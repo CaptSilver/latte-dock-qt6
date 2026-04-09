@@ -13,8 +13,8 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Lokalize 21.07.80\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"X-Generator: Lokalize 21.07.80\n"
 
 #: default/package/config/config.qml:23
 #, kde-format
@@ -47,7 +47,7 @@ msgstr "Zobraziť bodkový indikátor pre aktívne položky"
 #: default/package/config/config.qml:81
 #, kde-format
 msgid "Thickness"
-msgstr ""
+msgstr "Hrúbka"
 
 #: default/package/config/config.qml:103 default/package/config/config.qml:139
 #: default/package/config/config.qml:177 default/package/config/config.qml:213
@@ -70,7 +70,7 @@ msgstr "Výplň"
 #: default/package/config/config.qml:191
 #, kde-format
 msgid "Corner Margin"
-msgstr ""
+msgstr "Okraj rohu"
 
 #: default/package/config/config.qml:230
 #, kde-format
@@ -151,7 +151,7 @@ msgstr "Indikátory sa zobrazujú pre applety"
 #: default/package/config/config.qml:391
 #, kde-format
 msgid "Reverse indicator style"
-msgstr ""
+msgstr "Reverzný štýl indikátora"
 
 #~ msgid "Size"
 #~ msgstr "Veľkosť"
