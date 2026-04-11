@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: latte-dock\n"
 "Report-Msgid-Bugs-To: https://bugs.kde.org\n"
 "POT-Creation-Date: 2025-11-17 09:01+0000\n"
-"PO-Revision-Date: 2020-03-25 14:27+0100\n"
+"PO-Revision-Date: 2026-04-10 12:00+0200\n"
 "Last-Translator: Dusan Kazik <prescott66@gmail.com>\n"
 "Language-Team: sk\n"
 "Language: sk\n"
@@ -274,7 +274,7 @@ msgstr "filter_debug_text"
 #, kde-format
 msgctxt "command line: log-filepath"
 msgid "filter_log_filepath"
-msgstr ""
+msgstr "filter_log_filepath"
 
 #: app/main.cpp:204
 #, kde-format
@@ -1149,7 +1149,7 @@ msgstr "Obrazovky..."
 #: app/settings/settingsdialog/settingsdialog.cpp:147
 #, kde-format
 msgid "Examine your screens and remove deprecated references"
-msgstr ""
+msgstr "Preskúmajte vaše obrazovky a odstráňte zastarané odkazy"
 
 #: app/settings/settingsdialog/settingsdialog.cpp:150
 #, kde-format
@@ -1231,7 +1231,7 @@ msgstr "Latte Dock súbor kompletnej konfigurácie v0.2"
 #: app/settings/settingsdialog/tablayoutshandler.cpp:688
 #, kde-format
 msgid "Full configuration export <b>failed</b>..."
-msgstr ""
+msgstr "Úplný export konfigurácie <b>zlyhal</b>..."
 
 #: app/settings/settingsdialog/settingsdialog.cpp:362
 #: app/settings/settingsdialog/tablayoutshandler.cpp:708
@@ -1389,7 +1389,7 @@ msgstr "Parabolický efekt:"
 #, kde-format
 msgctxt "small spread"
 msgid "Small"
-msgstr ""
+msgstr "Malý"
 
 #. i18n: ectx: property (text), widget (QToolButton, mediumParabolicBtn)
 #: app/settings/settingsdialog/settingsdialog.ui:631
@@ -1403,13 +1403,13 @@ msgstr "Stredná"
 #, kde-format
 msgctxt "large spread"
 msgid "Large"
-msgstr ""
+msgstr "Veľký"
 
 #. i18n: ectx: property (text), widget (QLabel, parabolicSpreadLbl)
 #: app/settings/settingsdialog/settingsdialog.ui:669
 #, kde-format
 msgid "spread"
-msgstr ""
+msgstr "rozptyl"
 
 #. i18n: ectx: property (toolTip), widget (QCheckBox, autostartChkBox)
 #: app/settings/settingsdialog/settingsdialog.ui:726
@@ -1722,7 +1722,7 @@ msgstr "Layout <b>%1</b> downloaded successfully..."
 #, kde-format
 msgctxt "settings: active layout remove"
 msgid "<b>Active</b> layouts can not be removed..."
-msgstr ""
+msgstr "<b>Aktívne</b> rozloženia nie je možné odstrániť..."
 
 #: app/settings/settingsdialog/tablayoutshandler.cpp:512
 #, kde-format
@@ -1811,7 +1811,7 @@ msgstr[2] "Rozloženie: <b>%2</b> úspešne importované<br>"
 #, kde-format
 msgctxt "number in percentage, e.g. 85%"
 msgid "%1%"
-msgstr ""
+msgstr "%1%"
 
 #: app/settings/viewsdialog/delegates/namedelegate.cpp:55
 #, kde-format
@@ -1911,7 +1911,7 @@ msgstr "&nbsp;&nbsp;• <b>%1</b> [#%2] vnútri  <b>%3</b> [#%4]<br/>"
 #: app/settings/viewsdialog/viewscontroller.cpp:828
 #, kde-format
 msgid "<b>Possible Solutions:</b><br/>"
-msgstr ""
+msgstr "<b>Možné riešenia:</b><br/>"
 
 #: app/settings/viewsdialog/viewscontroller.cpp:679
 #, kde-format
@@ -2354,7 +2354,7 @@ msgstr "Zahŕňa"
 #, kde-format
 msgctxt "unknown screen"
 msgid "Unknown: [%1]"
-msgstr ""
+msgstr "Neznáme: [%1]"
 
 #: app/settings/viewsdialog/viewsmodel.cpp:867
 #, kde-format
@@ -2471,7 +2471,7 @@ msgstr "Prázdny panel"
 #, kde-format
 msgctxt "clone of original dock panel, name"
 msgid "Clone of %1"
-msgstr ""
+msgstr "Klon %1"
 
 #: app/view/settings/indicatoruimanager.cpp:167
 #, kde-format
@@ -2709,7 +2709,7 @@ msgstr "Posun"
 #, kde-format
 msgctxt "@label dynamic length configuration"
 msgid "Dynamic Length Adjustments"
-msgstr ""
+msgstr "Dynamické úpravy dĺžky"
 
 #: shell/package/contents/configuration/pages/AppearanceConfig.qml:577
 #, kde-format
@@ -2723,6 +2723,8 @@ msgid ""
 "Change panel length to maximum screen size when there is a maximized window "
 "present on the screen"
 msgstr ""
+"Zmeniť dĺžku panela na maximálnu veľkosť obrazovky, keď je na obrazovke "
+"prítomné maximalizované okno"
 
 #: shell/package/contents/configuration/pages/AppearanceConfig.qml:602
 #, kde-format
@@ -2745,7 +2747,7 @@ msgstr "Hrúbka"
 #: shell/package/contents/configuration/pages/AppearanceConfig.qml:709
 #, kde-format
 msgid "Floating gap"
-msgstr ""
+msgstr "Plávajúca medzera"
 
 #: shell/package/contents/configuration/pages/AppearanceConfig.qml:731
 #, kde-format
