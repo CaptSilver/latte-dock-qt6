@@ -49,7 +49,7 @@ msgstr "%1 indikátor úspešne aktualizovaný"
 #, kde-format
 msgctxt "indicator_name, imported success"
 msgid "%1 indicator installed successfully"
-msgstr "%1 indicator instvšetkýched successfully"
+msgstr "Indikátor %1 bol úspešne nainštalovaný"
 
 #: app/indicator/factory.cpp:371
 #, kde-format
@@ -338,7 +338,7 @@ msgid ""
 "\"Art in Coffee\""
 msgstr ""
 "Latte je dok postavený na Plasma frameworkoch, ktorý poskytuje elegantný a "
-"intuitývny zážitok pre vaše úlohy a plasmoidy. Oživuje svoj obsah pomocou "
+"intuitívny zážitok pre vaše úlohy a plasmoidy. Oživuje svoj obsah pomocou "
 "parabolického efektu priblíženia a pokúša sa byť tam iba keď je to "
 "potrebné.\n"
 "\n"
@@ -1281,7 +1281,8 @@ msgid ""
 "Multiple layouts can be present and active in memory at the same time for "
 "different activities"
 msgstr ""
-"Viac rozložení môže byť naraz aktívnych v pamätisúbor predvoleného rozloženia"
+"Viacero rozložení môže byť súčasne prítomných a aktívnych v pamäti pre rôzne "
+"aktivity"
 
 #. i18n: ectx: property (text), widget (QToolButton, multipleToolBtn)
 #: app/settings/settingsdialog/settingsdialog.ui:87
@@ -1376,7 +1377,7 @@ msgstr "Poskytovať vizuálnu odozvu keď rozloženia sú aktivované automatick
 #: app/settings/settingsdialog/settingsdialog.ui:543
 #, kde-format
 msgid "Show informative window for layouts automatic activation"
-msgstr "Zobrazivať informačné okno pre automatickú aktiváciu okien"
+msgstr "Zobrazovať informačné okno pre automatickú aktiváciu okien"
 
 #. i18n: ectx: property (text), widget (QLabel, parabolicEffectLbl)
 #: app/settings/settingsdialog/settingsdialog.ui:571
