@@ -10,13 +10,13 @@ set(WEBSITE "https://userbase.kde.org/LatteDock")
 set(BUG_ADDRESS "https://bugs.kde.org/enter_bug.cgi?product=lattedock")
 set(FAQS "https://userbase.kde.org/LatteDock/FAQ")
 
-set(QT_MIN_VERSION "5.15.0")
-set(KF5_MIN_VERSION "5.88.0")
-set(KDE_COMPILERSETTINGS_LEVEL "5.84.0")
+set(QT_MIN_VERSION "6.6.0")
+set(KF6_MIN_VERSION "6.5.0")
+set(KDE_COMPILERSETTINGS_LEVEL "6.5.0")
 
-set(KF5_LOCALE_PREFIX "")
+set(KF6_LOCALE_PREFIX "")
 
-find_package(ECM ${KF5_MIN_VERSION} REQUIRED NO_MODULE)
+find_package(ECM ${KF6_MIN_VERSION} REQUIRED NO_MODULE)
 set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
 
 include(KDEInstallDirs)
@@ -30,59 +30,57 @@ include(KDEPackageAppTemplates)
 include(WriteBasicConfigVersionFile)
 
 
-find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED NO_MODULE COMPONENTS DBus Gui Qml Quick)
+find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS DBus Gui Qml Quick Widgets WaylandClient)
 
-find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
-    Activities Archive CoreAddons GuiAddons Crash DBusAddons Declarative GlobalAccel Kirigami2
-    I18n IconThemes KIO NewStuff Notifications Plasma PlasmaQuick Wayland WindowSystem XmlGui)
+# KF6 frameworks (Fedora 44 has no umbrella KF6 config -> find each individually)
+find_package(KF6Archive ${KF6_MIN_VERSION} REQUIRED)
+find_package(KF6CoreAddons ${KF6_MIN_VERSION} REQUIRED)
+find_package(KF6GuiAddons ${KF6_MIN_VERSION} REQUIRED)
+find_package(KF6Crash ${KF6_MIN_VERSION} REQUIRED)
+find_package(KF6DBusAddons ${KF6_MIN_VERSION} REQUIRED)
+find_package(KF6GlobalAccel ${KF6_MIN_VERSION} REQUIRED)
+find_package(KF6I18n ${KF6_MIN_VERSION} REQUIRED)
+find_package(KF6IconThemes ${KF6_MIN_VERSION} REQUIRED)
+find_package(KF6KIO ${KF6_MIN_VERSION} REQUIRED)
+find_package(KF6NewStuff ${KF6_MIN_VERSION} REQUIRED)
+find_package(KF6Notifications ${KF6_MIN_VERSION} REQUIRED)
+find_package(KF6WindowSystem ${KF6_MIN_VERSION} REQUIRED)
+find_package(KF6XmlGui ${KF6_MIN_VERSION} REQUIRED)
+find_package(KF6Package ${KF6_MIN_VERSION} REQUIRED)
+find_package(KF6Config ${KF6_MIN_VERSION} REQUIRED)
+# Transitively required by Plasma::Plasma's link interface (configure fails without it).
+find_package(KF6KirigamiPlatform ${KF6_MIN_VERSION} REQUIRED)
 
-find_package(LibTaskManager REQUIRED)
-add_definitions(-DPLASMA_WORKSPACE_VERSION="${LibTaskManager_VERSION}")
-   
-find_package(X11 REQUIRED)
-set_package_properties(X11 PROPERTIES DESCRIPTION "X11 libraries"
-    URL "http://www.x.org"
-    TYPE OPTIONAL
-    PURPOSE "Required for building the X11 based workspace")
+# De-umbrella'd in Plasma 6 -> their own find_package calls
+find_package(Plasma ${KF6_MIN_VERSION} REQUIRED)
+find_package(PlasmaQuick ${KF6_MIN_VERSION} REQUIRED)
+find_package(PlasmaActivities ${KF6_MIN_VERSION} REQUIRED)
+# Pre-staged for Phase 6 (Plasma::Svg -> KSvg QML/C++ port).
+find_package(KF6Svg ${KF6_MIN_VERSION} REQUIRED)
+find_package(KWayland REQUIRED)
+# Pre-staged for Phase 4 (dock anchoring via layer-shell).
+find_package(LayerShellQt REQUIRED)
 
-if(X11_FOUND)
-    find_package(XCB MODULE REQUIRED COMPONENTS XCB RANDR SHAPE EVENT)
-    set_package_properties(XCB PROPERTIES TYPE REQUIRED)
-    find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS X11Extras)
-
-    if(NOT X11_SM_FOUND)
-        message(FATAL_ERROR "\nThe X11 Session Management (SM) development package could not be found.
-                \nPlease install libSM.\n")
-    endif(NOT X11_SM_FOUND)
-
-endif()
-
-if(X11_FOUND AND XCB_XCB_FOUND)
-    set(HAVE_X11 ON)
-endif()
+# Plasma_VERSION (libplasma) stands in for the old LibTaskManager_VERSION; same workspace release.
+add_definitions(-DPLASMA_WORKSPACE_VERSION="${Plasma_VERSION}")
 
 
 find_package(QtWaylandScanner REQUIRED)
-find_package(Qt${QT_MAJOR_VERSION}WaylandClient)
 find_package(PlasmaWaylandProtocols 1.6 REQUIRED)
 find_package(Wayland REQUIRED COMPONENTS Client)
 
-string(REGEX MATCH "\\.([^]]+)\\." KF5_VERSION_MINOR ${KF5_VERSION})
-string(REGEX REPLACE "\\." "" KF5_VERSION_MINOR ${KF5_VERSION_MINOR})
+string(REGEX MATCH "\\.([^]]+)\\." KF6_VERSION_MINOR ${KF6Config_VERSION})
+string(REGEX REPLACE "\\." "" KF6_VERSION_MINOR ${KF6_VERSION_MINOR})
 
-message(STATUS "KF5 VERSION : ${KF5_VERSION}")
-message(STATUS "KF5 VERSION MINOR : ${KF5_VERSION_MINOR}")
+message(STATUS "KF6 VERSION : ${KF6Config_VERSION}")
+message(STATUS "KF6 VERSION MINOR : ${KF6_VERSION_MINOR}")
 
 
 include(ECMFindQmlModule)
-ecm_find_qmlmodule(QtQuick 2.7)
-ecm_find_qmlmodule(QtQuick.Layouts 1.3)
-ecm_find_qmlmodule(QtQuick.Controls 1.4)
-ecm_find_qmlmodule(QtQuick.Controls.Styles.Plasma 2.0)
-ecm_find_qmlmodule(QtGraphicalEffects 1.0)
-ecm_find_qmlmodule(org.kde.kquickcontrolsaddons 2.0)
-ecm_find_qmlmodule(org.kde.plasma.core 2.0)
-ecm_find_qmlmodule(org.kde.plasma.components 2.0)
+ecm_find_qmlmodule(QtQuick 6.6)
+ecm_find_qmlmodule(QtQuick.Layouts 6.6)
+# QtQuick.Controls 1.x, QtQuick.Controls.Styles.Plasma, QtGraphicalEffects are Qt5-only;
+# org.kde.plasma.* QML module checks return in Phases 6-7 (QQC2 + KSvg/Kirigami port).
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/app/config-latte.h.cmake
                ${CMAKE_CURRENT_BINARY_DIR}/app/config-latte.h)

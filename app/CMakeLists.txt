@@ -41,7 +41,7 @@ add_subdirectory(wm)
 add_subdirectory(wm/tracker)
 
 set(latte_dbusXML dbus/org.kde.LatteDock.xml)
-qt5_add_dbus_adaptor(lattedock-app_SRCS ${latte_dbusXML} lattecorona.h Latte::Corona lattedockadaptor)
+qt_add_dbus_adaptor(lattedock-app_SRCS ${latte_dbusXML} lattecorona.h Latte::Corona lattedockadaptor)
 
 ki18n_wrap_ui(lattedock-app_SRCS settings/actionsdialog/actionsdialog.ui)
 ki18n_wrap_ui(lattedock-app_SRCS settings/detailsdialog/detailsdialog.ui)
@@ -60,39 +60,31 @@ add_executable(latte-dock ${lattedock-app_SRCS})
 include(FakeTarget.cmake)
 
 target_link_libraries(latte-dock
-    Qt5::DBus
-    Qt5::Quick
-    Qt5::Qml
-    KF5::Activities
-    KF5::Archive
-    KF5::CoreAddons
-    KF5::Crash
-    KF5::DBusAddons
-    KF5::Declarative
-    KF5::GuiAddons
-    KF5::GlobalAccel
-    KF5::I18n
-    KF5::IconThemes
-    KF5::KIOWidgets
-    KF5::Notifications
-    KF5::NewStuff
-    KF5::QuickAddons
-    KF5::Plasma
-    KF5::PlasmaQuick
-    KF5::WaylandClient
-    KF5::XmlGui
+    Qt6::DBus
+    Qt6::Quick
+    Qt6::Qml
+    Plasma::Activities
+    KF6::Archive
+    KF6::CoreAddons
+    KF6::Crash
+    KF6::DBusAddons
+    KF6::ConfigQml  # KF5::Declarative split in KF6; ConfigPropertyMap moved here; QmlObjectSharedEngine removed — Phase 3
+    KF6::GuiAddons
+    KF6::GlobalAccel
+    KF6::I18n
+    KF6::IconThemes
+    KF6::KIOWidgets
+    KF6::Notifications
+    KF6::NewStuffWidgets  # KF5::NewStuff split into KF6::NewStuffCore + KF6::NewStuffWidgets in KF6
+    # KF5::QuickAddons has no KF6 C++ target (kquickcontrolsaddons is QML-only in KF6);
+    # the C++ that used it is ported in Phase 3 (KCMUtils / PlasmaQuick). TODO Phase 3.
+    Plasma::Plasma
+    Plasma::PlasmaQuick
+    Plasma::KWaylandClient
+    KF6::XmlGui
+    KF6::WindowSystem
     Wayland::Client
 )
-
-
-if(HAVE_X11)
-    target_link_libraries(latte-dock
-        Qt5::X11Extras
-        KF5::WindowSystem
-        ${X11_LIBRARIES}
-        ${XCB_LIBRARIES}
-    )
-endif()
 
 configure_file(org.kde.latte-dock.desktop.cmake org.kde.latte-dock.desktop)
 configure_file(org.kde.latte-dock.appdata.xml.cmake org.kde.latte-dock.appdata.xml)
@@ -101,7 +93,7 @@ install(TARGETS latte-dock ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/org.kde.latte-dock.desktop DESTINATION ${KDE_INSTALL_APPDIR})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/org.kde.latte-dock.appdata.xml DESTINATION ${KDE_INSTALL_METAINFODIR})
 install(FILES dbus/org.kde.LatteDock.xml DESTINATION ${KDE_INSTALL_DBUSINTERFACEDIR})
-install(FILES lattedock.notifyrc DESTINATION ${KNOTIFYRC_INSTALL_DIR})
+install(FILES lattedock.notifyrc DESTINATION ${KDE_INSTALL_KNOTIFYRCDIR})
 install(FILES latte-layouts.knsrc DESTINATION  ${KDE_INSTALL_KNSRCDIR})
 install(FILES latte-indicators.knsrc DESTINATION  ${KDE_INSTALL_KNSRCDIR})
 
