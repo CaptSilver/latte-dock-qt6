@@ -1369,7 +1369,7 @@ bool View::mimeContainsPlasmoid(QMimeData *mimeData, QString name)
 
     if (mimeData->hasFormat(QStringLiteral("text/x-plasmoidservicename"))) {
         QString data = mimeData->data(QStringLiteral("text/x-plasmoidservicename"));
-        const QStringList appletNames = data.split('\n', QString::SkipEmptyParts);
+        const QStringList appletNames = data.split('\n', Qt::SkipEmptyParts);
 
         for (const QString &appletName : appletNames) {
             if (appletName == name)
@@ -1545,7 +1545,7 @@ bool View::event(QEvent *e)
 
         case QEvent::MouseButtonPress:
             if (auto me = dynamic_cast<QMouseEvent *>(e)) {
-                emit mousePressed(me->pos(), me->button());
+                emit mousePressed(me->position().toPoint(), me->button());
                 sinkableevent = true;
                 verticalUnityViewHasFocus();
             }
@@ -1553,7 +1553,7 @@ bool View::event(QEvent *e)
 
         case QEvent::MouseButtonRelease:
             if (auto me = dynamic_cast<QMouseEvent *>(e)) {
-                emit mouseReleased(me->pos(), me->button());
+                emit mouseReleased(me->position().toPoint(), me->button());
                 sinkableevent = true;
             }
             break;

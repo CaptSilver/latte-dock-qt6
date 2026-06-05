@@ -696,7 +696,7 @@ void WaylandInterface::requestToggleIsOnAllDesktops(WindowId wid)
         } else {
             const QStringList &now = w->plasmaVirtualDesktops();
 
-            foreach (const QString &desktop, now) {
+            for (const QString &desktop : now) {
                 w->requestLeaveVirtualDesktop(desktop);
             }
         }

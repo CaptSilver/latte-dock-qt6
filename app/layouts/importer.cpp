@@ -20,6 +20,7 @@
 // Qt
 #include <QFile>
 #include <QLatin1String>
+#include <QRegularExpression>
 
 // KDE
 #include <KArchive/KTar>
@@ -740,7 +741,7 @@ QString Importer::layoutTemplateSystemFilePath(const QString &name)
 
 QString Importer::uniqueLayoutName(QString name)
 {
-    int pos_ = name.lastIndexOf(QRegExp(QString(" - [0-9]+")));
+    int pos_ = name.lastIndexOf(QRegularExpression(QStringLiteral(" - [0-9]+")));
 
     if (layoutExists(name) && pos_ > 0) {
         name = name.left(pos_);

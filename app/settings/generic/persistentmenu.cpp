@@ -43,7 +43,7 @@ void PersistentMenu::setMasterIndex(const int &index)
 
 void PersistentMenu::mouseReleaseEvent (QMouseEvent *e)
 {
-  const QAction *action = actionAt(e->pos());
+  const QAction *action = actionAt(e->position().toPoint());
   if (action) {
       m_blockHide = true;
   }

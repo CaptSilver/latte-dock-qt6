@@ -57,7 +57,7 @@ void Schemes::initSchemes()
         QDir directory(path);
         QStringList tempSchemes = directory.entryList(QStringList() << "*.colors" << "*.COLORS", QDir::Files);
 
-        foreach (QString filename, tempSchemes) {
+        for (const auto &filename : tempSchemes) {
             if (!registeredSchemes.contains(filename)) {
                 QString fullPath = path + "/" + filename;
                 insertSchemeInList(fullPath);

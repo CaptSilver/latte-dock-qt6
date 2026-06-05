@@ -21,7 +21,7 @@ ViewsTableView::ViewsTableView(QWidget *parent)
 
 void ViewsTableView::mousePressEvent(QMouseEvent *event)
 {
-    QModelIndex eventIndex = indexAt(event->pos());
+    QModelIndex eventIndex = indexAt(event->position().toPoint());
 
     if (!eventIndex.isValid()) {
         clearSelection();

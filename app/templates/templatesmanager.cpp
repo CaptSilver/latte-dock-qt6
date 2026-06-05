@@ -16,6 +16,7 @@
 
 // Qt
 #include <QDir>
+#include <QRegularExpression>
 
 // KDE
 #include <KDirWatch>
@@ -273,7 +274,7 @@ void Manager::installCustomLayoutTemplate(const QString &templateFilePath)
 
 QString Manager::uniqueLayoutTemplateName(QString name) const
 {
-    int pos_ = name.lastIndexOf(QRegExp(QString(" - [0-9]+")));
+    int pos_ = name.lastIndexOf(QRegularExpression(QStringLiteral(" - [0-9]+")));
 
     if (hasLayoutTemplate(name) && pos_ > 0) {
         name = name.left(pos_);
@@ -293,7 +294,7 @@ QString Manager::uniqueLayoutTemplateName(QString name) const
 
 QString Manager::uniqueViewTemplateName(QString name) const
 {
-    int pos_ = name.lastIndexOf(QRegExp(QString(" - [0-9]+")));
+    int pos_ = name.lastIndexOf(QRegularExpression(QStringLiteral(" - [0-9]+")));
 
     if (hasViewTemplate(name) && pos_ > 0) {
         name = name.left(pos_);

@@ -75,7 +75,7 @@ bool CheckBox::editorEvent(QEvent *event, QAbstractItemModel *model, const QStyl
     Q_ASSERT(model);
 
     if (event->type() == QEvent::MouseButtonDblClick) {
-        if (!option.rect.contains(static_cast<QMouseEvent *>(event)->pos()))
+        if (!option.rect.contains(static_cast<QMouseEvent *>(event)->position().toPoint()))
             return false;
     } else if (event->type() == QEvent::KeyPress) {
         if (static_cast<QKeyEvent *>(event)->key() != Qt::Key_Space && static_cast<QKeyEvent *>(event)->key() != Qt::Key_Select)

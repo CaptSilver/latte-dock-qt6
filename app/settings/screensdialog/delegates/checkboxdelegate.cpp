@@ -44,12 +44,12 @@ bool CheckBox::editorEvent(QEvent *event, QAbstractItemModel *model, const QStyl
         QRect remained = Latte::remainedFromCheckBox(checkopt);
         QRegion checkregion = QRegion(option.rect).subtracted(remained);
 
-        if (!(checkregion.boundingRect().contains(static_cast<QMouseEvent *>(event)->pos()))) {
+        if (!(checkregion.boundingRect().contains(static_cast<QMouseEvent *>(event)->position().toPoint()))) {
             return false;
         }
     } else if (event->type() == QEvent::MouseButtonDblClick) {
         //! double click  on checkbox text, changes state
-        if (!option.rect.contains(static_cast<QMouseEvent *>(event)->pos())) {
+        if (!option.rect.contains(static_cast<QMouseEvent *>(event)->position().toPoint())) {
             return false;
         }
     } else if (event->type() == QEvent::KeyPress) {

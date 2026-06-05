@@ -188,7 +188,7 @@ void ContextMenuLayerQuickItem::mousePressEvent(QMouseEvent *event)
     // and set the event position as action data
     if (plugin->contextualActions().length() == 1) {
         QAction *action = plugin->contextualActions().at(0);
-        action->setData(event->pos());
+        action->setData(event->position().toPoint());
         action->trigger();
         event->accept();
         return;
@@ -200,7 +200,7 @@ void ContextMenuLayerQuickItem::mousePressEvent(QMouseEvent *event)
     //and set the event position as action data
     /*if (plugin->contextualActions().length() == 1) {
             QAction *action = plugin->contextualActions().at(0);
-            action->setData(event->pos());
+            action->setData(event->position().toPoint());
             action->trigger();
             event->accept();
             return;
@@ -221,10 +221,10 @@ void ContextMenuLayerQuickItem::mousePressEvent(QMouseEvent *event)
         if (m_appletContainsMethod.isValid()) {
             QVariant retVal;
             m_appletContainsMethod.invoke(m_appletContainsMethodItem, Qt::DirectConnection, Q_RETURN_ARG(QVariant, retVal)
-                                          , Q_ARG(QVariant, appletTemp->id()), Q_ARG(QVariant, event->pos()));
+                                          , Q_ARG(QVariant, appletTemp->id()), Q_ARG(QVariant, event->position().toPoint()));
             appletContainsMouse = retVal.toBool();
         } else {
-            appletContainsMouse = ai->contains(ai->mapFromItem(this, event->pos()));
+            appletContainsMouse = ai->contains(ai->mapFromItem(this, event->position()));
         }
 
         if (ai && ai->isVisible() && appletContainsMouse) {
