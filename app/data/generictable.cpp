@@ -167,7 +167,7 @@ GenericTable<T>::operator QString() const
     for(int i=0; i<m_list.count(); ++i) {
         result += m_list[i].id;
         if (i<(m_list.count()-1)) {
-            result += ", ";
+            result += QStringLiteral(", ");
         }
     }
 

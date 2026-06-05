@@ -71,7 +71,7 @@ public:
     void loadLayoutOnStartup(QString layoutName);
     void setOnAllActivities(QString layoutName);
     void setOnActivities(QString layoutName, QStringList activities);
-    void showInfoWindow(QString info, int duration, QStringList activities = {"0"});
+    void showInfoWindow(QString info, int duration, QStringList activities = {QStringLiteral("0")});
     void unload();
 
     QStringList currentLayoutsNames() const;
@@ -92,7 +92,7 @@ public:
 
     void moveView(QString originLayoutName, uint originViewId, QString destinationLayoutName);
 
-public slots:
+public Q_SLOTS:
     void showAboutDialog();
 
     void hideLatteSettingsDialog();
@@ -101,7 +101,7 @@ public slots:
     Q_INVOKABLE QStringList viewTemplateNames() const;
     Q_INVOKABLE QStringList viewTemplateIds() const;
 
-signals:
+Q_SIGNALS:
     void centralLayoutsChanged();
     void syncedLaunchersChanged();
     void viewTemplatesChanged();

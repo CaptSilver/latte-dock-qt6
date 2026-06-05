@@ -19,8 +19,8 @@
 #include <KGlobalAccel>
 
 
-#define GLOBALSHORTCUTSCONFIG "kglobalshortcutsrc"
-#define APPLETSHORTCUTKEY "activate widget "
+#define GLOBALSHORTCUTSCONFIG QStringLiteral("kglobalshortcutsrc")
+#define APPLETSHORTCUTKEY QStringLiteral("activate widget ")
 
 namespace Latte {
 namespace ShortcutsPart {
@@ -44,7 +44,7 @@ void ShortcutsTracker::initGlobalShortcutsWatcher()
         m_badgesForActivate << QString();
     }
 
-    const QString globalShortcutsFilePath = Latte::configPath() + "/" + GLOBALSHORTCUTSCONFIG;
+    const QString globalShortcutsFilePath = Latte::configPath() + QLatin1Char('/') + GLOBALSHORTCUTSCONFIG;
     m_shortcutsConfigPtr = KSharedConfig::openConfig(globalShortcutsFilePath);
 
     KDirWatch::self()->addFile(globalShortcutsFilePath);
@@ -91,8 +91,8 @@ QString ShortcutsTracker::shortcutToBadge(QStringList shortcutRecords)
 {
     QString badge;
 
-    if (shortcutRecords.count()>0 && shortcutRecords[0] != "none") {
-        QStringList modifiers = shortcutRecords[0].split("+");
+    if (shortcutRecords.count()>0 && shortcutRecords[0] != QLatin1String("none")) {
+        QStringList modifiers = shortcutRecords[0].split(QLatin1Char('+'));
 
         if (modifiers.count() >= 1) {
             badge = modifiers[modifiers.count() - 1];
@@ -111,23 +111,23 @@ QString ShortcutsTracker::shortcutToBadge(QStringList shortcutRecords)
 
 void ShortcutsTracker::parseGlobalShortcuts()
 {
-    KConfigGroup latteGroup = KConfigGroup(m_shortcutsConfigPtr, "lattedock");
+    KConfigGroup latteGroup = KConfigGroup(m_shortcutsConfigPtr, QStringLiteral("lattedock"));
 
     if (latteGroup.exists()) {
         m_badgesForActivate.clear();
         m_appletShortcuts.clear();
 
         for (int i = 1; i <= 19; ++i) {
-            QString entry = "activate entry " + QString::number(i);
+            QString entry = QStringLiteral("activate entry ") + QString::number(i);
 
             if (latteGroup.hasKey(entry)) {
                 QStringList records = latteGroup.readEntry(entry, QStringList());
                 if (records.count() > 0) {
-                    records[0] = records[0].split("\t")[0];
+                    records[0] = records[0].split(QLatin1Char('\t'))[0];
                 }
                 m_badgesForActivate << shortcutToBadge(records);
             } else {
-                m_badgesForActivate << "";
+                m_badgesForActivate << QString();
             }
         }
 
@@ -145,19 +145,19 @@ void ShortcutsTracker::parseGlobalShortcuts()
         qDebug() << "badges based on position updated to :: " << m_badgesForActivate;
         qDebug() << "badges for applet shortcuts updated to :: " << m_appletShortcuts;
 
-        emit badgesForActivateChanged();
+        Q_EMIT badgesForActivateChanged();
     }
 }
 
 void ShortcutsTracker::clearAllAppletShortcuts()
 {
-    KConfigGroup latteGroup = KConfigGroup(m_shortcutsConfigPtr, "lattedock");
+    KConfigGroup latteGroup = KConfigGroup(m_shortcutsConfigPtr, QStringLiteral("lattedock"));
 
     for(const auto &key : latteGroup.keyList()) {
         if (key.startsWith(APPLETSHORTCUTKEY)) {
             QAction *appletAction = new QAction(this);
 
-            appletAction->setText(QString("Activate ") + key);
+            appletAction->setText(QStringLiteral("Activate ") + key);
             appletAction->setObjectName(key);
             appletAction->setShortcut(QKeySequence());
             KGlobalAccel::setGlobalShortcut(appletAction, QKeySequence());

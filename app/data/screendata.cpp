@@ -7,6 +7,9 @@
 
 #include "../tools/commontools.h"
 
+// Qt
+#include <QLatin1String>
+
 namespace Latte {
 namespace Data {
 
@@ -90,7 +93,7 @@ bool Screen::operator!=(const Screen &rhs) const
 
 void Screen::init(const QString &screenId, const QString &serialized)
 {
-    QStringList parts = serialized.split(SERIALIZESPLITTER);
+    QStringList parts = serialized.split(QLatin1String(SERIALIZESPLITTER));
 
     id = screenId;
     name = parts[0];
@@ -115,7 +118,7 @@ QString Screen::serialize() const
     result << name;
     result << Latte::rectToString(geometry);
 
-    return result.join(SERIALIZESPLITTER);
+    return result.join(QLatin1String(SERIALIZESPLITTER));
 }
 
 }

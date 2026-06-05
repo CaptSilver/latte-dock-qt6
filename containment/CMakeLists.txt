@@ -17,6 +17,7 @@ target_link_libraries(lattecontainmentplugin
                       Qt6::Quick
                       KF6::ConfigQml  # KF5::Declarative -> KF6::ConfigQml (ConfigPropertyMap); Phase 3 for QML engine setup
                       Plasma::Plasma
+                      KF6::Svg
                       Plasma::PlasmaQuick)
 
 install(TARGETS lattecontainmentplugin DESTINATION ${KDE_INSTALL_QMLDIR}/org/kde/latte/private/containment)

@@ -31,13 +31,13 @@ void Generic::setTwinProperty(QAction *action, const QString &property, QVariant
         return;
     }
 
-    if (property == TWINVISIBLE) {
+    if (property == QLatin1String(TWINVISIBLE)) {
         action->setVisible(value.toBool());
         m_twinActions[action]->setVisible(value.toBool());
-    } else if (property == TWINENABLED) {
+    } else if (property == QLatin1String(TWINENABLED)) {
         action->setEnabled(value.toBool());
         m_twinActions[action]->setEnabled(value.toBool());
-    } else if (property == TWINCHECKED) {
+    } else if (property == QLatin1String(TWINCHECKED)) {
         action->setChecked(value.toBool());
         m_twinActions[action]->setChecked(value.toBool());
     }

@@ -21,7 +21,7 @@
 
 // KDE
 #include <KConfigGroup>
-#include <KActivities/Consumer>
+#include <PlasmaActivities/Consumer>
 
 
 namespace Latte {
@@ -75,7 +75,7 @@ void CentralLayout::setDisableBordersForMaximizedWindows(bool disable)
 
     m_disableBordersForMaximizedWindows = disable;
 
-    emit disableBordersForMaximizedWindowsChanged();
+    Q_EMIT disableBordersForMaximizedWindowsChanged();
 }
 
 bool CentralLayout::showInMenu() const
@@ -90,25 +90,25 @@ void CentralLayout::setShowInMenu(bool show)
     }
 
     m_showInMenu = show;
-    emit showInMenuChanged();
+    Q_EMIT showInMenuChanged();
 }
 
 bool CentralLayout::isCurrent()
 {
    QStringList appliedactivities = appliedActivities();
 
-    return (appliedactivities.contains(Data::Layout::ALLACTIVITIESID)
+    return (appliedactivities.contains(QLatin1String(Data::Layout::ALLACTIVITIESID))
             || appliedactivities.contains(m_corona->activitiesConsumer()->currentActivity()));
 }
 
 bool CentralLayout::isOnAllActivities() const
 {
-    return (m_activities.count() == 1 && m_activities[0] == Data::Layout::ALLACTIVITIESID);
+    return (m_activities.count() == 1 && m_activities[0] == QLatin1String(Data::Layout::ALLACTIVITIESID));
 }
 
 bool CentralLayout::isForFreeActivities() const
 {
-    return (m_activities.count() == 1 && m_activities[0] == Data::Layout::FREEACTIVITIESID);
+    return (m_activities.count() == 1 && m_activities[0] == QLatin1String(Data::Layout::FREEACTIVITIESID));
 }
 
 Layout::Type CentralLayout::type() const
@@ -129,7 +129,7 @@ void CentralLayout::setActivities(QStringList activities)
 
     m_activities = activities;
 
-    emit activitiesChanged();
+    Q_EMIT activitiesChanged();
 }
 
 Latte::WindowSystem::SchemeColors *CentralLayout::scheme() const
@@ -144,7 +144,7 @@ void CentralLayout::setScheme(Latte::WindowSystem::SchemeColors *_scheme)
     }
 
     m_scheme = _scheme;
-    emit schemeChanged();
+    Q_EMIT schemeChanged();
 }
 
 Data::Layout CentralLayout::data() const
@@ -184,7 +184,7 @@ void CentralLayout::loadConfig()
     m_showInMenu = m_layoutGroup.readEntry("showInMenu", false);     
     m_activities = m_layoutGroup.readEntry("activities", QStringList());
 
-    emit activitiesChanged();
+    Q_EMIT activitiesChanged();
 }
 
 void CentralLayout::saveConfig()
@@ -205,7 +205,7 @@ const QStringList CentralLayout::appliedActivities()
     }
 
     if (isOnAllActivities() || m_corona->layoutsManager()->memoryUsage() == MemoryUsage::SingleLayout) {
-        return QStringList(Data::Layout::ALLACTIVITIESID);
+        return QStringList(QLatin1String(Data::Layout::ALLACTIVITIESID));
     } else if (isForFreeActivities()) {
         return m_corona->layoutsManager()->synchronizer()->freeRunningActivities();
     } else {

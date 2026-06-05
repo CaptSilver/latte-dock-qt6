@@ -31,7 +31,7 @@ void Dialog::setContainsMouse(bool contains)
     }
 
     m_containsMouse = contains;
-    emit containsMouseChanged();
+    Q_EMIT containsMouseChanged();
 }
 
 Plasma::Types::Location Dialog::edge() const
@@ -46,7 +46,7 @@ void Dialog::setEdge(const Plasma::Types::Location &edge)
     }
 
     m_edge = edge;
-    emit edgeChanged();
+    Q_EMIT edgeChanged();
 }
 
 bool Dialog::isRespectingAppletsLayoutGeometry() const
@@ -79,7 +79,7 @@ void Dialog::onVisualParentChanged()
         return;
     }
 
-    bool hassignal = (visualParent()->metaObject()->indexOfSignal(QMetaObject::normalizedSignature("anchoredTooltipPositionChanged()")) != -1);
+    bool hassignal = (visualParent()->metaObject()->indexOfSignal(QMetaObject::normalizedSignature("anchoredTooltipPositionChanged()").constData()) != -1);
 
     if (hassignal) {
         m_visualParentConnections[0] = connect(visualParent(), SIGNAL(anchoredTooltipPositionChanged()) , this, SLOT(updateGeometry()));

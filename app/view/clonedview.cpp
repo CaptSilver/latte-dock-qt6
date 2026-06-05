@@ -14,9 +14,9 @@ namespace Latte {
 const int ClonedView::ERRORAPPLETID;
 
 QStringList ClonedView::CONTAINMENTMANUALSYNCEDPROPERTIES = QStringList()
-        << QString("appletOrder")
-        << QString("lockedZoomApplets")
-        << QString("userBlocksColorizingApplets");  
+        << QStringLiteral("appletOrder")
+        << QStringLiteral("lockedZoomApplets")
+        << QStringLiteral("userBlocksColorizingApplets");  
 
 ClonedView::ClonedView(Plasma::Corona *corona, Latte::OriginalView *originalView, QScreen *targetScreen, bool byPassX11WM)
     : View(corona, targetScreen, byPassX11WM),

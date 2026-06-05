@@ -20,7 +20,7 @@
 #include <KDirWatch>
 #include <KSharedConfig>
 
-#define PLASMARC "plasmashellrc"
+#define PLASMARC QStringLiteral("plasmashellrc")
 
 namespace Latte {
 namespace PlasmaExtended {
@@ -30,11 +30,11 @@ ScreenPool::ScreenPool(QObject *parent)
       m_primaryWatcher(new PrimaryOutputWatcher(this))
 {
     m_plasmarcConfig = KSharedConfig::openConfig(PLASMARC);
-    m_screensGroup = KConfigGroup(m_plasmarcConfig, "ScreenConnectors");
+    m_screensGroup = KConfigGroup(m_plasmarcConfig, QStringLiteral("ScreenConnectors"));
 
     load();
 
-    QString plasmaSettingsFile = Latte::configPath() + "/" + PLASMARC;
+    QString plasmaSettingsFile = Latte::configPath() + QLatin1Char('/') + PLASMARC;
 
     KDirWatch::self()->addFile(plasmaSettingsFile);
 
@@ -92,13 +92,13 @@ void ScreenPool::load()
         }
         qDebug() << "----------------  ---------------  ------------------";
 
-        emit idsChanged();
+        Q_EMIT idsChanged();
     }
 }
 
 void ScreenPool::insertScreenMapping(int id, const QString &connector)
 {
-    if (id==0 || connector.startsWith(":")) {
+    if (id==0 || connector.startsWith(QLatin1Char(':'))) {
         return;
     }
 

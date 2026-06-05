@@ -16,17 +16,18 @@
 #include <QQuickItem>
 #include <QQmlContext>
 #include <QQmlEngine>
+#include <QRandomGenerator>
 #include <QScreen>
 
 // KDE
 #include <KLocalizedContext>
-#include <KDeclarative/KDeclarative>
 #include <KWindowSystem>
+#include <KX11Extras>
 #include <KWayland/Client/plasmashell.h>
 #include <KWayland/Client/surface.h>
 
 // Plasma
-#include <Plasma/Package>
+#include <KPackage/Package>
 
 namespace Latte {
 
@@ -36,7 +37,7 @@ InfoView::InfoView(Latte::Corona *corona, QString message, QScreen *screen, QWin
       m_message(message),
       m_screen(screen)
 {
-    m_id = QString::number(qrand() % 1000);
+    m_id = QString::number(QRandomGenerator::global()->bounded(1000));
 
     setTitle(validTitle());
 
@@ -77,11 +78,6 @@ void InfoView::init()
 {
     rootContext()->setContextProperty(QStringLiteral("infoWindow"), this);
 
-    KDeclarative::KDeclarative kdeclarative;
-    kdeclarative.setDeclarativeEngine(engine());
-    kdeclarative.setTranslationDomain(QStringLiteral("latte-dock"));
-    kdeclarative.setupContext();
-    kdeclarative.setupEngine(engine());
 
     auto source = QUrl::fromLocalFile(m_corona->kPackage().filePath("infoviewui"));
     setSource(source);
@@ -93,10 +89,10 @@ void InfoView::init()
 
 QString InfoView::validTitle() const
 {
-    return "#layoutinfowindow#" + m_id;
+    return QStringLiteral("#layoutinfowindow#") + m_id;
 }
 
-Plasma::FrameSvg::EnabledBorders InfoView::enabledBorders() const
+KSvg::FrameSvg::EnabledBorders InfoView::enabledBorders() const
 {
     return m_borders;
 }
@@ -144,7 +140,7 @@ void InfoView::showEvent(QShowEvent *ev)
 
 void InfoView::updateWaylandId()
 {
-    Latte::WindowSystem::WindowId newId = m_corona->wm()->winIdFor("latte-dock", validTitle());
+    Latte::WindowSystem::WindowId newId = m_corona->wm()->winIdFor(QStringLiteral("latte-dock"), validTitle());
 
     if (m_trackedWindowId != newId) {
         if (!m_trackedWindowId.isNull()) {
@@ -215,7 +211,7 @@ bool InfoView::event(QEvent *e)
 
 void InfoView::setOnActivities(QStringList activities)
 {
-    KWindowSystem::setOnActivities(winId(), activities);
+    KX11Extras::setOnActivities(winId(), activities);
 }
 
 }

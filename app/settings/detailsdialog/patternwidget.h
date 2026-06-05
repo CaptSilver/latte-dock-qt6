@@ -31,18 +31,18 @@ public:
     QString textColor() const;
     void setTextColor(const QString &color);
 
-signals:
+Q_SIGNALS:
     void backgroundChanged();
     void textColorChanged();
     void mouseReleased();
 
 protected:
-    void enterEvent(QEvent *event) override;
+    void enterEvent(QEnterEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event ) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     void paintEvent(QPaintEvent *event) override;
 
-private slots:
+private Q_SLOTS:
     void updateUi();
 
 private:

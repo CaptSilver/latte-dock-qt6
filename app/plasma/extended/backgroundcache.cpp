@@ -18,7 +18,7 @@
 #include <QLatin1String>
 
 // Plasma
-#include <Plasma>
+#include <Plasma/Plasma>
 
 // KDE
 #include <KConfigGroup>
@@ -26,8 +26,8 @@
 
 #define MAXHASHSIZE 300
 
-#define PLASMACONFIG "plasma-org.kde.plasma.desktop-appletsrc"
-#define DEFAULTWALLPAPER "wallpapers/Next/contents/images/1920x1080.png"
+#define PLASMACONFIG QStringLiteral("plasma-org.kde.plasma.desktop-appletsrc")
+#define DEFAULTWALLPAPER QStringLiteral("wallpapers/Next/contents/images/1920x1080.png")
 
 namespace Latte{
 namespace PlasmaExtended {
@@ -84,7 +84,7 @@ void BackgroundCache::settingsFileChanged(const QString &file) {
 
 QString BackgroundCache::backgroundFromConfig(const KConfigGroup &config, QString wallpaperPlugin) const
 {
-    auto wallpaperConfig = config.group("Wallpaper").group(wallpaperPlugin).group("General");
+    auto wallpaperConfig = config.group(QStringLiteral("Wallpaper")).group(wallpaperPlugin).group(QStringLiteral("General"));
 
     if (wallpaperConfig.hasKey("Image")) {
         // Trying for the wallpaper
@@ -118,7 +118,7 @@ void BackgroundCache::reload()
 {
     // Traversing through all containments in search for
     // containments that define activities in plasma
-    KConfigGroup plasmaConfigContainments = m_plasmaConfig->group("Containments");
+    KConfigGroup plasmaConfigContainments = m_plasmaConfig->group(QStringLiteral("Containments"));
 
     //!activityId and screen names for which their background was updated
     QHash<QString, QList<QString>> updates;
@@ -137,7 +137,7 @@ void BackgroundCache::reload()
 
         QString background = returnedBackground;
 
-        if (background.startsWith("file://")) {
+        if (background.startsWith(QStringLiteral("file://"))) {
             background = returnedBackground.mid(7);
         }
 
@@ -171,7 +171,7 @@ void BackgroundCache::reload()
 
     for (const auto &activity : updates.keys()) {
         for (const auto &screen : updates[activity]) {
-            emit backgroundChanged(activity, screen);
+            Q_EMIT backgroundChanged(activity, screen);
         }
     }
 }
@@ -377,7 +377,7 @@ float BackgroundCache::brightnessForFile(QString imageFile, Plasma::Types::Locat
     }
 
     //! if it is a color
-    if (imageFile.startsWith("#")) {
+    if (imageFile.startsWith(QLatin1Char('#'))) {
         return Latte::colorBrightness(QColor(imageFile));
     }
 
@@ -399,7 +399,7 @@ bool BackgroundCache::busyForFile(QString imageFile, Plasma::Types::Location loc
     }
 
     //! if it is a color
-    if (imageFile.startsWith("#")) {
+    if (imageFile.startsWith(QLatin1Char('#'))) {
         return false;
     }
 
@@ -426,7 +426,7 @@ void BackgroundCache::setBackgroundFromBroadcast(QString activity, QString scree
     if (QFileInfo(filename).exists()) {
         setBroadcastedBackgroundsEnabled(activity, screen, true);
         m_backgrounds[activity][screen] = filename;
-        emit backgroundChanged(activity, screen);
+        Q_EMIT backgroundChanged(activity, screen);
     }
 }
 

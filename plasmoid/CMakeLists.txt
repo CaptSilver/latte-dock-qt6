@@ -13,6 +13,7 @@ target_link_libraries(lattetasksplugin
                       Qt6::Core
                       Qt6::Qml
                       Plasma::Plasma
+                      KF6::Svg
                       Plasma::PlasmaQuick)
                       
 install(TARGETS lattetasksplugin DESTINATION ${KDE_INSTALL_QMLDIR}/org/kde/latte/private/tasks)

@@ -79,7 +79,7 @@ void AbstractLayout::setVersion(int ver)
 
     m_version = ver;
 
-    emit versionChanged();
+    Q_EMIT versionChanged();
 }
 
 
@@ -95,7 +95,7 @@ void AbstractLayout::setPreferredForShortcutsTouched(bool touched)
     }
 
     m_preferredForShortcutsTouched = touched;
-    emit preferredForShortcutsTouchedChanged();
+    Q_EMIT preferredForShortcutsTouchedChanged();
 }
 
 int AbstractLayout::popUpMargin() const
@@ -110,7 +110,7 @@ void AbstractLayout::setPopUpMargin(const int &margin)
     }
 
     m_popUpMargin = margin;
-    emit popUpMarginChanged();
+    Q_EMIT popUpMarginChanged();
 }
 
 QString AbstractLayout::background() const
@@ -134,7 +134,7 @@ void AbstractLayout::setSchemeFile(const QString &file)
     }
 
     m_schemeFile = file;
-    emit schemeFileChanged();
+    Q_EMIT schemeFileChanged();
 }
 
 QString AbstractLayout::textColor() const
@@ -158,7 +158,7 @@ void AbstractLayout::setBackgroundStyle(const BackgroundStyle &style)
     }
 
     m_backgroundStyle = style;
-    emit backgroundStyleChanged();
+    Q_EMIT backgroundStyleChanged();
 }
 
 
@@ -175,7 +175,7 @@ void AbstractLayout::setCustomBackground(const QString &background)
 
     m_customBackground = background;
 
-    emit customBackgroundChanged();
+    Q_EMIT customBackgroundChanged();
 }
 
 QString AbstractLayout::file() const
@@ -194,9 +194,9 @@ void AbstractLayout::setFile(QString file)
     m_layoutFile = file;
 
     KSharedConfigPtr filePtr = KSharedConfig::openConfig(m_layoutFile);
-    m_layoutGroup = KConfigGroup(filePtr, "LayoutSettings");
+    m_layoutGroup = KConfigGroup(filePtr, QStringLiteral("LayoutSettings"));
 
-    emit fileChanged();
+    Q_EMIT fileChanged();
 }
 
 QString AbstractLayout::name() const
@@ -214,7 +214,7 @@ void AbstractLayout::setName(QString name)
 
     m_layoutName = name;
 
-    emit nameChanged();
+    Q_EMIT nameChanged();
 }
 
 QString AbstractLayout::color() const
@@ -229,7 +229,7 @@ void AbstractLayout::setColor(QString color)
     }
 
     m_color = color;
-    emit colorChanged();
+    Q_EMIT colorChanged();
 }
 
 QString AbstractLayout::icon() const
@@ -244,7 +244,7 @@ void AbstractLayout::setIcon(const QString &icon)
     }
 
     m_icon = icon;
-    emit iconChanged();
+    Q_EMIT iconChanged();
 }
 
 QString AbstractLayout::lastUsedActivity() const
@@ -254,47 +254,47 @@ QString AbstractLayout::lastUsedActivity() const
 
 void AbstractLayout::clearLastUsedActivity()
 {
-    m_lastUsedActivity = "";
-    emit lastUsedActivityChanged();
+    m_lastUsedActivity = QString();
+    Q_EMIT lastUsedActivityChanged();
 }
 
 QString AbstractLayout::defaultCustomTextColor()
 {
-    return "#3C1C00";
+    return QStringLiteral("#3C1C00");
 }
 
 QString AbstractLayout::defaultCustomBackground()
 {
-    return "defaultcustom";
+    return QStringLiteral("defaultcustom");
 }
 
 QString AbstractLayout::defaultTextColor(const QString &color)
 {
     //! the user is in default layout theme
     if (color == QLatin1String("blue")) {
-        return "#D7E3FF";
+        return QStringLiteral("#D7E3FF");
     } else if (color == QLatin1String("brown")) {
-        return "#F1DECB";
+        return QStringLiteral("#F1DECB");
     } else if (color == QLatin1String("darkgrey")) {
-        return "#ECECEC";
+        return QStringLiteral("#ECECEC");
     } else if (color == QLatin1String("gold")) {
-        return "#7C3636";
+        return QStringLiteral("#7C3636");
     } else if (color == QLatin1String("green")) {
-        return "#4D7549";
+        return QStringLiteral("#4D7549");
     } else if (color == QLatin1String("lightskyblue")) {
-        return "#0C2A43";
+        return QStringLiteral("#0C2A43");
     } else if (color == QLatin1String("orange")) {
-        return "#6F3902";
+        return QStringLiteral("#6F3902");
     } else if (color == QLatin1String("pink")) {
-        return "#743C46";
+        return QStringLiteral("#743C46");
     } else if (color == QLatin1String("purple")) {
-        return "#ECD9FF";
+        return QStringLiteral("#ECD9FF");
     }  else if (color == QLatin1String("red")) {
-        return "#F3E4E4";
+        return QStringLiteral("#F3E4E4");
     }  else if (color == QLatin1String("wheat")) {
-        return "#6A4E25";
+        return QStringLiteral("#6A4E25");
     }  else {
-        return "#FCFCFC";
+        return QStringLiteral("#FCFCFC");
     }
 }
 
@@ -315,7 +315,7 @@ void AbstractLayout::setCustomTextColor(const QString &customColor)
     }
 
     m_customTextColor = customColor;
-    emit customTextColorChanged();
+    Q_EMIT customTextColorChanged();
 }
 
 QStringList AbstractLayout::launchers() const
@@ -330,7 +330,7 @@ void AbstractLayout::setLaunchers(QStringList launcherList)
 
     m_launchers = launcherList;
 
-    emit launchersChanged();
+    Q_EMIT launchersChanged();
 }
 
 Type AbstractLayout::type() const
@@ -354,11 +354,11 @@ QList<Plasma::Types::Location> combinedFreeEdges(const QList<Plasma::Types::Loca
 
 QString AbstractLayout::layoutName(const QString &fileName)
 {
-    int lastSlash = fileName.lastIndexOf("/");
+    int lastSlash = fileName.lastIndexOf(QLatin1String("/"));
     QString tempLayoutFile = fileName;
     QString layoutName = tempLayoutFile.remove(0, lastSlash + 1);
 
-    int ext = layoutName.lastIndexOf(".layout.latte");
+    int ext = layoutName.lastIndexOf(QLatin1String(".layout.latte"));
     layoutName = layoutName.remove(ext, 13);
 
     return layoutName;
@@ -379,22 +379,22 @@ void AbstractLayout::loadConfig()
     m_preferredForShortcutsTouched = m_layoutGroup.readEntry("preferredForShortcutsTouched", false);
     m_popUpMargin = m_layoutGroup.readEntry("popUpMargin", -1);
 
-    m_color = m_layoutGroup.readEntry("color", QString("blue"));
+    m_color = m_layoutGroup.readEntry("color", QStringLiteral("blue"));
     m_backgroundStyle = static_cast<BackgroundStyle>(m_layoutGroup.readEntry("backgroundStyle", (int)ColorBackgroundStyle));
 
-    m_schemeFile = m_layoutGroup.readEntry("schemeFile", QString(Data::Layout::DEFAULTSCHEMEFILE));
+    m_schemeFile = m_layoutGroup.readEntry("schemeFile", QString::fromLatin1(Data::Layout::DEFAULTSCHEMEFILE));
 
-    if (m_schemeFile.startsWith("~")) {
+    if (m_schemeFile.startsWith(QLatin1String("~"))) {
         m_schemeFile.remove(0, 1);
         m_schemeFile = QDir::homePath() + m_schemeFile;
     }
 
-    m_schemeFile = m_schemeFile.isEmpty() || !QFileInfo(m_schemeFile).exists() ? Data::Layout::DEFAULTSCHEMEFILE : m_schemeFile;
+    m_schemeFile = m_schemeFile.isEmpty() || !QFileInfo(m_schemeFile).exists() ? QLatin1String(Data::Layout::DEFAULTSCHEMEFILE) : m_schemeFile;
 
     QString deprecatedTextColor = m_layoutGroup.readEntry("textColor", QString());
     QString deprecatedBackground = m_layoutGroup.readEntry("background", QString());
 
-    if (deprecatedBackground.startsWith("/")) {
+    if (deprecatedBackground.startsWith(QLatin1String("/"))) {
         m_customBackground = deprecatedBackground;
         m_customTextColor = deprecatedTextColor;
         setBackgroundStyle(PatternBackgroundStyle);
@@ -429,9 +429,9 @@ void AbstractLayout::saveConfig()
 
     if (scmfile.startsWith(QDir::homePath())) {
         scmfile.remove(0, QDir::homePath().size());
-        scmfile = "~" + scmfile;
+        scmfile = QStringLiteral("~") + scmfile;
     }
-    m_layoutGroup.writeEntry("schemeFile", scmfile == Data::Layout::DEFAULTSCHEMEFILE ? "" : scmfile);
+    m_layoutGroup.writeEntry("schemeFile", scmfile == QLatin1String(Data::Layout::DEFAULTSCHEMEFILE) ? QString() : scmfile);
 
     m_layoutGroup.sync();
 }

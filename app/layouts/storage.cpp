@@ -31,7 +31,7 @@
 #include <KPackage/PackageLoader>
 
 // Plasma
-#include <Plasma>
+#include <Plasma/Plasma>
 #include <Plasma/Applet>
 #include <Plasma/Containment>
 
@@ -46,18 +46,18 @@ Storage::Storage()
     qDebug() << " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> LAYOUTS::STORAGE, TEMP DIR ::: " << m_storageTmpDir.path();
 
     //! Known Errors / Warnings
-    s_knownErrors << Data::Generic(Data::Error::APPLETSWITHSAMEID, i18n("Different Applets With Same Id"));
-    s_knownErrors << Data::Generic(Data::Error::ORPHANEDPARENTAPPLETOFSUBCONTAINMENT, i18n("Orphaned Parent Applet Of Subcontainment"));
-    s_knownErrors<< Data::Generic(Data::Warning::APPLETANDCONTAINMENTWITHSAMEID, i18n("Different Applet And Containment With Same Id"));
-    s_knownErrors << Data::Generic(Data::Warning::ORPHANEDSUBCONTAINMENT, i18n("Orphaned Subcontainment"));
+    s_knownErrors << Data::Generic(QLatin1String(Data::Error::APPLETSWITHSAMEID), i18n("Different Applets With Same Id"));
+    s_knownErrors << Data::Generic(QLatin1String(Data::Error::ORPHANEDPARENTAPPLETOFSUBCONTAINMENT), i18n("Orphaned Parent Applet Of Subcontainment"));
+    s_knownErrors<< Data::Generic(QLatin1String(Data::Warning::APPLETANDCONTAINMENTWITHSAMEID), i18n("Different Applet And Containment With Same Id"));
+    s_knownErrors << Data::Generic(QLatin1String(Data::Warning::ORPHANEDSUBCONTAINMENT), i18n("Orphaned Subcontainment"));
 
 
     //! Known SubContainment Families
     SubContaimentIdentityData data;
     //! Systray Family
-    m_subIdentities << SubContaimentIdentityData{.cfgGroup="Configuration", .cfgProperty="SystrayContainmentId"};
+    m_subIdentities << SubContaimentIdentityData{.cfgGroup=QStringLiteral("Configuration"), .cfgProperty=QStringLiteral("SystrayContainmentId")};
     //! Group applet Family
-    m_subIdentities << SubContaimentIdentityData{.cfgGroup="Configuration", .cfgProperty="ContainmentId"};
+    m_subIdentities << SubContaimentIdentityData{.cfgGroup=QStringLiteral("Configuration"), .cfgProperty=QStringLiteral("ContainmentId")};
 }
 
 Storage::~Storage()
@@ -96,7 +96,7 @@ bool Storage::isLatteContainment(const Plasma::Containment *containment) const
 
 bool Storage::isLatteContainment(const KConfigGroup &group) const
 {
-    QString pluginId = group.readEntry("plugin", "");
+    QString pluginId = group.readEntry(QStringLiteral("plugin"), QString());
     return pluginId == QLatin1String("org.kde.latte.containment");
 }
 
@@ -227,12 +227,12 @@ void Storage::importToCorona(const Layout::GenericLayout *layout)
 
     removeAllClonedViews(layout->file());
 
-    QString temp1FilePath = m_storageTmpDir.path() +  "/" + layout->name() + ".multiple.views";
+    QString temp1FilePath = m_storageTmpDir.path() + QStringLiteral("/") + layout->name() + QStringLiteral(".multiple.views");
     //! we need to copy first the layout file because the kde cache
     //! may not have yet been updated (KSharedConfigPtr)
     //! this way we make sure at the latest changes stored in the layout file
     //! will be also available when changing to Multiple Layouts
-    QString tempLayoutFilePath = m_storageTmpDir.path() +  "/" + layout->name() + ".multiple.tmplayout";
+    QString tempLayoutFilePath = m_storageTmpDir.path() + QStringLiteral("/") + layout->name() + QStringLiteral(".multiple.tmplayout");
 
     //! WE NEED A WAY TO COPY A CONTAINMENT!!!!
     QFile tempLayoutFile(tempLayoutFilePath);
@@ -251,8 +251,8 @@ void Storage::importToCorona(const Layout::GenericLayout *layout)
 
     KSharedConfigPtr filePtr = KSharedConfig::openConfig(tempLayoutFilePath);
     KSharedConfigPtr newFile = KSharedConfig::openConfig(temp1FilePath);
-    KConfigGroup copyGroup = KConfigGroup(newFile, "Containments");
-    KConfigGroup current_containments = KConfigGroup(filePtr, "Containments");
+    KConfigGroup copyGroup = KConfigGroup(newFile, QStringLiteral("Containments"));
+    KConfigGroup current_containments = KConfigGroup(filePtr, QStringLiteral("Containments"));
 
     current_containments.copyTo(&copyGroup);
 
@@ -282,7 +282,7 @@ QString Storage::availableId(QStringList all, QStringList assigned, int base)
         i++;
     }
 
-    return QString("");
+    return QStringLiteral("");
 }
 
 bool Storage::appletGroupIsValid(const KConfigGroup &appletGroup)
@@ -290,8 +290,8 @@ bool Storage::appletGroupIsValid(const KConfigGroup &appletGroup)
     return !( appletGroup.keyList().count() == 0
               && appletGroup.groupList().count() == 1
               && appletGroup.groupList().at(0) == QLatin1String("Configuration")
-              && appletGroup.group("Configuration").keyList().count() == 1
-              && appletGroup.group("Configuration").hasKey("PreloadWeight") );
+              && appletGroup.group(QStringLiteral("Configuration")).keyList().count() == 1
+              && appletGroup.group(QStringLiteral("Configuration")).hasKey(QStringLiteral("PreloadWeight")) );
 }
 
 QStringList Storage::containmentsIds(const QString &filepath)
@@ -299,7 +299,7 @@ QStringList Storage::containmentsIds(const QString &filepath)
     QStringList ids;
 
     KSharedConfigPtr filePtr = KSharedConfig::openConfig(filepath);
-    KConfigGroup containments = KConfigGroup(filePtr, "Containments");
+    KConfigGroup containments = KConfigGroup(filePtr, QStringLiteral("Containments"));
 
     for(const auto &cId : containments.groupList()) {
         ids << cId;
@@ -313,10 +313,10 @@ QStringList Storage::appletsIds(const QString &filepath)
     QStringList ids;
 
     KSharedConfigPtr filePtr = KSharedConfig::openConfig(filepath);
-    KConfigGroup containments = KConfigGroup(filePtr, "Containments");
+    KConfigGroup containments = KConfigGroup(filePtr, QStringLiteral("Containments"));
 
     for(const auto &cId : containments.groupList()) {
-        for(const auto &aId : containments.group(cId).group("Applets").groupList()) {
+        for(const auto &aId : containments.group(cId).group(QStringLiteral("Applets")).groupList()) {
             ids << aId;
         }
     }
@@ -331,13 +331,13 @@ QString Storage::newUniqueIdsFile(QString originFile, const Layout::GenericLayou
     }
 
     QString currentdestinationname = destinationLayout->name();
-    QString currentdestinationfile = "";
+    QString currentdestinationfile;
 
     if (!destinationLayout->hasCorona()) {
         currentdestinationfile = destinationLayout->file();
     }
 
-    QString tempFile = m_storageTmpDir.path() + "/" + currentdestinationname + ".views.newids";
+    QString tempFile = m_storageTmpDir.path() + QStringLiteral("/") + currentdestinationname + QStringLiteral(".views.newids");
 
     QFile copyFile(tempFile);
 
@@ -373,12 +373,12 @@ QString Storage::newUniqueIdsFile(QString originFile, const Layout::GenericLayou
     QHash<QString, QString> assigned;
 
     KSharedConfigPtr filePtr = KSharedConfig::openConfig(originFile);
-    KConfigGroup investigate_conts = KConfigGroup(filePtr, "Containments");
+    KConfigGroup investigate_conts = KConfigGroup(filePtr, QStringLiteral("Containments"));
 
     //! Record the containment and applet ids
     for (const auto &cId : investigate_conts.groupList()) {
         toInvestigateContainmentIds << cId;
-        auto appletsEntries = investigate_conts.group(cId).group("Applets");
+        auto appletsEntries = investigate_conts.group(cId).group(QStringLiteral("Applets"));
         toInvestigateAppletIds << appletsEntries.groupList();
 
         //! investigate for subcontainments
@@ -461,37 +461,37 @@ QString Storage::newUniqueIdsFile(QString originFile, const Layout::GenericLayou
         //! Update options that contain applet ids
         //! (appletOrder) and (lockedZoomApplets) and (userBlocksColorizingApplets)
         QStringList options;
-        options << "appletOrder" << "lockedZoomApplets" << "userBlocksColorizingApplets";
+        options << QStringLiteral("appletOrder") << QStringLiteral("lockedZoomApplets") << QStringLiteral("userBlocksColorizingApplets");
 
         for (const auto &settingStr : options) {
-            QString order1 = investigate_conts.group(cId).group("General").readEntry(settingStr, QString());
+            QString order1 = investigate_conts.group(cId).group(QStringLiteral("General")).readEntry(settingStr, QString());
 
             if (!order1.isEmpty()) {
-                QStringList order1Ids = order1.split(";");
+                QStringList order1Ids = order1.split(QLatin1Char(';'));
                 QStringList fixedOrder1Ids;
 
                 for (int i = 0; i < order1Ids.count(); ++i) {
                     fixedOrder1Ids.append(assigned[order1Ids[i]]);
                 }
 
-                QString fixedOrder1 = fixedOrder1Ids.join(";");
-                investigate_conts.group(cId).group("General").writeEntry(settingStr, fixedOrder1);
+                QString fixedOrder1 = fixedOrder1Ids.join(QLatin1Char(';'));
+                investigate_conts.group(cId).group(QStringLiteral("General")).writeEntry(settingStr, fixedOrder1);
             }
         }
 
         if (destinationLayout->hasCorona() && destinationLayout->corona()->layoutsManager()->memoryUsage() == MemoryUsage::MultipleLayouts) {
             //! will be added in main corona multiple layouts file
-            investigate_conts.group(cId).writeEntry("layoutId", destinationLayout->name());
+            investigate_conts.group(cId).writeEntry(QStringLiteral("layoutId"), destinationLayout->name());
         } else {
             //! will be added in inactive layout
-            investigate_conts.group(cId).writeEntry("layoutId", QString());
+            investigate_conts.group(cId).writeEntry(QStringLiteral("layoutId"), QString());
         }
     }
 
     //! must update also the sub id in its applet
     for (const auto &subId : toInvestigateSubContIds) {
         KConfigGroup subParentContainment = investigate_conts.group(subParentContainmentIds[subId]);
-        KConfigGroup subAppletConfig = subParentContainment.group("Applets").group(subAppletIds[subId]);
+        KConfigGroup subAppletConfig = subParentContainment.group(QStringLiteral("Applets")).group(subAppletIds[subId]);
 
         int entityIndex = subIdentityIndex(subAppletConfig);
 
@@ -511,20 +511,20 @@ QString Storage::newUniqueIdsFile(QString originFile, const Layout::GenericLayou
 
     //! Copy To Temp 2 File And Update Correctly The Ids
     KSharedConfigPtr file2Ptr = KSharedConfig::openConfig(tempFile);
-    KConfigGroup fixedNewContainmets = KConfigGroup(file2Ptr, "Containments");
+    KConfigGroup fixedNewContainmets = KConfigGroup(file2Ptr, QStringLiteral("Containments"));
 
     for (const auto &contId : investigate_conts.groupList()) {
-        QString pluginId = investigate_conts.group(contId).readEntry("plugin", "");
+        QString pluginId = investigate_conts.group(contId).readEntry(QStringLiteral("plugin"), QString());
 
-        if (pluginId != "org.kde.desktopcontainment") { //!don't add ghost containments
+        if (pluginId != QLatin1String("org.kde.desktopcontainment")) { //!don't add ghost containments
             KConfigGroup newContainmentGroup = fixedNewContainmets.group(assigned[contId]);
             investigate_conts.group(contId).copyTo(&newContainmentGroup);
 
-            newContainmentGroup.group("Applets").deleteGroup();
+            newContainmentGroup.group(QStringLiteral("Applets")).deleteGroup();
 
-            for (const auto &appId : investigate_conts.group(contId).group("Applets").groupList()) {
-                KConfigGroup appletGroup = investigate_conts.group(contId).group("Applets").group(appId);
-                KConfigGroup newAppletGroup = fixedNewContainmets.group(assigned[contId]).group("Applets").group(assigned[appId]);
+            for (const auto &appId : investigate_conts.group(contId).group(QStringLiteral("Applets")).groupList()) {
+                KConfigGroup appletGroup = investigate_conts.group(contId).group(QStringLiteral("Applets")).group(appId);
+                KConfigGroup newAppletGroup = fixedNewContainmets.group(assigned[contId]).group(QStringLiteral("Applets")).group(assigned[appId]);
                 appletGroup.copyTo(&newAppletGroup);
             }
         }
@@ -543,21 +543,21 @@ void Storage::syncToLayoutFile(const Layout::GenericLayout *layout, bool removeL
 
     KSharedConfigPtr filePtr = KSharedConfig::openConfig(layout->file());
 
-    KConfigGroup oldContainments = KConfigGroup(filePtr, "Containments");
+    KConfigGroup oldContainments = KConfigGroup(filePtr, QStringLiteral("Containments"));
     oldContainments.deleteGroup();
 
     qDebug() << " LAYOUT :: " << layout->name() << " is syncing its original file.";
 
     for (const auto containment : *layout->containments()) {
         if (removeLayoutId) {
-            containment->config().writeEntry("layoutId", "");
+            containment->config().writeEntry(QStringLiteral("layoutId"), QString());
         }
 
         KConfigGroup newGroup = oldContainments.group(QString::number(containment->id()));
         containment->config().copyTo(&newGroup);
 
         if (!removeLayoutId) {
-            newGroup.writeEntry("layoutId", "");
+            newGroup.writeEntry(QStringLiteral("layoutId"), QString());
         }
 
         newGroup.sync();
@@ -573,7 +573,7 @@ void Storage::moveToLayoutFile(const QString &layoutName)
         return;
     }
 
-    QString linkedFilePath = Importer::layoutUserFilePath(Layout::MULTIPLELAYOUTSHIDDENNAME);
+    QString linkedFilePath = Importer::layoutUserFilePath(QLatin1String(Layout::MULTIPLELAYOUTSHIDDENNAME));
     QString layoutFilePath = Importer::layoutUserFilePath(layoutName);
 
     if (linkedFilePath.isEmpty() || layoutFilePath.isEmpty() || !QFileInfo(linkedFilePath).exists() || !QFileInfo(layoutFilePath).exists()) {
@@ -581,20 +581,20 @@ void Storage::moveToLayoutFile(const QString &layoutName)
     }
 
     KSharedConfigPtr layoutFilePtr = KSharedConfig::openConfig(layoutFilePath);
-    KConfigGroup singleContainments = KConfigGroup(layoutFilePtr, "Containments");
+    KConfigGroup singleContainments = KConfigGroup(layoutFilePtr, QStringLiteral("Containments"));
     singleContainments.deleteGroup();
 
     KSharedConfigPtr multiFilePtr = KSharedConfig::openConfig(linkedFilePath);
-    KConfigGroup multiContainments = KConfigGroup(multiFilePtr, "Containments");
+    KConfigGroup multiContainments = KConfigGroup(multiFilePtr, QStringLiteral("Containments"));
 
     for(const auto &cId : multiContainments.groupList()) {
-        QString cname = multiContainments.group(cId).readEntry("layoutId", QString());
+        QString cname = multiContainments.group(cId).readEntry(QStringLiteral("layoutId"), QString());
 
         if (!cname.isEmpty() && cname == layoutName) {
-            multiContainments.group(cId).writeEntry("layoutId", "");
+            multiContainments.group(cId).writeEntry(QStringLiteral("layoutId"), QString());
             KConfigGroup singleGroup = singleContainments.group(cId);
             multiContainments.group(cId).copyTo(&singleGroup);
-            singleGroup.writeEntry("layoutId", "");
+            singleGroup.writeEntry(QStringLiteral("layoutId"), QString());
             singleGroup.sync();
 
             multiContainments.group(cId).deleteGroup();
@@ -608,7 +608,7 @@ void Storage::moveToLayoutFile(const QString &layoutName)
 QList<Plasma::Containment *> Storage::importLayoutFile(const Layout::GenericLayout *layout, QString file)
 {
     KSharedConfigPtr filePtr = KSharedConfig::openConfig(file);
-    auto newContainments = layout->corona()->importLayout(KConfigGroup(filePtr, ""));
+    auto newContainments = layout->corona()->importLayout(KConfigGroup(filePtr, QStringLiteral("")));
 
     QList<Plasma::Containment *> importedViews;
 
@@ -630,8 +630,8 @@ void Storage::importContainments(const QString &originFile, const QString &desti
     KSharedConfigPtr originPtr = KSharedConfig::openConfig(originFile);
     KSharedConfigPtr destinationPtr = KSharedConfig::openConfig(destinationFile);
 
-    KConfigGroup originContainments = KConfigGroup(originPtr, "Containments");
-    KConfigGroup destinationContainments = KConfigGroup(destinationPtr, "Containments");
+    KConfigGroup originContainments = KConfigGroup(originPtr, QStringLiteral("Containments"));
+    KConfigGroup destinationContainments = KConfigGroup(destinationPtr, QStringLiteral("Containments"));
 
     for (const auto originContId : originContainments.groupList()) {
         KConfigGroup destinationContainment(&destinationContainments, originContId);
@@ -656,7 +656,7 @@ Data::View Storage::newView(const Layout::GenericLayout *destinationLayout, cons
 
     QString templateFile = nextViewData.originFile();
     //! copy view template path in temp file
-    QString templateTmpAbsolutePath = m_storageTmpDir.path() + "/" + QFileInfo(templateFile).fileName() + ".newids";
+    QString templateTmpAbsolutePath = m_storageTmpDir.path() + QStringLiteral("/") + QFileInfo(templateFile).fileName() + QStringLiteral(".newids");
 
     if (QFile(templateTmpAbsolutePath).exists()) {
         QFile(templateTmpAbsolutePath).remove();
@@ -671,7 +671,7 @@ Data::View Storage::newView(const Layout::GenericLayout *destinationLayout, cons
     if (nextViewData.state() != Data::View::IsInvalid) {
 
         KSharedConfigPtr lFile = KSharedConfig::openConfig(temp2File);
-        KConfigGroup containments = KConfigGroup(lFile, "Containments");
+        KConfigGroup containments = KConfigGroup(lFile, QStringLiteral("Containments"));
 
         for (const auto cId : containments.groupList()) {
             if (Layouts::Storage::self()->isLatteContainment(containments.group(cId))) {
@@ -696,7 +696,7 @@ Data::View Storage::newView(const Layout::GenericLayout *destinationLayout, cons
 
         Plasma::Containment *newContainment = (importedViews.size() == 1 ? importedViews[0] : nullptr);
 
-        if (!newContainment || !newContainment->kPackage().isValid()) {
+        if (!newContainment || !newContainment->pluginMetaData().isValid()) {
             qWarning() << "the requested containment plugin can not be located or loaded from:" << templateFile;
             return Data::View();
         }
@@ -710,9 +710,9 @@ Data::View Storage::newView(const Layout::GenericLayout *destinationLayout, cons
 
 void Storage::clearExportedLayoutSettings(KConfigGroup &layoutSettingsGroup)
 {
-    layoutSettingsGroup.writeEntry("preferredForShortcutsTouched", false);
-    layoutSettingsGroup.writeEntry("lastUsedActivity", QString());
-    layoutSettingsGroup.writeEntry("activities", QStringList());
+    layoutSettingsGroup.writeEntry(QStringLiteral("preferredForShortcutsTouched"), false);
+    layoutSettingsGroup.writeEntry(QStringLiteral("lastUsedActivity"), QString());
+    layoutSettingsGroup.writeEntry(QStringLiteral("activities"), QStringList());
     layoutSettingsGroup.sync();
 }
 
@@ -731,22 +731,22 @@ bool Storage::exportTemplate(const QString &originFile, const QString &destinati
     KSharedConfigPtr destFilePtr = KSharedConfig::openConfig(destinationFile);
     destFilePtr->reparseConfiguration();
 
-    KConfigGroup containments = KConfigGroup(destFilePtr, "Containments");
+    KConfigGroup containments = KConfigGroup(destFilePtr, QStringLiteral("Containments"));
 
     QStringList rejectedSubContainments;
 
     //! clear applets that are not approved
     for (const auto &cId : containments.groupList()) {
         //! clear properties
-        containments.group(cId).writeEntry("layoutId", QString());
+        containments.group(cId).writeEntry(QStringLiteral("layoutId"), QString());
         if (isLatteContainment(containments.group(cId))) {
-            containments.group(cId).writeEntry("isPreferredForShortcuts", false);
+            containments.group(cId).writeEntry(QStringLiteral("isPreferredForShortcuts"), false);
         }
 
         //! clear applets
-        auto applets = containments.group(cId).group("Applets");
+        auto applets = containments.group(cId).group(QStringLiteral("Applets"));
         for (const auto &aId: applets.groupList()) {
-            QString pluginId = applets.group(aId).readEntry("plugin", "");
+            QString pluginId = applets.group(aId).readEntry(QStringLiteral("plugin"), QString());
 
             if (!approvedApplets.containsId(pluginId)) {
                 if (!isSubContainment(applets.group(aId))) {
@@ -765,11 +765,11 @@ bool Storage::exportTemplate(const QString &originFile, const QString &destinati
     //! clear rejected SubContainments
     for (const auto &cId : containments.groupList()) {
         if (rejectedSubContainments.contains(cId)) {
-            containments.group(cId).group("General").deleteGroup();
+            containments.group(cId).group(QStringLiteral("General")).deleteGroup();
         }
     };
 
-    KConfigGroup layoutSettingsGrp(destFilePtr, "LayoutSettings");
+    KConfigGroup layoutSettingsGrp(destFilePtr, QStringLiteral("LayoutSettings"));
     clearExportedLayoutSettings(layoutSettingsGrp);
     destFilePtr->reparseConfiguration();
     removeAllClonedViews(destinationFile);
@@ -790,7 +790,7 @@ bool Storage::exportTemplate(const Layout::GenericLayout *layout, Plasma::Contai
     KSharedConfigPtr destFilePtr = KSharedConfig::openConfig(destinationFile);
     destFilePtr->reparseConfiguration();
 
-    KConfigGroup copied_conts = KConfigGroup(destFilePtr, "Containments");
+    KConfigGroup copied_conts = KConfigGroup(destFilePtr, QStringLiteral("Containments"));
     KConfigGroup copied_c1 = KConfigGroup(&copied_conts, QString::number(containment->id()));
 
     containment->config().copyTo(&copied_c1);
@@ -799,7 +799,7 @@ bool Storage::exportTemplate(const Layout::GenericLayout *layout, Plasma::Contai
 
     //! subId, subAppletId
     QHash<uint, QString> subInfo;
-    auto applets = containment->config().group("Applets");
+    auto applets = containment->config().group(QStringLiteral("Applets"));
 
     for (const auto &applet : applets.groupList()) {
         int tSubId = subContainmentId(applets.group(applet));
@@ -835,15 +835,15 @@ bool Storage::exportTemplate(const Layout::GenericLayout *layout, Plasma::Contai
     //! clear applets that are not approved
     for (const auto &cId : copied_conts.groupList()) {
         //! clear properties
-        copied_conts.group(cId).writeEntry("layoutId", QString());
+        copied_conts.group(cId).writeEntry(QStringLiteral("layoutId"), QString());
         if (isLatteContainment(copied_conts.group(cId))) {
-            copied_conts.group(cId).writeEntry("isPreferredForShortcuts", false);
+            copied_conts.group(cId).writeEntry(QStringLiteral("isPreferredForShortcuts"), false);
         }
 
         //! clear applets
-        auto applets = copied_conts.group(cId).group("Applets");
+        auto applets = copied_conts.group(cId).group(QStringLiteral("Applets"));
         for (const auto &aId: applets.groupList()) {
-            QString pluginId = applets.group(aId).readEntry("plugin", "");
+            QString pluginId = applets.group(aId).readEntry(QStringLiteral("plugin"), QString());
 
             if (!approvedApplets.containsId(pluginId)) {
                 if (!isSubContainment(applets.group(aId))) {
@@ -862,11 +862,11 @@ bool Storage::exportTemplate(const Layout::GenericLayout *layout, Plasma::Contai
     //! clear rejected SubContainments
     for (const auto &cId : copied_conts.groupList()) {
         if (rejectedSubContainments.contains(cId)) {
-            copied_conts.group(cId).group("General").deleteGroup();
+            copied_conts.group(cId).group(QStringLiteral("General")).deleteGroup();
         }
     };
 
-    KConfigGroup layoutSettingsGrp(destFilePtr, "LayoutSettings");
+    KConfigGroup layoutSettingsGrp(destFilePtr, QStringLiteral("LayoutSettings"));
     clearExportedLayoutSettings(layoutSettingsGrp);
     destFilePtr->reparseConfiguration();
     removeAllClonedViews(destinationFile);
@@ -880,8 +880,8 @@ bool Storage::hasDifferentAppletsWithSameId(const Layout::GenericLayout *layout,
         return false;
     }
 
-    error.id = s_knownErrors[Data::Error::APPLETSWITHSAMEID].id;
-    error.name = s_knownErrors[Data::Error::APPLETSWITHSAMEID].name;
+    error.id = s_knownErrors[QLatin1String(Data::Error::APPLETSWITHSAMEID)].id;
+    error.name = s_knownErrors[QLatin1String(Data::Error::APPLETSWITHSAMEID)].name;
 
     if (layout->isActive()) { // active layout
         QStringList registeredapplets;
@@ -925,14 +925,14 @@ bool Storage::hasDifferentAppletsWithSameId(const Layout::GenericLayout *layout,
         }
     } else { // inactive layout
         KSharedConfigPtr lfile = KSharedConfig::openConfig(layout->file());
-        KConfigGroup containmentsEntries = KConfigGroup(lfile, "Containments");
+        KConfigGroup containmentsEntries = KConfigGroup(lfile, QStringLiteral("Containments"));
 
         QStringList registeredapplets;
         QStringList conflictedapplets;
 
         //! split ids to normal registered and conflicted
         for (const auto &cid : containmentsEntries.groupList()) {
-            for (const auto &aid : containmentsEntries.group(cid).group("Applets").groupList()) {
+            for (const auto &aid : containmentsEntries.group(cid).group(QStringLiteral("Applets")).groupList()) {
                 if (!registeredapplets.contains(aid)) {
                     registeredapplets << aid;
                 } else if (!conflictedapplets.contains(aid)) {
@@ -943,16 +943,16 @@ bool Storage::hasDifferentAppletsWithSameId(const Layout::GenericLayout *layout,
 
         //! create error data
         for (const auto &cid : containmentsEntries.groupList()) {
-            for (const auto &aid : containmentsEntries.group(cid).group("Applets").groupList()) {
+            for (const auto &aid : containmentsEntries.group(cid).group(QStringLiteral("Applets")).groupList()) {
                 if (!conflictedapplets.contains(aid)) {
                    continue;
                 }
 
                 Data::ErrorInformation errorinfo;
                 errorinfo.id = QString::number(error.information.rowCount());
-                errorinfo.containment = metadata(containmentsEntries.group(cid).readEntry("plugin", ""));
+                errorinfo.containment = metadata(containmentsEntries.group(cid).readEntry(QStringLiteral("plugin"), QString()));
                 errorinfo.containment.storageId = cid;
-                errorinfo.applet = metadata(containmentsEntries.group(cid).group("Applets").group(aid).readEntry("plugin", ""));
+                errorinfo.applet = metadata(containmentsEntries.group(cid).group(QStringLiteral("Applets")).group(aid).readEntry(QStringLiteral("plugin"), QString()));
                 errorinfo.applet.storageId = aid;
 
                 error.information << errorinfo;
@@ -969,8 +969,8 @@ bool Storage::hasAppletsAndContainmentsWithSameId(const Layout::GenericLayout *l
         return false;
     }
 
-    warning.id = s_knownErrors[Data::Error::APPLETANDCONTAINMENTWITHSAMEID].id;
-    warning.name = s_knownErrors[Data::Error::APPLETANDCONTAINMENTWITHSAMEID].name;
+    warning.id = s_knownErrors[QLatin1String(Data::Error::APPLETANDCONTAINMENTWITHSAMEID)].id;
+    warning.name = s_knownErrors[QLatin1String(Data::Error::APPLETANDCONTAINMENTWITHSAMEID)].name;
 
     if (layout->isActive()) { // active layout
         QStringList registeredcontainments;
@@ -1034,7 +1034,7 @@ bool Storage::hasAppletsAndContainmentsWithSameId(const Layout::GenericLayout *l
         }
     } else { // inactive layout
         KSharedConfigPtr lfile = KSharedConfig::openConfig(layout->file());
-        KConfigGroup containmentsEntries = KConfigGroup(lfile, "Containments");
+        KConfigGroup containmentsEntries = KConfigGroup(lfile, QStringLiteral("Containments"));
 
         QStringList registeredcontainments;
         QStringList conflicted;
@@ -1050,7 +1050,7 @@ bool Storage::hasAppletsAndContainmentsWithSameId(const Layout::GenericLayout *l
 
         //! discover conflicted ids between containments and applets
         for (const auto &cid : containmentsEntries.groupList()) {
-            for (const auto &aid : containmentsEntries.group(cid).group("Applets").groupList()) {
+            for (const auto &aid : containmentsEntries.group(cid).group(QStringLiteral("Applets")).groupList()) {
                 if (!registeredcontainments.contains(aid)) {
                     continue;
                 } else if (!conflicted.contains(aid)) {
@@ -1064,22 +1064,22 @@ bool Storage::hasAppletsAndContainmentsWithSameId(const Layout::GenericLayout *l
             if (conflicted.contains(cid)) {
                 Data::WarningInformation warninginfo;
                 warninginfo.id = QString::number(warning.information.rowCount());
-                warninginfo.containment = metadata(containmentsEntries.group(cid).readEntry("plugin", ""));
+                warninginfo.containment = metadata(containmentsEntries.group(cid).readEntry(QStringLiteral("plugin"), QString()));
                 warninginfo.containment.storageId = cid;
 
                 warning.information << warninginfo;
             }
 
-            for (const auto &aid : containmentsEntries.group(cid).group("Applets").groupList()) {
+            for (const auto &aid : containmentsEntries.group(cid).group(QStringLiteral("Applets")).groupList()) {
                 if (!conflicted.contains(aid)) {
                    continue;
                 }
 
                 Data::WarningInformation warninginfo;
                 warninginfo.id = QString::number(warning.information.rowCount());
-                warninginfo.containment = metadata(containmentsEntries.group(cid).readEntry("plugin", ""));
+                warninginfo.containment = metadata(containmentsEntries.group(cid).readEntry(QStringLiteral("plugin"), QString()));
                 warninginfo.containment.storageId = cid;
-                warninginfo.applet = metadata(containmentsEntries.group(cid).group("Applets").group(aid).readEntry("plugin", ""));
+                warninginfo.applet = metadata(containmentsEntries.group(cid).group(QStringLiteral("Applets")).group(aid).readEntry(QStringLiteral("plugin"), QString()));
                 warninginfo.applet.storageId = aid;
 
                 warning.information << warninginfo;
@@ -1096,8 +1096,8 @@ bool Storage::hasOrphanedParentAppletOfSubContainment(const Layout::GenericLayou
         return false;
     }
 
-    error.id = s_knownErrors[Data::Error::ORPHANEDPARENTAPPLETOFSUBCONTAINMENT].id;
-    error.name = s_knownErrors[Data::Error::ORPHANEDPARENTAPPLETOFSUBCONTAINMENT].name;
+    error.id = s_knownErrors[QLatin1String(Data::Error::ORPHANEDPARENTAPPLETOFSUBCONTAINMENT)].id;
+    error.name = s_knownErrors[QLatin1String(Data::Error::ORPHANEDPARENTAPPLETOFSUBCONTAINMENT)].name;
 
     Data::ViewsTable views = Layouts::Storage::self()->views(layout);
 
@@ -1122,19 +1122,19 @@ bool Storage::hasOrphanedParentAppletOfSubContainment(const Layout::GenericLayou
                 errorinfo.containment.storageId = cid;
                 errorinfo.applet = metadata(applet->pluginMetaData().pluginId());
                 errorinfo.applet.storageId = aid;
-                errorinfo.applet.subcontainmentId = subid;
+                errorinfo.applet.subcontainmentId = QString::number(subid);
 
                 error.information << errorinfo;
             }
         }
     } else {
         KSharedConfigPtr lfile = KSharedConfig::openConfig(layout->file());
-        KConfigGroup containmentsEntries = KConfigGroup(lfile, "Containments");
+        KConfigGroup containmentsEntries = KConfigGroup(lfile, QStringLiteral("Containments"));
 
         //! create error data
         for (const auto &cid : containmentsEntries.groupList()) {
-            for (const auto &aid : containmentsEntries.group(cid).group("Applets").groupList()) {
-                int subid = subContainmentId(containmentsEntries.group(cid).group("Applets").group(aid));
+            for (const auto &aid : containmentsEntries.group(cid).group(QStringLiteral("Applets")).groupList()) {
+                int subid = subContainmentId(containmentsEntries.group(cid).group(QStringLiteral("Applets")).group(aid));
 
                 if (subid == IDNULL || hasContainment(layout, subid)) {
                     continue;
@@ -1142,11 +1142,11 @@ bool Storage::hasOrphanedParentAppletOfSubContainment(const Layout::GenericLayou
 
                 Data::ErrorInformation errorinfo;
                 errorinfo.id = QString::number(error.information.rowCount());
-                errorinfo.containment = metadata(containmentsEntries.group(cid).readEntry("plugin", ""));
+                errorinfo.containment = metadata(containmentsEntries.group(cid).readEntry(QStringLiteral("plugin"), QString()));
                 errorinfo.containment.storageId = cid;
-                errorinfo.applet = metadata(containmentsEntries.group(cid).group("Applets").group(aid).readEntry("plugin", ""));
+                errorinfo.applet = metadata(containmentsEntries.group(cid).group(QStringLiteral("Applets")).group(aid).readEntry(QStringLiteral("plugin"), QString()));
                 errorinfo.applet.storageId = aid;
-                errorinfo.applet.subcontainmentId = subid;
+                errorinfo.applet.subcontainmentId = QString::number(subid);
 
                 error.information << errorinfo;
             }
@@ -1167,8 +1167,8 @@ bool Storage::hasOrphanedSubContainments(const Layout::GenericLayout *layout, Da
         return false;
     }
 
-    warning.id = s_knownErrors[Data::Error::ORPHANEDSUBCONTAINMENT].id;
-    warning.name = s_knownErrors[Data::Error::ORPHANEDSUBCONTAINMENT].name;
+    warning.id = s_knownErrors[QLatin1String(Data::Error::ORPHANEDSUBCONTAINMENT)].id;
+    warning.name = s_knownErrors[QLatin1String(Data::Error::ORPHANEDSUBCONTAINMENT)].name;
 
     Data::ViewsTable views = Layouts::Storage::self()->views(layout);
 
@@ -1193,7 +1193,7 @@ bool Storage::hasOrphanedSubContainments(const Layout::GenericLayout *layout, Da
         }
     } else { // inactive layout
         KSharedConfigPtr lfile = KSharedConfig::openConfig(layout->file());
-        KConfigGroup containmentsEntries = KConfigGroup(lfile, "Containments");
+        KConfigGroup containmentsEntries = KConfigGroup(lfile, QStringLiteral("Containments"));
 
         //! create warning data
         for (const auto &cid : containmentsEntries.groupList()) {
@@ -1203,7 +1203,7 @@ bool Storage::hasOrphanedSubContainments(const Layout::GenericLayout *layout, Da
 
             Data::WarningInformation warninginfo;
             warninginfo.id = QString::number(warning.information.rowCount());
-            warninginfo.containment = metadata(containmentsEntries.group(cid).readEntry("plugin", ""));
+            warninginfo.containment = metadata(containmentsEntries.group(cid).readEntry(QStringLiteral("plugin"), QString()));
             warninginfo.containment.storageId = cid;
             warning.information << warninginfo;
         }
@@ -1275,8 +1275,8 @@ Data::Applet Storage::metadata(const QString &pluginId)
         data.description = pkg.metadata().description();
 
         QString iconName = pkg.metadata().iconName();
-        if (!iconName.startsWith("/") && iconName.contains("/")) {
-            data.icon = QFileInfo(pkg.metadata().fileName()).absolutePath() + "/" + iconName;
+        if (!iconName.startsWith(QLatin1Char('/')) && iconName.contains(QLatin1Char('/'))) {
+            data.icon = QFileInfo(pkg.metadata().fileName()).absolutePath() + QStringLiteral("/") + iconName;
         } else {
             data.icon = iconName;
         }
@@ -1356,7 +1356,7 @@ Data::AppletsTable Storage::plugins(const QString &layoutfile, const int contain
     }
 
     KSharedConfigPtr lFile = KSharedConfig::openConfig(layoutfile);
-    KConfigGroup containmentGroups = KConfigGroup(lFile, "Containments");
+    KConfigGroup containmentGroups = KConfigGroup(lFile, QStringLiteral("Containments"));
 
     //! empty means all containments are valid
     QList<int> validcontainmentids;
@@ -1371,7 +1371,7 @@ Data::AppletsTable Storage::plugins(const QString &layoutfile, const int contain
                 continue;
             }
 
-            auto appletGroups = containmentGroups.group(cId).group("Applets");
+            auto appletGroups = containmentGroups.group(cId).group(QStringLiteral("Applets"));
 
             for (const auto &appletId : appletGroups.groupList()) {
                 KConfigGroup appletCfg = appletGroups.group(appletId);
@@ -1389,11 +1389,11 @@ Data::AppletsTable Storage::plugins(const QString &layoutfile, const int contain
             continue;
         }
 
-        auto appletGroups = containmentGroups.group(cId).group("Applets");
+        auto appletGroups = containmentGroups.group(cId).group(QStringLiteral("Applets"));
 
         for (const auto &appletId : appletGroups.groupList()) {
             KConfigGroup appletCfg = appletGroups.group(appletId);
-            QString pluginId = appletCfg.readEntry("plugin", "");
+            QString pluginId = appletCfg.readEntry(QStringLiteral("plugin"), QString());
 
             if (!knownapplets.containsId(pluginId) && !unknownapplets.containsId(pluginId)) {
                 Data::Applet appletdata = metadata(pluginId);
@@ -1421,7 +1421,7 @@ void Storage::syncContainmentConfig(Plasma::Containment *containment)
     }
 
     for(auto applet: containment->applets()) {
-        KConfigGroup appletGeneralConfig = applet->config().group("General");
+        KConfigGroup appletGeneralConfig = applet->config().group(QStringLiteral("General"));
 
         if (appletGeneralConfig.exists()) {
             appletGeneralConfig.sync();
@@ -1436,7 +1436,7 @@ void Storage::syncContainmentConfig(Plasma::Containment *containment)
 bool Storage::containsView(const QString &filepath, const int &viewId)
 {
     KSharedConfigPtr lFile = KSharedConfig::openConfig(filepath);
-    KConfigGroup containmentGroups = KConfigGroup(lFile, "Containments");
+    KConfigGroup containmentGroups = KConfigGroup(lFile, QStringLiteral("Containments"));
     KConfigGroup viewGroup = containmentGroups.group(QString::number(viewId));
     return viewGroup.exists() && isLatteContainment(viewGroup);
 }
@@ -1455,7 +1455,7 @@ bool Storage::hasContainment(const Layout::GenericLayout *layout, const int &id)
         }
     } else { // inactive layout
         KSharedConfigPtr lfile = KSharedConfig::openConfig(layout->file());
-        KConfigGroup containmentsEntries = KConfigGroup(lfile, "Containments");
+        KConfigGroup containmentsEntries = KConfigGroup(lfile, QStringLiteral("Containments"));
 
         //! create warning data
         for (const auto &cid : containmentsEntries.groupList()) {
@@ -1483,14 +1483,14 @@ bool Storage::isClonedView(const KConfigGroup &containmentGroup) const
         return false;
     }
 
-    int isClonedFrom = containmentGroup.readEntry("isClonedFrom", Data::View::ISCLONEDNULL);
+    int isClonedFrom = containmentGroup.readEntry(QStringLiteral("isClonedFrom"), Data::View::ISCLONEDNULL);
     return (isClonedFrom != IDNULL);
 }
 
 void Storage::removeAllClonedViews(const QString &filepath)
 {
     KSharedConfigPtr lFile = KSharedConfig::openConfig(filepath);
-    KConfigGroup containmentGroups = KConfigGroup(lFile, "Containments");
+    KConfigGroup containmentGroups = KConfigGroup(lFile, QStringLiteral("Containments"));
 
     QList<Data::View> clones;
 
@@ -1548,7 +1548,7 @@ Data::GenericTable<Data::Generic> Storage::subcontainments(const KConfigGroup &c
         return subs;
     }
 
-    auto applets = containmentGroup.group("Applets");
+    auto applets = containmentGroup.group(QStringLiteral("Applets"));
 
     for (const auto &applet : applets.groupList()) {
         if (isSubContainment(applets.group(applet))) {
@@ -1590,20 +1590,20 @@ Data::View Storage::view(const KConfigGroup &containmentGroup)
     }
 
     vdata.id = containmentGroup.name();
-    vdata.name = containmentGroup.readEntry("name", QString());
+    vdata.name = containmentGroup.readEntry(QStringLiteral("name"), QString());
     vdata.isActive = false;
-    vdata.screensGroup = static_cast<Latte::Types::ScreensGroup>(containmentGroup.readEntry("screensGroup", (int)Latte::Types::SingleScreenGroup));
-    vdata.onPrimary = containmentGroup.readEntry("onPrimary", true);
-    vdata.screen = containmentGroup.readEntry("lastScreen", IDNULL);
-    vdata.isClonedFrom = containmentGroup.readEntry("isClonedFrom", Data::View::ISCLONEDNULL);
-    vdata.screenEdgeMargin = containmentGroup.group("General").readEntry("screenEdgeMargin", (int)-1);
+    vdata.screensGroup = static_cast<Latte::Types::ScreensGroup>(containmentGroup.readEntry(QStringLiteral("screensGroup"), (int)Latte::Types::SingleScreenGroup));
+    vdata.onPrimary = containmentGroup.readEntry(QStringLiteral("onPrimary"), true);
+    vdata.screen = containmentGroup.readEntry(QStringLiteral("lastScreen"), IDNULL);
+    vdata.isClonedFrom = containmentGroup.readEntry(QStringLiteral("isClonedFrom"), Data::View::ISCLONEDNULL);
+    vdata.screenEdgeMargin = containmentGroup.group(QStringLiteral("General")).readEntry(QStringLiteral("screenEdgeMargin"), (int)-1);
 
-    int location = containmentGroup.readEntry("location", (int)Plasma::Types::BottomEdge);
+    int location = containmentGroup.readEntry(QStringLiteral("location"), (int)Plasma::Types::BottomEdge);
     vdata.edge = (Plasma::Types::Location)location;
 
-    vdata.maxLength = containmentGroup.group("General").readEntry("maxLength", (float)100.0);
+    vdata.maxLength = containmentGroup.group(QStringLiteral("General")).readEntry(QStringLiteral("maxLength"), (float)100.0);
 
-    int alignment = containmentGroup.group("General").readEntry("alignment", (int)Latte::Types::Center) ;
+    int alignment = containmentGroup.group(QStringLiteral("General")).readEntry(QStringLiteral("alignment"), (int)Latte::Types::Center) ;
     vdata.alignment = (Latte::Types::Alignment)alignment;
 
     vdata.subcontainments = subcontainments(containmentGroup);
@@ -1618,15 +1618,15 @@ void Storage::updateView(KConfigGroup viewGroup, const Data::View &viewData)
         return;
     }
 
-    viewGroup.writeEntry("name", viewData.name);
-    viewGroup.writeEntry("screensGroup", (int)viewData.screensGroup);
-    viewGroup.writeEntry("onPrimary", viewData.onPrimary);
-    viewGroup.writeEntry("isClonedFrom", viewData.isClonedFrom);
-    viewGroup.writeEntry("lastScreen", viewData.screen);
-    viewGroup.group("General").writeEntry("screenEdgeMargin", viewData.screenEdgeMargin);
-    viewGroup.writeEntry("location", (int)viewData.edge);
-    viewGroup.writeEntry("maxLength", viewData.maxLength);
-    viewGroup.group("General").writeEntry("alignment", (int)viewData.alignment);
+    viewGroup.writeEntry(QStringLiteral("name"), viewData.name);
+    viewGroup.writeEntry(QStringLiteral("screensGroup"), (int)viewData.screensGroup);
+    viewGroup.writeEntry(QStringLiteral("onPrimary"), viewData.onPrimary);
+    viewGroup.writeEntry(QStringLiteral("isClonedFrom"), viewData.isClonedFrom);
+    viewGroup.writeEntry(QStringLiteral("lastScreen"), viewData.screen);
+    viewGroup.group(QStringLiteral("General")).writeEntry(QStringLiteral("screenEdgeMargin"), viewData.screenEdgeMargin);
+    viewGroup.writeEntry(QStringLiteral("location"), (int)viewData.edge);
+    viewGroup.writeEntry(QStringLiteral("maxLength"), viewData.maxLength);
+    viewGroup.group(QStringLiteral("General")).writeEntry(QStringLiteral("alignment"), (int)viewData.alignment);
     viewGroup.sync();
 }
 
@@ -1654,7 +1654,7 @@ void Storage::updateView(const Layout::GenericLayout *layout, const Data::View &
     } else {
         //! inactive view and in layout storage
         KSharedConfigPtr lFile = KSharedConfig::openConfig(layout->file());
-        KConfigGroup containmentGroups = KConfigGroup(lFile, "Containments");
+        KConfigGroup containmentGroups = KConfigGroup(lFile, QStringLiteral("Containments"));
         KConfigGroup viewContainment = containmentGroups.group(viewData.id);
 
         if (viewContainment.exists() && Layouts::Storage::self()->isLatteContainment(viewContainment)) {
@@ -1683,7 +1683,7 @@ void Storage::removeContainment(const QString &filepath, const QString &containm
     }
 
     KSharedConfigPtr lFile = KSharedConfig::openConfig(filepath);
-    KConfigGroup containmentGroups = KConfigGroup(lFile, "Containments");
+    KConfigGroup containmentGroups = KConfigGroup(lFile, QStringLiteral("Containments"));
 
     if (!containmentGroups.group(containmentId).exists()) {
         return;
@@ -1696,17 +1696,17 @@ void Storage::removeContainment(const QString &filepath, const QString &containm
 QStringList Storage::storedLayoutsInMultipleFile()
 {
     QStringList layouts;
-    QString linkedFilePath = Importer::layoutUserFilePath(Layout::MULTIPLELAYOUTSHIDDENNAME);
+    QString linkedFilePath = Importer::layoutUserFilePath(QLatin1String(Layout::MULTIPLELAYOUTSHIDDENNAME));
 
     if (linkedFilePath.isEmpty() || !QFileInfo(linkedFilePath).exists()) {
         return layouts;
     }
 
     KSharedConfigPtr filePtr = KSharedConfig::openConfig(linkedFilePath);
-    KConfigGroup linkedContainments = KConfigGroup(filePtr, "Containments");
+    KConfigGroup linkedContainments = KConfigGroup(filePtr, QStringLiteral("Containments"));
 
     for(const auto &cId : linkedContainments.groupList()) {
-        QString layoutName = linkedContainments.group(cId).readEntry("layoutId", QString());
+        QString layoutName = linkedContainments.group(cId).readEntry(QStringLiteral("layoutId"), QString());
 
         if (!layoutName.isEmpty() && !layouts.contains(layoutName)) {
             layouts << layoutName;
@@ -1736,7 +1736,7 @@ QString Storage::storedView(const Layout::GenericLayout *layout, const int &cont
     }
 
     //! at this point we are sure that both layout and containmentId are acceptable
-    QString nextTmpStoredViewAbsolutePath = m_storageTmpDir.path() + "/" + QFileInfo(layout->name()).fileName() + "." + QString::number(containmentId) + ".stored.tmp";
+    QString nextTmpStoredViewAbsolutePath = m_storageTmpDir.path() + QStringLiteral("/") + QFileInfo(layout->name()).fileName() + QStringLiteral(".") + QString::number(containmentId) + QStringLiteral(".stored.tmp");
 
     QFile tempStoredViewFile(nextTmpStoredViewAbsolutePath);
 
@@ -1745,7 +1745,7 @@ QString Storage::storedView(const Layout::GenericLayout *layout, const int &cont
     }
 
     KSharedConfigPtr destinationPtr = KSharedConfig::openConfig(nextTmpStoredViewAbsolutePath);
-    KConfigGroup destinationContainments = KConfigGroup(destinationPtr, "Containments");
+    KConfigGroup destinationContainments = KConfigGroup(destinationPtr, QStringLiteral("Containments"));
 
     if (layout->isActive()) {
         //! update and copy containments
@@ -1775,7 +1775,7 @@ QString Storage::storedView(const Layout::GenericLayout *layout, const int &cont
         KConfigGroup destinationViewContainment(&destinationContainments, containmentid);
 
         KSharedConfigPtr originPtr = KSharedConfig::openConfig(layout->file());
-        KConfigGroup originContainments = KConfigGroup(originPtr, "Containments");
+        KConfigGroup originContainments = KConfigGroup(originPtr, QStringLiteral("Containments"));
 
         originContainments.group(containmentid).copyTo(&destinationViewContainment);
 
@@ -1856,7 +1856,7 @@ Data::ViewsTable Storage::views(const QString &file)
     Data::ViewsTable vtable;
 
     KSharedConfigPtr lFile = KSharedConfig::openConfig(file);
-    KConfigGroup containmentGroups = KConfigGroup(lFile, "Containments");
+    KConfigGroup containmentGroups = KConfigGroup(lFile, QStringLiteral("Containments"));
 
     for (const auto &cId : containmentGroups.groupList()) {
         if (Layouts::Storage::self()->isLatteContainment(containmentGroups.group(cId))) {

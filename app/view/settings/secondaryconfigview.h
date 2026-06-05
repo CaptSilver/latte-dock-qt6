@@ -18,8 +18,8 @@
 #include <QTimer>
 
 // Plasma
-#include <plasma/package.h>
-#include <Plasma/FrameSvg>
+#include <KPackage/Package>
+#include <KSvg/FrameSvg>
 
 
 namespace Plasma {
@@ -60,11 +60,11 @@ public:
 
     void hideConfigWindow();
 
-public slots:
+public Q_SLOTS:
     Q_INVOKABLE void syncGeometry() override;
     Q_INVOKABLE void updateEffects();
 
-signals:
+Q_SIGNALS:
     void showSignal();
 
 protected:
@@ -81,7 +81,7 @@ private:
     QPointer<PrimaryConfigView> m_parent;
 
     //only for the mask on disabled compositing, not to actually paint
-    Plasma::FrameSvg *m_background{nullptr};
+    KSvg::FrameSvg *m_background{nullptr};
 };
 
 }

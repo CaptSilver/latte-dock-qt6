@@ -45,10 +45,11 @@
 
 // KDe
 #include <KActionCollection>
-#include <KActivities/Consumer>
+#include <PlasmaActivities/Consumer>
 #include <KWayland/Client/plasmashell.h>
 #include <KWayland/Client/surface.h>
 #include <KWindowSystem>
+#include <KX11Extras>
 
 // Plasma
 #include <Plasma/Containment>
@@ -104,7 +105,7 @@ View::View(Plasma::Corona *corona, QScreen *targetScreen, bool byPassX11WM)
         //! Best guess is that this is needed because OnAllDesktops is set through visibilitymanager
         //! after containment has been assigned. That delay might lead wm ignoring the flag
         //! until it is reapplied.
-        KWindowSystem::setOnAllDesktops(winId(), true);
+        KX11Extras::setOnAllDesktops(winId(), true);
     }
 
     if (targetScreen) {
@@ -144,7 +145,7 @@ View::View(Plasma::Corona *corona, QScreen *targetScreen, bool byPassX11WM)
         //! needs to be created before visibility creation because visibility uses it
         if (!m_windowsTracker) {
             m_windowsTracker = new ViewPart::WindowsTracker(this);
-            emit windowsTrackerChanged();
+            Q_EMIT windowsTrackerChanged();
         }
 
         if (!m_visibility) {
@@ -172,12 +173,12 @@ View::View(Plasma::Corona *corona, QScreen *targetScreen, bool byPassX11WM)
                 }
             });*/
 
-            emit visibilityChanged();
+            Q_EMIT visibilityChanged();
         }
 
         if (!m_indicator) {
             m_indicator = new ViewPart::Indicator(this);
-            emit indicatorChanged();
+            Q_EMIT indicatorChanged();
         }
 
         if (m_positioner) {
@@ -188,7 +189,7 @@ View::View(Plasma::Corona *corona, QScreen *targetScreen, bool byPassX11WM)
         connect(this->containment(), SIGNAL(statusChanged(Plasma::Types::ItemStatus)), SLOT(statusChanged(Plasma::Types::ItemStatus)));
         connect(this->containment(), &Plasma::Containment::showAddWidgetsInterface, this, &View::showWidgetExplorer);
         connect(this->containment(), &Plasma::Containment::userConfiguringChanged, this, [&]() {
-            emit inEditModeChanged();
+            Q_EMIT inEditModeChanged();
         });
 
         connect(this->containment(), &Plasma::Containment::destroyedChanged, this, [&]() {
@@ -203,7 +204,7 @@ View::View(Plasma::Corona *corona, QScreen *targetScreen, bool byPassX11WM)
             m_primaryConfigView->setParentView(this, true);
         }
 
-        emit containmentActionsChanged();
+        Q_EMIT containmentActionsChanged();
     }, Qt::DirectConnection);
 
     if (m_corona) {
@@ -302,8 +303,8 @@ void View::init(Plasma::Containment *plasma_containment)
             return;
         }
 
-        emit availableScreenRectChangedFrom(this);
-        emit availableScreenRegionChangedFrom(this);
+        Q_EMIT availableScreenRectChangedFrom(this);
+        Q_EMIT availableScreenRegionChangedFrom(this);
     });
 
     connect(this, &View::maxLengthChanged, this, [&]() {
@@ -311,8 +312,8 @@ void View::init(Plasma::Containment *plasma_containment)
             return;
         }
 
-        emit availableScreenRectChangedFrom(this);
-        emit availableScreenRegionChangedFrom(this);
+        Q_EMIT availableScreenRectChangedFrom(this);
+        Q_EMIT availableScreenRegionChangedFrom(this);
     });
 
     connect(this, &View::offsetChanged, this, [&]() {
@@ -320,8 +321,8 @@ void View::init(Plasma::Containment *plasma_containment)
             return;
         }
 
-        emit availableScreenRectChangedFrom(this);
-        emit availableScreenRegionChangedFrom(this);
+        Q_EMIT availableScreenRectChangedFrom(this);
+        Q_EMIT availableScreenRegionChangedFrom(this);
     });
 
     connect(this, &View::localGeometryChanged, this, [&]() {
@@ -344,23 +345,23 @@ void View::init(Plasma::Containment *plasma_containment)
     connect(this, &View::typeChanged, this, &View::saveConfig);
 
     connect(this, &View::normalThicknessChanged, this, [&]() {
-        emit availableScreenRectChangedFrom(this);
+        Q_EMIT availableScreenRectChangedFrom(this);
     });
 
     connect(m_effects, &ViewPart::Effects::innerShadowChanged, this, [&]() {
-        emit availableScreenRectChangedFrom(this);
+        Q_EMIT availableScreenRectChangedFrom(this);
     });
     connect(m_positioner, &ViewPart::Positioner::onHideWindowsForSlidingOut, this, &View::hideWindowsForSlidingOut);
     connect(m_positioner, &ViewPart::Positioner::screenGeometryChanged, this, &View::screenGeometryChanged);
     connect(m_positioner, &ViewPart::Positioner::windowSizeChanged, this, [&]() {
-        emit availableScreenRectChangedFrom(this);
+        Q_EMIT availableScreenRectChangedFrom(this);
     });
 
     connect(m_interface, &ViewPart::ContainmentInterface::hasExpandedAppletChanged, this, &View::verticalUnityViewHasFocus);
 
     //! View sends this signal in order to avoid crashes from ViewPart::Indicator when the view is recreated
     connect(m_corona->indicatorFactory(), &Latte::Indicator::Factory::indicatorChanged, this, [&](const QString &indicatorId) {
-        emit indicatorPluginChanged(indicatorId);
+        Q_EMIT indicatorPluginChanged(indicatorId);
     });
 
     connect(this, &View::indicatorPluginChanged, this, [&](const QString &indicatorId) {
@@ -546,7 +547,7 @@ bool View::settingsWindowIsShown()
 void View::showSettingsWindow()
 {
     if (!settingsWindowIsShown()) {
-        emit m_visibility->mustBeShown();
+        Q_EMIT m_visibility->mustBeShown();
         showConfigurationInterface(containment());
         applyActivitiesToWindows();
     }
@@ -627,7 +628,7 @@ void View::setLocalGeometry(const QRect &geometry)
     }
 
     m_localGeometry = geometry;
-    emit localGeometryChanged();
+    Q_EMIT localGeometryChanged();
 }
 
 
@@ -643,7 +644,7 @@ void View::setName(const QString &newname)
     }
 
     m_name = newname;
-    emit nameChanged();
+    Q_EMIT nameChanged();
 }
 
 QString View::validTitle() const
@@ -697,14 +698,14 @@ void View::updateAbsoluteGeometry(bool bypassChecks)
 
     if (m_absoluteGeometry != absGeometry) {
         m_absoluteGeometry = absGeometry;
-        emit absoluteGeometryChanged(m_absoluteGeometry);
+        Q_EMIT absoluteGeometryChanged(m_absoluteGeometry);
     }
 
     if ((m_absoluteGeometry != absGeometry) || bypassChecks) {
         //! inform others such as neighbour vertical views that new geometries are applied
         //! main use of BYPASSCKECKS is from Positioner when the view changes screens
-        emit availableScreenRectChangedFrom(this);
-        emit availableScreenRegionChangedFrom(this);
+        Q_EMIT availableScreenRectChangedFrom(this);
+        Q_EMIT availableScreenRegionChangedFrom(this);
     }
 }
 
@@ -729,7 +730,7 @@ void View::statusChanged(Plasma::Types::ItemStatus status)
         setFlags(flags() & ~Qt::WindowDoesNotAcceptFocus);
         m_visibility->initViewFlags();
         if (KWindowSystem::isPlatformX11()) {
-            KWindowSystem::forceActiveWindow(winId());
+            KX11Extras::forceActiveWindow(winId());
         }
         if (m_shellSurface) {
             m_shellSurface->setPanelTakesFocus(true);
@@ -801,7 +802,7 @@ void View::setType(Types::ViewType type)
     }
 
     m_type = type;
-    emit typeChanged();
+    Q_EMIT typeChanged();
 }
 
 bool View::alternativesIsShown() const
@@ -817,7 +818,7 @@ void View::setAlternativesIsShown(bool show)
 
     m_alternativesIsShown = show;
 
-    emit alternativesIsShownChanged();
+    Q_EMIT alternativesIsShownChanged();
 }
 
 bool View::containsDrag() const
@@ -840,7 +841,7 @@ void View::setContainsDrag(bool contains)
         m_visibility->removeBlockHidingEvent(BLOCKHIDINGDRAGTYPE);
     }
 
-    emit containsDragChanged();
+    Q_EMIT containsDragChanged();
 }
 
 bool View::containsMouse() const
@@ -860,7 +861,7 @@ void View::setNormalThickness(int thickness)
     }
 
     m_normalThickness = thickness;
-    emit normalThicknessChanged();
+    Q_EMIT normalThicknessChanged();
 }
 
 int View::maxNormalThickness() const
@@ -875,7 +876,7 @@ void View::setMaxNormalThickness(int thickness)
     }
 
     m_maxNormalThickness = thickness;
-    emit maxNormalThicknessChanged();
+    Q_EMIT maxNormalThicknessChanged();
 }
 
 int View::headThicknessGap() const
@@ -890,7 +891,7 @@ void View::setHeadThicknessGap(int thickness)
     }
 
     m_headThicknessGap = thickness;
-    emit headThicknessGapChanged();
+    Q_EMIT headThicknessGapChanged();
 }
 
 bool View::byPassWM() const
@@ -905,7 +906,7 @@ void View::setByPassWM(bool bypass)
     }
 
     m_byPassWM = bypass;
-    emit byPassWMChanged();
+    Q_EMIT byPassWMChanged();
 }
 
 bool View::behaveAsPlasmaPanel() const
@@ -921,7 +922,7 @@ void View::setBehaveAsPlasmaPanel(bool behavior)
 
     m_behaveAsPlasmaPanel = behavior;
 
-    emit behaveAsPlasmaPanelChanged();
+    Q_EMIT behaveAsPlasmaPanelChanged();
 }
 
 bool View::inEditMode() const
@@ -947,10 +948,10 @@ void View::setIsPreferredForShortcuts(bool preferred)
 
     m_isPreferredForShortcuts = preferred;
 
-    emit isPreferredForShortcutsChanged();
+    Q_EMIT isPreferredForShortcutsChanged();
 
     if (m_isPreferredForShortcuts && m_layout) {
-        emit m_layout->preferredViewForShortcutsChanged(this);
+        Q_EMIT m_layout->preferredViewForShortcutsChanged(this);
     }
 }
 
@@ -972,7 +973,7 @@ void View::setIsTouchingBottomViewAndIsBusy(bool touchAndBusy)
 
     m_isTouchingBottomViewAndIsBusy = touchAndBusy;
 
-    emit isTouchingBottomViewAndIsBusyChanged();
+    Q_EMIT isTouchingBottomViewAndIsBusyChanged();
 }
 
 bool View::isTouchingTopViewAndIsBusy() const
@@ -987,7 +988,7 @@ void View::setIsTouchingTopViewAndIsBusy(bool touchAndBusy)
     }
 
     m_isTouchingTopViewAndIsBusy = touchAndBusy;
-    emit isTouchingTopViewAndIsBusyChanged();
+    Q_EMIT isTouchingTopViewAndIsBusyChanged();
 }
 
 void View::preferredViewForShortcutsChangedSlot(Latte::View *view)
@@ -1009,7 +1010,7 @@ void View::setOnPrimary(bool flag)
     }
 
     m_onPrimary = flag;
-    emit onPrimaryChanged();
+    Q_EMIT onPrimaryChanged();
 }
 
 int View::groupId() const
@@ -1033,7 +1034,7 @@ void View::setMaxLength(float length)
     }
 
     m_maxLength = length;
-    emit maxLengthChanged();
+    Q_EMIT maxLengthChanged();
 }
 
 int View::editThickness() const
@@ -1058,7 +1059,7 @@ void View::setMaxThickness(int thickness)
         return;
 
     m_maxThickness = thickness;
-    emit maxThicknessChanged();
+    Q_EMIT maxThicknessChanged();
 }
 
 int View::alignment() const
@@ -1075,7 +1076,7 @@ void View::setAlignment(int alignment)
     }
 
     m_alignment = align;
-    emit alignmentChanged();
+    Q_EMIT alignmentChanged();
 }
 
 QRect View::absoluteGeometry() const
@@ -1105,7 +1106,7 @@ void View::setOffset(float offset)
     }
 
     m_offset = offset;
-    emit offsetChanged();
+    Q_EMIT offsetChanged();
 }
 
 bool View::screenEdgeMarginEnabled() const
@@ -1120,7 +1121,7 @@ void View::setScreenEdgeMarginEnabled(bool enabled)
     }
 
     m_screenEdgeMarginEnabled = enabled;
-    emit screenEdgeMarginEnabledChanged();
+    Q_EMIT screenEdgeMarginEnabledChanged();
 }
 
 int View::screenEdgeMargin() const
@@ -1137,7 +1138,7 @@ void View::setScreenEdgeMargin(int margin)
 
 
     m_screenEdgeMargin = margin;
-    emit screenEdgeMarginChanged();
+    Q_EMIT screenEdgeMarginChanged();
 }
 
 int View::fontPixelSize() const
@@ -1153,7 +1154,7 @@ void View::setFontPixelSize(int size)
 
     m_fontPixelSize = size;
 
-    emit fontPixelSizeChanged();
+    Q_EMIT fontPixelSizeChanged();
 }
 
 bool View::isOnAllActivities() const
@@ -1188,7 +1189,7 @@ void View::setActivities(const QStringList &ids)
     }
 
     m_activities = ids;
-    emit activitiesChanged();
+    Q_EMIT activitiesChanged();
 }
 
 void View::applyActivitiesToWindows()
@@ -1232,7 +1233,7 @@ void View::showHiddenViewFromActivityStopping()
         }
 
         //qDebug() << "View:: Enforce reshow from timer 1...";
-        emit forcedShown();
+        Q_EMIT forcedShown();
     } else if (m_layout && isVisible()) {
         m_inDelete = false;
         //qDebug() << "View:: No needed reshow from timer 1...";
@@ -1335,19 +1336,19 @@ void View::setLayout(Layout::GenericLayout *layout)
             connectionsLayout << connect(&m_visibleHackTimer1, &QTimer::timeout, this, [&]() {
                 applyActivitiesToWindows();
                 showHiddenViewFromActivityStopping();
-                emit activitiesChanged();
+                Q_EMIT activitiesChanged();
             });
 
             connectionsLayout << connect(&m_visibleHackTimer2, &QTimer::timeout, this, [&]() {
                 applyActivitiesToWindows();
                 showHiddenViewFromActivityStopping();
-                emit activitiesChanged();
+                Q_EMIT activitiesChanged();
             });
 
             //! END OF KWIN HACK
         }
 
-        emit layoutChanged();
+        Q_EMIT layoutChanged();
     } else {
         m_activities.clear();
     }
@@ -1419,7 +1420,7 @@ void View::setColorizer(QQuickItem *colorizer)
     }
 
     m_colorizer = colorizer;
-    emit colorizerChanged();
+    Q_EMIT colorizerChanged();
 }
 
 QQuickItem *View::metrics() const
@@ -1434,7 +1435,7 @@ void View::setMetrics(QQuickItem *metrics)
     }
 
     m_metrics = metrics;
-    emit metricsChanged();
+    Q_EMIT metricsChanged();
 }
 
 ViewPart::Effects *View::effects() const
@@ -1498,7 +1499,7 @@ void View::setInterfacesGraphicObj(Latte::Interfaces *ifaces)
         }
     }
 
-    emit interfacesGraphicObjChanged();
+    Q_EMIT interfacesGraphicObjChanged();
 }
 
 bool View::event(QEvent *e)
@@ -1506,7 +1507,7 @@ bool View::event(QEvent *e)
     QEvent *sunkevent = e;
 
     if (!m_inDelete) {
-        emit eventTriggered(e);
+        Q_EMIT eventTriggered(e);
 
         bool sinkableevent{false};
 
@@ -1545,7 +1546,7 @@ bool View::event(QEvent *e)
 
         case QEvent::MouseButtonPress:
             if (auto me = dynamic_cast<QMouseEvent *>(e)) {
-                emit mousePressed(me->position().toPoint(), me->button());
+                Q_EMIT mousePressed(me->position().toPoint(), me->button());
                 sinkableevent = true;
                 verticalUnityViewHasFocus();
             }
@@ -1553,7 +1554,7 @@ bool View::event(QEvent *e)
 
         case QEvent::MouseButtonRelease:
             if (auto me = dynamic_cast<QMouseEvent *>(e)) {
-                emit mouseReleased(me->position().toPoint(), me->button());
+                Q_EMIT mouseReleased(me->position().toPoint(), me->button());
                 sinkableevent = true;
             }
             break;
@@ -1595,7 +1596,7 @@ bool View::event(QEvent *e)
         case QEvent::Wheel:
             if (auto we = dynamic_cast<QWheelEvent *>(e)) {
                 QPoint pos = we->position().toPoint();
-                emit wheelScrolled(pos, we->angleDelta(), we->buttons());
+                Q_EMIT wheelScrolled(pos, we->angleDelta(), we->buttons());
                 sinkableevent = true;
             }
             break;
@@ -1713,7 +1714,7 @@ void View::verticalUnityViewHasFocus()
             && (y() != screenGeometry().y())
             && ( (m_alignment == Latte::Types::Justify && m_maxLength == 1.0)
                  ||(m_alignment == Latte::Types::Top && m_offset == 0.0) )) {
-        emit m_corona->verticalUnityViewHasFocus();
+        Q_EMIT m_corona->verticalUnityViewHasFocus();
     }
 }
 //! END: WORKAROUND
@@ -1748,10 +1749,10 @@ void View::restoreConfig()
 
     //! Send changed signals at the end in order to be sure that saveConfig
     //! wont rewrite default/invalid values
-    emit alignmentChanged();
-    emit nameChanged();
-    emit onPrimaryChanged();
-    emit byPassWMChanged();
+    Q_EMIT alignmentChanged();
+    Q_EMIT nameChanged();
+    Q_EMIT onPrimaryChanged();
+    Q_EMIT byPassWMChanged();
 }
 //!END configuration functions
 

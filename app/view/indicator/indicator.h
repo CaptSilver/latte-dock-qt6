@@ -21,10 +21,10 @@
 #include <KConfigLoader>
 #include <KPluginMetaData>
 
-namespace KDeclarative
+class KConfigPropertyMap;
+namespace PlasmaQuick
 {
-class ConfigPropertyMap;
-class QmlObjectSharedEngine;
+class SharedQmlEngine;
 }
 
 namespace Latte {
@@ -111,7 +111,7 @@ public:
     void load(QString type);
     void unloadIndicators();
 
-signals:
+Q_SIGNALS:
     void customPluginsChanged();
     void enabledChanged();
     void enabledForAppletsChanged();
@@ -142,7 +142,7 @@ private:
     bool m_pluginIsReady{false};
 
     QString m_pluginPath;
-    QString m_type{"org.kde.latte.default"};
+    QString m_type{QStringLiteral("org.kde.latte.default")};
     QString m_customType;
 
     QPointer<QQmlComponent> m_component;
@@ -157,7 +157,7 @@ private:
     QPointer<IndicatorPart::Info> m_info;
     QPointer<IndicatorPart::Resources> m_resources;
 
-    QPointer<KDeclarative::ConfigPropertyMap> m_configuration;
+    QPointer<KConfigPropertyMap> m_configuration;
 };
 
 }

@@ -25,14 +25,17 @@
 #include <QButtonGroup>
 #include <QDir>
 #include <QFileDialog>
+#include <QList>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QMimeData>
+#include <QUrl>
 
 // KDE
 #include <KLocalizedString>
 #include <KMessageBox>
 #include <KWindowSystem>
+#include <KX11Extras>
 #include <KIO/OpenFileManagerWindowJob>
 
 
@@ -44,7 +47,7 @@ SettingsDialog::SettingsDialog(QWidget *parent, Latte::Corona *corona)
     : GenericDialog(parent),
       m_ui(new Ui::SettingsDialog),
       m_corona(corona),
-      m_storage(KConfigGroup(KSharedConfig::openConfig(),"LatteSettingsDialog"))
+      m_storage(KConfigGroup(KSharedConfig::openConfig(),QStringLiteral("LatteSettingsDialog")))
 {
     setAttribute(Qt::WA_DeleteOnClose, true);
     setAcceptDrops(true);
@@ -74,8 +77,8 @@ SettingsDialog::SettingsDialog(QWidget *parent, Latte::Corona *corona)
     loadConfig();
     resize(m_windowSize);
 
-    m_ui->buttonBox->button(QDialogButtonBox::Apply)->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_S));
-    m_ui->buttonBox->button(QDialogButtonBox::Reset)->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_L));
+    m_ui->buttonBox->button(QDialogButtonBox::Apply)->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_S));
+    m_ui->buttonBox->button(QDialogButtonBox::Reset)->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_L));
 
     //! SIGNALS
     connect(m_ui->tabWidget, &QTabWidget::currentChanged, this, &SettingsDialog::onCurrentTabChanged);
@@ -128,28 +131,28 @@ void SettingsDialog::initFileMenu()
     }
 
     m_importFullAction = m_fileMenu->addAction(i18n("Import Configuration..."));
-    m_importFullAction->setIcon(QIcon::fromTheme("document-import"));
-    m_importFullAction->setShortcut(QKeySequence(Qt::CTRL + Qt::ALT + Qt::Key_I));
+    m_importFullAction->setIcon(QIcon::fromTheme(QStringLiteral("document-import")));
+    m_importFullAction->setShortcut(QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_I));
     m_importFullAction->setToolTip(i18n("Import your full configuration from previous backup"));
     connect(m_importFullAction, &QAction::triggered, this, &SettingsDialog::importFullConfiguration);
 
     m_exportFullAction = m_fileMenu->addAction(i18n("Export Configuration..."));
-    m_exportFullAction->setIcon(QIcon::fromTheme("document-export"));
-    m_exportFullAction->setShortcut(QKeySequence(Qt::CTRL + Qt::ALT + Qt::Key_E));
+    m_exportFullAction->setIcon(QIcon::fromTheme(QStringLiteral("document-export")));
+    m_exportFullAction->setShortcut(QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_E));
     m_exportFullAction->setToolTip(i18n("Export your full configuration to create backup"));
     connect(m_exportFullAction, &QAction::triggered, this, &SettingsDialog::exportFullConfiguration);
 
     m_fileMenu->addSeparator();
 
     QAction *screensAction = m_fileMenu->addAction(i18n("&Screens..."));
-    screensAction->setIcon(QIcon::fromTheme("document-properties"));
-    screensAction->setShortcut(QKeySequence(Qt::CTRL + Qt::ALT + Qt::Key_S));
+    screensAction->setIcon(QIcon::fromTheme(QStringLiteral("document-properties")));
+    screensAction->setShortcut(QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_S));
     screensAction->setToolTip(i18n("Examine your screens and remove deprecated references"));
     connect(screensAction, &QAction::triggered, this, &SettingsDialog::showScreensDialog);
 
     QAction *quitAction = m_fileMenu->addAction(i18n("&Quit Latte"));
-    quitAction->setIcon(QIcon::fromTheme("application-exit"));
-    quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
+    quitAction->setIcon(QIcon::fromTheme(QStringLiteral("application-exit")));
+    quitAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Q));
 
 
     //! triggers
@@ -259,14 +262,14 @@ void SettingsDialog::importFullConfiguration()
                                                     , QDir::homePath()
                                                     , QStringLiteral("latterc"));
 
-    importFileDialog->setWindowIcon(QIcon::fromTheme("document-import"));
+    importFileDialog->setWindowIcon(QIcon::fromTheme(QStringLiteral("document-import")));
     importFileDialog->setLabelText(QFileDialog::Accept, i18nc("import full configuration","Import"));
     importFileDialog->setFileMode(QFileDialog::AnyFile);
     importFileDialog->setAcceptMode(QFileDialog::AcceptOpen);
-    importFileDialog->setDefaultSuffix("latterc");
+    importFileDialog->setDefaultSuffix(QStringLiteral("latterc"));
 
     QStringList filters;
-    filters << QString(i18nc("import full configuration", "Latte Dock Full Configuration file") + "(*.latterc)");
+    filters << QString(i18nc("import full configuration", "Latte Dock Full Configuration file") + QStringLiteral("(*.latterc)"));
     importFileDialog->setNameFilters(filters);
 
     connect(importFileDialog, &QFileDialog::finished, importFileDialog, &QFileDialog::deleteLater);
@@ -285,12 +288,12 @@ void SettingsDialog::importFullConfiguration()
 
             QPushButton *takeBackupBtn = new QPushButton(msg);
             takeBackupBtn->setText(i18nc("export full configuration", "Take Backup..."));
-            takeBackupBtn->setIcon(QIcon::fromTheme("document-export"));
+            takeBackupBtn->setIcon(QIcon::fromTheme(QStringLiteral("document-export")));
             takeBackupBtn->setToolTip(i18n("Export your full configuration in order to take backup"));
 
             QPushButton *importBtn = new QPushButton(msg);
             importBtn->setText(i18nc("import full configuration", "Import"));
-            importBtn->setIcon(QIcon::fromTheme("document-import"));
+            importBtn->setIcon(QIcon::fromTheme(QStringLiteral("document-import")));
             importBtn->setToolTip(i18n("Import your full configuration and drop all your current settings and layouts"));
 
             msg->addButton(takeBackupBtn, QMessageBox::AcceptRole);
@@ -326,10 +329,10 @@ void SettingsDialog::exportFullConfiguration()
     exportFileDialog->setLabelText(QFileDialog::Accept, i18nc("export full configuration","Export"));
     exportFileDialog->setFileMode(QFileDialog::AnyFile);
     exportFileDialog->setAcceptMode(QFileDialog::AcceptSave);
-    exportFileDialog->setDefaultSuffix("latterc");
+    exportFileDialog->setDefaultSuffix(QStringLiteral("latterc"));
 
     QStringList filters;
-    QString filter2(i18nc("export full configuration", "Latte Dock Full Configuration file v0.2") + "(*.latterc)");
+    QString filter2(i18nc("export full configuration", "Latte Dock Full Configuration file v0.2") + QStringLiteral("(*.latterc)"));
 
     filters << filter2;
 
@@ -346,7 +349,7 @@ void SettingsDialog::exportFullConfiguration()
 
         if (m_corona->layoutsManager()->importer()->exportFullConfiguration(file)) {
             QAction *openUrlAction = new QAction(i18n("Open Location..."), this);
-            openUrlAction->setIcon(QIcon::fromTheme("document-open"));
+            openUrlAction->setIcon(QIcon::fromTheme(QStringLiteral("document-open")));
             openUrlAction->setData(file);
             QList<QAction *> actions;
             actions << openUrlAction;
@@ -355,7 +358,7 @@ void SettingsDialog::exportFullConfiguration()
                 QString file = openUrlAction->data().toString();
 
                 if (!file.isEmpty()) {
-                    KIO::highlightInFileManager({file});
+                    KIO::highlightInFileManager(QList<QUrl>{QUrl::fromLocalFile(file)});
                 }
             });
 
@@ -371,7 +374,7 @@ void SettingsDialog::exportFullConfiguration()
     exportFileDialog->open();
 
     QDate currentDate = QDate::currentDate();
-    QString proposedName = QStringLiteral("Latte Dock (") + currentDate.toString("yyyy-MM-dd")+")";
+    QString proposedName = QStringLiteral("Latte Dock (") + currentDate.toString(QStringLiteral("yyyy-MM-dd"))+QStringLiteral(")");
 
     exportFileDialog->selectFile(proposedName);
 }
@@ -473,14 +476,14 @@ bool SettingsDialog::saveChanges()
     if ((m_acceptedPage == LayoutPage && m_tabLayoutsHandler->hasChangedData())
         || (m_acceptedPage == PreferencesPage && m_tabPreferencesHandler->hasChangedData())) {
 
-        QString tabName = m_ui->tabWidget->tabBar()->tabText(m_acceptedPage).remove("&");
+        QString tabName = m_ui->tabWidget->tabBar()->tabText(m_acceptedPage).remove(QLatin1Char('&'));
         QString saveChangesText = i18n("The settings of <b>%1</b> tab have changed.<br/>Do you want to apply the changes or discard them?", tabName);
 
         KMessageBox::ButtonCode result = saveChangesConfirmation(saveChangesText);
 
-        if (result == KMessageBox::Yes) {
+        if (result == KMessageBox::PrimaryAction) {
             save();
-        } else if (result == KMessageBox::No) {
+        } else if (result == KMessageBox::SecondaryAction) {
             reset();
         } else {
             return false;
@@ -605,7 +608,7 @@ void SettingsDialog::dropEvent(QDropEvent *event)
 void SettingsDialog::updateWindowActivities()
 {
     if (KWindowSystem::isPlatformX11()) {
-        KWindowSystem::setOnActivities(winId(), QStringList());
+        KX11Extras::setOnActivities(winId(), QStringList());
     }
 }
 

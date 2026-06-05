@@ -100,7 +100,7 @@ void CustomMenuItemWidget::paintEvent(QPaintEvent* e)
     opt.rect = remained;
 
     //! text
-    opt.text = opt.text.remove("&");
+    opt.text = opt.text.remove(QLatin1Char('&'));
     if (qApp->layoutDirection() == Qt::LeftToRight) {
         //! add spacing
         remained = QRect(opt.rect.x() + 2 , opt.rect.y(), opt.rect.width() - 2, opt.rect.height());
@@ -112,7 +112,7 @@ void CustomMenuItemWidget::paintEvent(QPaintEvent* e)
     opt.rect = remained;
 
     if (m_screen.isActive && inScreensColumn) {
-        opt.text = "<b>" + opt.text + "</b>";
+        opt.text = QStringLiteral("<b>") + opt.text + QStringLiteral("</b>");
     }
 
     //style()->drawControl(QStyle::CE_MenuItem, &opt, &painter, this);

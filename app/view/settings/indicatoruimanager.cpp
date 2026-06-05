@@ -20,7 +20,7 @@
 // KDE
 #include <KLocalizedString>
 #include <KPluginMetaData>
-#include <KDeclarative/QmlObjectSharedEngine>
+#include <PlasmaQuick/SharedQmlEngine>
 
 namespace Latte {
 namespace ViewPart {
@@ -116,19 +116,19 @@ void IndicatorUiManager::ui(const QString &type, Latte::View *view)
     KPluginMetaData metadata = m_primary->corona()->indicatorFactory()->metadata(type);
 
     if (metadata.isValid()) {
-        QString uiPath = metadata.value("X-Latte-ConfigUi");
+        QString uiPath = metadata.value(QStringLiteral("X-Latte-ConfigUi"));
 
         if (!uiPath.isEmpty()) {
             IndicatorUiData uidata;
 
-            uidata.ui = new KDeclarative::QmlObjectSharedEngine(this);
+            uidata.ui = new PlasmaQuick::SharedQmlEngine(this);
             uidata.pluginPath = QFileInfo(metadata.fileName()).absolutePath();
             uidata.type = type;
             uidata.view = view;
 
-            uidata.ui->setTranslationDomain(QLatin1String("latte_indicator_") + metadata.pluginId());
+            uidata.ui->setTranslationDomain(QStringLiteral("latte_indicator_") + metadata.pluginId());
             uidata.ui->setInitializationDelayed(true);
-            uiPath = uidata.pluginPath + "/package/" + uiPath;
+            uiPath = uidata.pluginPath + QStringLiteral("/package/") + uiPath;
             uidata.ui->setSource(QUrl::fromLocalFile(uiPath));
             uidata.ui->rootContext()->setContextProperty(QStringLiteral("dialog"), m_parentItem);
             uidata.ui->rootContext()->setContextProperty(QStringLiteral("indicator"), view->indicator());
@@ -170,10 +170,10 @@ void IndicatorUiManager::addIndicator()
 
     fileDialog->setFileMode(QFileDialog::AnyFile);
     fileDialog->setAcceptMode(QFileDialog::AcceptOpen);
-    fileDialog->setDefaultSuffix("indicator.latte");
+    fileDialog->setDefaultSuffix(QStringLiteral("indicator.latte"));
 
     QStringList filters;
-    filters << QString(i18nc("add indicator file", "Latte Indicator") + "(*.indicator.latte)");
+    filters << QString(i18nc("add indicator file", "Latte Indicator") + QStringLiteral("(*.indicator.latte)"));
     fileDialog->setNameFilters(filters);
 
     connect(fileDialog, &QFileDialog::finished, fileDialog, &QFileDialog::deleteLater);

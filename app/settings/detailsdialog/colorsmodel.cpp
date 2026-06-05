@@ -10,6 +10,7 @@
 
 // KDE
 #include <KLocalizedString>
+#include <KPackage/Package>
 
 namespace Latte {
 namespace Settings {
@@ -20,7 +21,7 @@ Colors::Colors(QObject *parent, Latte::Corona *corona)
       m_corona(corona)
 {
     //!find the available colors
-    m_colorsPath = m_corona->kPackage().path() + "../../shells/org.kde.latte.shell/contents/images/canvas/";
+    m_colorsPath = m_corona->kPackage().path() + QStringLiteral("../../shells/org.kde.latte.shell/contents/images/canvas/");
 
     init();
 }
@@ -32,22 +33,22 @@ Colors::~Colors()
 void Colors::init()
 {
     QString id;
-    id = "blue"; add(id, i18n("Blue"), colorPath(id), Layout::AbstractLayout::defaultTextColor(id));
-    id = "brown"; add(id, i18n("Brown"), colorPath(id), Layout::AbstractLayout::defaultTextColor(id));
-    id = "darkgrey"; add(id, i18n("Dark Grey"), colorPath(id), Layout::AbstractLayout::defaultTextColor(id));
-    id = "gold"; add(id, i18n("Gold"), colorPath(id), Layout::AbstractLayout::defaultTextColor(id));
-    id = "green"; add(id, i18n("Green"), colorPath(id), Layout::AbstractLayout::defaultTextColor(id));
-    id = "lightskyblue"; add(id, i18n("Light Sky Blue"), colorPath(id), Layout::AbstractLayout::defaultTextColor(id));
-    id = "orange"; add(id, i18n("Orange"), colorPath(id), Layout::AbstractLayout::defaultTextColor(id));
-    id = "pink"; add(id, i18n("Pink"), colorPath(id), Layout::AbstractLayout::defaultTextColor(id));
-    id = "purple"; add(id, i18n("Purple"), colorPath(id), Layout::AbstractLayout::defaultTextColor(id));
-    id = "red"; add(id, i18n("Red"), colorPath(id), Layout::AbstractLayout::defaultTextColor(id));
-    id = "wheat"; add(id, i18n("Wheat"), colorPath(id), Layout::AbstractLayout::defaultTextColor(id));
+    id = QStringLiteral("blue"); add(id, i18n("Blue"), colorPath(id), Layout::AbstractLayout::defaultTextColor(id));
+    id = QStringLiteral("brown"); add(id, i18n("Brown"), colorPath(id), Layout::AbstractLayout::defaultTextColor(id));
+    id = QStringLiteral("darkgrey"); add(id, i18n("Dark Grey"), colorPath(id), Layout::AbstractLayout::defaultTextColor(id));
+    id = QStringLiteral("gold"); add(id, i18n("Gold"), colorPath(id), Layout::AbstractLayout::defaultTextColor(id));
+    id = QStringLiteral("green"); add(id, i18n("Green"), colorPath(id), Layout::AbstractLayout::defaultTextColor(id));
+    id = QStringLiteral("lightskyblue"); add(id, i18n("Light Sky Blue"), colorPath(id), Layout::AbstractLayout::defaultTextColor(id));
+    id = QStringLiteral("orange"); add(id, i18n("Orange"), colorPath(id), Layout::AbstractLayout::defaultTextColor(id));
+    id = QStringLiteral("pink"); add(id, i18n("Pink"), colorPath(id), Layout::AbstractLayout::defaultTextColor(id));
+    id = QStringLiteral("purple"); add(id, i18n("Purple"), colorPath(id), Layout::AbstractLayout::defaultTextColor(id));
+    id = QStringLiteral("red"); add(id, i18n("Red"), colorPath(id), Layout::AbstractLayout::defaultTextColor(id));
+    id = QStringLiteral("wheat"); add(id, i18n("Wheat"), colorPath(id), Layout::AbstractLayout::defaultTextColor(id));
 }
 
 QString Colors::colorPath(const QString &color)
 {
-    return QString(m_colorsPath + color + "print.jpg");
+    return m_colorsPath + color + QStringLiteral("print.jpg");
 }
 
 void Colors::add(const QString &newid, const QString &newname, const QString &newpath, const QString &newtextcolor)

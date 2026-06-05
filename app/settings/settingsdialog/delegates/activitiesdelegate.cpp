@@ -73,7 +73,7 @@ QWidget *Activities::createEditor(QWidget *parent, const QStyleOptionViewItem &o
         }
 
 
-        bool inCurrentActivity = (activitydata.id == Data::Layout::CURRENTACTIVITYID && assignedActivities.contains(currentrealactivityid));
+        bool inCurrentActivity = (activitydata.id == QLatin1String(Data::Layout::CURRENTACTIVITYID) && assignedActivities.contains(currentrealactivityid));
         bool ischecked = assignedActivities.contains(activitydata.id) || inCurrentActivity;
 
         if (ischecked) {
@@ -86,9 +86,9 @@ QWidget *Activities::createEditor(QWidget *parent, const QStyleOptionViewItem &o
         action->setCheckable(true);
         action->setChecked(ischecked);
 
-        if (activitydata.id == Data::Layout::FREEACTIVITIESID
-                || activitydata.id == Data::Layout::ALLACTIVITIESID
-                || activitydata.id == Data::Layout::CURRENTACTIVITYID) {
+        if (activitydata.id == QLatin1String(Data::Layout::FREEACTIVITIESID)
+                || activitydata.id == QLatin1String(Data::Layout::ALLACTIVITIESID)
+                || activitydata.id == QLatin1String(Data::Layout::CURRENTACTIVITYID)) {
             if (isLayoutActive) {
                 QFont font = action->font();
                 font.setBold(true);
@@ -103,7 +103,7 @@ QWidget *Activities::createEditor(QWidget *parent, const QStyleOptionViewItem &o
                 if (action->isChecked()) {
                     menu->setMasterIndex(i);
 
-                    if (action->data().toString() == Data::Layout::CURRENTACTIVITYID) {
+                    if (action->data().toString() == QLatin1String(Data::Layout::CURRENTACTIVITYID)) {
                         auto actions = menu->actions();
                         for (int i=0; i<actions.count(); ++i) {
                             if (actions[i]->data().toString() == currentrealactivityid) {
@@ -116,7 +116,7 @@ QWidget *Activities::createEditor(QWidget *parent, const QStyleOptionViewItem &o
                         menu->setMasterIndex(-1);
                     }
 
-                    if (action->data().toString() == Data::Layout::CURRENTACTIVITYID) {
+                    if (action->data().toString() == QLatin1String(Data::Layout::CURRENTACTIVITYID)) {
                         auto actions = menu->actions();
                         for (int i=0; i<actions.count(); ++i) {
                             if (actions[i]->data().toString() == currentrealactivityid) {
@@ -148,7 +148,7 @@ QWidget *Activities::createEditor(QWidget *parent, const QStyleOptionViewItem &o
 
         menu->addAction(action);
 
-        if (activitydata.id == Data::Layout::CURRENTACTIVITYID) {
+        if (activitydata.id == QLatin1String(Data::Layout::CURRENTACTIVITYID)) {
             //! After CurrentActivity record we can add Separator
             menu->addSeparator();
         }
@@ -167,7 +167,7 @@ QWidget *Activities::createEditor(QWidget *parent, const QStyleOptionViewItem &o
         } else {
             for (QAction *action : button->menu()->actions()) {
                 QString actId = action->data().toString();
-                if (actId == Data::Layout::FREEACTIVITIESID || actId == Data::Layout::ALLACTIVITIESID) {
+                if (actId == QLatin1String(Data::Layout::FREEACTIVITIESID) || actId == QLatin1String(Data::Layout::ALLACTIVITIESID)) {
                     action->setChecked(false);
                 }
             }
@@ -219,7 +219,7 @@ void Activities::updateCurrentActivityAction(QMenu *menu) const
 
     auto actions = menu->actions();
     for (int i=0; i<actions.count(); ++i) {
-        if (actions[i]->data().toString() == Data::Layout::CURRENTACTIVITYID) {
+        if (actions[i]->data().toString() == QLatin1String(Data::Layout::CURRENTACTIVITYID)) {
             if (actions[i]->isChecked()) {
                 QFont font = actions[i]->font();
                 font.setBold(true);
@@ -255,15 +255,15 @@ void Activities::setModelData(QWidget *editor, QAbstractItemModel *model, const 
     for (QAction *action : button->menu()->actions()) {
         QString activityid = action->data().toString();
 
-        if (activityid == Data::Layout::CURRENTACTIVITYID) {
+        if (activityid == QLatin1String(Data::Layout::CURRENTACTIVITYID)) {
             continue;
         }
 
-        if (activityid == Data::Layout::ALLACTIVITIESID && action->isChecked()) {
-            assignedActivities = QStringList(Data::Layout::ALLACTIVITIESID);
+        if (activityid == QLatin1String(Data::Layout::ALLACTIVITIESID) && action->isChecked()) {
+            assignedActivities = QStringList(QLatin1String(Data::Layout::ALLACTIVITIESID));
             break;
-        } else if (activityid == Data::Layout::FREEACTIVITIESID && action->isChecked()) {
-            assignedActivities = QStringList(Data::Layout::FREEACTIVITIESID);
+        } else if (activityid == QLatin1String(Data::Layout::FREEACTIVITIESID) && action->isChecked()) {
+            assignedActivities = QStringList(QLatin1String(Data::Layout::FREEACTIVITIESID));
             break;
         }
 
@@ -314,7 +314,7 @@ void Activities::paint(QPainter *painter, const QStyleOptionViewItem &option, co
     if (assignedActivities.count() > 0) {
         myOptions.text = joinedActivities(assignedActivities, assignedOriginalIds, isLayoutActive);
     } else {
-        myOptions.text = "";
+        myOptions.text = QStringLiteral("");
     }
 
     Latte::drawBackground(painter, option);
@@ -331,24 +331,24 @@ QString Activities::joinedActivities(const QList<Latte::Data::Activity> &activit
         bool bold{false};
         bool italic = (!originalIds.contains(activities[i].id));
 
-        if (activities[i].id == Data::Layout::FREEACTIVITIESID || activities[i].id == Data::Layout::ALLACTIVITIESID) {
+        if (activities[i].id == QLatin1String(Data::Layout::FREEACTIVITIESID) || activities[i].id == QLatin1String(Data::Layout::ALLACTIVITIESID)) {
             bold = isActive;
         } else {
             bold = activities[i].isRunning();
         }
 
         if (i > 0) {
-            finalText += ", ";
+            finalText += QStringLiteral(", ");
         }
 
         QString styledText = activities[i].name;
 
         if (bold && formatText) {
-            styledText = "<b>" + styledText + "</b>";
+            styledText = QStringLiteral("<b>") + styledText + QStringLiteral("</b>");
         }
 
         if (italic && formatText) {
-            styledText = "<i>" + styledText + "</i>";
+            styledText = QStringLiteral("<i>") + styledText + QStringLiteral("</i>");
         }
 
         finalText += styledText;
@@ -367,7 +367,7 @@ void Activities::updateButton(QWidget *editor, const Latte::Data::ActivitiesTabl
     QList<Latte::Data::Activity> assignedActivities;
 
     for (QAction *action : button->menu()->actions()) {
-        if (action->isChecked() && action->data().toString() != Data::Layout::CURRENTACTIVITYID) {
+        if (action->isChecked() && action->data().toString() != QLatin1String(Data::Layout::CURRENTACTIVITYID)) {
             assignedActivities << allActivitiesTable[action->data().toString()];
         }
     }

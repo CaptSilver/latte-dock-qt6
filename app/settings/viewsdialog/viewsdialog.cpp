@@ -19,7 +19,7 @@ ViewsDialog::ViewsDialog(SettingsDialog *parent, Controller::Layouts *controller
       m_parentDlg(parent),
       m_ui(new Ui::ViewsDialog),
       m_layoutsController(controller),
-      m_storage(KConfigGroup(KSharedConfig::openConfig(),"LatteSettingsDialog").group("ViewsDialog"))
+      m_storage(KConfigGroup(KSharedConfig::openConfig(),QStringLiteral("LatteSettingsDialog")).group(QStringLiteral("ViewsDialog")))
 {
     setAttribute(Qt::WA_DeleteOnClose, true);
     loadConfig();
@@ -30,7 +30,7 @@ ViewsDialog::ViewsDialog(SettingsDialog *parent, Controller::Layouts *controller
     m_handler = new Handler::ViewsHandler(this);
 
     //! Button Group
-    m_applyNowBtn = new QPushButton(QIcon::fromTheme("dialog-yes"), i18n("Apply Now"), m_ui->buttonBox);
+    m_applyNowBtn = new QPushButton(QIcon::fromTheme(QStringLiteral("dialog-yes")), i18n("Apply Now"), m_ui->buttonBox);
     m_applyNowBtn->setToolTip(i18n("Apply all dock, panels changes now"));
     m_ui->buttonBox->addButton(m_applyNowBtn, QDialogButtonBox::ApplyRole);
 

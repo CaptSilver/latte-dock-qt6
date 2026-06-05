@@ -145,17 +145,17 @@ bool Layout::operator!=(const Layout &rhs) const
 
 bool Layout::isOnAllActivities() const
 {
-    return ((activities.count() == 1) && (activities[0] == ALLACTIVITIESID));
+    return ((activities.count() == 1) && (activities[0] == QLatin1String(ALLACTIVITIESID)));
 }
 
 bool Layout::isForFreeActivities() const
 {
-    return ((activities.count() == 1) && (activities[0] == FREEACTIVITIESID));
+    return ((activities.count() == 1) && (activities[0] == QLatin1String(FREEACTIVITIESID)));
 }
 
 bool Layout::isTemporary() const
 {
-    return id.startsWith("/tmp");
+    return id.startsWith(QLatin1String("/tmp"));
 }
 
 bool Layout::isEmpty() const

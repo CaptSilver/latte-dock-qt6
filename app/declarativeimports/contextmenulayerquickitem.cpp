@@ -57,7 +57,7 @@ void ContextMenuLayerQuickItem::setView(QObject *view)
     }
 
     m_latteView = qobject_cast<Latte::View *>(view);
-    emit viewChanged();
+    Q_EMIT viewChanged();
 }
 
 void ContextMenuLayerQuickItem::onMenuAboutToHide()
@@ -68,7 +68,7 @@ void ContextMenuLayerQuickItem::onMenuAboutToHide()
 
     m_latteView->containment()->setStatus(m_lastContainmentStatus);
     m_contextMenu = nullptr;
-    emit menuChanged();
+    Q_EMIT menuChanged();
 }
 
 QPoint ContextMenuLayerQuickItem::popUpRelevantToParent(const QRect &parentItem, const QRect popUpRect)
@@ -152,7 +152,7 @@ void ContextMenuLayerQuickItem::mouseReleaseEvent(QMouseEvent *event)
     }
 
     event->setAccepted(m_latteView->containment()->containmentActions().contains(Plasma::ContainmentActions::eventToString(event)));
-    emit menuChanged();
+    Q_EMIT menuChanged();
 }
 
 void ContextMenuLayerQuickItem::mousePressEvent(QMouseEvent *event)
@@ -252,18 +252,18 @@ void ContextMenuLayerQuickItem::mousePressEvent(QMouseEvent *event)
 
     desktopMenu->setAttribute(Qt::WA_DeleteOnClose);
     m_contextMenu = desktopMenu;
-    emit menuChanged();
+    Q_EMIT menuChanged();
 
     //end workaround
     //!end of plasma official code(workaround)
 
     //qDebug() << "5 ...";
 
-    emit m_latteView->containment()->contextualActionsAboutToShow();
+    Q_EMIT m_latteView->containment()->contextualActionsAboutToShow();
 
     if (applet && applet != m_latteView->containment()) {
         //qDebug() << "5.3 ...";
-        emit applet->contextualActionsAboutToShow();
+        Q_EMIT applet->contextualActionsAboutToShow();
         addAppletActions(desktopMenu, applet, event);
     } else {
         //qDebug() << "5.6 ...";
@@ -377,19 +377,19 @@ void ContextMenuLayerQuickItem::addAppletActions(QMenu *desktopMenu, Plasma::App
     }
 
     if (!applet->failedToLaunch()) {
-        QAction *runAssociatedApplication = applet->actions()->action(QStringLiteral("run associated application"));
+        QAction *runAssociatedApplication = applet->internalAction(QStringLiteral("run associated application"));
 
         if (runAssociatedApplication && runAssociatedApplication->isEnabled()) {
             desktopMenu->addAction(runAssociatedApplication);
         }
 
-        QAction *configureApplet = applet->actions()->action(QStringLiteral("configure"));
+        QAction *configureApplet = applet->internalAction(QStringLiteral("configure"));
 
         if (configureApplet && configureApplet->isEnabled()) {
             desktopMenu->addAction(configureApplet);
         }
 
-        QAction *appletAlternatives = applet->actions()->action(QStringLiteral("alternatives"));
+        QAction *appletAlternatives = applet->internalAction(QStringLiteral("alternatives"));
 
         if (appletAlternatives && appletAlternatives->isEnabled() && m_latteView->containment()->isUserConfiguring()) {
             desktopMenu->addAction(appletAlternatives);
@@ -434,8 +434,8 @@ void ContextMenuLayerQuickItem::addAppletActions(QMenu *desktopMenu, Plasma::App
     }
 
     if (m_latteView->containment()->immutability() == Plasma::Types::Mutable &&
-            (m_latteView->containment()->containmentType() != Plasma::Types::PanelContainment || m_latteView->containment()->isUserConfiguring())) {
-        QAction *closeApplet = applet->actions()->action(QStringLiteral("remove"));
+            (m_latteView->containment()->containmentType() != Plasma::Containment::Panel || m_latteView->containment()->isUserConfiguring())) {
+        QAction *closeApplet = applet->internalAction(QStringLiteral("remove"));
 
         //qDebug() << "checking for removal" << closeApplet;
         if (closeApplet) {
@@ -473,7 +473,7 @@ void ContextMenuLayerQuickItem::addContainmentActions(QMenu *desktopMenu, QEvent
     if (plugin->containment() != m_latteView->containment()) {
         plugin->setContainment(m_latteView->containment());
         // now configure it
-        KConfigGroup cfg(m_latteView->containment()->corona()->config(), "ActionPlugins");
+        KConfigGroup cfg(m_latteView->containment()->corona()->config(), QStringLiteral("ActionPlugins"));
         cfg = KConfigGroup(&cfg, QString::number(m_latteView->containment()->containmentType()));
         KConfigGroup pluginConfig = KConfigGroup(&cfg, trigger);
         plugin->restore(pluginConfig);

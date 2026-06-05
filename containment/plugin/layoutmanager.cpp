@@ -12,15 +12,15 @@
 #include <QtMath>
 
 // KDE
-#include <KDeclarative/ConfigPropertyMap>
+#include <KConfigQml/KConfigPropertyMap>
 
 // Plasma
-#include <Plasma>
+#include <Plasma/Plasma>
 #include <Plasma/Applet>
 #include <PlasmaQuick/AppletQuickItem>
 
-#define ISAPPLETLOCKEDOPTION "lockZoom"
-#define ISCOLORINGBLOCKEDOPTION "userBlocksColorizing"
+#define ISAPPLETLOCKEDOPTION QStringLiteral("lockZoom")
+#define ISCOLORINGBLOCKEDOPTION QStringLiteral("userBlocksColorizing")
 
 namespace Latte{
 namespace Containment{
@@ -30,8 +30,8 @@ const int LayoutManager::JUSTIFYSPLITTERID;
 LayoutManager::LayoutManager(QObject *parent)
     : QObject(parent)
 {
-    m_option[ISAPPLETLOCKEDOPTION] = "lockedZoomApplets";
-    m_option[ISCOLORINGBLOCKEDOPTION] = "userBlocksColorizingApplets";
+    m_option[ISAPPLETLOCKEDOPTION] = QStringLiteral("lockedZoomApplets");
+    m_option[ISCOLORINGBLOCKEDOPTION] = QStringLiteral("userBlocksColorizingApplets");
 
     connect(this, &LayoutManager::rootItemChanged, this, &LayoutManager::onRootItemChanged);
 
@@ -39,7 +39,7 @@ LayoutManager::LayoutManager(QObject *parent)
     m_hasRestoredAppletsTimer.setSingleShot(true);
     connect(&m_hasRestoredAppletsTimer, &QTimer::timeout, this, [&]() {
         m_hasRestoredApplets = true;
-        emit hasRestoredAppletsChanged();
+        Q_EMIT hasRestoredAppletsChanged();
     });
 }
 
@@ -60,7 +60,7 @@ void LayoutManager::setSplitterPosition(const int &position)
     }
 
     m_splitterPosition = position;
-    emit splitterPositionChanged();
+    Q_EMIT splitterPositionChanged();
 }
 
 int LayoutManager::splitterPosition2() const
@@ -75,7 +75,7 @@ void LayoutManager::setSplitterPosition2(const int &position)
     }
 
     m_splitterPosition2 = position;
-    emit splitterPosition2Changed();
+    Q_EMIT splitterPosition2Changed();
 }
 
 QList<int> LayoutManager::appletOrder() const
@@ -90,7 +90,7 @@ void LayoutManager::setAppletOrder(const QList<int> &order)
     }
 
     m_appletOrder = order;
-    emit appletOrderChanged();
+    Q_EMIT appletOrderChanged();
 }
 
 QList<int> LayoutManager::lockedZoomApplets() const
@@ -105,7 +105,7 @@ void LayoutManager::setLockedZoomApplets(const QList<int> &applets)
     }
 
     m_lockedZoomApplets = applets;
-    emit lockedZoomAppletsChanged();
+    Q_EMIT lockedZoomAppletsChanged();
 }
 
 QList<int> LayoutManager::order() const
@@ -120,7 +120,7 @@ void LayoutManager::setOrder(const QList<int> &order)
     }
 
     m_order = order;
-    emit orderChanged();
+    Q_EMIT orderChanged();
 }
 
 QList<int> LayoutManager::userBlocksColorizingApplets() const
@@ -135,7 +135,7 @@ void LayoutManager::setUserBlocksColorizingApplets(const QList<int> &applets)
     }
 
     m_userBlocksColorizingApplets = applets;
-    emit userBlocksColorizingAppletsChanged();
+    Q_EMIT userBlocksColorizingAppletsChanged();
 }
 
 QList<int> LayoutManager::appletsInScheduledDestruction() const
@@ -147,10 +147,10 @@ void LayoutManager::setAppletInScheduledDestruction(const int &id, const bool &e
 {
     if (m_appletsInScheduledDestruction.contains(id) && !enabled) {
         m_appletsInScheduledDestruction.remove(id);
-        emit appletsInScheduledDestructionChanged();
+        Q_EMIT appletsInScheduledDestructionChanged();
     } else if (!m_appletsInScheduledDestruction.contains(id) && enabled) {
         m_appletsInScheduledDestruction[id] = appletItem(id);
-        emit appletsInScheduledDestructionChanged();
+        Q_EMIT appletsInScheduledDestructionChanged();
     }
 }
 
@@ -169,10 +169,10 @@ void LayoutManager::setPlasmoid(QObject *plasmoid)
     m_plasmoid = plasmoid;
 
     if (m_plasmoid) {
-        m_configuration = qobject_cast<KDeclarative::ConfigPropertyMap *>(m_plasmoid->property("configuration").value<QObject *>());
+        m_configuration = qobject_cast<KConfigPropertyMap *>(m_plasmoid->property("configuration").value<QObject *>());
     }
 
-    emit plasmoidChanged();
+    Q_EMIT plasmoidChanged();
 }
 
 QQuickItem *LayoutManager::rootItem() const
@@ -187,7 +187,7 @@ void LayoutManager::setRootItem(QQuickItem *root)
     }
 
     m_rootItem = root;
-    emit rootItemChanged();
+    Q_EMIT rootItemChanged();
 }
 
 QQuickItem *LayoutManager::dndSpacer() const
@@ -202,7 +202,7 @@ void LayoutManager::setDndSpacer(QQuickItem *dnd)
     }
 
     m_dndSpacer = dnd;
-    emit dndSpacerChanged();
+    Q_EMIT dndSpacerChanged();
 }
 
 QQuickItem *LayoutManager::mainLayout() const
@@ -217,7 +217,7 @@ void LayoutManager::setMainLayout(QQuickItem *main)
     }
 
     m_mainLayout = main;
-    emit mainLayoutChanged();
+    Q_EMIT mainLayoutChanged();
 }
 
 QQuickItem *LayoutManager::startLayout() const
@@ -232,7 +232,7 @@ void LayoutManager::setStartLayout(QQuickItem *start)
     }
 
     m_startLayout = start;
-    emit startLayoutChanged();
+    Q_EMIT startLayoutChanged();
 }
 
 QQuickItem *LayoutManager::endLayout() const
@@ -247,7 +247,7 @@ void LayoutManager::setEndLayout(QQuickItem *end)
     }
 
     m_endLayout = end;
-    emit endLayoutChanged();
+    Q_EMIT endLayoutChanged();
 }
 
 QQuickItem *LayoutManager::metrics() const
@@ -262,12 +262,12 @@ void LayoutManager::setMetrics(QQuickItem *metrics)
     }
 
     m_metrics = metrics;
-    emit metricsChanged();
+    Q_EMIT metricsChanged();
 }
 
 void LayoutManager::updateOrder()
 {
-    Latte::Types::Alignment alignment = static_cast<Latte::Types::Alignment>((*m_configuration)["alignment"].toInt());
+    Latte::Types::Alignment alignment = static_cast<Latte::Types::Alignment>((*m_configuration)[QStringLiteral("alignment")].toInt());
 
     auto nextorder = m_appletOrder;
 
@@ -318,12 +318,12 @@ bool LayoutManager::isValidApplet(const int &id)
 //! Actions
 void LayoutManager::restore()
 {
-    QList<int> appletIdsOrder = toIntList((*m_configuration)["appletOrder"].toString());
+    QList<int> appletIdsOrder = toIntList((*m_configuration)[QStringLiteral("appletOrder")].toString());
     QList<QObject *> applets = m_plasmoid->property("applets").value<QList<QObject *>>();
 
-    Latte::Types::Alignment alignment = static_cast<Latte::Types::Alignment>((*m_configuration)["alignment"].toInt());
-    int splitterPosition = (*m_configuration)["splitterPosition"].toInt();
-    int splitterPosition2 = (*m_configuration)["splitterPosition2"].toInt();
+    Latte::Types::Alignment alignment = static_cast<Latte::Types::Alignment>((*m_configuration)[QStringLiteral("alignment")].toInt());
+    int splitterPosition = (*m_configuration)[QStringLiteral("splitterPosition")].toInt();
+    int splitterPosition2 = (*m_configuration)[QStringLiteral("splitterPosition2")].toInt();
 
     if (alignment==Latte::Types::Justify) {
         if (splitterPosition!=-1 && splitterPosition2!=-1) {
@@ -464,7 +464,7 @@ void LayoutManager::restoreOptions()
     restoreOption(ISCOLORINGBLOCKEDOPTION);
 }
 
-void LayoutManager::restoreOption(const char *option)
+void LayoutManager::restoreOption(const QString &option)
 {
     QList<int> applets = toIntList((*m_configuration)[m_option[option]].toString());
 
@@ -547,23 +547,23 @@ void LayoutManager::save()
     int mainChilds  = collectLayoutAppletIds(m_mainLayout,  appletIds);
     int endChilds   = collectLayoutAppletIds(m_endLayout,   appletIds);
 
-    Latte::Types::Alignment alignment = static_cast<Latte::Types::Alignment>((*m_configuration)["alignment"].toInt());
+    Latte::Types::Alignment alignment = static_cast<Latte::Types::Alignment>((*m_configuration)[QStringLiteral("alignment")].toInt());
 
     if (alignment == Latte::Types::Justify) {
         setSplitterPosition(startChilds + 1);
         setSplitterPosition2(startChilds + 1 + mainChilds + 1);
     } else {
-        int splitterPosition = (*m_configuration)["splitterPosition"].toInt();
-        int splitterPosition2 = (*m_configuration)["splitterPosition2"].toInt();
+        int splitterPosition = (*m_configuration)[QStringLiteral("splitterPosition")].toInt();
+        int splitterPosition2 = (*m_configuration)[QStringLiteral("splitterPosition2")].toInt();
 
         setSplitterPosition(splitterPosition);
         setSplitterPosition2(splitterPosition2);
     }
 
     //! are not writing in config file for some cases mentioned in class header so they are not used
-    //(*m_configuration)["splitterPosition"] = QVariant(startChilds + 1);
-    //(*m_configuration)["splitterPosition2"] = QVariant(startChilds + 1 + mainChilds + 1);
-    //(*m_configuration)["appletOrder"] = appletIds.join(";");
+    //(*m_configuration)[QStringLiteral("splitterPosition")] = QVariant(startChilds + 1);
+    //(*m_configuration)[QStringLiteral("splitterPosition2")] = QVariant(startChilds + 1 + mainChilds + 1);
+    //(*m_configuration)[QStringLiteral("appletOrder")] = appletIds.join(QLatin1Char(';'));
 
     setAppletOrder(appletIds);
 
@@ -573,9 +573,9 @@ void LayoutManager::save()
     //! save applet order
     QString appletsserialized = toStr(appletIds);
 
-    if ((*m_configuration)["appletOrder"] != appletsserialized) {
-        m_configuration->insert("appletOrder", appletsserialized);
-        emit m_configuration->valueChanged("appletOrder", appletsserialized);
+    if ((*m_configuration)[QStringLiteral("appletOrder")] != appletsserialized) {
+        m_configuration->insert(QStringLiteral("appletOrder"), appletsserialized);
+        Q_EMIT m_configuration->valueChanged(QStringLiteral("appletOrder"), appletsserialized);
     }
 }
 
@@ -584,23 +584,23 @@ void LayoutManager::saveOptions()
     QString lockedserialized =  toStr(m_lockedZoomApplets);
     if ((*m_configuration)[m_option[ISAPPLETLOCKEDOPTION]] != lockedserialized) {
         m_configuration->insert(m_option[ISAPPLETLOCKEDOPTION], lockedserialized);
-        emit m_configuration->valueChanged(m_option[ISAPPLETLOCKEDOPTION], lockedserialized);
+        Q_EMIT m_configuration->valueChanged(m_option[ISAPPLETLOCKEDOPTION], lockedserialized);
     }
 
     QString colorsserialized = toStr(m_userBlocksColorizingApplets);
     if ((*m_configuration)[m_option[ISCOLORINGBLOCKEDOPTION]] != colorsserialized) {
         m_configuration->insert(m_option[ISCOLORINGBLOCKEDOPTION], colorsserialized);
-        emit m_configuration->valueChanged(m_option[ISCOLORINGBLOCKEDOPTION], colorsserialized);
+        Q_EMIT m_configuration->valueChanged(m_option[ISCOLORINGBLOCKEDOPTION], colorsserialized);
     }
 
-    if ((*m_configuration)["splitterPosition"] != m_splitterPosition) {
-        m_configuration->insert("splitterPosition", m_splitterPosition);
-        emit m_configuration->valueChanged(m_option["splitterPosition"], m_splitterPosition);
+    if ((*m_configuration)[QStringLiteral("splitterPosition")] != m_splitterPosition) {
+        m_configuration->insert(QStringLiteral("splitterPosition"), m_splitterPosition);
+        Q_EMIT m_configuration->valueChanged(m_option[QStringLiteral("splitterPosition")], m_splitterPosition);
     }
 
-    if ((*m_configuration)["splitterPosition2"] != m_splitterPosition2) {
-        m_configuration->insert("splitterPosition2", m_splitterPosition2);
-        emit m_configuration->valueChanged(m_option["splitterPosition2"], m_splitterPosition2);
+    if ((*m_configuration)[QStringLiteral("splitterPosition2")] != m_splitterPosition2) {
+        m_configuration->insert(QStringLiteral("splitterPosition2"), m_splitterPosition2);
+        Q_EMIT m_configuration->valueChanged(m_option[QStringLiteral("splitterPosition2")], m_splitterPosition2);
     }
 }
 
@@ -889,7 +889,7 @@ int LayoutManager::dndSpacerIndex()
         return -1;
     }
 
-    Latte::Types::Alignment alignment = static_cast<Latte::Types::Alignment>((*m_configuration)["alignment"].toInt());
+    Latte::Types::Alignment alignment = static_cast<Latte::Types::Alignment>((*m_configuration)[QStringLiteral("alignment")].toInt());
     int index = -1;
 
     if (alignment == Latte::Types::Justify) {
@@ -944,7 +944,7 @@ int LayoutManager::dndSpacerIndex()
 
 void LayoutManager::requestAppletsOrder(const QList<int> &order)
 {
-    Latte::Types::Alignment alignment = static_cast<Latte::Types::Alignment>((*m_configuration)["alignment"].toInt());
+    Latte::Types::Alignment alignment = static_cast<Latte::Types::Alignment>((*m_configuration)[QStringLiteral("alignment")].toInt());
     QQuickItem *nextlayout = alignment != Latte::Types::Justify ? m_mainLayout : m_startLayout;
     QQuickItem *previousitem = nullptr;
 
@@ -1008,7 +1008,7 @@ void LayoutManager::insertAtCoordinates(QQuickItem *item, const int &x, const in
         return;
     }
 
-    Latte::Types::Alignment alignment = static_cast<Latte::Types::Alignment>((*m_configuration)["alignment"].toInt());
+    Latte::Types::Alignment alignment = static_cast<Latte::Types::Alignment>((*m_configuration)[QStringLiteral("alignment")].toInt());
 
     bool result{false};
 
@@ -1098,7 +1098,7 @@ void LayoutManager::addAppletItem(QObject *applet, int index)
         return;
     }
 
-    Latte::Types::Alignment alignment = static_cast<Latte::Types::Alignment>((*m_configuration)["alignment"].toInt());
+    Latte::Types::Alignment alignment = static_cast<Latte::Types::Alignment>((*m_configuration)[QStringLiteral("alignment")].toInt());
     QVariant appletItemVariant;
     QVariant appletVariant; appletVariant.setValue(applet);
     m_createAppletItemMethod.invoke(m_rootItem, Q_RETURN_ARG(QVariant, appletItemVariant), Q_ARG(QVariant, appletVariant));
@@ -1276,7 +1276,7 @@ void LayoutManager::destroyAppletContainer(QObject *applet)
 
 void LayoutManager::reorderSplitterInStartLayout()
 {
-    Latte::Types::Alignment alignment = static_cast<Latte::Types::Alignment>((*m_configuration)["alignment"].toInt());
+    Latte::Types::Alignment alignment = static_cast<Latte::Types::Alignment>((*m_configuration)[QStringLiteral("alignment")].toInt());
 
     if (alignment != Latte::Types::Justify) {
         return;
@@ -1305,7 +1305,7 @@ void LayoutManager::reorderSplitterInStartLayout()
 
 void LayoutManager::reorderSplitterInEndLayout()
 {
-    Latte::Types::Alignment alignment = static_cast<Latte::Types::Alignment>((*m_configuration)["alignment"].toInt());
+    Latte::Types::Alignment alignment = static_cast<Latte::Types::Alignment>((*m_configuration)[QStringLiteral("alignment")].toInt());
 
     if (alignment != Latte::Types::Justify) {
         return;
@@ -1340,8 +1340,8 @@ void LayoutManager::addJustifySplittersInMainLayout()
 
     destroyJustifySplitters();
 
-    int splitterPosition = (*m_configuration)["splitterPosition"].toInt();
-    int splitterPosition2 = (*m_configuration)["splitterPosition2"].toInt();
+    int splitterPosition = (*m_configuration)[QStringLiteral("splitterPosition")].toInt();
+    int splitterPosition2 = (*m_configuration)[QStringLiteral("splitterPosition2")].toInt();
 
     int splitterIndex = (splitterPosition >= 1 ? splitterPosition - 1 : -1);
     int splitterIndex2 = (splitterPosition2 >= 1 ? splitterPosition2 - 1 : -1);
@@ -1532,7 +1532,7 @@ void LayoutManager::printAppletList(QList<QQuickItem *> list)
 QList<int> LayoutManager::toIntList(const QString &serialized)
 {
     QList<int> list;
-    QStringList items = serialized.split(";");
+    QStringList items = serialized.split(QLatin1Char(';'));
     items.removeAll(QString());
 
     for(const auto &item: items) {
@@ -1551,7 +1551,7 @@ QString LayoutManager::toStr(const QList<int> &list)
         strlist << QString::number(num);
     }
 
-    return strlist.join(";");
+    return strlist.join(QLatin1Char(';'));
 }
 
 }

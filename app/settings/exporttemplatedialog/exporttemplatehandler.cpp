@@ -25,6 +25,7 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QList>
+#include <QUrl>
 
 // KDE
 #include <KLocalizedString>
@@ -52,7 +53,7 @@ ExportTemplateHandler::ExportTemplateHandler(Dialog::ExportTemplateDialog *dialo
 {
     loadApplets(layout.id);
     m_dialog->setWindowTitle(i18n("Export Layout Template"));
-    o_filepath = dialog->corona()->templatesManager()->proposedTemplateAbsolutePath(layout.name + ".layout.latte");
+    o_filepath = dialog->corona()->templatesManager()->proposedTemplateAbsolutePath(layout.name + QStringLiteral(".layout.latte"));
     setFilepath(o_filepath);
 }
 
@@ -62,8 +63,8 @@ ExportTemplateHandler::ExportTemplateHandler(Dialog::ExportTemplateDialog *dialo
     loadApplets(view.id);
     m_dialog->setWindowTitle(i18n("Export Dock/Panel Template"));
 
-    QString viewname = view.name.isEmpty() ? view.originLayout() + " " + i18n("Dock") : view.name;
-    o_filepath = dialog->corona()->templatesManager()->proposedTemplateAbsolutePath(viewname + ".view.latte");
+    QString viewname = view.name.isEmpty() ? view.originLayout() + QStringLiteral(" ") + i18n("Dock") : view.name;
+    o_filepath = dialog->corona()->templatesManager()->proposedTemplateAbsolutePath(viewname + QStringLiteral(".view.latte"));
     setFilepath(o_filepath);
 }
 
@@ -77,9 +78,9 @@ ExportTemplateHandler::ExportTemplateHandler(Dialog::ExportTemplateDialog *dialo
     loadApplets(temporiginfile);
     m_dialog->setWindowTitle(i18n("Export %1 Template", type));
 
-    QString viewname = view->name().isEmpty() ? view->layout()->name() + " " + type : view->name();
+    QString viewname = view->name().isEmpty() ? view->layout()->name() + QStringLiteral(" ") + type : view->name();
 
-    o_filepath = dialog->corona()->templatesManager()->proposedTemplateAbsolutePath(viewname + ".view.latte");
+    o_filepath = dialog->corona()->templatesManager()->proposedTemplateAbsolutePath(viewname + QStringLiteral(".view.latte"));
     setFilepath(o_filepath);
 }
 
@@ -128,7 +129,7 @@ void ExportTemplateHandler::setFilepath(const QString &filepath)
     }
 
     c_filepath = filepath;
-    emit filepathChanged();
+    Q_EMIT filepathChanged();
 }
 
 void ExportTemplateHandler::loadApplets(const QString &file)
@@ -141,7 +142,7 @@ void ExportTemplateHandler::loadApplets(const QString &file)
 void ExportTemplateHandler::chooseFileDialog()
 {
     QFileInfo currentFile(c_filepath);
-    bool inLayoutState = c_filepath.endsWith("layout.latte");
+    bool inLayoutState = c_filepath.endsWith(QStringLiteral("layout.latte"));
 
     QFileDialog *chooseFileDlg = new QFileDialog(m_dialog,
                                                  inLayoutState ? i18n("Choose Layout Template file") : i18n("Choose View Template file"),
@@ -152,17 +153,17 @@ void ExportTemplateHandler::chooseFileDialog()
     chooseFileDlg->setFileMode(QFileDialog::AnyFile);
     chooseFileDlg->setAcceptMode(QFileDialog::AcceptSave);
     if (inLayoutState) {
-        chooseFileDlg->setDefaultSuffix("layout.latte");
+        chooseFileDlg->setDefaultSuffix(QStringLiteral("layout.latte"));
     } else {
-        chooseFileDlg->setDefaultSuffix("view.latte");
+        chooseFileDlg->setDefaultSuffix(QStringLiteral("view.latte"));
     }
 
     QStringList filters;
 
     if (inLayoutState) {
-        filters << QString(i18nc("layout template", "Latte Dock Layout Template file v0.2") + "(*.layout.latte)");
+        filters << QString(i18nc("layout template", "Latte Dock Layout Template file v0.2") + QStringLiteral("(*.layout.latte)"));
     } else {
-        filters << QString(i18nc("view template", "Latte Dock View Template file v0.2") + "(*.view.latte)");
+        filters << QString(i18nc("view template", "Latte Dock View Template file v0.2") + QStringLiteral("(*.view.latte)"));
     }
 
     chooseFileDlg->setNameFilters(filters);
@@ -170,9 +171,9 @@ void ExportTemplateHandler::chooseFileDialog()
     connect(chooseFileDlg, &QFileDialog::finished, chooseFileDlg, &QFileDialog::deleteLater);
     connect(chooseFileDlg, &QFileDialog::fileSelected, this, [&, inLayoutState](const QString &file) {
         if (inLayoutState) {
-            if (!file.endsWith(".layout.latte")) {
+            if (!file.endsWith(QStringLiteral(".layout.latte"))) {
                 QString selected = file;
-                selected = selected.replace(QDir::homePath(), "~");
+                selected = selected.replace(QDir::homePath(), QStringLiteral("~"));
                 showInlineMessage(i18n("<i>%1</i> does not end with <i>.layout.latte</i> extension. Selected file <b>rejected</b>.", selected),
                                   KMessageWidget::Error,
                                   true);
@@ -180,9 +181,9 @@ void ExportTemplateHandler::chooseFileDialog()
                 setFilepath(file);
             }
         } else {
-            if (!file.endsWith(".view.latte")) {
+            if (!file.endsWith(QStringLiteral(".view.latte"))) {
                 QString selected = file;
-                selected = selected.replace(QDir::homePath(), "~");
+                selected = selected.replace(QDir::homePath(), QStringLiteral("~"));
                 showInlineMessage(i18n("<i>%1</i> does not end with <i>.view.latte</i> extension. Selected file <b>rejected</b>.", selected),
                                   KMessageWidget::Error,
                                   true);
@@ -220,7 +221,7 @@ void ExportTemplateHandler::onExport()
                                                                          m_appletsModel->selectedApplets());
     if (result) {
         QAction *openUrlAction = new QAction(i18n("Open Location..."), this);
-        openUrlAction->setIcon(QIcon::fromTheme("document-open"));
+        openUrlAction->setIcon(QIcon::fromTheme(QStringLiteral("document-open")));
         openUrlAction->setData(c_filepath);
         QList<QAction *> actions;
         actions << openUrlAction;
@@ -229,7 +230,7 @@ void ExportTemplateHandler::onExport()
             QString file = openUrlAction->data().toString();
 
             if (!file.isEmpty()) {
-                KIO::highlightInFileManager({file});
+                KIO::highlightInFileManager(QList<QUrl>{QUrl::fromLocalFile(file)});
             }
         });
 
@@ -238,7 +239,7 @@ void ExportTemplateHandler::onExport()
                           false,
                           actions);
 
-        emit exportSucceeded();
+        Q_EMIT exportSucceeded();
     } else {
         showExportTemplateError(QFileInfo(c_filepath).baseName());
     }
@@ -248,7 +249,7 @@ void ExportTemplateHandler::onFilepathChanged()
 {
     QString filepath = c_filepath;
 
-    filepath = filepath.replace(QDir::homePath(), "~");
+    filepath = filepath.replace(QDir::homePath(), QStringLiteral("~"));
     m_ui->fileLbl->setText(filepath);
 }
 
@@ -294,11 +295,11 @@ void ExportTemplateHandler::save()
 
 bool ExportTemplateHandler::overwriteConfirmation(const QString &fileName)
 {
-    return (KMessageBox::warningYesNo(m_dialog,
+    return (KMessageBox::warningTwoActions(m_dialog,
                                       i18n("The file \"%1\" already exists. Do you wish to overwrite it?", fileName),
                                       i18n("Overwrite File?"),
                                       KStandardGuiItem::overwrite(),
-                                      KStandardGuiItem::cancel()) == KMessageBox::Yes);
+                                      KStandardGuiItem::cancel()) == KMessageBox::PrimaryAction);
 }
 
 }

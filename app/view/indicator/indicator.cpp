@@ -21,8 +21,8 @@
 // KDE
 #include <KLocalizedString>
 #include <KPluginMetaData>
-#include <KDeclarative/ConfigPropertyMap>
-#include <KDeclarative/QmlObjectSharedEngine>
+#include <KConfigPropertyMap>
+#include <PlasmaQuick/SharedQmlEngine>
 
 
 namespace Latte {
@@ -44,17 +44,17 @@ Indicator::Indicator(Latte::View *parent)
 
     connect(m_view, &Latte::View::indicatorPluginChanged, [this](const QString &indicatorId) {
         if (m_corona && m_corona->indicatorFactory()->isCustomType(indicatorId)) {
-            emit customPluginsChanged();
+            Q_EMIT customPluginsChanged();
         }
     });
 
     connect(m_view, &Latte::View::indicatorPluginRemoved, [this](const QString &indicatorId) {
         if (m_corona && m_type == indicatorId && !m_corona->indicatorFactory()->pluginExists(indicatorId)) {
-            setType("org.kde.latte.default");
+            setType(QStringLiteral("org.kde.latte.default"));
         }
 
         if (m_corona && m_corona->indicatorFactory()->isCustomType(indicatorId)) {
-            emit customPluginsChanged();
+            Q_EMIT customPluginsChanged();
         }
     });
 
@@ -96,7 +96,7 @@ void Indicator::setEnabled(bool enabled)
     }
 
     m_enabled = enabled;
-    emit enabledChanged();
+    Q_EMIT enabledChanged();
 }
 
 bool Indicator::enabledForApplets() const
@@ -111,7 +111,7 @@ void Indicator::setEnabledForApplets(bool enabled)
     }
 
     m_enabledForApplets = enabled;
-    emit enabledForAppletsChanged();
+    Q_EMIT enabledForAppletsChanged();
 }
 
 bool Indicator::isCustomIndicator() const
@@ -136,7 +136,7 @@ void Indicator::setPluginIsReady(bool ready)
     }
 
     m_pluginIsReady = ready;
-    emit pluginIsReadyChanged();
+    Q_EMIT pluginIsReadyChanged();
 }
 
 int Indicator::index(const QString &type)
@@ -180,7 +180,7 @@ void Indicator::setCustomType(QString type)
     }
 
     m_customType = type;
-    emit customPluginChanged();
+    Q_EMIT customPluginChanged();
 }
 
 int Indicator::customPluginsCount() const
@@ -253,13 +253,13 @@ void Indicator::load(QString type)
         updateScheme();
         updateComponent();
 
-        emit pluginChanged();
+        Q_EMIT pluginChanged();
 
         //! create all indicators with the new type
         setPluginIsReady(true);
-    } else if (type!="org.kde.latte.default") {
+    } else if (type != QLatin1String("org.kde.latte.default")) {
         qDebug() << " Indicator metadata are not valid : " << type;
-        setType("org.kde.latte.default");
+        setType(QStringLiteral("org.kde.latte.default"));
     }
 }
 
@@ -267,11 +267,11 @@ void Indicator::updateComponent()
 {
     auto prevComponent = m_component;
 
-    QString uiPath = m_metadata.value("X-Latte-MainScript");
+    QString uiPath = m_metadata.value(QStringLiteral("X-Latte-MainScript"));
 
     if (!uiPath.isEmpty()) {
-        uiPath = m_pluginPath + "/package/" + uiPath;
-        m_component = new QQmlComponent(m_view->engine(), uiPath);
+        uiPath = m_pluginPath + QStringLiteral("/package/") + uiPath;
+        m_component = new QQmlComponent(m_view->engine().get(), uiPath);
     }
 
     if (prevComponent) {
@@ -283,19 +283,19 @@ void Indicator::loadPlasmaComponent()
 {
     auto prevComponent = m_plasmaComponent;
 
-    KPluginMetaData metadata = m_corona->indicatorFactory()->metadata("org.kde.latte.plasmatabstyle");
-    QString uiPath = metadata.value("X-Latte-MainScript");
+    KPluginMetaData metadata = m_corona->indicatorFactory()->metadata(QStringLiteral("org.kde.latte.plasmatabstyle"));
+    QString uiPath = metadata.value(QStringLiteral("X-Latte-MainScript"));
 
     if (!uiPath.isEmpty()) {
-        uiPath = QFileInfo(metadata.fileName()).absolutePath() + "/package/" + uiPath;
-        m_plasmaComponent = new QQmlComponent(m_view->engine(), uiPath);
+        uiPath = QFileInfo(metadata.fileName()).absolutePath() + QStringLiteral("/package/") + uiPath;
+        m_plasmaComponent = new QQmlComponent(m_view->engine().get(), uiPath);
     }
 
     if (prevComponent) {
         prevComponent->deleteLater();
     }
 
-    emit plasmaComponentChanged();
+    Q_EMIT plasmaComponentChanged();
 }
 
 void Indicator::unloadIndicators()
@@ -308,12 +308,12 @@ void Indicator::updateScheme()
     auto prevConfigLoader = m_configLoader;
     auto prevConfiguration = m_configuration;
 
-    QString xmlPath = m_metadata.value("X-Latte-ConfigXml");
+    QString xmlPath = m_metadata.value(QStringLiteral("X-Latte-ConfigXml"));
 
     if (!xmlPath.isEmpty()) {
-        QFile file(m_pluginPath + "/package/" + xmlPath);
-        m_configLoader = new KConfigLoader(m_view->containment()->config().group("Indicator").group(m_metadata.pluginId()), &file);
-        m_configuration = new KDeclarative::ConfigPropertyMap(m_configLoader, this);
+        QFile file(m_pluginPath + QStringLiteral("/package/") + xmlPath);
+        m_configLoader = new KConfigLoader(m_view->containment()->config().group(QStringLiteral("Indicator")).group(m_metadata.pluginId()), &file);
+        m_configuration = new KConfigPropertyMap(m_configLoader, this);
     } else {
         m_configLoader = nullptr;
         m_configuration = nullptr;
@@ -327,23 +327,23 @@ void Indicator::updateScheme()
         prevConfiguration->deleteLater();
     }
 
-    emit configurationChanged();
+    Q_EMIT configurationChanged();
 }
 
 void Indicator::loadConfig()
 {
-    auto config = m_view->containment()->config().group("Indicator");
-    m_customType = config.readEntry("customType", QString());
-    m_enabled = config.readEntry("enabled", true);
-    m_type = config.readEntry("type", "org.kde.latte.default");
+    auto config = m_view->containment()->config().group(QStringLiteral("Indicator"));
+    m_customType = config.readEntry(QStringLiteral("customType"), QString());
+    m_enabled = config.readEntry(QStringLiteral("enabled"), true);
+    m_type = config.readEntry(QStringLiteral("type"), QStringLiteral("org.kde.latte.default"));
 }
 
 void Indicator::saveConfig()
 {
-    auto config = m_view->containment()->config().group("Indicator");
-    config.writeEntry("customType", m_customType);
-    config.writeEntry("enabled", m_enabled);
-    config.writeEntry("type", m_type);
+    auto config = m_view->containment()->config().group(QStringLiteral("Indicator"));
+    config.writeEntry(QStringLiteral("customType"), m_customType);
+    config.writeEntry(QStringLiteral("enabled"), m_enabled);
+    config.writeEntry(QStringLiteral("type"), m_type);
 }
 
 }

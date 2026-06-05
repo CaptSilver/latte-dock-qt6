@@ -100,7 +100,7 @@ public:
     //! geometry() function under wayland does not return nice results
     QRect m_validGeometry;
 
-public slots:
+public Q_SLOTS:
     void identifyWinId() {
         if (m_winId.isNull()) {
             m_winId = m_waylandInterface->winIdFor("latte-dock", m_validGeometry);
@@ -137,7 +137,7 @@ void WaylandInterface::initWindowManagement(KWayland::Client::PlasmaWindowManage
     connect(m_windowManagement, &PlasmaWindowManagement::activeWindowChanged, this, [&]() noexcept {
         auto w = m_windowManagement->activeWindow();
         if (!w || (w && (!m_ignoredWindows.contains(w->internalId()))) ) {
-            emit activeWindowChanged(w ? w->internalId() : 0);
+            Q_EMIT activeWindowChanged(w ? w->internalId() : 0);
         }
 
     }, Qt::QueuedConnection);
@@ -194,7 +194,7 @@ void WaylandInterface::setCurrentDesktop(QString desktop)
     }
 
     m_currentDesktop = desktop;
-    emit currentDesktopChanged();
+    Q_EMIT currentDesktopChanged();
 }
 
 KWayland::Client::PlasmaShell *WaylandInterface::waylandCoronaInterface() const
@@ -214,7 +214,7 @@ void WaylandInterface::registerIgnoredWindow(WindowId wid)
             untrackWindow(w);
         }
 
-        emit windowChanged(wid);
+        Q_EMIT windowChanged(wid);
     }
 }
 
@@ -222,7 +222,7 @@ void WaylandInterface::unregisterIgnoredWindow(WindowId wid)
 {
     if (m_ignoredWindows.contains(wid)) {
         m_ignoredWindows.removeAll(wid);
-        emit windowRemoved(wid);
+        Q_EMIT windowRemoved(wid);
     }
 }
 
@@ -872,7 +872,7 @@ void WaylandInterface::windowUnmapped()
 
     if (pW) {
         untrackWindow(pW);
-        emit windowRemoved(pW->internalId());
+        Q_EMIT windowRemoved(pW->internalId());
     }
 }
 
@@ -930,10 +930,10 @@ void WaylandInterface::windowCreatedProxy(KWayland::Client::PlasmaWindow *w)
     }
 
     trackWindow(w);
-    emit windowAdded(w->internalId());
+    Q_EMIT windowAdded(w->internalId());
 
     if (w->appId() == QLatin1String("latte-dock")) {
-        emit latteWindowAdded();
+        Q_EMIT latteWindowAdded();
     }
 }
 

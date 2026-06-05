@@ -6,6 +6,7 @@
 #include "viewstable.h"
 
 #include <QDebug>
+#include <QLatin1String>
 
 namespace Latte {
 namespace Data {
@@ -108,9 +109,9 @@ void ViewsTable::appendTemporaryView(const Data::View &view)
     int maxTempId = 0;
 
     for(int i=0; i<rowCount(); ++i) {
-        if ((*this)[i].id.startsWith(TEMPIDPREFIX)) {
+        if ((*this)[i].id.startsWith(QLatin1String(TEMPIDPREFIX))) {
             QString tid = (*this)[i].id;
-            tid.remove(0, QString(TEMPIDPREFIX).count());
+            tid.remove(0, QLatin1String(TEMPIDPREFIX).size());
             if (tid.toInt() > maxTempId) {
                 maxTempId = tid.toInt();
             }
@@ -118,14 +119,14 @@ void ViewsTable::appendTemporaryView(const Data::View &view)
     }
 
     Data::View newview = view;
-    newview.id =  QString(TEMPIDPREFIX + QString::number(maxTempId+1));
+    newview.id = QLatin1String(TEMPIDPREFIX) + QString::number(maxTempId+1);
     m_list << newview;
 }
 
 void ViewsTable::print()
 {
-    qDebug().noquote() << "Views initialized : " + (isInitialized ? QString("true") : QString("false"));
-    qDebug().noquote() << "aa | id | active | primary | screen | edge | alignment | maxlength | subcontainments";
+    qDebug().noquote() << QStringLiteral("Views initialized : ") + (isInitialized ? QStringLiteral("true") : QStringLiteral("false"));
+    qDebug().noquote() << QStringLiteral("aa | id | active | primary | screen | edge | alignment | maxlength | subcontainments");
 
     for(int i=0; i<rowCount(); ++i) {
         qDebug().noquote() << QString::number(i+1) << " | " << m_list[i];

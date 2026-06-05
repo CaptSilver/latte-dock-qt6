@@ -18,21 +18,8 @@ namespace Latte {
 QuickWindowSystem::QuickWindowSystem(QObject *parent)
     : QObject(parent)
 {
-    if (KWindowSystem::isPlatformWayland()) {
-        //! TODO: Wayland compositing active
-        m_compositing = true;
-    } else {
-        connect(KWindowSystem::self(), &KWindowSystem::compositingChanged
-        , this, [&](bool enabled) {
-            if (m_compositing == enabled)
-                return;
-
-            m_compositing = enabled;
-            emit compositingChanged();
-        });
-
-        m_compositing = KWindowSystem::compositingActive();
-    }
+    //! Wayland always composites; X11 compositing API removed in KF6
+    m_compositing = true;
 }
 
 QuickWindowSystem::~QuickWindowSystem()

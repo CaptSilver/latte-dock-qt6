@@ -10,6 +10,7 @@
 #include "../windowinfowrap.h"
 
 // Qt
+#include <QHash>
 #include <QObject>
 
 
@@ -36,11 +37,11 @@ public:
 
     SchemeColors *schemeForFile(const QString &scheme);
 
-signals:
+Q_SIGNALS:
     void colorSchemeChanged(const WindowId &wid);
     void defaultSchemeChanged();
 
-private slots:
+private Q_SLOTS:
     void updateDefaultScheme();
 
 private:
@@ -53,7 +54,7 @@ private:
      QMap<QString, Latte::WindowSystem::SchemeColors *> m_schemes;
 
      //! window id and its corresponding scheme file
-     QMap<WindowId, QString> m_windowScheme;
+     QHash<WindowId, QString> m_windowScheme;
 };
 
 }

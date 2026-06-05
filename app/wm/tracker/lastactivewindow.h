@@ -8,7 +8,6 @@
 
 // local
 #include "../windowinfowrap.h"
-#include "../abstractwindowinterface.h"
 
 // Qt
 #include <QObject>
@@ -104,7 +103,7 @@ public:
 
     void setInformation(const WindowInfoWrap &info);
 
-public slots:
+public Q_SLOTS:
     Q_INVOKABLE void requestActivate();
     Q_INVOKABLE void requestClose();
     Q_INVOKABLE void requestToggleIsOnAllDesktops();
@@ -119,7 +118,7 @@ public slots:
     //! Debug
     void printHistory();
 
-private slots:
+private Q_SLOTS:
     void updateInformationFromHistory();
 
     void applicationDataChanged(const WindowId &wid);
@@ -127,7 +126,7 @@ private slots:
     void windowChanged(const WindowId &wid);
     void windowRemoved(const WindowId &wid);
 
-signals:
+Q_SIGNALS:
     void colorSchemeChanged();
     void iconChanged();
     void isActiveChanged();

@@ -21,13 +21,13 @@
 #include <KWayland/Client/plasmashell.h>
 
 // Plasma
-#include <Plasma/Package>
+#include <KPackage/Package>
 
 namespace Latte {
 namespace ViewPart {
 
 WidgetExplorerView::WidgetExplorerView(Latte::View *view)
-    : SubConfigView(view, QString("#widgetexplorerview#"), true)
+    : SubConfigView(view, QStringLiteral("#widgetexplorerview#"), true)
 {
     setResizeMode(QQuickView::SizeRootObjectToView);
     //!set flags early in order for wayland to initialize properly
@@ -71,7 +71,7 @@ void WidgetExplorerView::setHideOnWindowDeactivate(bool hide)
     }
 
     m_hideOnWindowDeactivate = hide;
-    emit hideOnWindowDeactivateChanged();
+    Q_EMIT hideOnWindowDeactivateChanged();
 }
 
 Qt::WindowFlags WidgetExplorerView::wFlags() const
@@ -161,7 +161,7 @@ void WidgetExplorerView::showEvent(QShowEvent *ev)
     m_screenSyncTimer.start();
     QTimer::singleShot(400, this, &WidgetExplorerView::syncGeometry);
 
-    emit showSignal();
+    Q_EMIT showSignal();
 }
 
 void WidgetExplorerView::focusOutEvent(QFocusEvent *ev)
@@ -184,10 +184,10 @@ void WidgetExplorerView::updateEffects()
     }
 
     if (!m_background) {
-        m_background = new Plasma::FrameSvg(this);
+        m_background = new KSvg::FrameSvg(this);
     }
 
-    if (m_background->imagePath() != "dialogs/background") {
+    if (m_background->imagePath() != QStringLiteral("dialogs/background")) {
         m_background->setImagePath(QStringLiteral("dialogs/background"));
     }
 
@@ -204,10 +204,10 @@ void WidgetExplorerView::updateEffects()
         setMask(QRegion());
     }
 
-    if (KWindowSystem::compositingActive()) {
-        KWindowEffects::enableBlurBehind(winId(), true, fixedMask);
+    if (true) {
+        KWindowEffects::enableBlurBehind(this, true, fixedMask);
     } else {
-        KWindowEffects::enableBlurBehind(winId(), false);
+        KWindowEffects::enableBlurBehind(this, false);
     }
 }
 
@@ -249,19 +249,19 @@ void WidgetExplorerView::updateEnabledBorders()
         return;
     }
 
-    Plasma::FrameSvg::EnabledBorders borders = Plasma::FrameSvg::AllBorders;
+    KSvg::FrameSvg::EnabledBorders borders = KSvg::FrameSvg::AllBorders;
 
     if (!m_geometryWhenVisible.isEmpty()) {
         if (m_geometryWhenVisible.x() == m_latteView->screenGeometry().x()) {
-            borders &= ~Plasma::FrameSvg::LeftBorder;
+            borders &= ~KSvg::FrameSvg::LeftBorder;
         }
 
         if (m_geometryWhenVisible.y() == m_latteView->screenGeometry().y()) {
-            borders &= ~Plasma::FrameSvg::TopBorder;
+            borders &= ~KSvg::FrameSvg::TopBorder;
         }
 
         if (m_geometryWhenVisible.height() == m_latteView->screenGeometry().height()) {
-            borders &= ~Plasma::FrameSvg::BottomBorder;
+            borders &= ~KSvg::FrameSvg::BottomBorder;
         }
     }
 
@@ -271,7 +271,7 @@ void WidgetExplorerView::updateEnabledBorders()
         }
         m_corona->dialogShadows()->addWindow(this, m_enabledBorders);
 
-        emit enabledBordersChanged();
+        Q_EMIT enabledBordersChanged();
     }
 }
 

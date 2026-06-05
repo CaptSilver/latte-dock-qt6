@@ -91,7 +91,7 @@ void Screens::clear()
         c_screens.clear();
         endRemoveRows();
 
-        emit screenDataChanged();
+        Q_EMIT screenDataChanged();
     }
 }
 
@@ -104,8 +104,8 @@ void Screens::deselectAll()
         c_screens[i].isSelected = false;
     }
 
-    emit dataChanged(index(0, SCREENCOLUMN), index(c_screens.rowCount()-1, SCREENCOLUMN), roles);
-    emit screenDataChanged();
+    Q_EMIT dataChanged(index(0, SCREENCOLUMN), index(c_screens.rowCount()-1, SCREENCOLUMN), roles);
+    Q_EMIT screenDataChanged();
 }
 
 void Screens::reset()
@@ -115,8 +115,8 @@ void Screens::reset()
     QVector<int> roles;
     roles << Qt::CheckStateRole;
 
-    emit dataChanged(index(0, SCREENCOLUMN), index(c_screens.rowCount()-1, SCREENCOLUMN), roles);
-    emit screenDataChanged();
+    Q_EMIT dataChanged(index(0, SCREENCOLUMN), index(c_screens.rowCount()-1, SCREENCOLUMN), roles);
+    Q_EMIT screenDataChanged();
 }
 
 QString Screens::sortableId(const QString &id) const
@@ -140,15 +140,15 @@ QString Screens::sortableText(const int &priority, const QString &text) const
     QString numberPart;
 
     if (priority < 10) {
-        numberPart = "00000" + QString::number(priority);
+        numberPart = QStringLiteral("00000") + QString::number(priority);
     } else if (priority < 100) {
-        numberPart = "0000" + QString::number(priority);
+        numberPart = QStringLiteral("0000") + QString::number(priority);
     } else if (priority < 1000) {
-        numberPart = "000" + QString::number(priority);
+        numberPart = QStringLiteral("000") + QString::number(priority);
     } else if (priority < 10000) {
-        numberPart = "00" + QString::number(priority);
+        numberPart = QStringLiteral("00") + QString::number(priority);
     } else if (priority < 100000) {
-        numberPart = "0" + QString::number(priority);
+        numberPart = QStringLiteral("0") + QString::number(priority);
     }
 
     return (numberPart + text);
@@ -165,7 +165,7 @@ void Screens::setData(const Latte::Data::ScreensTable &screens)
         o_screens = c_screens;
         endInsertRows();
 
-        emit screenDataChanged();
+        Q_EMIT screenDataChanged();
     }
 }
 
@@ -181,13 +181,13 @@ void Screens::setSelected(const Latte::Data::ScreensTable &screens)
             roles << Qt::CheckStateRole;
 
             c_screens[pos].isSelected = screens[i].isSelected;
-            emit dataChanged(index(pos, SCREENCOLUMN), index(pos, SCREENCOLUMN), roles);
+            Q_EMIT dataChanged(index(pos, SCREENCOLUMN), index(pos, SCREENCOLUMN), roles);
             changed = true;
         }
     }
 
     if (changed) {
-        emit screenDataChanged();
+        Q_EMIT screenDataChanged();
     }
 }
 
@@ -259,7 +259,7 @@ bool Screens::setData(const QModelIndex &index, const QVariant &value, int role)
     case SCREENCOLUMN:
         if (role == Qt::CheckStateRole) {
             c_screens[row].isSelected = (value.toInt() > 0 ? true : false);
-            emit screenDataChanged();
+            Q_EMIT screenDataChanged();
             return true;
         }
         break;
@@ -280,7 +280,7 @@ QVariant Screens::data(const QModelIndex &index, int role) const
     if (role == IDROLE) {
         return c_screens[row].id;
     } else if (role == Qt::DisplayRole) {
-        QString display = "{" + c_screens[row].id + "} " + c_screens[row].name;
+        QString display = QStringLiteral("{") + c_screens[row].id + QStringLiteral("} ") + c_screens[row].name;
         return display;
     } else if (role == Qt::CheckStateRole) {
         return (c_screens[row].isSelected ? Qt::Checked : Qt::Unchecked);
@@ -289,10 +289,8 @@ QVariant Screens::data(const QModelIndex &index, int role) const
     } else if (role == ISSELECTEDROLE) {
         return c_screens[row].isSelected;
     } else if (role == SCREENDATAROLE) {
-        QVariant scrVariant;
         Latte::Data::Screen scrdata = c_screens[row];
-        scrVariant.setValue<Latte::Data::Screen>(scrdata);
-        return scrVariant;
+        return QVariant::fromValue(scrdata);
     } else if (role == SORTINGROLE) {
         //! reverse id priority, smaller id has higher priority
         QString idstr = sortableId(c_screens[row].id);

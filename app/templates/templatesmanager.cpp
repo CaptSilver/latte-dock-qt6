@@ -29,7 +29,7 @@ Manager::Manager(Latte::Corona *corona)
     : QObject(corona),
       m_corona(corona)
 {
-    KDirWatch::self()->addDir(Latte::configPath() + "/latte/templates", KDirWatch::WatchFiles);
+    KDirWatch::self()->addDir(Latte::configPath() + QStringLiteral("/latte/templates"), KDirWatch::WatchFiles);
     connect(KDirWatch::self(), &KDirWatch::created, this, &Manager::onCustomTemplatesCountChanged);
     connect(KDirWatch::self(), &KDirWatch::deleted, this, &Manager::onCustomTemplatesCountChanged);
     connect(KDirWatch::self(), &KDirWatch::dirty, this, &Manager::onCustomTemplatesCountChanged);
@@ -51,36 +51,36 @@ void Manager::initLayoutTemplates()
 {
     m_layoutTemplates.clear();
     initLayoutTemplates(m_corona->kPackage().filePath("templates"));
-    initLayoutTemplates(Latte::configPath() + "/latte/templates");
-    emit layoutTemplatesChanged();
+    initLayoutTemplates(Latte::configPath() + QStringLiteral("/latte/templates"));
+    Q_EMIT layoutTemplatesChanged();
 }
 
 void Manager::initViewTemplates()
 {
     m_viewTemplates.clear();
     initViewTemplates(m_corona->kPackage().filePath("templates"));
-    initViewTemplates(Latte::configPath() + "/latte/templates");
-    emit viewTemplatesChanged();
+    initViewTemplates(Latte::configPath() + QStringLiteral("/latte/templates"));
+    Q_EMIT viewTemplatesChanged();
 }
 
 void Manager::initLayoutTemplates(const QString &path)
 {
     QDir templatesDir(path);
     QStringList filter;
-    filter.append(QString("*.layout.latte"));
+    filter.append(QStringLiteral("*.layout.latte"));
     QStringList templates = templatesDir.entryList(filter, QDir::Files | QDir::Hidden | QDir::NoSymLinks);
 
     for (int i=0; i<templates.count(); ++i) {
-        QString templatePath = templatesDir.path() + "/" + templates[i];
+        QString templatePath = templatesDir.path() + QStringLiteral("/") + templates[i];
         if (!m_layoutTemplates.containsId(templatePath)) {
             CentralLayout layouttemplate(this, templatePath);
 
             Data::Layout tdata = layouttemplate.data();
             tdata.isTemplate = true;
 
-            if (tdata.name == DEFAULTLAYOUTTEMPLATENAME || tdata.name == EMPTYLAYOUTTEMPLATENAME) {
+            if (tdata.name == QLatin1String(DEFAULTLAYOUTTEMPLATENAME) || tdata.name == QLatin1String(EMPTYLAYOUTTEMPLATENAME)) {
                 QByteArray templateNameChars = tdata.name.toUtf8();
-                tdata.name = i18n(templateNameChars);
+                tdata.name = i18n(templateNameChars.constData());
             }
 
             m_layoutTemplates << tdata;
@@ -94,11 +94,11 @@ void Manager::initViewTemplates(const QString &path)
 
     QDir templatesDir(path);
     QStringList filter;
-    filter.append(QString("*.view.latte"));
+    filter.append(QStringLiteral("*.view.latte"));
     QStringList templates = templatesDir.entryList(filter, QDir::Files | QDir::Hidden | QDir::NoSymLinks);
 
     for (int i=0; i<templates.count(); ++i) {
-        QString templatePath = templatesDir.path() + "/" + templates[i];
+        QString templatePath = templatesDir.path() + QStringLiteral("/") + templates[i];
 
         if (!m_viewTemplates.containsId(templatePath)) {
             Data::Generic vdata;
@@ -107,7 +107,7 @@ void Manager::initViewTemplates(const QString &path)
 
             if (istranslated) {
                 QByteArray tnamechars = tname.toUtf8();
-                vdata.name = i18nc("view template name", tnamechars);
+                vdata.name = i18nc("view template name", tnamechars.constData());
             } else {
                 vdata.name = tname;
             }
@@ -139,7 +139,7 @@ Data::LayoutsTable Manager::layoutTemplates()
     for (int i=0; i<m_layoutTemplates.rowCount(); ++i) {
         if ( m_layoutTemplates[i].name != i18n(DEFAULTLAYOUTTEMPLATENAME)
              && m_layoutTemplates[i].name != i18n(EMPTYLAYOUTTEMPLATENAME)
-             && m_layoutTemplates[i].name != Layout::MULTIPLELAYOUTSHIDDENNAME) {
+             && m_layoutTemplates[i].name != QLatin1String(Layout::MULTIPLELAYOUTSHIDDENNAME)) {
             templates << m_layoutTemplates[i];
         }
     }
@@ -170,7 +170,7 @@ QString Manager::newLayout(QString layoutName, QString layoutTemplate)
     QFile(dlayout.id).copy(newLayoutPath);
     qDebug() << "adding layout : " << layoutName << " based on layout template:" << layoutTemplate;
 
-    emit newLayoutAdded(newLayoutPath);
+    Q_EMIT newLayoutAdded(newLayoutPath);
 
     return newLayoutPath;
 }
@@ -187,10 +187,10 @@ bool Manager::exportTemplate(const Latte::View *view, const QString &destination
 
 void Manager::onCustomTemplatesCountChanged(const QString &file)
 {
-    if (file.startsWith(Latte::configPath() + "/latte/templates")) {
-        if (file.endsWith(".layout.latte")) {
+    if (file.startsWith(Latte::configPath() + QStringLiteral("/latte/templates"))) {
+        if (file.endsWith(QStringLiteral(".layout.latte"))) {
             initLayoutTemplates();
-        } else if (file.endsWith(".view.latte")) {
+        } else if (file.endsWith(QStringLiteral(".view.latte"))) {
             initViewTemplates();
         }
     }
@@ -214,15 +214,15 @@ QString Manager::proposedTemplateAbsolutePath(QString templateFilename)
 {
     QString tempfilename = templateFilename;
 
-    if (tempfilename.endsWith(".layout.latte")) {
-        QString clearedname = tempfilename.chopped(QString(".layout.latte").size());
-        tempfilename = uniqueLayoutTemplateName(clearedname) + ".layout.latte";
-    } else if (tempfilename.endsWith(".view.latte")) {
-        QString clearedname = tempfilename.chopped(QString(".view.latte").size());
-        tempfilename = uniqueViewTemplateName(clearedname) + ".view.latte";
+    if (tempfilename.endsWith(QStringLiteral(".layout.latte"))) {
+        QString clearedname = tempfilename.chopped(QStringLiteral(".layout.latte").size());
+        tempfilename = uniqueLayoutTemplateName(clearedname) + QStringLiteral(".layout.latte");
+    } else if (tempfilename.endsWith(QStringLiteral(".view.latte"))) {
+        QString clearedname = tempfilename.chopped(QStringLiteral(".view.latte").size());
+        tempfilename = uniqueViewTemplateName(clearedname) + QStringLiteral(".view.latte");
     }
 
-    return QString(Latte::configPath() + "/latte/templates/" + tempfilename);
+    return Latte::configPath() + QStringLiteral("/latte/templates/") + tempfilename;
 }
 
 bool Manager::hasCustomLayoutTemplate(const QString &templateName) const
@@ -257,13 +257,13 @@ QString Manager::viewTemplateFilePath(const QString templateName) const
 
 void Manager::installCustomLayoutTemplate(const QString &templateFilePath)
 {
-    if (!templateFilePath.endsWith(".layout.latte")) {
+    if (!templateFilePath.endsWith(QStringLiteral(".layout.latte"))) {
         return;
     }
 
     QString layoutName = QFileInfo(templateFilePath).baseName();
 
-    QString destinationFilePath = Latte::configPath() + "/latte/templates/" + layoutName + ".layout.latte";
+    QString destinationFilePath = Latte::configPath() + QStringLiteral("/latte/templates/") + layoutName + QStringLiteral(".layout.latte");
 
     if (hasCustomLayoutTemplate(layoutName)) {
         QFile(destinationFilePath).remove();
@@ -285,7 +285,7 @@ QString Manager::uniqueLayoutTemplateName(QString name) const
     QString namePart = name;
 
     while (hasLayoutTemplate(name)) {
-        name = namePart + " - " + QString::number(i);
+        name = namePart + QStringLiteral(" - ") + QString::number(i);
         i++;
     }
 
@@ -305,7 +305,7 @@ QString Manager::uniqueViewTemplateName(QString name) const
     QString namePart = name;
 
     while (hasViewTemplate(name)) {
-        name = namePart + " - " + QString::number(i);
+        name = namePart + QStringLiteral(" - ") + QString::number(i);
         i++;
     }
 
@@ -314,16 +314,16 @@ QString Manager::uniqueViewTemplateName(QString name) const
 
 QString Manager::templateName(const QString &filePath)
 {
-    int lastSlash = filePath.lastIndexOf("/");
+    int lastSlash = filePath.lastIndexOf(QLatin1Char('/'));
     QString tempFilePath = filePath;
     QString templatename = tempFilePath.remove(0, lastSlash + 1);
 
-    QString extension(".layout.latte");
+    QString extension(QStringLiteral(".layout.latte"));
     int ext = templatename.lastIndexOf(extension);
     if (ext>0) {
         templatename = templatename.remove(ext, extension.size());
     } else {
-        extension = ".view.latte";
+        extension = QStringLiteral(".view.latte");
         ext = templatename.lastIndexOf(extension);
         templatename = templatename.remove(ext,extension.size());
     }

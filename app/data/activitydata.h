@@ -16,15 +16,21 @@
 #include <QIcon>
 #include <QString>
 
-//! KActivities
-#include <KActivities/Info>
-
 namespace Latte {
 namespace Data {
 
 class Activity : public Generic
 {
 public:
+    //! KF6: KActivities::Info::State was removed; define a compatible local enum
+    enum State {
+        Invalid  = 0,
+        Running  = 2,
+        Starting = 1,
+        Stopping = 3,
+        Stopped  = 4
+    };
+
     Activity();
     Activity(Activity &&o);
     Activity(const Activity &o);
@@ -32,7 +38,7 @@ public:
     //! Layout data
     bool isCurrent{false};
     QString icon;
-    KActivities::Info::State state;
+    State state{Invalid};
 
     bool isValid() const;
     bool isRunning() const;

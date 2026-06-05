@@ -17,6 +17,9 @@
 #include <QQuickView>
 #include <QScreen>
 
+// KSvg
+#include <KSvg/FrameSvg>
+
 namespace KWayland {
 namespace Client {
 class PlasmaShellSurface;
@@ -29,7 +32,7 @@ class InfoView : public QQuickView
 {
     Q_OBJECT
 
-    Q_PROPERTY(Plasma::FrameSvg::EnabledBorders enabledBorders READ enabledBorders NOTIFY enabledBordersChanged)
+    Q_PROPERTY(KSvg::FrameSvg::EnabledBorders enabledBorders READ enabledBorders NOTIFY enabledBordersChanged)
 
 public:
     InfoView(Latte::Corona *corona, QString message, QScreen *screen, QWindow *parent = nullptr);
@@ -37,24 +40,24 @@ public:
 
     QString validTitle() const;
 
-    Plasma::FrameSvg::EnabledBorders enabledBorders() const;
+    KSvg::FrameSvg::EnabledBorders enabledBorders() const;
 
     void init();
     Qt::WindowFlags wFlags() const;
 
-    void setOnActivities(QStringList activities = {"0"});
+    void setOnActivities(QStringList activities = {QStringLiteral("0")});
 
-public slots:
+public Q_SLOTS:
     Q_INVOKABLE void syncGeometry();
 
-signals:
+Q_SIGNALS:
     void enabledBordersChanged();
 
 protected:
     void showEvent(QShowEvent *ev) override;
     bool event(QEvent *e) override;
 
-private slots:
+private Q_SLOTS:
     void setupWaylandIntegration();
     void updateWaylandId();
 
@@ -65,7 +68,7 @@ private:
 
     QScreen *m_screen{nullptr};
 
-    Plasma::FrameSvg::EnabledBorders m_borders{Plasma::FrameSvg::TopBorder | Plasma::FrameSvg::BottomBorder};
+    KSvg::FrameSvg::EnabledBorders m_borders{KSvg::FrameSvg::TopBorder | KSvg::FrameSvg::BottomBorder};
 
     Latte::WindowSystem::WindowId m_trackedWindowId;
     KWayland::Client::PlasmaShellSurface *m_shellSurface{nullptr};

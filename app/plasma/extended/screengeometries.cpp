@@ -18,9 +18,9 @@
 #include <QtDBus>
 
 
-#define LATTESERVICE "org.kde.lattedock"
-#define PLASMASERVICE "org.kde.plasmashell"
-#define PLASMASTRUTNAMESPACE "org.kde.PlasmaShell.StrutManager"
+#define LATTESERVICE QStringLiteral("org.kde.lattedock")
+#define PLASMASERVICE QStringLiteral("org.kde.plasmashell")
+#define PLASMASTRUTNAMESPACE QStringLiteral("org.kde.PlasmaShell.StrutManager")
 
 #define PUBLISHINTERVAL 1000
 
@@ -117,9 +117,9 @@ void ScreenGeometries::onBroadcastToPlasmaChanged()
 void ScreenGeometries::setPlasmaAvailableScreenRect(const QString &screenName, const QRect &rect)
 {
     QDBusMessage message = QDBusMessage::createMethodCall(PLASMASERVICE,
-                                                          "/StrutManager",
+                                                          QStringLiteral("/StrutManager"),
                                                           PLASMASTRUTNAMESPACE,
-                                                          "setAvailableScreenRect");
+                                                          QStringLiteral("setAvailableScreenRect"));
     QVariantList args;
 
     args << LATTESERVICE
@@ -133,9 +133,9 @@ void ScreenGeometries::setPlasmaAvailableScreenRect(const QString &screenName, c
 void ScreenGeometries::setPlasmaAvailableScreenRegion(const QString &screenName, const QRegion &region)
 {
     QDBusMessage message = QDBusMessage::createMethodCall(PLASMASERVICE,
-                                                          "/StrutManager",
+                                                          QStringLiteral("/StrutManager"),
                                                           PLASMASTRUTNAMESPACE,
-                                                          "setAvailableScreenRegion");
+                                                          QStringLiteral("setAvailableScreenRegion"));
 
     QVariant regionvariant;
 

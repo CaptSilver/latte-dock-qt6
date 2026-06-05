@@ -15,7 +15,11 @@
 
 // Qt
 #include <QAbstractTableModel>
+#include <QHash>
 #include <QModelIndex>
+
+// PlasmaActivities
+#include <PlasmaActivities/Info>
 
 
 namespace Latte {
@@ -133,13 +137,13 @@ public:
     void setOriginalActivitiesForLayout(const Latte::Data::Layout &layout);
     void setOriginalViewsForLayout(const Latte::Data::Layout &layout);
 
-signals:
+Q_SIGNALS:
     void activitiesStatesChanged();
     void inMultipleModeChanged();
     void nameDuplicated(const QString &provenId, const QString &trialId);
     void rowsInserted();
 
-private slots:
+private Q_SLOTS:
     void updateActiveStates();
     void updateConsideredActiveStates();
 

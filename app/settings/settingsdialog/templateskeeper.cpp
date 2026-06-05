@@ -47,7 +47,7 @@ void TemplatesKeeper::setClipboardContents(const Latte::Data::ViewsTable &views)
     m_clipboardViews.clear();
     m_clipboardViews = views;
 
-    emit clipboardContentsChanged();
+    Q_EMIT clipboardContentsChanged();
 }
 
 void TemplatesKeeper::clear()
@@ -61,7 +61,7 @@ void TemplatesKeeper::clear()
 
 QString TemplatesKeeper::viewKeeperId(const QString &layoutCurrentId, const QString &viewId)
 {
-    return QString(layoutCurrentId + "#" + viewId);
+    return layoutCurrentId + QStringLiteral("#") + viewId;
 
 }
 

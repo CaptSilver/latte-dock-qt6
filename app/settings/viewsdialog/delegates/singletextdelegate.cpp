@@ -34,7 +34,7 @@ void SingleText::paint(QPainter *painter, const QStyleOptionViewItem &option, co
     float textopacity = 1.0;
 
     if (isActive) {
-        myOptions.text = "<b>" + myOptions.text + "</b>";
+        myOptions.text = QStringLiteral("<b>") + myOptions.text + QStringLiteral("</b>");
     }
 
     if (isMoveOrigin) {

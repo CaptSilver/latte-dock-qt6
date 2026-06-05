@@ -24,7 +24,7 @@ namespace Latte {
 namespace ViewPart {
 
 ScreenEdgeGhostWindow::ScreenEdgeGhostWindow(Latte::View *view) :
-    SubWindow(view, QString("Screen Ghost Window"))
+    SubWindow(view, QStringLiteral("Screen Ghost Window"))
 {
     if (m_debugMode) {
         m_showColor = QColor("purple");
@@ -63,7 +63,7 @@ ScreenEdgeGhostWindow::~ScreenEdgeGhostWindow()
 
 QString ScreenEdgeGhostWindow::validTitlePrefix() const
 {
-    return QString("#subghostedge#");
+    return QStringLiteral("#subghostedge#");
 }
 
 void ScreenEdgeGhostWindow::updateGeometry()
@@ -74,7 +74,7 @@ void ScreenEdgeGhostWindow::updateGeometry()
 
     QRect newGeometry = m_latteView->absoluteGeometry();
 
-    if (KWindowSystem::compositingActive()) {
+    if (true) {
         m_thickness = 6;
     } else {
         m_thickness = 2;
@@ -122,7 +122,7 @@ void ScreenEdgeGhostWindow::updateGeometry()
     }
 
     m_calculatedGeometry = newGeometry;
-    emit calculatedGeometryChanged();
+    Q_EMIT calculatedGeometryChanged();
 }
 
 bool ScreenEdgeGhostWindow::containsMouse() const
@@ -137,7 +137,7 @@ void ScreenEdgeGhostWindow::setContainsMouse(bool contains)
     }
 
     m_containsMouse = contains;
-    emit containsMouseChanged(contains);
+    Q_EMIT containsMouseChanged(contains);
 }
 
 bool ScreenEdgeGhostWindow::event(QEvent *e)
@@ -147,7 +147,7 @@ bool ScreenEdgeGhostWindow::event(QEvent *e)
             m_delayedContainsMouse = false;
             m_delayedMouseTimer.stop();
             setContainsMouse(true);
-            emit dragEntered();
+            Q_EMIT dragEntered();
         }
     } else if (e->type() == QEvent::Enter) {
         m_delayedContainsMouse = true;

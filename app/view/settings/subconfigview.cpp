@@ -18,7 +18,6 @@
 
 // KDE
 #include <KLocalizedContext>
-#include <KDeclarative/KDeclarative>
 #include <KWayland/Client/plasmashell.h>
 #include <KWayland/Client/surface.h>
 #include <KWindowSystem>
@@ -114,11 +113,6 @@ void SubConfigView::init()
         rootContext()->setContextProperty(QStringLiteral("themeExtended"), m_corona->themeExtended());
     }
 
-    KDeclarative::KDeclarative kdeclarative;
-    kdeclarative.setDeclarativeEngine(engine());
-    kdeclarative.setTranslationDomain(QStringLiteral("latte-dock"));
-    kdeclarative.setupContext();
-    kdeclarative.setupEngine(engine());
 
 }
 
@@ -312,7 +306,7 @@ bool SubConfigView::event(QEvent *e)
 
 void SubConfigView::updateWaylandId()
 {
-    Latte::WindowSystem::WindowId newId = m_corona->wm()->winIdFor("latte-dock", validTitle());
+    Latte::WindowSystem::WindowId newId = m_corona->wm()->winIdFor(QStringLiteral("latte-dock"), validTitle());
 
     if (m_waylandWindowId != newId) {
         if (!m_waylandWindowId.isNull()) {
@@ -324,7 +318,7 @@ void SubConfigView::updateWaylandId()
     }
 }
 
-Plasma::FrameSvg::EnabledBorders SubConfigView::enabledBorders() const
+KSvg::FrameSvg::EnabledBorders SubConfigView::enabledBorders() const
 {
     return m_enabledBorders;
 }

@@ -9,6 +9,7 @@
 
 // Qt
 #include <QWindow>
+#include <QHash>
 #include <QIcon>
 #include <QRect>
 #include <QVariant>
@@ -175,6 +176,12 @@ private:
 };
 
 }
+}
+
+// Qt6 removed operator< and qHash for QVariant; provide qHash so WindowId can be used in QHash containers.
+inline size_t qHash(const Latte::WindowSystem::WindowId &key, size_t seed = 0) noexcept
+{
+    return qHashMulti(seed, key.userType(), key.toString());
 }
 
 #endif // WINDOWINFOWRAP_H

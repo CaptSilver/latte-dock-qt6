@@ -10,6 +10,7 @@
 
 //! Qt
 #include <QDebug>
+#include <QEnterEvent>
 #include <QFont>
 #include <QHBoxLayout>
 #include <QPainter>
@@ -68,7 +69,7 @@ void PatternWidget::setBackground(const QString &file)
         m_background = file;
     }
 
-    emit backgroundChanged();
+    Q_EMIT backgroundChanged();
 }
 
 void PatternWidget::setText(const QString &text)
@@ -90,7 +91,7 @@ void PatternWidget::setTextColor(const QString &color)
     m_textColor = color;
     m_textColorBrightness = Latte::colorBrightness(QColor(color));
 
-    emit textColorChanged();
+    Q_EMIT textColorChanged();
 }
 
 void PatternWidget::updateUi()
@@ -98,15 +99,15 @@ void PatternWidget::updateUi()
     QPalette systemPalette;
 
     QColor textColor = systemPalette.color(QPalette::Active, QPalette::Text);
-    QString background = "background-image: url(" + m_background + ");";
+    QString background = QStringLiteral("background-image: url(") + m_background + QStringLiteral(");");
 
     int radius = qMax(2, height() / 4);
 
     if (m_background.isEmpty()) {
-        background = "background-image: none;";
+        background = QStringLiteral("background-image: none;");
         m_shadowEffect->setColor(Qt::transparent);
     } else {
-        m_shadowEffect->setColor("#020202");
+        m_shadowEffect->setColor(QStringLiteral("#020202"));
     }
 
     if (m_textColorBrightness > 127) {
@@ -115,11 +116,11 @@ void PatternWidget::updateUi()
         m_shadowEffect->setBlurRadius(1);
     }
 
-    setStyleSheet("[isBackground=true] {border: 1px solid " + textColor.name() + "; border-radius: " + QString::number(radius) + "px; " + background + "}");
-    m_label->setStyleSheet("QLabel {border: 0px; background-image:none; color:" + m_textColor + "}");
+    setStyleSheet(QStringLiteral("[isBackground=true] {border: 1px solid ") + textColor.name() + QStringLiteral("; border-radius: ") + QString::number(radius) + QStringLiteral("px; ") + background + QStringLiteral("}"));
+    m_label->setStyleSheet(QStringLiteral("QLabel {border: 0px; background-image:none; color:") + m_textColor + QStringLiteral("}"));
 }
 
-void PatternWidget::enterEvent(QEvent *event)
+void PatternWidget::enterEvent(QEnterEvent *event)
 {
     setCursor(Qt::PointingHandCursor);
     QWidget::enterEvent(event);
@@ -132,7 +133,7 @@ void PatternWidget::mouseMoveEvent(QMouseEvent *event )
 
 void PatternWidget::mouseReleaseEvent(QMouseEvent *event)
 {
-    emit mouseReleased();
+    Q_EMIT mouseReleased();
     QWidget::mouseReleaseEvent(event);
 }
 
@@ -141,7 +142,7 @@ void PatternWidget::paintEvent(QPaintEvent *event)
     //! it is needed from Qt, otherwise QWidget is not updated
     //! https://wiki.qt.io/How_to_Change_the_Background_Color_of_QWidget
     QStyleOption opt;
-    opt.init(this);
+    opt.initFrom(this);
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing, true);
 

@@ -34,7 +34,7 @@ public:
     bool isPlatformWayland() const;
     bool isPlatformX11() const;
 
-signals:
+Q_SIGNALS:
     void compositingChanged();
     void isPlatformWaylandChanged();
     void isPlatformX11Changed();

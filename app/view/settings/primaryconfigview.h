@@ -20,8 +20,9 @@
 #include <QWindow>
 
 // Plasma
-#include <plasma/package.h>
-#include <Plasma/FrameSvg>
+#include <KPackage/Package>
+#include <Plasma/Plasma>
+#include <KSvg/FrameSvg>
 
 namespace Plasma {
 class Applet;
@@ -98,13 +99,13 @@ public:
 
     void requestActivate() override;
 
-public slots:
+public Q_SLOTS:
     Q_INVOKABLE void syncGeometry() override;
     Q_INVOKABLE void hideConfigWindow();
     Q_INVOKABLE void setSticker(bool blockFocusLost);    
     Q_INVOKABLE void updateEffects();
 
-signals:
+Q_SIGNALS:
     void availableScreenGeometryChanged();
     void indicatorUiManagerChanged();
     void isReadyChanged();
@@ -123,7 +124,7 @@ protected:
     void initParentView(Latte::View *view) override;
     void updateEnabledBorders() override;
 
-private slots:
+private Q_SLOTS:
     void immutabilityChanged(Plasma::Types::ImmutabilityType type);
     void updateAvailableScreenGeometry(View *origin = nullptr);
     void updateShowInlineProperties();
@@ -164,7 +165,7 @@ private:
     Config::IndicatorUiManager *m_indicatorUiManager{nullptr};
 
     //only for the mask on disabled compositing, not to actually paint
-    Plasma::FrameSvg *m_background{nullptr};
+    KSvg::FrameSvg *m_background{nullptr};
 };
 
 }

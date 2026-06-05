@@ -161,11 +161,11 @@ void SingleOption::paint(QPainter *painter, const QStyleOptionViewItem &option, 
     float textopacity = 1.0;
 
     if (isActive) {
-        myOptions.text = "<b>" + myOptions.text + "</b>";
+        myOptions.text = QStringLiteral("<b>") + myOptions.text + QStringLiteral("</b>");
     }
 
     if (isChanged) {
-        myOptions.text = "<i>" + myOptions.text + "</i>";
+        myOptions.text = QStringLiteral("<i>") + myOptions.text + QStringLiteral("</i>");
     }
 
     if (isMoveOrigin) {

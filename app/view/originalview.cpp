@@ -75,7 +75,7 @@ void OriginalView::setScreensGroup(const Latte::Types::ScreensGroup &group)
     }
 
     m_screensGroup = group;
-    emit screensGroupChanged();
+    Q_EMIT screensGroupChanged();
 }
 
 void OriginalView::addClone(Latte::ClonedView *view)
@@ -161,7 +161,7 @@ void OriginalView::setNextLocationForClones(const QString layoutName, int edge, 
     }
 
     for (const auto clone : m_clones) {
-        clone->positioner()->setNextLocation(layoutName, Latte::Types::SingleScreenGroup, "", edge, alignment);
+        clone->positioner()->setNextLocation(layoutName, Latte::Types::SingleScreenGroup, QStringLiteral(""), edge, alignment);
     }
 }
 
@@ -276,7 +276,7 @@ void OriginalView::restoreConfig()
 
     //! Send changed signals at the end in order to be sure that saveConfig
     //! wont rewrite default/invalid values
-    emit screensGroupChanged();
+    Q_EMIT screensGroupChanged();
 }
 
 }

@@ -22,7 +22,7 @@
 #include <QPixmap>
 
 // Plasma
-#include <Plasma/Svg>
+#include <KSvg/Svg>
 
 // this file is based on PlasmaCore::IconItem class, thanks to KDE
 namespace Latte {
@@ -49,7 +49,7 @@ class IconItem : public QQuickItem
      * Specifies the color group to use for this icon
      * This only applies to icons loaded from the plasma theme
      */
-    Q_PROPERTY(Plasma::Theme::ColorGroup colorGroup READ colorGroup WRITE setColorGroup NOTIFY colorGroupChanged)
+    Q_PROPERTY(KSvg::Svg::ColorSet colorGroup READ colorGroup WRITE setColorGroup NOTIFY colorGroupChanged)
 
     /**
       * Specifies the overlay(s) for this icon
@@ -106,8 +106,8 @@ public:
     void setSource(const QVariant &source);
     QVariant source() const;
 
-    void setColorGroup(Plasma::Theme::ColorGroup group);
-    Plasma::Theme::ColorGroup colorGroup() const;
+    void setColorGroup(KSvg::Svg::ColorSet group);
+    KSvg::Svg::ColorSet colorGroup() const;
 
     void setOverlays(const QStringList &overlays);
     QStringList overlays() const;
@@ -139,11 +139,11 @@ public:
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData) override;
 
     void itemChange(ItemChange change, const ItemChangeData &value) override;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
     void componentComplete() Q_DECL_OVERRIDE;
 
-signals:
+Q_SIGNALS:
     void activeChanged();
     void backgroundColorChanged();
     void colorGroupChanged();
@@ -157,7 +157,7 @@ signals:
     void usesPlasmaThemeChanged();
     void validChanged();
 
-private slots:
+private Q_SLOTS:
     void schedulePixmapUpdate();
     void enabledChanged();
 
@@ -185,7 +185,7 @@ private:
     QIcon m_icon;
     QPixmap m_iconPixmap;
     QImage m_imageIcon;
-    std::unique_ptr<Plasma::Svg> m_svgIcon;
+    std::unique_ptr<KSvg::Svg> m_svgIcon;
     QString m_svgIconName;
 
     //! can be used to track changes during source "changes" independent
@@ -205,7 +205,7 @@ private:
 
     QStringList m_overlays;
 
-    Plasma::Theme::ColorGroup m_colorGroup;
+    KSvg::Svg::ColorSet m_colorGroup;
 
     //this contains the raw variant it was passed
     QVariant m_source;

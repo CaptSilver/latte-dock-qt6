@@ -39,6 +39,7 @@
 #include <KArchive/KArchiveEntry>
 #include <KArchive/KArchiveDirectory>
 #include <KMessageWidget>
+#include <KPackage/Package>
 
 namespace Latte {
 namespace Settings {
@@ -51,7 +52,7 @@ Layouts::Layouts(Settings::Handler::TabLayouts *parent)
       m_proxyModel(new QSortFilterProxyModel(this)),
       m_view(m_handler->ui()->layoutsView),
       m_headerView(new Settings::Layouts::HeaderView(Qt::Horizontal, m_handler->dialog())),
-      m_storage(KConfigGroup(KSharedConfig::openConfig(),"LatteSettingsDialog").group("TabLayouts"))
+      m_storage(KConfigGroup(KSharedConfig::openConfig(),QStringLiteral("LatteSettingsDialog")).group(QStringLiteral("TabLayouts")))
 {   
     m_templatesKeeper = new Settings::Part::TemplatesKeeper(this, m_handler->corona());
 
@@ -92,7 +93,7 @@ Layouts::~Layouts()
     for (const auto &tempDir : m_tempDirectories) {
         QDir tDir(tempDir);
 
-        if (tDir.exists() && tempDir.startsWith("/tmp/")) {
+        if (tDir.exists() && tempDir.startsWith(QStringLiteral("/tmp/"))) {
             tDir.removeRecursively();
         }
     }
@@ -131,16 +132,16 @@ void Layouts::initView()
     m_view->sortByColumn(m_viewSortColumn, m_viewSortOrder);
 
     //!find the available colors
-    m_iconsPath = m_handler->corona()->kPackage().path() + "../../shells/org.kde.latte.shell/contents/images/canvas/";
+    m_iconsPath = m_handler->corona()->kPackage().path() + QStringLiteral("../../shells/org.kde.latte.shell/contents/images/canvas/");
 
     QDir layoutDir(m_iconsPath);
     QStringList filter;
-    filter.append(QString("*print.jpg"));
+    filter.append(QStringLiteral("*print.jpg"));
     QStringList files = layoutDir.entryList(filter, QDir::Files | QDir::NoSymLinks);
     QStringList colors;
 
     for (auto &file : files) {
-        int colorEnd = file.lastIndexOf("print.jpg");
+        int colorEnd = file.lastIndexOf(QStringLiteral("print.jpg"));
         QString color = file.remove(colorEnd, 9);
         colors.append(color);
     }
@@ -201,10 +202,10 @@ bool Layouts::isSelectedLayoutOriginal() const
 
 QString Layouts::colorPath(const QString color) const
 {
-    QString path = m_iconsPath + color + "print.jpg";
+    QString path = m_iconsPath + color + QStringLiteral("print.jpg");
 
     if (!QFileInfo(path).exists()) {
-        return m_iconsPath + "blueprint.jpg";
+        return m_iconsPath + QStringLiteral("blueprint.jpg");
     }
 
     return path;
@@ -479,7 +480,7 @@ QString Layouts::uniqueLayoutName(QString name)
     QString namePart = name;
 
     while (m_model->containsCurrentName(name)) {
-        name = namePart + " - " + QString::number(i);
+        name = namePart + QStringLiteral(" - ") + QString::number(i);
         i++;
     }
 
@@ -526,9 +527,9 @@ void Layouts::toggleEnabledForSelected()
         if (m_model->hasEnabledLayoutInCurrentActivity() || layoutsenabledonlyinspecificactivities) {
             activities << m_model->currentActivityId();
         } else if (m_model->hasEnabledLayoutInFreeActivities()) {
-            activities << Data::Layout::FREEACTIVITIESID;
+            activities << QLatin1String(Data::Layout::FREEACTIVITIESID);
         } else {
-            activities << Data::Layout::ALLACTIVITIESID;
+            activities << QLatin1String(Data::Layout::ALLACTIVITIESID);
         }
 
         m_proxyModel->setData(m_proxyModel->index(m_view->currentIndex().row(), Model::Layouts::ACTIVITYCOLUMN), activities, Qt::UserRole);
@@ -564,7 +565,7 @@ QString Layouts::layoutNameForFreeActivities() const
 void Layouts::setOriginalLayoutForFreeActivities(const QString &id)
 {
     m_model->setOriginalLayoutForFreeActivities(id);
-    emit dataChanged();
+    Q_EMIT dataChanged();
 }
 
 void Layouts::initLayouts()
@@ -621,7 +622,7 @@ void Layouts::messageForErroredLayout(const Data::Layout &layout)
 {
     //! add actions
     QAction *examineaction = new QAction(i18n("Examine..."), this);
-    examineaction->setIcon(QIcon::fromTheme("document-preview"));
+    examineaction->setIcon(QIcon::fromTheme(QStringLiteral("document-preview")));
     examineaction->setData(layout.id);
     QList<QAction *> actions;
     actions << examineaction;
@@ -647,11 +648,11 @@ void Layouts::messageForErroredLayout(const Data::Layout &layout)
                                      actions);
     } else if (layout.hasErrors() && !layout.hasWarnings()) {
         //! add errors in the end in order to be read by the user
-        m_handler->showInlineMessage(i18nc("settings:named layout with errors",
-                                           "<b>Error: %2</b> layout has reported <b>1 error</b> that you need to repair.",
-                                           "<b>Error: %2</b> layout has reported <b>%1 errors</b> that you need to repair.",
-                                           layout.errors,
-                                           layout.name),
+        m_handler->showInlineMessage(i18ncp("settings:named layout with errors",
+                                            "<b>Error: %2</b> layout has reported <b>1 error</b> that you need to repair.",
+                                            "<b>Error: %2</b> layout has reported <b>%1 errors</b> that you need to repair.",
+                                            layout.errors,
+                                            layout.name),
                                      KMessageWidget::Error,
                                      true,
                                      actions);
@@ -754,7 +755,7 @@ const Latte::Data::Layout Layouts::addLayoutForFile(QString file, QString layout
     Latte::Data::Layout copied;
 
     if (newTempDirectory) {
-        copied.id = uniqueTempDirectory() + "/" + layoutName + ".layout.latte";
+        copied.id = uniqueTempDirectory() + QStringLiteral("/") + layoutName + QStringLiteral(".layout.latte");
         QFile(file).copy(copied.id);
     } else {
         copied.id = file;
@@ -824,7 +825,7 @@ void Layouts::duplicateSelectedLayout()
     Latte::Data::Layout copied = selectedLayoutCurrent;
 
     copied.name = uniqueLayoutName(selectedLayoutCurrent.name);
-    copied.id = uniqueTempDirectory() + "/" + copied.name + ".layout.latte";;
+    copied.id = uniqueTempDirectory() + QStringLiteral("/") + copied.name + QStringLiteral(".layout.latte");
     copied.isActive = false;
     copied.isConsideredActive = false;
     copied.isLocked = false;
@@ -864,20 +865,20 @@ bool Layouts::importLayoutsFromV1ConfigFile(QString file)
 
         QString name = Latte::Layouts::Importer::nameOfConfigFile(file);
 
-        QString applets(tempDir.absolutePath() + "/" + "lattedock-appletsrc");
+        QString applets(tempDir.absolutePath() + QStringLiteral("/lattedock-appletsrc"));
 
         if (QFile(applets).exists()) {
             QStringList importedlayouts;
 
             if (m_handler->corona()->layoutsManager()->importer()->importOldLayout(applets, name, false, tempDir.absolutePath())) {
-                Latte::Data::Layout imported = addLayoutForFile(tempDir.absolutePath() + "/" + name + ".layout.latte", name);
+                Latte::Data::Layout imported = addLayoutForFile(tempDir.absolutePath() + QStringLiteral("/") + name + QStringLiteral(".layout.latte"), name);
                 importedlayouts << imported.name;
             }
 
-            QString alternativeName = name + "-" + i18nc("layout", "Alternative");
+            QString alternativeName = name + QStringLiteral("-") + i18nc("layout", "Alternative");
 
             if (m_handler->corona()->layoutsManager()->importer()->importOldLayout(applets, alternativeName, false, tempDir.absolutePath())) {
-                Latte::Data::Layout imported = addLayoutForFile(tempDir.absolutePath() + "/" + alternativeName + ".layout.latte", alternativeName, false);
+                Latte::Data::Layout imported = addLayoutForFile(tempDir.absolutePath() + QStringLiteral("/") + alternativeName + QStringLiteral(".layout.latte"), alternativeName, false);
                 importedlayouts << imported.name;
             }
 
@@ -885,7 +886,7 @@ bool Layouts::importLayoutsFromV1ConfigFile(QString file)
                 m_handler->showInlineMessage(i18np("Layout <b>%2</b> imported successfully...",
                                                    "Layouts <b>%2</b> imported successfully...",
                                                    importedlayouts.count(),
-                                                   importedlayouts.join(",")),
+                                                   importedlayouts.join(QStringLiteral(","))),
                         KMessageWidget::Positive);
 
                 return true;
@@ -976,7 +977,7 @@ void Layouts::save()
                 activeLayoutsToRename[iLayoutCurrentData.name] = central;
             }
 
-            QString tempFile = layoutTempDir.path() + "/" + QString(central->name() + ".layout.latte");
+            QString tempFile = layoutTempDir.path() + QStringLiteral("/") + central->name() + QStringLiteral(".layout.latte");
             qDebug() << "new temp file ::: " << tempFile;
 
             QFile(iLayoutCurrentData.id).rename(tempFile);
@@ -1054,7 +1055,7 @@ void Layouts::save()
 
         m_handler->corona()->layoutsManager()->switchToLayout(nextSingleLayoutName, MemoryUsage::SingleLayout);
     }  else {
-        m_handler->corona()->layoutsManager()->switchToLayout("", MemoryUsage::MultipleLayouts);
+        m_handler->corona()->layoutsManager()->switchToLayout(QStringLiteral(""), MemoryUsage::MultipleLayouts);
     }
 
     m_model->applyData();
@@ -1062,13 +1063,13 @@ void Layouts::save()
     //! Clear any templates keeper data
     m_templatesKeeper->clear();
 
-    emit dataChanged();
+    Q_EMIT dataChanged();
 }
 
 void Layouts::storeColumnWidths(bool inMultipleMode)
 {   
     if (m_viewColumnWidths.isEmpty()) {
-        m_viewColumnWidths << "" << "" << "" << "";
+        m_viewColumnWidths << QStringLiteral("") << QStringLiteral("") << QStringLiteral("") << QStringLiteral("");
     }
 
     m_viewColumnWidths[0] = QString::number(m_view->columnWidth(Model::Layouts::BACKGROUNDCOLUMN));

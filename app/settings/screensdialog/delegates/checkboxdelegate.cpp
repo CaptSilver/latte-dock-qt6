@@ -39,7 +39,7 @@ bool CheckBox::editorEvent(QEvent *event, QAbstractItemModel *model, const QStyl
     if (event->type() == QEvent::MouseButtonRelease) {
         //! single click on checkbox, changes state
         QStyleOptionButton checkopt;
-        checkopt.text = "";
+        checkopt.text = QStringLiteral("");
         checkopt.rect = option.rect;
         QRect remained = Latte::remainedFromCheckBox(checkopt);
         QRegion checkregion = QRegion(option.rect).subtracted(remained);
@@ -100,7 +100,7 @@ void CheckBox::paint(QPainter *painter, const QStyleOptionViewItem &option, cons
     QStyleOptionButton checkopt;
     checkopt.state |= QStyle::State_Enabled;
     checkopt.state |= isSelected ? QStyle::State_On : QStyle::State_Off;
-    checkopt.text = "";
+    checkopt.text = QString();
     checkopt.rect = option.rect;
 
     QRect remainedrect = Latte::remainedFromCheckBox(checkopt);
@@ -116,10 +116,10 @@ void CheckBox::paint(QPainter *painter, const QStyleOptionViewItem &option, cons
     adjustedOption.rect = remainedrect;
 
     //! screen id
-    adjustedOption.text = "{" + screen.id + "}";
+    adjustedOption.text = QStringLiteral("{") + screen.id + QStringLiteral("}");
 
     if (isActive) {
-        adjustedOption.text = "<b>" + adjustedOption.text + "</b>";
+        adjustedOption.text = QStringLiteral("<b>") + adjustedOption.text + QStringLiteral("</b>");
     }
 
     adjustedOption.displayAlignment = Qt::AlignRight;
@@ -131,7 +131,7 @@ void CheckBox::paint(QPainter *painter, const QStyleOptionViewItem &option, cons
     adjustedOption.text = screen.name;
 
     if (isActive) {
-        adjustedOption.text = "<b>" + adjustedOption.text + "</b>";
+        adjustedOption.text = QStringLiteral("<b>") + adjustedOption.text + QStringLiteral("</b>");
     }
 
     adjustedOption.displayAlignment = Qt::AlignLeft;

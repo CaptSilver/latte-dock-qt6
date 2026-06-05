@@ -33,7 +33,7 @@ Schemes::~Schemes()
 {
     m_windowScheme.clear();
     //! it is just a reference to a real scheme file
-    m_schemes.take("kdeglobals");
+    m_schemes.take(QStringLiteral("kdeglobals"));
     qDeleteAll(m_schemes.values());
     m_schemes.clear();
 }
@@ -44,7 +44,7 @@ void Schemes::init()
 
     connect(this, &Schemes::colorSchemeChanged, this, [&](WindowId wid) {
         if (wid == m_wm->activeWindow()) {
-            emit m_wm->activeWindowChanged(wid);
+            Q_EMIT m_wm->activeWindowChanged(wid);
         }
     });
 
@@ -53,7 +53,7 @@ void Schemes::init()
     });
 
     //! track for changing default scheme
-    QString kdeSettingsFile = Latte::configPath() + "/kdeglobals";
+    QString kdeSettingsFile = Latte::configPath() + QStringLiteral("/kdeglobals");
 
     KDirWatch::self()->addFile(kdeSettingsFile);
 
@@ -73,7 +73,7 @@ void Schemes::init()
 //! Scheme support for windows
 void Schemes::updateDefaultScheme()
 {
-    QString defaultSchemePath = SchemeColors::possibleSchemeFile("kdeglobals");
+    QString defaultSchemePath = SchemeColors::possibleSchemeFile(QStringLiteral("kdeglobals"));
 
     qDebug() << " Windows default color scheme :: " << defaultSchemePath;
 
@@ -86,11 +86,11 @@ void Schemes::updateDefaultScheme()
         dScheme = m_schemes[defaultSchemePath];
     }
 
-    if (!m_schemes.contains("kdeglobals") || m_schemes["kdeglobals"]->schemeFile() != defaultSchemePath) {
-        m_schemes["kdeglobals"] = dScheme;
+    if (!m_schemes.contains(QStringLiteral("kdeglobals")) || m_schemes[QStringLiteral("kdeglobals")]->schemeFile() != defaultSchemePath) {
+        m_schemes[QStringLiteral("kdeglobals")] = dScheme;
     }
 
-    emit defaultSchemeChanged();
+    Q_EMIT defaultSchemeChanged();
 }
 
 SchemeColors *Schemes::schemeForFile(const QString &scheme)
@@ -108,7 +108,7 @@ SchemeColors *Schemes::schemeForFile(const QString &scheme)
 SchemeColors *Schemes::schemeForWindow(WindowId wid)
 {
     if (!m_windowScheme.contains(wid)) {
-        return m_schemes["kdeglobals"];
+        return m_schemes[QStringLiteral("kdeglobals")];
     } else {
         return m_schemes[m_windowScheme[wid]];
     }
@@ -137,7 +137,7 @@ void Schemes::setColorSchemeForWindow(WindowId wid, QString scheme)
         m_windowScheme[wid] = schemeFile;
     }
 
-    emit colorSchemeChanged(wid);
+    Q_EMIT colorSchemeChanged(wid);
 }
 
 }

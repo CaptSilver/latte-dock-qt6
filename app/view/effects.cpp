@@ -19,6 +19,8 @@
 // KDE
 #include <KWindowEffects>
 #include <KWindowSystem>
+#include <KX11Extras>
+#include <Plasma/Theme>
 
 
 namespace Latte {
@@ -55,16 +57,18 @@ void Effects::init()
     connect(m_view, &QQuickWindow::widthChanged, this, &Effects::updateMask);
     connect(m_view, &QQuickWindow::heightChanged, this, &Effects::updateMask);
     connect(m_view, &Latte::View::behaveAsPlasmaPanelChanged, this, &Effects::updateMask);
-    connect(KWindowSystem::self(), &KWindowSystem::compositingChanged, this, [&]() {
-        if (!KWindowSystem::compositingActive() && !m_view->behaveAsPlasmaPanel()) {
-            setMask(m_rect);
-        }
+    if (KWindowSystem::isPlatformX11()) {
+        connect(KX11Extras::self(), &KX11Extras::compositingChanged, this, [&]() {
+            if (!true && !m_view->behaveAsPlasmaPanel()) {
+                setMask(m_rect);
+            }
 
-        updateMask();
-    });
+            updateMask();
+        });
+    }
 
     connect(this, &Effects::rectChanged, this, [&]() {
-        if (!KWindowSystem::compositingActive() && !m_view->behaveAsPlasmaPanel()) {
+        if (!true && !m_view->behaveAsPlasmaPanel()) {
             setMask(m_rect);
         }
     });
@@ -91,7 +95,7 @@ void Effects::init()
     connect(m_view, &Latte::View::configWindowGeometryChanged, this, &Effects::updateMask);
     connect(m_view, &Latte::View::layoutChanged, this, &Effects::onPopUpMarginChanged);
 
-    connect(&m_theme, &Plasma::Theme::themeChanged, this, [&]() {
+    connect(&m_theme, &KSvg::ImageSet::imageSetChanged, this, [&](const QString &) {
         updateBackgroundContrastValues();
         updateEffects();
     });
@@ -109,7 +113,7 @@ void Effects::setAnimationsBlocked(bool blocked)
     }
 
     m_animationsBlocked = blocked;
-    emit animationsBlockedChanged();
+    Q_EMIT animationsBlockedChanged();
 }
 
 bool Effects::backgroundAllCorners() const
@@ -124,7 +128,7 @@ void Effects::setBackgroundAllCorners(bool allcorners)
     }
 
     m_backgroundAllCorners = allcorners;
-    emit backgroundAllCornersChanged();
+    Q_EMIT backgroundAllCornersChanged();
 }
 
 bool Effects::backgroundRadiusEnabled() const
@@ -139,7 +143,7 @@ void Effects::setBackgroundRadiusEnabled(bool enabled)
     }
 
     m_backgroundRadiusEnabled = enabled;
-    emit backgroundRadiusEnabledChanged();
+    Q_EMIT backgroundRadiusEnabledChanged();
 }
 
 bool Effects::drawShadows() const
@@ -155,7 +159,7 @@ void Effects::setDrawShadows(bool draw)
 
     m_drawShadows = draw;
 
-    emit drawShadowsChanged();
+    Q_EMIT drawShadowsChanged();
 }
 
 bool Effects::drawEffects() const
@@ -171,7 +175,7 @@ void Effects::setDrawEffects(bool draw)
 
     m_drawEffects = draw;
 
-    emit drawEffectsChanged();
+    Q_EMIT drawEffectsChanged();
 }
 
 void Effects::setForceBottomBorder(bool draw)
@@ -206,7 +210,7 @@ void Effects::setBackgroundRadius(const int &radius)
     }
 
     m_backgroundRadius = radius;
-    emit backgroundRadiusChanged();
+    Q_EMIT backgroundRadiusChanged();
 }
 
 float Effects::backgroundOpacity() const
@@ -223,7 +227,7 @@ void Effects::setBackgroundOpacity(float opacity)
     m_backgroundOpacity = opacity;
 
     updateBackgroundContrastValues();
-    emit backgroundOpacityChanged();
+    Q_EMIT backgroundOpacityChanged();
 }
 
 int Effects::editShadow() const
@@ -238,7 +242,7 @@ void Effects::setEditShadow(int shadow)
     }
 
     m_editShadow = shadow;
-    emit editShadowChanged();
+    Q_EMIT editShadowChanged();
 }
 
 int Effects::innerShadow() const
@@ -253,7 +257,7 @@ void Effects::setInnerShadow(int shadow)
 
     m_innerShadow = shadow;
 
-    emit innerShadowChanged();
+    Q_EMIT innerShadowChanged();
 }
 
 int Effects::popUpMargin() const
@@ -274,7 +278,7 @@ void Effects::setRect(QRect area)
 
     m_rect = area;
 
-    emit rectChanged();
+    Q_EMIT rectChanged();
 }
 
 QRect Effects::mask() const
@@ -291,7 +295,7 @@ void Effects::setMask(QRect area)
     updateMask();
 
     // qDebug() << "dock mask set:" << m_mask;
-    emit maskChanged();
+    Q_EMIT maskChanged();
 }
 
 QRect Effects::inputMask() const
@@ -323,7 +327,7 @@ void Effects::setInputMask(QRect area)
         m_view->setMask(area);
     }
 
-    emit inputMaskChanged();
+    Q_EMIT inputMaskChanged();
 }
 
 QRect Effects::appletsLayoutGeometry() const
@@ -340,7 +344,7 @@ void Effects::setAppletsLayoutGeometry(const QRect &geom)
     m_appletsLayoutGeometry = geom;
     m_view->setProperty("_applets_layout_geometry", QVariant(m_appletsLayoutGeometry));
 
-    emit appletsLayoutGeometryChanged();
+    Q_EMIT appletsLayoutGeometryChanged();
 }
 
 QQuickItem *Effects::panelBackgroundSvg() const
@@ -355,7 +359,7 @@ void Effects::setPanelBackgroundSvg(QQuickItem *quickitem)
     }
 
     m_panelBackgroundSvg = quickitem;
-    emit panelBackgroundSvgChanged();
+    Q_EMIT panelBackgroundSvgChanged();
 }
 
 void Effects::onPopUpMarginChanged()
@@ -375,7 +379,7 @@ void Effects::setSubtractedMaskRegion(const QString &regionid, const QRegion &re
     }
 
     m_subtractedMaskRegions[regionid] = region;
-    emit subtractedMaskRegionsChanged();
+    Q_EMIT subtractedMaskRegionsChanged();
 }
 
 void Effects::removeSubtractedMaskRegion(const QString &regionid)
@@ -385,7 +389,7 @@ void Effects::removeSubtractedMaskRegion(const QString &regionid)
     }
 
     m_subtractedMaskRegions.remove(regionid);
-    emit subtractedMaskRegionsChanged();
+    Q_EMIT subtractedMaskRegionsChanged();
 }
 
 void Effects::setUnitedMaskRegion(const QString &regionid, const QRegion &region)
@@ -395,7 +399,7 @@ void Effects::setUnitedMaskRegion(const QString &regionid, const QRegion &region
     }
 
     m_unitedMaskRegions[regionid] = region;
-    emit unitedMaskRegionsChanged();
+    Q_EMIT unitedMaskRegionsChanged();
 }
 
 void Effects::removeUnitedMaskRegion(const QString &regionid)
@@ -405,7 +409,7 @@ void Effects::removeUnitedMaskRegion(const QString &regionid)
     }
 
     m_unitedMaskRegions.remove(regionid);
-    emit unitedMaskRegionsChanged();
+    Q_EMIT unitedMaskRegionsChanged();
 }
 
 QRegion Effects::customMask(const QRect &rect)
@@ -465,12 +469,12 @@ void Effects::updateBackgroundCorners()
     m_corona->themeExtended()->cornersMask(m_backgroundRadius);
 
     m_cornersMaskRegion = m_corona->themeExtended()->cornersMask(m_backgroundRadius);
-    emit backgroundCornersMaskChanged();
+    Q_EMIT backgroundCornersMaskChanged();
 }
 
 void Effects::updateMask()
 {
-    if (KWindowSystem::compositingActive()) {
+    if (true) {
         if (KWindowSystem::isPlatformX11()) {
             if (m_view->behaveAsPlasmaPanel()) {
                 // set as NULL in order for plasma framrworks to identify NULL Mask properly
@@ -490,7 +494,7 @@ void Effects::updateMask()
             //! CustomBackground way
             fixedMask = customMask(QRect(0,0,maskRect.width(), maskRect.height()));
         } else {
-            //! Plasma::Theme way
+            //! KSvg::ImageSet way
             //! this is used when compositing is disabled and provides
             //! the correct way for the mask to be painted in order for
             //! rounded corners to be shown correctly
@@ -550,7 +554,7 @@ void Effects::updateEffects()
                     //! CustomBackground way
                     backMask = customMask(QRect(0,0,m_rect.width(), m_rect.height()));
                 } else {
-                    //! Plasma::Theme way
+                    //! KSvg::ImageSet way
                     //! this is used when compositing is disabled and provides
                     //! the correct way for the mask to be painted in order for
                     //! rounded corners to be shown correctly
@@ -597,9 +601,9 @@ void Effects::updateEffects()
 
                 if (!fixedMask.isEmpty()) {
                     clearEffects = false;
-                    KWindowEffects::enableBlurBehind(m_view->winId(), true, fixedMask);
-                    KWindowEffects::enableBackgroundContrast(m_view->winId(),
-                                                             m_theme.backgroundContrastEnabled(),
+                    KWindowEffects::enableBlurBehind(m_view, true, fixedMask);
+                    KWindowEffects::enableBackgroundContrast(m_view,
+                                                             m_plasmaTheme.backgroundContrastEnabled(),
                                                              m_backEffectContrast,
                                                              m_backEffectIntesity,
                                                              m_backEffectSaturation,
@@ -609,9 +613,9 @@ void Effects::updateEffects()
         } else {
             //!  BEHAVEASPLASMAPANEL case
             clearEffects = false;
-            KWindowEffects::enableBlurBehind(m_view->winId(), true);
-            KWindowEffects::enableBackgroundContrast(m_view->winId(),
-                                                     m_theme.backgroundContrastEnabled(),
+            KWindowEffects::enableBlurBehind(m_view, true);
+            KWindowEffects::enableBackgroundContrast(m_view,
+                                                     m_plasmaTheme.backgroundContrastEnabled(),
                                                      m_backEffectContrast,
                                                      m_backEffectIntesity,
                                                      m_backEffectSaturation);
@@ -619,13 +623,13 @@ void Effects::updateEffects()
     }
 
     if (clearEffects) {
-        KWindowEffects::enableBlurBehind(m_view->winId(), false);
-        KWindowEffects::enableBackgroundContrast(m_view->winId(), false);
+        KWindowEffects::enableBlurBehind(m_view, false);
+        KWindowEffects::enableBackgroundContrast(m_view, false);
     }
 }
 
 //!BEGIN draw panel shadows outside the dock window
-Plasma::FrameSvg::EnabledBorders Effects::enabledBorders() const
+KSvg::FrameSvg::EnabledBorders Effects::enabledBorders() const
 {
     return m_enabledBorders;
 }
@@ -652,7 +656,7 @@ qreal Effects::currentMidValue(const qreal &max, const qreal &factor, const qrea
 
 void Effects::updateBackgroundContrastValues()
 {
-    if (!m_theme.backgroundContrastEnabled()) {
+    if (!m_plasmaTheme.backgroundContrastEnabled()) {
         m_backEffectContrast = 1.0;
         m_backEffectIntesity = 1.0;
         m_backEffectSaturation = 1.0;
@@ -660,13 +664,13 @@ void Effects::updateBackgroundContrastValues()
     }
 
     if (m_backgroundOpacity == -1 /*Default plasma opacity option*/) {
-        m_backEffectContrast = m_theme.backgroundContrast();
-        m_backEffectIntesity = m_theme.backgroundIntensity();
-        m_backEffectSaturation = m_theme.backgroundSaturation();
+        m_backEffectContrast = m_plasmaTheme.backgroundContrast();
+        m_backEffectIntesity = m_plasmaTheme.backgroundIntensity();
+        m_backEffectSaturation = m_plasmaTheme.backgroundSaturation();
     } else {
-        m_backEffectContrast = currentMidValue(m_theme.backgroundContrast(), m_backgroundOpacity, 1);
-        m_backEffectIntesity = currentMidValue(m_theme.backgroundIntensity(), m_backgroundOpacity, 1);
-        m_backEffectSaturation = currentMidValue(m_theme.backgroundSaturation(), m_backgroundOpacity, 1);
+        m_backEffectContrast = currentMidValue(m_plasmaTheme.backgroundContrast(), m_backgroundOpacity, 1);
+        m_backEffectIntesity = currentMidValue(m_plasmaTheme.backgroundIntensity(), m_backgroundOpacity, 1);
+        m_backEffectSaturation = currentMidValue(m_plasmaTheme.backgroundSaturation(), m_backgroundOpacity, 1);
     }
 }
 
@@ -676,24 +680,24 @@ void Effects::updateEnabledBorders()
         return;
     }
 
-    Plasma::FrameSvg::EnabledBorders borders = Plasma::FrameSvg::AllBorders;
+    KSvg::FrameSvg::EnabledBorders borders = KSvg::FrameSvg::AllBorders;
 
     if (!m_view->screenEdgeMarginEnabled() && !m_backgroundAllCorners) {
         switch (m_view->location()) {
         case Plasma::Types::TopEdge:
-            borders &= ~Plasma::FrameSvg::TopBorder;
+            borders &= ~KSvg::FrameSvg::TopBorder;
             break;
 
         case Plasma::Types::LeftEdge:
-            borders &= ~Plasma::FrameSvg::LeftBorder;
+            borders &= ~KSvg::FrameSvg::LeftBorder;
             break;
 
         case Plasma::Types::RightEdge:
-            borders &= ~Plasma::FrameSvg::RightBorder;
+            borders &= ~KSvg::FrameSvg::RightBorder;
             break;
 
         case Plasma::Types::BottomEdge:
-            borders &= ~Plasma::FrameSvg::BottomBorder;
+            borders &= ~KSvg::FrameSvg::BottomBorder;
             break;
 
         default:
@@ -705,47 +709,47 @@ void Effects::updateEnabledBorders()
         if ((m_view->location() == Plasma::Types::LeftEdge || m_view->location() == Plasma::Types::RightEdge)) {
             if (m_view->maxLength() == 1 && m_view->alignment() == Latte::Types::Justify) {
                 if (!m_forceTopBorder) {
-                    borders &= ~Plasma::FrameSvg::TopBorder;
+                    borders &= ~KSvg::FrameSvg::TopBorder;
                 }
 
                 if (!m_forceBottomBorder) {
-                    borders &= ~Plasma::FrameSvg::BottomBorder;
+                    borders &= ~KSvg::FrameSvg::BottomBorder;
                 }
             }
 
             if (m_view->alignment() == Latte::Types::Top && !m_forceTopBorder && m_view->offset() == 0) {
-                borders &= ~Plasma::FrameSvg::TopBorder;
+                borders &= ~KSvg::FrameSvg::TopBorder;
             }
 
             if (m_view->alignment() == Latte::Types::Bottom && !m_forceBottomBorder && m_view->offset() == 0) {
-                borders &= ~Plasma::FrameSvg::BottomBorder;
+                borders &= ~KSvg::FrameSvg::BottomBorder;
             }
         }
 
         if (m_view->location() == Plasma::Types::TopEdge || m_view->location() == Plasma::Types::BottomEdge) {
             if (m_view->maxLength() == 1 && m_view->alignment() == Latte::Types::Justify) {
-                borders &= ~Plasma::FrameSvg::LeftBorder;
-                borders &= ~Plasma::FrameSvg::RightBorder;
+                borders &= ~KSvg::FrameSvg::LeftBorder;
+                borders &= ~KSvg::FrameSvg::RightBorder;
             }
 
             if (m_view->alignment() == Latte::Types::Left && m_view->offset() == 0) {
-                borders &= ~Plasma::FrameSvg::LeftBorder;
+                borders &= ~KSvg::FrameSvg::LeftBorder;
             }
 
             if (m_view->alignment() == Latte::Types::Right  && m_view->offset() == 0) {
-                borders &= ~Plasma::FrameSvg::RightBorder;
+                borders &= ~KSvg::FrameSvg::RightBorder;
             }
         }
     }
 
-    m_hasTopLeftCorner =  (borders == Plasma::FrameSvg::AllBorders) || ((borders & Plasma::FrameSvg::TopBorder) && (borders & Plasma::FrameSvg::LeftBorder));
-    m_hasTopRightCorner =  (borders == Plasma::FrameSvg::AllBorders) || ((borders & Plasma::FrameSvg::TopBorder) && (borders & Plasma::FrameSvg::RightBorder));
-    m_hasBottomLeftCorner =  (borders == Plasma::FrameSvg::AllBorders) || ((borders & Plasma::FrameSvg::BottomBorder) && (borders & Plasma::FrameSvg::LeftBorder));
-    m_hasBottomRightCorner =  (borders == Plasma::FrameSvg::AllBorders) || ((borders & Plasma::FrameSvg::BottomBorder) && (borders & Plasma::FrameSvg::RightBorder));
+    m_hasTopLeftCorner =  (borders == KSvg::FrameSvg::AllBorders) || ((borders & KSvg::FrameSvg::TopBorder) && (borders & KSvg::FrameSvg::LeftBorder));
+    m_hasTopRightCorner =  (borders == KSvg::FrameSvg::AllBorders) || ((borders & KSvg::FrameSvg::TopBorder) && (borders & KSvg::FrameSvg::RightBorder));
+    m_hasBottomLeftCorner =  (borders == KSvg::FrameSvg::AllBorders) || ((borders & KSvg::FrameSvg::BottomBorder) && (borders & KSvg::FrameSvg::LeftBorder));
+    m_hasBottomRightCorner =  (borders == KSvg::FrameSvg::AllBorders) || ((borders & KSvg::FrameSvg::BottomBorder) && (borders & KSvg::FrameSvg::RightBorder));
 
     if (m_enabledBorders != borders) {
         m_enabledBorders = borders;
-        emit enabledBordersChanged();
+        Q_EMIT enabledBordersChanged();
     }
 
     if (!m_view->behaveAsPlasmaPanel() || !m_drawShadows) {

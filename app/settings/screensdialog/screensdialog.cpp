@@ -67,7 +67,7 @@ void ScreensDialog::initRemoveNowButton()
 {
     m_removeNowButton = new QPushButton(this);
     m_removeNowButton->setText(i18nc("remove selected screens", "Remove Now"));
-    m_removeNowButton->setIcon(QIcon::fromTheme("edit-delete"));
+    m_removeNowButton->setIcon(QIcon::fromTheme(QStringLiteral("edit-delete")));
     m_removeNowButton->setToolTip(i18n("Remove selected screen references"));
 
     m_ui->buttonBox->addButton(m_removeNowButton, QDialogButtonBox::AcceptRole);

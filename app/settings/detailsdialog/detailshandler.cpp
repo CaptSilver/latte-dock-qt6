@@ -73,7 +73,7 @@ void DetailsHandler::init()
 
     m_ui->patternClearBtn->setFixedHeight(m_ui->backgroundBtn->height()+2);
 
-    connect(m_backButtonsGroup, static_cast<void(QButtonGroup::*)(int, bool)>(&QButtonGroup::buttonToggled),
+    connect(m_backButtonsGroup, &QButtonGroup::idToggled,
             [ = ](int id, bool checked) {
 
         if (checked) {
@@ -146,7 +146,7 @@ void DetailsHandler::reload()
 void DetailsHandler::loadLayout(const Latte::Data::Layout &data)
 {
     if (data.icon.isEmpty()) {
-        m_ui->iconBtn->setIcon(QIcon::fromTheme("add"));
+        m_ui->iconBtn->setIcon(QIcon::fromTheme(QStringLiteral("add")));
         m_ui->iconClearBtn->setVisible(false);
     } else {
         m_ui->iconBtn->setIcon(QIcon::fromTheme(data.icon));
@@ -226,7 +226,7 @@ bool DetailsHandler::inDefaultValues() const
 void DetailsHandler::reset()
 {
     c_data = o_data;
-    emit currentLayoutChanged();
+    Q_EMIT currentLayoutChanged();
 }
 
 void DetailsHandler::resetDefaults()
@@ -241,13 +241,13 @@ void DetailsHandler::save()
 
 void DetailsHandler::clearIcon()
 {
-    setIcon("");
+    setIcon(QStringLiteral(""));
 }
 
 void DetailsHandler::clearPattern()
 {
-    setBackground("");
-    setTextColor("");
+    setBackground(QStringLiteral(""));
+    setTextColor(QStringLiteral(""));
 }
 
 void DetailsHandler::onCurrentColorIndexChanged(int row)
@@ -264,11 +264,11 @@ void DetailsHandler::onCurrentLayoutIndexChanged(int row)
         if (hasChangedData()) { //new layout was chosen but there are changes
             KMessageBox::ButtonCode result = saveChangesConfirmation();
 
-            if (result == KMessageBox::Yes) {
+            if (result == KMessageBox::PrimaryAction) {
                 switchtonewlayout = true;
                 m_lastConfirmedLayoutIndex = row;
                 save();
-            } else if (result == KMessageBox::No) {
+            } else if (result == KMessageBox::SecondaryAction) {
                 switchtonewlayout = true;
                 m_lastConfirmedLayoutIndex = row;
             } else if (result == KMessageBox::Cancel) {
@@ -284,7 +284,7 @@ void DetailsHandler::onCurrentLayoutIndexChanged(int row)
         QString layoutId = m_layoutsProxyModel->data(m_layoutsProxyModel->index(row, Model::Layouts::IDCOLUMN), Qt::UserRole).toString();
         m_dialog->layoutsController()->selectRow(layoutId);
         reload();
-        emit currentLayoutChanged();
+        Q_EMIT currentLayoutChanged();
     } else {
         //! reset combobox index
         m_ui->layoutsCmb->setCurrentText(c_data.name);
@@ -313,7 +313,7 @@ void DetailsHandler::setBackground(const QString &background)
     }
 
     c_data.background = background;
-    emit dataChanged();
+    Q_EMIT dataChanged();
 }
 
 void DetailsHandler::setColor(const QString &color)
@@ -323,7 +323,7 @@ void DetailsHandler::setColor(const QString &color)
     }
 
     c_data.color = color;
-    emit dataChanged();
+    Q_EMIT dataChanged();
 }
 
 void DetailsHandler::setCustomSchemeFile(const QString &file)
@@ -333,7 +333,7 @@ void DetailsHandler::setCustomSchemeFile(const QString &file)
     }
 
     c_data.schemeFile = file;
-    emit dataChanged();
+    Q_EMIT dataChanged();
 }
 
 void DetailsHandler::setIcon(const QString &icon)
@@ -343,7 +343,7 @@ void DetailsHandler::setIcon(const QString &icon)
     }
 
     c_data.icon = icon;
-    emit dataChanged();
+    Q_EMIT dataChanged();
 }
 
 void DetailsHandler::setTextColor(const QString &textColor)
@@ -353,7 +353,7 @@ void DetailsHandler::setTextColor(const QString &textColor)
     }
 
     c_data.textColor = textColor;
-    emit dataChanged();
+    Q_EMIT dataChanged();
 }
 
 void DetailsHandler::setIsShownInMenu(bool inMenu)
@@ -363,7 +363,7 @@ void DetailsHandler::setIsShownInMenu(bool inMenu)
     }
 
     c_data.isShownInMenu = inMenu;
-    emit dataChanged();
+    Q_EMIT dataChanged();
 }
 
 void DetailsHandler::setHasDisabledBorders(bool disabled)
@@ -373,7 +373,7 @@ void DetailsHandler::setHasDisabledBorders(bool disabled)
     }
 
     c_data.hasDisabledBorders = disabled;
-    emit dataChanged();
+    Q_EMIT dataChanged();
 }
 
 void DetailsHandler::setBackgroundStyle(const Latte::Layout::BackgroundStyle &style)
@@ -383,7 +383,7 @@ void DetailsHandler::setBackgroundStyle(const Latte::Layout::BackgroundStyle &st
     }
 
     c_data.backgroundStyle = style;
-    emit dataChanged();
+    Q_EMIT dataChanged();
 }
 
 void DetailsHandler::setPopUpMargin(const int &margin)
@@ -393,21 +393,21 @@ void DetailsHandler::setPopUpMargin(const int &margin)
     }
 
     c_data.popUpMargin = margin;
-    emit dataChanged();
+    Q_EMIT dataChanged();
 }
 
 void DetailsHandler::selectBackground()
 {
     QStringList mimeTypeFilters;
-    mimeTypeFilters << "image/jpeg" // will show "JPEG image (*.jpeg *.jpg)
-                    << "image/png";  // will show "PNG image (*.png)"
+    mimeTypeFilters << QStringLiteral("image/jpeg") // will show "JPEG image (*.jpeg *.jpg)
+                    << QStringLiteral("image/png");  // will show "PNG image (*.png)"
 
     QFileDialog dialog(m_dialog);
     dialog.setMimeTypeFilters(mimeTypeFilters);
 
     QString background =  m_ui->backPatternWidget->background();
 
-    if (background.startsWith("/") && QFileInfo(background).exists()) {
+    if (background.startsWith(QLatin1Char('/')) && QFileInfo(background).exists()) {
         dialog.setDirectory(QFileInfo(background).absolutePath());
         dialog.selectFile(background);
     }

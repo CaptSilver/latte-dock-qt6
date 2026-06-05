@@ -21,7 +21,7 @@
 #include <QQuickWindow>
 #include <QPixmap>
 #include <QSGSimpleTextureNode>
-#include <QuickAddons/ManagedTextureNode>
+// QuickAddons/ManagedTextureNode removed in KF6; use QSGSimpleTextureNode directly
 #include <QLatin1String>
 
 // KDE
@@ -39,7 +39,7 @@ IconItem::IconItem(QQuickItem *parent)
       m_sizeChanged(false),
       m_usesPlasmaTheme(false),
       m_lastValidSourceName(QString()),
-      m_colorGroup(Plasma::Theme::NormalColorGroup)
+      m_colorGroup(KSvg::Svg::Window)
 {
     setFlag(ItemHasContents, true);
     connect(KIconLoader::global(), SIGNAL(iconLoaderSettingsChanged()),
@@ -93,17 +93,17 @@ void IconItem::setSource(const QVariant &source)
             m_svgIcon.reset();
         } else {
             if (!m_svgIcon) {
-                m_svgIcon = std::make_unique<Plasma::Svg>(this);
-                m_svgIcon->setColorGroup(m_colorGroup);
-                m_svgIcon->setStatus(Plasma::Svg::Normal);
+                m_svgIcon = std::make_unique<KSvg::Svg>(this);
+                m_svgIcon->setColorSet(m_colorGroup);
+                m_svgIcon->setStatus(KSvg::Svg::Normal);
                 m_svgIcon->setUsingRenderingCache(false);
                 m_svgIcon->setDevicePixelRatio((window() ? window()->devicePixelRatio() : qApp->devicePixelRatio()));
-                connect(m_svgIcon.get(), &Plasma::Svg::repaintNeeded, this, &IconItem::schedulePixmapUpdate);
+                connect(m_svgIcon.get(), &KSvg::Svg::repaintNeeded, this, &IconItem::schedulePixmapUpdate);
             }
 
             if (m_usesPlasmaTheme) {
                 //try as a svg icon from plasma theme
-                m_svgIcon->setImagePath(QLatin1String("icons/") + sourceString.split('-').first());
+                m_svgIcon->setImagePath(QStringLiteral("icons/") + sourceString.split(QLatin1Char('-')).first());
                 m_svgIcon->setContainsMultipleImages(true);
                 //invalidate the image path to recalculate it later
             } else {
@@ -116,7 +116,7 @@ void IconItem::setSource(const QVariant &source)
                 m_svgIconName = sourceString;
                 //ok, svg not available from the plasma theme
             } else {
-                //try to load from iconloader an svg with Plasma::Svg
+                //try to load from iconloader an svg with KSvg::Svg
                 const auto *iconTheme = KIconLoader::global()->theme();
                 QString iconPath;
 
@@ -155,7 +155,7 @@ void IconItem::setSource(const QVariant &source)
     } else if (source.canConvert<QIcon>()) {
         m_icon = source.value<QIcon>();
         m_iconCounter++;
-        setLastLoadedSourceId("_icon_"+QString::number(m_iconCounter));
+        setLastLoadedSourceId(QStringLiteral("_icon_")+QString::number(m_iconCounter));
 
         m_imageIcon = QImage();
         m_svgIconName.clear();
@@ -163,7 +163,7 @@ void IconItem::setSource(const QVariant &source)
     } else if (source.canConvert<QImage>()) {
         m_imageIcon = source.value<QImage>();
         m_iconCounter++;
-        setLastLoadedSourceId("_image_"+QString::number(m_iconCounter));
+        setLastLoadedSourceId(QStringLiteral("_image_")+QString::number(m_iconCounter));
 
         m_icon = QIcon();
         m_svgIconName.clear();
@@ -179,8 +179,8 @@ void IconItem::setSource(const QVariant &source)
         schedulePixmapUpdate();
     }
 
-    emit sourceChanged();
-    emit validChanged();
+    Q_EMIT sourceChanged();
+    Q_EMIT validChanged();
 }
 
 QVariant IconItem::source() const
@@ -210,10 +210,10 @@ void IconItem::setLastValidSourceName(QString name)
 
     m_lastValidSourceName = name;
 
-    emit lastValidSourceNameChanged();
+    Q_EMIT lastValidSourceNameChanged();
 }
 
-void IconItem::setColorGroup(Plasma::Theme::ColorGroup group)
+void IconItem::setColorGroup(KSvg::Svg::ColorSet group)
 {
     if (m_colorGroup == group) {
         return;
@@ -222,13 +222,13 @@ void IconItem::setColorGroup(Plasma::Theme::ColorGroup group)
     m_colorGroup = group;
 
     if (m_svgIcon) {
-        m_svgIcon->setColorGroup(group);
+        m_svgIcon->setColorSet(group);
     }
 
-    emit colorGroupChanged();
+    Q_EMIT colorGroupChanged();
 }
 
-Plasma::Theme::ColorGroup IconItem::colorGroup() const
+KSvg::Svg::ColorSet IconItem::colorGroup() const
 {
     return m_colorGroup;
 }
@@ -241,7 +241,7 @@ void IconItem::setOverlays(const QStringList &overlays)
     }
 
     m_overlays = overlays;
-    emit overlaysChanged();
+    Q_EMIT overlaysChanged();
 }
 
 QStringList IconItem::overlays() const
@@ -267,7 +267,7 @@ void IconItem::setActive(bool active)
         schedulePixmapUpdate();
     }
 
-    emit activeChanged();
+    Q_EMIT activeChanged();
 }
 
 bool IconItem::providesColors() const
@@ -282,7 +282,7 @@ void IconItem::setProvidesColors(const bool provides)
     }
 
     m_providesColors = provides;
-    emit providesColorsChanged();
+    Q_EMIT providesColorsChanged();
 }
 
 void IconItem::setSmooth(const bool smooth)
@@ -334,7 +334,7 @@ void IconItem::setUsesPlasmaTheme(bool usesPlasmaTheme)
     setSource(src);
 
     update();
-    emit usesPlasmaThemeChanged();
+    Q_EMIT usesPlasmaThemeChanged();
 }
 
 void IconItem::updatePolish()
@@ -352,14 +352,15 @@ QSGNode *IconItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *update
         return nullptr;
     }
 
-    ManagedTextureNode *textureNode = dynamic_cast<ManagedTextureNode *>(oldNode);
+    QSGSimpleTextureNode *textureNode = dynamic_cast<QSGSimpleTextureNode *>(oldNode);
 
     if (!textureNode || m_textureChanged) {
         if (oldNode)
             delete oldNode;
 
-        textureNode = new ManagedTextureNode;
-        textureNode->setTexture(QSharedPointer<QSGTexture>(window()->createTextureFromImage(m_iconPixmap.toImage(), QQuickWindow::TextureCanUseAtlas)));
+        textureNode = new QSGSimpleTextureNode;
+        textureNode->setOwnsTexture(true);
+        textureNode->setTexture(window()->createTextureFromImage(m_iconPixmap.toImage(), QQuickWindow::TextureCanUseAtlas));
         textureNode->setFiltering(smooth() ? QSGTexture::Linear : QSGTexture::Nearest);
 
         m_sizeChanged = true;
@@ -398,7 +399,7 @@ void IconItem::setBackgroundColor(QColor background)
     }
 
     m_backgroundColor = background;
-    emit backgroundColorChanged();
+    Q_EMIT backgroundColorChanged();
 }
 
 QColor IconItem::glowColor() const
@@ -413,7 +414,7 @@ void IconItem::setGlowColor(QColor glow)
     }
 
     m_glowColor = glow;
-    emit glowColorChanged();
+    Q_EMIT glowColorChanged();
 }
 
 void IconItem::updateColors()
@@ -557,7 +558,7 @@ void IconItem::itemChange(ItemChange change, const ItemChangeData &value)
     QQuickItem::itemChange(change, value);
 }
 
-void IconItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void IconItem::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     if (newGeometry.size() != oldGeometry.size()) {
         m_sizeChanged = true;
@@ -572,11 +573,11 @@ void IconItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeome
         const auto newSize = qMin(newGeometry.size().width(), newGeometry.size().height());
 
         if (!almost_equal(oldSize, newSize, 2)) {
-            emit paintedSizeChanged();
+            Q_EMIT paintedSizeChanged();
         }
     }
 
-    QQuickItem::geometryChanged(newGeometry, oldGeometry);
+    QQuickItem::geometryChange(newGeometry, oldGeometry);
 }
 
 void IconItem::componentComplete()

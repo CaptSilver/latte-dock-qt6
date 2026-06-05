@@ -24,7 +24,7 @@
 #include <QMetaType>
 
 // Plasma
-#include <Plasma>
+#include <Plasma/Plasma>
 
 //! There are gcc versions that don't support yet that function even though they
 //! publish themselves as C++14 compatible. Such a case is gcc 4.8.x that openSUSE
@@ -44,8 +44,8 @@ unique_ptr<T> make_unique(Args &&... args)
  */
 inline QString qRectToStr(const QRect &r)
 {
-    return "(" % QString::number(r.x()) % ", " % QString::number(r.y()) % ") "
-           % QString::number(r.width()) % "x" % QString::number(r.height());
+    return QLatin1String("(") % QString::number(r.x()) % QLatin1String(", ") % QString::number(r.y()) % QLatin1String(") ")
+           % QString::number(r.width()) % QLatin1String("x") % QString::number(r.height());
 }
 
 /*!

@@ -18,7 +18,8 @@
 
 // KDE
 #include <KWindowSystem>
-#include <KActivities/Controller>
+#include <PlasmaActivities/Consumer>
+#include <PlasmaActivities/Controller>
 
 namespace Latte {
 namespace WindowSystem {
@@ -26,8 +27,8 @@ namespace WindowSystem {
 #define MAXPLASMAPANELTHICKNESS 96
 #define MAXSIDEPANELTHICKNESS 512
 
-#define KWINSERVICE "org.kde.KWin"
-#define KWINVIRTUALDESKTOPMANAGERNAMESPACE "org.kde.KWin.VirtualDesktopManager"
+#define KWINSERVICE QStringLiteral("org.kde.KWin")
+#define KWINVIRTUALDESKTOPMANAGERNAMESPACE QStringLiteral("org.kde.KWin.VirtualDesktopManager")
 
 AbstractWindowInterface::AbstractWindowInterface(QObject *parent)
     : QObject(parent),
@@ -48,7 +49,7 @@ AbstractWindowInterface::AbstractWindowInterface(QObject *parent)
     connect(&m_windowWaitingTimer, &QTimer::timeout, this, [&]() {
         WindowId wid = m_windowChangedWaiting;
         m_windowChangedWaiting = QVariant();
-        emit windowChanged(wid);
+        Q_EMIT windowChanged(wid);
     });
 
     connect(this, &AbstractWindowInterface::windowRemoved, this, &AbstractWindowInterface::windowRemovedSlot);
@@ -59,7 +60,7 @@ AbstractWindowInterface::AbstractWindowInterface(QObject *parent)
 
     connect(m_activities.data(), &KActivities::Consumer::currentActivityChanged, this, [&](const QString &id) {
         m_currentActivity = id;
-        emit currentActivityChanged();
+        Q_EMIT currentActivityChanged();
     });
 
     connect(KWindowSystem::self(), &KWindowSystem::showingDesktopChanged, this, &AbstractWindowInterface::setIsShowingDesktop);
@@ -102,7 +103,7 @@ void AbstractWindowInterface::setIsShowingDesktop(const bool &showing)
     }
 
     m_isShowingDesktop = showing;
-    emit isShowingDesktopChanged();
+    Q_EMIT isShowingDesktopChanged();
 }
 
 QString AbstractWindowInterface::currentDesktop()
@@ -268,7 +269,7 @@ bool AbstractWindowInterface::isKWinRunning() const
 
 void AbstractWindowInterface::initKWinInterface()
 {
-    QDBusInterface kwinIface(KWINSERVICE, "/VirtualDesktopManager", KWINVIRTUALDESKTOPMANAGERNAMESPACE, QDBusConnection::sessionBus());
+    QDBusInterface kwinIface(KWINSERVICE, QStringLiteral("/VirtualDesktopManager"), KWINVIRTUALDESKTOPMANAGERNAMESPACE, QDBusConnection::sessionBus());
 
     if (kwinIface.isValid() && !m_isKWinInterfaceAvailable) {
         m_isKWinInterfaceAvailable = true;
@@ -277,9 +278,9 @@ void AbstractWindowInterface::initKWinInterface()
 
         QDBusConnection bus = QDBusConnection::sessionBus();
         bool signalconnected = bus.connect(KWINSERVICE,
-                                           "/VirtualDesktopManager",
+                                           QStringLiteral("/VirtualDesktopManager"),
                                            KWINVIRTUALDESKTOPMANAGERNAMESPACE,
-                                           "navigationWrappingAroundChanged",
+                                           QStringLiteral("navigationWrappingAroundChanged"),
                                            this,
                                            SLOT(onVirtualDesktopNavigationWrappingAroundChanged(bool)));
 
@@ -304,7 +305,7 @@ void AbstractWindowInterface::registerIgnoredWindow(WindowId wid)
 {
     if (!wid.isNull() && !m_ignoredWindows.contains(wid)) {
         m_ignoredWindows.append(wid);
-        emit windowChanged(wid);
+        Q_EMIT windowChanged(wid);
     }
 }
 
@@ -312,7 +313,7 @@ void AbstractWindowInterface::unregisterIgnoredWindow(WindowId wid)
 {
     if (m_ignoredWindows.contains(wid)) {
         m_ignoredWindows.removeAll(wid);
-        emit windowRemoved(wid);
+        Q_EMIT windowRemoved(wid);
     }
 }
 
@@ -320,7 +321,7 @@ void AbstractWindowInterface::registerPlasmaIgnoredWindow(WindowId wid)
 {
     if (!wid.isNull() && !m_plasmaIgnoredWindows.contains(wid)) {
         m_plasmaIgnoredWindows.append(wid);
-        emit windowChanged(wid);
+        Q_EMIT windowChanged(wid);
     }
 }
 
@@ -335,7 +336,7 @@ void AbstractWindowInterface::registerWhitelistedWindow(WindowId wid)
 {
     if (!wid.isNull() && !m_whitelistedWindows.contains(wid)) {
         m_whitelistedWindows.append(wid);
-        emit windowChanged(wid);
+        Q_EMIT windowChanged(wid);
     }
 }
 
@@ -364,7 +365,7 @@ void AbstractWindowInterface::windowRemovedSlot(WindowId wid)
 //! Activities switching
 void AbstractWindowInterface::switchToNextActivity()
 {
-    QStringList runningActivities = m_activities->activities(KActivities::Info::State::Running);
+    QStringList runningActivities = m_activities->activities();
     if (runningActivities.count() <= 1) {
         return;
     }
@@ -382,7 +383,7 @@ void AbstractWindowInterface::switchToNextActivity()
 
 void AbstractWindowInterface::switchToPreviousActivity()
 {
-    QStringList runningActivities = m_activities->activities(KActivities::Info::State::Running);
+    QStringList runningActivities = m_activities->activities();
     if (runningActivities.count() <= 1) {
         return;
     }
@@ -418,7 +419,7 @@ void AbstractWindowInterface::considerWindowChanged(WindowId wid)
     if (m_windowChangedWaiting != wid && m_windowWaitingTimer.isActive()) {
         m_windowWaitingTimer.stop();
         //! sent previous waiting window
-        emit windowChanged(m_windowChangedWaiting);
+        Q_EMIT windowChanged(m_windowChangedWaiting);
 
         //! retrigger waiting for the upcoming window
         m_windowChangedWaiting = wid;

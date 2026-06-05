@@ -159,15 +159,15 @@ QString Views::sortableText(const int &priority, const QString &text) const
     QString numberPart;
 
     if (priority < 10) {
-        numberPart = "00000" + QString::number(priority);
+        numberPart = QStringLiteral("00000") + QString::number(priority);
     } else if (priority < 100) {
-        numberPart = "0000" + QString::number(priority);
+        numberPart = QStringLiteral("0000") + QString::number(priority);
     } else if (priority < 1000) {
-        numberPart = "000" + QString::number(priority);
+        numberPart = QStringLiteral("000") + QString::number(priority);
     } else if (priority < 10000) {
-        numberPart = "00" + QString::number(priority);
+        numberPart = QStringLiteral("00") + QString::number(priority);
     } else if (priority < 100000) {
-        numberPart = "0" + QString::number(priority);
+        numberPart = QStringLiteral("0") + QString::number(priority);
     }
 
     return (numberPart + text);
@@ -342,7 +342,7 @@ void Views::appendTemporaryView(const Latte::Data::View &view)
     m_viewsTable.appendTemporaryView(view);
     endInsertRows();
 
-    emit rowsInserted();
+    Q_EMIT rowsInserted();
 }
 
 void Views::removeView(const QString &id)
@@ -351,7 +351,7 @@ void Views::removeView(const QString &id)
 
     if (index >= 0) {
         removeRows(index, 1);
-        emit rowsRemoved();
+        Q_EMIT rowsRemoved();
     }
 }
 
@@ -411,7 +411,7 @@ void Views::updateActiveStatesBasedOn(const CentralLayout *layout)
 
         if (currentactivestate != m_viewsTable[i].isActive) {
             m_viewsTable[i].isActive = currentactivestate;
-            emit dataChanged(this->index(i, IDCOLUMN), this->index(i, SUBCONTAINMENTSCOLUMN), roles);
+            Q_EMIT dataChanged(this->index(i, IDCOLUMN), this->index(i, SUBCONTAINMENTSCOLUMN), roles);
         }
     }
 }
@@ -490,7 +490,7 @@ void Views::clearErrorsAndWarnings()
     roles << ERRORSROLE;
     roles << WARNINGSROLE;
 
-    emit dataChanged(this->index(0, IDCOLUMN), this->index(m_viewsTable.rowCount()-1, SUBCONTAINMENTSCOLUMN), roles);
+    Q_EMIT dataChanged(this->index(0, IDCOLUMN), this->index(m_viewsTable.rowCount()-1, SUBCONTAINMENTSCOLUMN), roles);
 }
 
 void Views::populateScreens()
@@ -534,7 +534,7 @@ void Views::updateCurrentView(QString currentViewId, Latte::Data::View &view)
     roles << ERRORSROLE;
     roles << WARNINGSROLE;
 
-    emit dataChanged(this->index(currentrow, IDCOLUMN), this->index(currentrow, SUBCONTAINMENTSCOLUMN), roles);
+    Q_EMIT dataChanged(this->index(currentrow, IDCOLUMN), this->index(currentrow, SUBCONTAINMENTSCOLUMN), roles);
 }
 
 void Views::setOriginalView(QString currentViewId, Latte::Data::View &view)
@@ -554,7 +554,7 @@ void Views::setOriginalView(QString currentViewId, Latte::Data::View &view)
     roles << ISACTIVEROLE;
     roles << HASCHANGEDVIEWROLE;
 
-    emit dataChanged(this->index(currentrow, IDCOLUMN), this->index(currentrow, SUBCONTAINMENTSCOLUMN), roles);
+    Q_EMIT dataChanged(this->index(currentrow, IDCOLUMN), this->index(currentrow, SUBCONTAINMENTSCOLUMN), roles);
 }
 
 void Views::setOriginalData(Latte::Data::ViewsTable &data)
@@ -566,7 +566,7 @@ void Views::setOriginalData(Latte::Data::ViewsTable &data)
     m_viewsTable = data;
     endInsertRows();
 
-    emit rowsInserted();
+    Q_EMIT rowsInserted();
 }
 
 QVariant Views::headerData(int section, Qt::Orientation orientation, int role) const
@@ -584,7 +584,7 @@ QVariant Views::headerData(int section, Qt::Orientation orientation, int role) c
     switch(section) {
     case IDCOLUMN:
         if (role == Qt::DisplayRole) {
-            return QString("#");
+            return QStringLiteral("#");
         }
         break;
     case NAMECOLUMN:
@@ -672,7 +672,7 @@ bool Views::setData(const QModelIndex &index, const QVariant &value, int role)
             }
 
             m_viewsTable[row].name = value.toString();
-            emit dataChanged(index, index, roles);
+            Q_EMIT dataChanged(index, index, roles);
         }
         break;
     case SCREENCOLUMN:
@@ -705,7 +705,7 @@ bool Views::setData(const QModelIndex &index, const QVariant &value, int role)
                 }
             }
 
-            emit dataChanged(this->index(row, NAMECOLUMN), this->index(row, ALIGNMENTCOLUMN), roles);
+            Q_EMIT dataChanged(this->index(row, NAMECOLUMN), this->index(row, ALIGNMENTCOLUMN), roles);
         }
         break;
     case EDGECOLUMN:
@@ -718,7 +718,7 @@ bool Views::setData(const QModelIndex &index, const QVariant &value, int role)
 
             Plasma::Types::Location previousEdge = m_viewsTable[row].edge;
             m_viewsTable[row].edge = edge;
-            emit dataChanged(index, index, roles);
+            Q_EMIT dataChanged(index, index, roles);
 
             bool previousFactor = isVertical(previousEdge);
             bool currentFactor = isVertical(edge);
@@ -734,7 +734,7 @@ bool Views::setData(const QModelIndex &index, const QVariant &value, int role)
                     m_viewsTable[row].alignment = Latte::Types::Right;
                 }
 
-                emit dataChanged(this->index(row, NAMECOLUMN), this->index(row, ALIGNMENTCOLUMN), roles);
+                Q_EMIT dataChanged(this->index(row, NAMECOLUMN), this->index(row, ALIGNMENTCOLUMN), roles);
             }
 
             return true;
@@ -749,7 +749,7 @@ bool Views::setData(const QModelIndex &index, const QVariant &value, int role)
             }
 
             m_viewsTable[row].alignment = static_cast<Latte::Types::Alignment>(alignment);
-            emit dataChanged(this->index(row, NAMECOLUMN), this->index(row, ALIGNMENTCOLUMN), roles);
+            Q_EMIT dataChanged(this->index(row, NAMECOLUMN), this->index(row, ALIGNMENTCOLUMN), roles);
             return true;
         }
         break;
@@ -770,10 +770,10 @@ QVariant Views::data(const QModelIndex &index, int role) const
     }
 
     bool isNewView = !o_viewsTable.containsId(m_viewsTable[row].id);
-    QString origviewid = !isNewView ? m_viewsTable[row].id : "";
+    QString origviewid = !isNewView ? m_viewsTable[row].id : QStringLiteral("");
 
     if (role == IDROLE) {
-        return (m_viewsTable[row].state() == Data::View::IsCreated ? m_viewsTable[row].id : "#");
+        return (m_viewsTable[row].state() == Data::View::IsCreated ? m_viewsTable[row].id : QStringLiteral("#"));
     } else if (role == ISACTIVEROLE) {
         return m_viewsTable[row].isActive;
     } else if (role == CHOICESROLE) {
@@ -788,19 +788,19 @@ QVariant Views::data(const QModelIndex &index, int role) const
                 currentScreens.insertBasedOnId(explicitScr);
             }
 
-            screensVariant.setValue<Latte::Data::ScreensTable>(currentScreens);
+            screensVariant = QVariant::fromValue(currentScreens);
             return screensVariant;
         } else if (column == EDGECOLUMN) {
             QVariant edgesVariant;
-            edgesVariant.setValue<Latte::Data::ViewsTable>(edgesChoices(m_viewsTable[row]));
+            edgesVariant = QVariant::fromValue(edgesChoices(m_viewsTable[row]));
             return edgesVariant;
         } else if (column == ALIGNMENTCOLUMN) {
             QVariant alignmentsVariant;
 
             if (isVertical(m_viewsTable[row].edge)) {
-                alignmentsVariant.setValue<Latte::Data::ViewsTable>(verticalAlignmentChoices(m_viewsTable[row]));
+                alignmentsVariant = QVariant::fromValue(verticalAlignmentChoices(m_viewsTable[row]));
             } else {
-                alignmentsVariant.setValue<Latte::Data::ViewsTable>(horizontalAlignmentChoices(m_viewsTable[row]));
+                alignmentsVariant = QVariant::fromValue(horizontalAlignmentChoices(m_viewsTable[row]));
             }
 
             return alignmentsVariant;
@@ -810,11 +810,11 @@ QVariant Views::data(const QModelIndex &index, int role) const
     } else if (role == SCREENROLE) {
         QVariant scrVariant;
         Latte::Data::Screen scrdata = screenData(m_viewsTable[row].id);
-        scrVariant.setValue<Latte::Data::Screen>(scrdata);
+        scrVariant = QVariant::fromValue(scrdata);
         return scrVariant;
     } else if (role == VIEWROLE) {
         QVariant viewVariant;
-        viewVariant.setValue<Latte::Data::View>(m_viewsTable[row]);
+        viewVariant = QVariant::fromValue(m_viewsTable[row]);
         return viewVariant;
     } else if (role == ISMOVEORIGINROLE) {
         return m_viewsTable[row].isMoveOrigin;
@@ -831,7 +831,7 @@ QVariant Views::data(const QModelIndex &index, int role) const
     switch (column) {
     case IDCOLUMN:
         if (role == Qt::DisplayRole){
-            return (m_viewsTable[row].state() == Data::View::IsCreated ? m_viewsTable[row].id : "#");
+            return (m_viewsTable[row].state() == Data::View::IsCreated ? m_viewsTable[row].id : QStringLiteral("#"));
         } else if (role == Qt::UserRole) {
             return m_viewsTable[row].id;
         } else if (role == ISCHANGEDROLE) {
@@ -962,20 +962,20 @@ QVariant Views::data(const QModelIndex &index, int role) const
     case SUBCONTAINMENTSCOLUMN:
         if (role == Qt::DisplayRole){
             if (m_viewsTable[row].subcontainments.rowCount()>0) {
-                QString result = "{";
+                QString result = QStringLiteral("{");
 
                 for (int i=0; i<m_viewsTable[row].subcontainments.rowCount(); ++i) {
                     if (i>0) {
-                        result += " ";
+                        result += QLatin1Char(' ');
                     }
-                    result += (m_viewsTable[row].state() == Data::View::IsCreated ? m_viewsTable[row].subcontainments[i].id : TEMPIDDISPLAY);
+                    result += (m_viewsTable[row].state() == Data::View::IsCreated ? m_viewsTable[row].subcontainments[i].id : QStringLiteral(TEMPIDDISPLAY));
 
                     if (i<m_viewsTable[row].subcontainments.rowCount()-1) {
-                        result += ",";
+                        result += QLatin1Char(',');
                     }
                 }
 
-                result += "}";
+                result += QLatin1Char('}');
                 return result;
             }
 

@@ -16,15 +16,20 @@
 #include <QTimer>
 
 // Plasma
-#include <plasma/package.h>
-#include <Plasma/FrameSvg>
+#include <KPackage/Package>
+
+// KSvg
+#include <KSvg/FrameSvg>
 
 
 namespace Plasma {
 class Applet;
 class Containment;
-class FrameSvg;
 class Types;
+}
+
+namespace KSvg {
+class FrameSvg;
 }
 
 namespace KWayland {
@@ -58,10 +63,10 @@ public:
 
     void hideConfigWindow();
 
-public slots:
+public Q_SLOTS:
     Q_INVOKABLE void syncGeometry() override;
 
-signals:
+Q_SIGNALS:
     void showSignal();
 
 protected:

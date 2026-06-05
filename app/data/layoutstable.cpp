@@ -63,7 +63,7 @@ void LayoutsTable::setLayoutForFreeActivities(const QString &id)
 
 
     if (row>=0) {
-        m_list[row].activities = QStringList(Data::Layout::FREEACTIVITIESID);
+        m_list[row].activities = QStringList({QLatin1String(Data::Layout::FREEACTIVITIESID)});
     }
 }
 

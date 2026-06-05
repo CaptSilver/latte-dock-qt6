@@ -154,82 +154,82 @@ View::operator QString() const
     QString result;
 
     result += id;
-    result +=" : ";
-    result += isActive ? "Active" : "Inactive";
-    result +=" : ";
+    result += QStringLiteral(" : ");
+    result += isActive ? QStringLiteral("Active") : QStringLiteral("Inactive");
+    result += QStringLiteral(" : ");
     if (m_state==OriginFromLayout && isMoveOrigin) {
-        result += " ↑ ";
+        result += QStringLiteral(" ↑ ");
     } else if (m_state==OriginFromLayout && isMoveDestination) {
-        result += " ↓ ";
+        result += QStringLiteral(" ↓ ");
     } else if (m_state==OriginFromLayout && isMoveOrigin && isMoveDestination) {
-        result += " ↑↓ ";
+        result += QStringLiteral(" ↑↓ ");
     } else {
-        result += " - ";
+        result += QStringLiteral(" - ");
     }
 
-    result += " : ";
+    result += QStringLiteral(" : ");
 
     if (m_state == IsInvalid) {
-        result += "IsInvalid";
+        result += QStringLiteral("IsInvalid");
     } else if (m_state == IsCreated) {
-        result += "IsCreated";
+        result += QStringLiteral("IsCreated");
     } else if (m_state == OriginFromViewTemplate) {
-        result += "OriginFromViewTemplate";
+        result += QStringLiteral("OriginFromViewTemplate");
     } else if (m_state == OriginFromLayout) {
-        result += "OriginFromLayout";
+        result += QStringLiteral("OriginFromLayout");
     }
 
-    result += " : ";
+    result += QStringLiteral(" : ");
     if (isCloned()) {
-        result += ("Cloned from:"+ isClonedFrom);
+        result += QStringLiteral("Cloned from:") + QString::number(isClonedFrom);
     } else {
-        result += "Original";
+        result += QStringLiteral("Original");
     }
 
-    result += " : ";
+    result += QStringLiteral(" : ");
     if (screensGroup == Latte::Types::SingleScreenGroup) {
-        result += onPrimary ? "Primary" : "Explicit";
+        result += onPrimary ? QStringLiteral("Primary") : QStringLiteral("Explicit");
     } else if (screensGroup == Latte::Types::AllScreensGroup) {
-        result += "All Screens";
+        result += QStringLiteral("All Screens");
     } else if (screensGroup == Latte::Types::AllSecondaryScreensGroup) {
-        result += "All Secondary Screens";
+        result += QStringLiteral("All Secondary Screens");
     }
 
-    result += onPrimary ? "Primary" : "Explicit";
-    result += " : ";
+    result += onPrimary ? QStringLiteral("Primary") : QStringLiteral("Explicit");
+    result += QStringLiteral(" : ");
     result += QString::number(screen);
-    result += " : ";
+    result += QStringLiteral(" : ");
     if (edge == Plasma::Types::BottomEdge) {
-        result += "BottomEdge";
+        result += QStringLiteral("BottomEdge");
     } else if (edge == Plasma::Types::TopEdge) {
-        result += "TopEdge";
+        result += QStringLiteral("TopEdge");
     } else if (edge == Plasma::Types::LeftEdge) {
-        result += "LeftEdge";
+        result += QStringLiteral("LeftEdge");
     } else if (edge == Plasma::Types::RightEdge) {
-        result += "RightEdge";
+        result += QStringLiteral("RightEdge");
     }
 
-    result += " : ";
+    result += QStringLiteral(" : ");
 
     if (alignment == Latte::Types::Center) {
-        result += "CenterAlignment";
+        result += QStringLiteral("CenterAlignment");
     } else if (alignment == Latte::Types::Left) {
-        result += "LeftAlignment";
+        result += QStringLiteral("LeftAlignment");
     } else if (alignment == Latte::Types::Right) {
-        result += "RightAlignment";
+        result += QStringLiteral("RightAlignment");
     } else if (alignment == Latte::Types::Top) {
-        result += "TopAlignment";
+        result += QStringLiteral("TopAlignment");
     } else if (alignment == Latte::Types::Bottom) {
-        result += "BottomAlignment";
+        result += QStringLiteral("BottomAlignment");
     } else if (alignment == Latte::Types::Justify) {
-        result += "JustifyAlignment";
+        result += QStringLiteral("JustifyAlignment");
     }
 
-    result += " : ";
-    result += QString::number(maxLength) + "%";
+    result += QStringLiteral(" : ");
+    result += QString::number(maxLength) + QStringLiteral("%");
 
-    result += " || ";
-    result += "{" + subcontainments + "}";
+    result += QStringLiteral(" || ");
+    result += QStringLiteral("{") + static_cast<QString>(subcontainments) + QStringLiteral("}");
 
     return result;
 }

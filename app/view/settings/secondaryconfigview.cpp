@@ -21,20 +21,19 @@
 
 // KDE
 #include <KLocalizedContext>
-#include <KDeclarative/KDeclarative>
 #include <KWayland/Client/plasmashell.h>
 #include <KWayland/Client/surface.h>
 #include <KWindowEffects>
 #include <KWindowSystem>
 
 // Plasma
-#include <Plasma/Package>
+#include <KPackage/Package>
 
 namespace Latte {
 namespace ViewPart {
 
 SecondaryConfigView::SecondaryConfigView(Latte::View *view, PrimaryConfigView *parent)
-    : SubConfigView(view, QString("#secondaryconfigview#")),
+    : SubConfigView(view, QStringLiteral("#secondaryconfigview#")),
       m_parent(parent)
 {
     connect(this, &QQuickView::widthChanged, this, &SecondaryConfigView::updateEffects);
@@ -187,7 +186,7 @@ void SecondaryConfigView::showEvent(QShowEvent *ev)
     m_screenSyncTimer.start();
     QTimer::singleShot(400, this, &SecondaryConfigView::syncGeometry);
 
-    emit showSignal();
+    Q_EMIT showSignal();
 }
 
 void SecondaryConfigView::focusOutEvent(QFocusEvent *ev)
@@ -237,10 +236,10 @@ void SecondaryConfigView::updateEffects()
     }
 
     if (!m_background) {
-        m_background = new Plasma::FrameSvg(this);
+        m_background = new KSvg::FrameSvg(this);
     }
 
-    if (m_background->imagePath() != "dialogs/background") {
+    if (m_background->imagePath() != QStringLiteral("dialogs/background")) {
         m_background->setImagePath(QStringLiteral("dialogs/background"));
     }
 
@@ -257,10 +256,10 @@ void SecondaryConfigView::updateEffects()
         setMask(QRegion());
     }
 
-    if (KWindowSystem::compositingActive()) {
-        KWindowEffects::enableBlurBehind(winId(), true, fixedMask);
+    if (true) {
+        KWindowEffects::enableBlurBehind(this, true, fixedMask);
     } else {
-        KWindowEffects::enableBlurBehind(winId(), false);
+        KWindowEffects::enableBlurBehind(this, false);
     }
 }
 
@@ -271,23 +270,23 @@ void SecondaryConfigView::updateEnabledBorders()
         return;
     }
 
-    Plasma::FrameSvg::EnabledBorders borders = Plasma::FrameSvg::AllBorders;
+    KSvg::FrameSvg::EnabledBorders borders = KSvg::FrameSvg::AllBorders;
 
     switch (m_latteView->location()) {
     case Plasma::Types::TopEdge:
-        borders &= ~Plasma::FrameSvg::TopBorder;
+        borders &= ~KSvg::FrameSvg::TopBorder;
         break;
 
     case Plasma::Types::LeftEdge:
-        borders &= ~Plasma::FrameSvg::LeftBorder;
+        borders &= ~KSvg::FrameSvg::LeftBorder;
         break;
 
     case Plasma::Types::RightEdge:
-        borders &= ~Plasma::FrameSvg::RightBorder;
+        borders &= ~KSvg::FrameSvg::RightBorder;
         break;
 
     case Plasma::Types::BottomEdge:
-        borders &=  ~Plasma::FrameSvg::BottomBorder;
+        borders &=  ~KSvg::FrameSvg::BottomBorder;
         break;
 
     default:
@@ -299,7 +298,7 @@ void SecondaryConfigView::updateEnabledBorders()
 
         m_corona->dialogShadows()->addWindow(this, m_enabledBorders);
 
-        emit enabledBordersChanged();
+        Q_EMIT enabledBordersChanged();
     }
 }
 

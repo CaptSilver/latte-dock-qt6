@@ -12,6 +12,7 @@
 #include "../layout/abstractlayout.h"
 
 //Qt
+#include <QLatin1String>
 #include <QMetaType>
 #include <QString>
 #include <QStringList>
@@ -37,7 +38,7 @@ public:
     QString background;
     QString textColor;
     QString lastUsedActivity;
-    QString schemeFile{DEFAULTSCHEMEFILE};
+    QString schemeFile{QLatin1String(DEFAULTSCHEMEFILE)};
     bool isActive{false};
     bool isConsideredActive{false}; //used from settings window to indicate activeness based on selected layouts mode
     bool isLocked{false};

@@ -31,6 +31,7 @@
 #include <KMessageBox>
 #include <KLocalizedString>
 #include <KNotification>
+#include <KPackage/Package>
 
 namespace Latte {
 namespace Layouts {
@@ -79,7 +80,7 @@ void Manager::init()
 
         //startup create what is necessary....
         if (!layoutsDir.exists()) {
-            QDir(Latte::configPath()).mkdir("latte");
+            QDir(Latte::configPath()).mkdir(QStringLiteral("latte"));
         }
 
         QString defpath = m_corona->templatesManager()->newLayout(i18n("My Layout"), i18n(Templates::DEFAULTLAYOUTTEMPLATENAME));
@@ -99,15 +100,15 @@ void Manager::init()
     }
 
     //! Custom Templates path creation
-    QDir localTemplatesDir(Latte::configPath() + "/latte/templates");
+    QDir localTemplatesDir(Latte::configPath() + QStringLiteral("/latte/templates"));
 
     if (!localTemplatesDir.exists()) {
-        QDir(Latte::configPath() + "/latte").mkdir("templates");
+        QDir(Latte::configPath() + QStringLiteral("/latte")).mkdir(QStringLiteral("templates"));
     }
 
     //! Check if the multiple-layouts hidden file is present, add it if it isnt
-    if (!QFile(Layouts::Importer::layoutUserFilePath(Layout::MULTIPLELAYOUTSHIDDENNAME)).exists()) {
-        m_corona->templatesManager()->newLayout("", Layout::MULTIPLELAYOUTSHIDDENNAME);
+    if (!QFile(Layouts::Importer::layoutUserFilePath(QLatin1String(Layout::MULTIPLELAYOUTSHIDDENNAME))).exists()) {
+        m_corona->templatesManager()->newLayout(QString(), QLatin1String(Layout::MULTIPLELAYOUTSHIDDENNAME));
     }
 
     qDebug() << "Latte is loading  its layouts...";
@@ -205,12 +206,12 @@ Latte::Data::LayoutIcon Manager::iconForLayout(const Data::Layout &layout) const
 
     //! fallback icon: background image
     if (_icon.isEmpty()) {
-        QString colorPath = m_corona->kPackage().path() + "../../shells/org.kde.latte.shell/contents/images/canvas/";
+        QString colorPath = m_corona->kPackage().path() + QStringLiteral("../../shells/org.kde.latte.shell/contents/images/canvas/");
 
         if (layout.backgroundStyle == Layout::PatternBackgroundStyle && layout.background.isEmpty()) {
-            colorPath += "defaultcustomprint.jpg";
+            colorPath += QStringLiteral("defaultcustomprint.jpg");
         } else {
-            colorPath = layout.background.startsWith("/") ? layout.background : colorPath + layout.color + "print.jpg";
+            colorPath = layout.background.startsWith(QLatin1String("/")) ? layout.background : colorPath + layout.color + QStringLiteral("print.jpg");
         }
 
         if (QFileInfo(colorPath).exists()) {
@@ -316,10 +317,10 @@ void Manager::setOnAllActivities(QString layoutName)
     CentralLayout *central = m_synchronizer->centralLayout(layoutName);
 
     if (central) {
-        central->setActivities(QStringList(Data::Layout::ALLACTIVITIESID));
+        central->setActivities(QStringList({QLatin1String(Data::Layout::ALLACTIVITIESID)}));
     } else if (m_importer->layoutExists(layoutName)) {
         CentralLayout storage(this, m_importer->layoutUserFilePath(layoutName));
-        storage.setActivities(QStringList(Data::Layout::ALLACTIVITIESID));
+        storage.setActivities(QStringList({QLatin1String(Data::Layout::ALLACTIVITIESID)}));
     }
 }
 
@@ -341,7 +342,7 @@ void Manager::cleanupOnStartup(QString path)
 
     KSharedConfigPtr filePtr = KSharedConfig::openConfig(path);
 
-    KConfigGroup actionGroups = KConfigGroup(filePtr, "ActionPlugins");
+    KConfigGroup actionGroups = KConfigGroup(filePtr, QStringLiteral("ActionPlugins"));
 
     QStringList deprecatedActionGroup;
 
@@ -358,7 +359,7 @@ void Manager::cleanupOnStartup(QString path)
         actionGroups.group(pId).deleteGroup();
     }
 
-    KConfigGroup containmentGroups = KConfigGroup(filePtr, "Containments");
+    KConfigGroup containmentGroups = KConfigGroup(filePtr, QStringLiteral("Containments"));
 
     QStringList removeContaimentsList;
 
@@ -387,7 +388,7 @@ void Manager::clearUnloadedContainmentsFromLinkedFile(QStringList containmentsId
         return;
     }
 
-    auto containments = m_corona->config()->group("Containments");
+    auto containments = m_corona->config()->group(QStringLiteral("Containments"));
 
     for (const auto &conId : containmentsIds) {
         qDebug() << "unloads ::: " << conId;

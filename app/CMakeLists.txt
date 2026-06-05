@@ -73,12 +73,15 @@ target_link_libraries(latte-dock
     KF6::GlobalAccel
     KF6::I18n
     KF6::IconThemes
+    KF6::IconWidgets
     KF6::KIOWidgets
     KF6::Notifications
     KF6::NewStuffWidgets  # KF5::NewStuff split into KF6::NewStuffCore + KF6::NewStuffWidgets in KF6
     # KF5::QuickAddons has no KF6 C++ target (kquickcontrolsaddons is QML-only in KF6);
     # the C++ that used it is ported in Phase 3 (KCMUtils / PlasmaQuick). TODO Phase 3.
     Plasma::Plasma
+    KF6::Svg
+    KF6::Package
     Plasma::PlasmaQuick
     Plasma::KWaylandClient
     KF6::XmlGui

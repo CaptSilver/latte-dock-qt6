@@ -46,20 +46,20 @@ void Schemes::initSchemes()
     qDeleteAll(m_schemes);
     m_schemes.clear();
 
-    QString currentSchemePath = WindowSystem::SchemeColors::possibleSchemeFile(Data::Layout::DEFAULTSCHEMEFILE);
+    QString currentSchemePath = WindowSystem::SchemeColors::possibleSchemeFile(QLatin1String(Data::Layout::DEFAULTSCHEMEFILE));
     insertSchemeInList(currentSchemePath);
 
-    QStringList standardPaths = Latte::Layouts::Importer::standardPathsFor("color-schemes");
+    QStringList standardPaths = Latte::Layouts::Importer::standardPathsFor(QStringLiteral("color-schemes"));
 
     QStringList registeredSchemes;
 
     for(auto path : standardPaths) {
         QDir directory(path);
-        QStringList tempSchemes = directory.entryList(QStringList() << "*.colors" << "*.COLORS", QDir::Files);
+        QStringList tempSchemes = directory.entryList(QStringList() << QStringLiteral("*.colors") << QStringLiteral("*.COLORS"), QDir::Files);
 
         for (const auto &filename : tempSchemes) {
             if (!registeredSchemes.contains(filename)) {
-                QString fullPath = path + "/" + filename;
+                QString fullPath = path + QStringLiteral("/") + filename;
                 insertSchemeInList(fullPath);
                 registeredSchemes << filename;
             }
@@ -92,7 +92,7 @@ void Schemes::insertSchemeInList(QString file)
 
 int Schemes::row(const QString &id)
 {
-    if (id.isEmpty() || id == Data::Layout::DEFAULTSCHEMEFILE) {
+    if (id.isEmpty() || id == QLatin1String(Data::Layout::DEFAULTSCHEMEFILE)) {
         return 0;
     }
 
@@ -115,7 +115,7 @@ QVariant Schemes::data(const QModelIndex &index, int role) const
 
     switch (role) {
     case IDROLE:
-        return index.row() == 0 ? Data::Layout::DEFAULTSCHEMEFILE : d->schemeFile();
+        return index.row() == 0 ? QString::fromLatin1(Data::Layout::DEFAULTSCHEMEFILE) : d->schemeFile();
         break;
 
     case Qt::DisplayRole:

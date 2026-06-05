@@ -8,6 +8,7 @@
 
 // local
 #include "../../wm/abstractwindowinterface.h"
+#include "../../wm/schemecolors.h"
 
 // Qt
 #include <QObject>
@@ -21,7 +22,6 @@ class WindowsTracker;
 
 namespace WindowSystem {
 class AbstractWindowInterface;
-class SchemeColors;
 namespace Tracker {
 class LastActiveWindow;
 }
@@ -53,10 +53,10 @@ public:
 
     WindowSystem::Tracker::LastActiveWindow *lastActiveWindow();
 
-public slots:
+public Q_SLOTS:
     Q_INVOKABLE void requestMoveLastWindow(int localX, int localY);
 
-signals:
+Q_SIGNALS:
     void activeWindowMaximizedChanged();
     void existsWindowActiveChanged();
     void existsWindowMaximizedChanged();
@@ -64,7 +64,7 @@ signals:
 
     void lastActiveWindowChanged();
 
-private slots:
+private Q_SLOTS:
     void initSignalsForInformation();
 
 private:
@@ -80,5 +80,8 @@ private:
 }
 }
 }
+
+// Qt6 moc requires fully-defined types (or opaque declaration) for Q_PROPERTY pointer types.
+Q_DECLARE_OPAQUE_POINTER(Latte::WindowSystem::Tracker::LastActiveWindow*)
 
 #endif

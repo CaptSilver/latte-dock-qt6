@@ -27,7 +27,7 @@
 #include <KDesktopFile>
 #include <KLocalizedString>
 #include <KPluginMetaData>
-#include <KDeclarative/ConfigPropertyMap>
+#include <KConfigPropertyMap>
 
 namespace Latte {
 namespace ViewPart {
@@ -180,7 +180,7 @@ int ContainmentInterface::applicationLauncherId() const
     auto launcherId{-1};
 
     for (auto applet : applets) {
-        const auto provides = applet->kPackage().metadata().value(QStringLiteral("X-Plasma-Provides"));
+        const auto provides = applet->pluginMetaData().value(QStringLiteral("X-Plasma-Provides"));
 
         if (provides.contains(QLatin1String("org.kde.plasma.launchermenu"))) {
             if (!applet->globalShortcut().isEmpty()) {
@@ -203,7 +203,7 @@ bool ContainmentInterface::updateBadgeForLatteTask(const QString identifier, con
     const auto &applets = m_view->containment()->applets();
 
     for (auto *applet : applets) {
-        KPluginMetaData meta = applet->kPackage().metadata();
+        KPluginMetaData meta = applet->pluginMetaData();
 
         if (meta.pluginId() == QLatin1String("org.kde.latte.plasmoid")) {
 
@@ -252,7 +252,7 @@ bool ContainmentInterface::activatePlasmaTask(const int index)
     const auto &applets = m_view->containment()->applets();
 
     for (auto *applet : applets) {
-        const auto &provides = KPluginMetaData::readStringList(applet->pluginMetaData().rawData(), QStringLiteral("X-Plasma-Provides"));
+        const auto &provides = applet->pluginMetaData().value(QStringLiteral("X-Plasma-Provides"), QStringList());
 
         if (provides.contains(QLatin1String("org.kde.plasma.multitasking"))) {
             if (QQuickItem *appletInterface = applet->property("_plasma_graphicObject").value<QQuickItem *>()) {
@@ -261,8 +261,6 @@ bool ContainmentInterface::activatePlasmaTask(const int index)
                 if (childItems.isEmpty()) {
                     continue;
                 }
-
-                KPluginMetaData meta = applet->kPackage().metadata();
 
                 for (QQuickItem *item : childItems) {
                     if (auto *metaObject = item->metaObject()) {
@@ -299,7 +297,7 @@ bool ContainmentInterface::newInstanceForPlasmaTask(const int index)
     const auto &applets = m_view->containment()->applets();
 
     for (auto *applet : applets) {
-        const auto &provides = KPluginMetaData::readStringList(applet->pluginMetaData().rawData(), QStringLiteral("X-Plasma-Provides"));
+        const auto &provides = applet->pluginMetaData().value(QStringLiteral("X-Plasma-Provides"), QStringList());
 
         if (provides.contains(QLatin1String("org.kde.plasma.multitasking"))) {
             if (QQuickItem *appletInterface = applet->property("_plasma_graphicObject").value<QQuickItem *>()) {
@@ -308,8 +306,6 @@ bool ContainmentInterface::newInstanceForPlasmaTask(const int index)
                 if (childItems.isEmpty()) {
                     continue;
                 }
-
-                KPluginMetaData meta = applet->kPackage().metadata();
 
                 for (QQuickItem *item : childItems) {
                     if (auto *metaObject = item->metaObject()) {
@@ -540,14 +536,14 @@ void ContainmentInterface::setPlasmoid(QObject *plasmoid)
     m_plasmoid = plasmoid;
 
     if (m_plasmoid) {
-        m_configuration = qobject_cast<KDeclarative::ConfigPropertyMap *>(m_plasmoid->property("configuration").value<QObject *>());
+        m_configuration = qobject_cast<KConfigPropertyMap *>(m_plasmoid->property("configuration").value<QObject *>());
 
         if (m_configuration) {
             connect(m_configuration, &QQmlPropertyMap::valueChanged, this, &ContainmentInterface::containmentConfigPropertyChanged);
         }
     }
 
-    emit plasmoidChanged();
+    Q_EMIT plasmoidChanged();
 }
 
 QObject *ContainmentInterface::layoutManager() const
@@ -599,7 +595,7 @@ void ContainmentInterface::setLayoutManager(QObject *manager)
         }
     }
 
-    emit layoutManagerChanged();
+    Q_EMIT layoutManagerChanged();
 }
 
 void ContainmentInterface::addApplet(const QString &pluginId)
@@ -612,7 +608,7 @@ void ContainmentInterface::addApplet(const QString &pluginId)
     QString pluginpath;
 
     for(int i=0; i<paths.count(); ++i) {
-        QString cpath = paths[i] + "/plasma/plasmoids/" + pluginId;
+        QString cpath = paths[i] + QStringLiteral("/plasma/plasmoids/") + pluginId;
 
         if (QDir(cpath).exists()) {
             pluginpath = cpath;
@@ -646,10 +642,10 @@ void ContainmentInterface::addExpandedApplet(PlasmaQuick::AppletQuickItem * appl
     m_expandedAppletIds[appletQuickItem] = appletQuickItem->applet()->id();
 
     if (isExpanded != hasExpandedApplet()) {
-        emit hasExpandedAppletChanged();
+        Q_EMIT hasExpandedAppletChanged();
     }
 
-    emit expandedAppletStateChanged();
+    Q_EMIT expandedAppletStateChanged();
 }
 
 void ContainmentInterface::removeExpandedApplet(PlasmaQuick::AppletQuickItem *appletQuickItem)
@@ -663,10 +659,10 @@ void ContainmentInterface::removeExpandedApplet(PlasmaQuick::AppletQuickItem *ap
     m_expandedAppletIds.remove(appletQuickItem);
 
     if (isExpanded != hasExpandedApplet()) {
-        emit hasExpandedAppletChanged();
+        Q_EMIT hasExpandedAppletChanged();
     }
 
-    emit expandedAppletStateChanged();
+    Q_EMIT expandedAppletStateChanged();
 }
 
 QAbstractListModel *ContainmentInterface::latteTasksModel() const
@@ -730,7 +726,7 @@ void ContainmentInterface::updateAppletsOrder()
         }
     }
 
-    emit appletsOrderChanged();
+    Q_EMIT appletsOrderChanged();
 }
 
 void ContainmentInterface::updateAppletsInLockedZoom()
@@ -746,7 +742,7 @@ void ContainmentInterface::updateAppletsInLockedZoom()
     }
 
     m_appletsInLockedZoom = appletslockedzoom;
-    emit appletsInLockedZoomChanged(m_appletsInLockedZoom);
+    Q_EMIT appletsInLockedZoomChanged(m_appletsInLockedZoom);
 }
 
 void ContainmentInterface::updateAppletsDisabledColoring()
@@ -762,7 +758,7 @@ void ContainmentInterface::updateAppletsDisabledColoring()
     }
 
     m_appletsDisabledColoring = appletsdisabledcoloring;
-    emit appletsDisabledColoringChanged(appletsdisabledcoloring);
+    Q_EMIT appletsDisabledColoringChanged(appletsdisabledcoloring);
 }
 
 void ContainmentInterface::onLatteTasksCountChanged()
@@ -773,7 +769,7 @@ void ContainmentInterface::onLatteTasksCountChanged()
     }
 
     m_hasLatteTasks = (m_latteTasksModel->count() > 0);
-    emit hasLatteTasksChanged();
+    Q_EMIT hasLatteTasksChanged();
 }
 
 void ContainmentInterface::onPlasmaTasksCountChanged()
@@ -784,7 +780,7 @@ void ContainmentInterface::onPlasmaTasksCountChanged()
     }
 
     m_hasPlasmaTasks = (m_plasmaTasksModel->count() > 0);
-    emit hasPlasmaTasksChanged();
+    Q_EMIT hasPlasmaTasksChanged();
 }
 
 bool ContainmentInterface::appletIsExpanded(const int id) const
@@ -803,7 +799,7 @@ void ContainmentInterface::toggleAppletExpanded(const int id)
             PlasmaQuick::AppletQuickItem *ai = applet->property("_plasma_graphicObject").value<PlasmaQuick::AppletQuickItem *>();
 
             if (ai) {
-                emit applet->activated();
+                Q_EMIT applet->activated();
             }
         }
     }
@@ -816,7 +812,7 @@ void ContainmentInterface::removeApplet(const int &id)
     }
 
     auto applet = m_appletData[id].applet;
-    emit applet->appletDeleted(applet); //! this signal should be part of Plasma Frameworks AppletPrivate::destroy() function...
+    Q_EMIT applet->appletDeleted(applet); //! this signal should be part of Plasma Frameworks AppletPrivate::destroy() function...
     applet->destroy();
 }
 
@@ -864,7 +860,7 @@ void ContainmentInterface::updateContainmentConfigProperty(const QString &key, c
     if (m_configuration->keys().contains(key)
             && (*m_configuration)[key] != value) {
         m_configuration->insert(key, value);
-        emit m_configuration->valueChanged(key, value);
+        Q_EMIT m_configuration->valueChanged(key, value);
     }
 }
 
@@ -877,7 +873,7 @@ void ContainmentInterface::updateAppletConfigProperty(const int &id, const QStri
     if (m_appletData[id].configuration->keys().contains(key)
             && (*m_appletData[id].configuration)[key] != value) {
         m_appletData[id].configuration->insert(key, value);
-        emit m_appletData[id].configuration->valueChanged(key, value);
+        Q_EMIT m_appletData[id].configuration->valueChanged(key, value);
     }
 }
 
@@ -891,7 +887,7 @@ void ContainmentInterface::updateAppletsTracking()
         onAppletAdded(applet);
     }
 
-    emit initializationCompleted();
+    Q_EMIT initializationCompleted();
 }
 
 void ContainmentInterface::updateAppletDelayedConfiguration()
@@ -908,7 +904,7 @@ void ContainmentInterface::updateAppletDelayedConfiguration()
     }
 }
 
-void ContainmentInterface::initAppletConfigurationSignals(const int &id, KDeclarative::ConfigPropertyMap *configuration)
+void ContainmentInterface::initAppletConfigurationSignals(const int &id, KConfigPropertyMap *configuration)
 {
     if (!configuration) {
         return;
@@ -917,11 +913,11 @@ void ContainmentInterface::initAppletConfigurationSignals(const int &id, KDeclar
     connect(configuration, &QQmlPropertyMap::valueChanged,
             this, [&, id](const QString &key, const QVariant &value) {
         //qDebug() << "org.kde.sync applet property changed : " << currentAppletId << " __ " << m_appletData[currentAppletId].plugin << " __ " << key << " __ " << value;
-        emit appletConfigPropertyChanged(id, key, value);
+        Q_EMIT appletConfigPropertyChanged(id, key, value);
     });
 }
 
-KDeclarative::ConfigPropertyMap *ContainmentInterface::appletConfiguration(const Plasma::Applet *applet)
+KConfigPropertyMap *ContainmentInterface::appletConfiguration(const Plasma::Applet *applet)
 {
     if (!m_view->containment() || !applet) {
         return nullptr;
@@ -930,13 +926,13 @@ KDeclarative::ConfigPropertyMap *ContainmentInterface::appletConfiguration(const
     PlasmaQuick::AppletQuickItem *ai = applet->property("_plasma_graphicObject").value<PlasmaQuick::AppletQuickItem *>();
     bool isSubContainment = Layouts::Storage::self()->isSubContainment(m_view->corona(), applet); //we use corona() to make sure that returns true even when it is first created from user
     int currentAppletId = applet->id();
-    KDeclarative::ConfigPropertyMap *configuration{nullptr};
+    KConfigPropertyMap *configuration{nullptr};
 
     //! set configuration object properly for applets and subcontainments
     if (!isSubContainment) {
         int metaconfigindex = ai->metaObject()->indexOfProperty("configuration");
         if (metaconfigindex >=0 ){
-            configuration = qobject_cast<KDeclarative::ConfigPropertyMap *>((ai->property("configuration")).value<QObject *>());
+            configuration = qobject_cast<KConfigPropertyMap *>((ai->property("configuration")).value<QObject *>());
         }
     } else {
         Plasma::Containment *subcontainment = Layouts::Storage::self()->subContainmentOf(m_view->corona(), applet);
@@ -946,7 +942,7 @@ KDeclarative::ConfigPropertyMap *ContainmentInterface::appletConfiguration(const
             if (subcai) {
                 int metaconfigindex = subcai->metaObject()->indexOfProperty("configuration");
                 if (metaconfigindex >=0 ){
-                    configuration = qobject_cast<KDeclarative::ConfigPropertyMap *>((subcai->property("configuration")).value<QObject *>());
+                    configuration = qobject_cast<KConfigPropertyMap *>((subcai->property("configuration")).value<QObject *>());
                 }
             }
         }
@@ -993,8 +989,8 @@ void ContainmentInterface::onAppletAdded(Plasma::Applet *applet)
             }
         }
     } else if (ai) {
-        KPluginMetaData meta = applet->kPackage().metadata();
-        const auto &provides = KPluginMetaData::readStringList(meta.rawData(), QStringLiteral("X-Plasma-Provides"));
+        KPluginMetaData meta = applet->pluginMetaData();
+        const auto &provides = meta.value(QStringLiteral("X-Plasma-Provides"), QStringList());
 
         if (meta.pluginId() == QLatin1String("org.kde.latte.plasmoid")) {
             //! populate latte tasks applet
@@ -1016,7 +1012,7 @@ void ContainmentInterface::onAppletAdded(Plasma::Applet *applet)
     if (ai) {
         bool initializing{!m_appletData.contains(currentAppletId)};
 
-        KPluginMetaData meta = applet->kPackage().metadata();
+        KPluginMetaData meta = applet->pluginMetaData();
         ViewPart::AppletInterfaceData data;
         data.id = currentAppletId;
         data.plugin = meta.pluginId();
@@ -1037,19 +1033,19 @@ void ContainmentInterface::onAppletAdded(Plasma::Applet *applet)
         if (initializing) {
             //! track applet destroyed flag
             connect(applet, &Plasma::Applet::destroyedChanged, this, [&, currentAppletId](bool destroyed) {
-                emit appletInScheduledDestructionChanged(currentAppletId, destroyed);
+                Q_EMIT appletInScheduledDestructionChanged(currentAppletId, destroyed);
             });
 
             //! remove on applet destruction
             connect(applet, &QObject::destroyed, this, [&, data](){
-                emit appletRemoved(data.id);
+                Q_EMIT appletRemoved(data.id);
                 //qDebug() << "org.kde.sync: removing applet ::: " << data.id << " __ " << data.plugin << " remained : " << m_appletData.keys();
                 m_appletData.remove(data.id);
             });
         }
 
         m_appletData[data.id] = data;
-        emit appletDataCreated(data.id);
+        Q_EMIT appletDataCreated(data.id);
     }
 }
 

@@ -53,11 +53,11 @@ public:
     void resetDefaults() override;
     void save() override;
 
-signals:
+Q_SIGNALS:
     void borderlessMaximizedChanged();
     void contextActionsChanged();
 
-private slots:
+private Q_SLOTS:
     void initUi();
     void initSettings();
     void updateUi();

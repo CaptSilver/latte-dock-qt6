@@ -15,8 +15,11 @@
 #include <QQuickView>
 #include <QRect>
 
+// KSvg
+#include <KSvg/FrameSvg>
+#include <KSvg/ImageSet>
+
 // Plasma
-#include <Plasma/FrameSvg>
 #include <Plasma/Theme>
 
 namespace Latte {
@@ -50,7 +53,7 @@ class Effects: public QObject
     Q_PROPERTY(QRect inputMask READ inputMask WRITE setInputMask NOTIFY inputMaskChanged)
     Q_PROPERTY(QRect appletsLayoutGeometry READ appletsLayoutGeometry WRITE setAppletsLayoutGeometry NOTIFY appletsLayoutGeometryChanged)
 
-    Q_PROPERTY(Plasma::FrameSvg::EnabledBorders enabledBorders READ enabledBorders NOTIFY enabledBordersChanged)
+    Q_PROPERTY(KSvg::FrameSvg::EnabledBorders enabledBorders READ enabledBorders NOTIFY enabledBordersChanged)
 
     Q_PROPERTY(QQuickItem *panelBackgroundSvg READ panelBackgroundSvg WRITE setPanelBackgroundSvg NOTIFY panelBackgroundSvgChanged)
 
@@ -102,12 +105,12 @@ public:
     QRect appletsLayoutGeometry() const;
     void setAppletsLayoutGeometry(const QRect &geom);
 
-    Plasma::FrameSvg::EnabledBorders enabledBorders() const;
+    KSvg::FrameSvg::EnabledBorders enabledBorders() const;
 
     QQuickItem *panelBackgroundSvg() const;
     void setPanelBackgroundSvg(QQuickItem *quickitem);
 
-public slots:
+public Q_SLOTS:
     Q_INVOKABLE void forceMaskRedraw();
     Q_INVOKABLE void setSubtractedMaskRegion(const QString &regionid, const QRegion &region);
     Q_INVOKABLE void removeSubtractedMaskRegion(const QString &regionid);
@@ -120,7 +123,7 @@ public slots:
     void updateEnabledBorders();
     void updateMask();
 
-signals:
+Q_SIGNALS:
     void animationsBlockedChanged();
     void appletsLayoutGeometryChanged();
     void backgroundAllCornersChanged();
@@ -142,7 +145,7 @@ signals:
     void subtractedMaskRegionsChanged();
     void unitedMaskRegionsChanged();
 
-private slots:
+private Q_SLOTS:
     void init();
 
     void onPopUpMarginChanged();
@@ -190,10 +193,11 @@ private:
 
     PlasmaExtended::CornerRegions m_cornersMaskRegion;
 
-    Plasma::Theme m_theme;
+    KSvg::ImageSet m_theme;
+    Plasma::Theme m_plasmaTheme;
 
     //only for the mask, not to actually paint
-    Plasma::FrameSvg::EnabledBorders m_enabledBorders{Plasma::FrameSvg::AllBorders};
+    KSvg::FrameSvg::EnabledBorders m_enabledBorders{KSvg::FrameSvg::AllBorders};
 
     //assigned from qml side in order to access the official panel background svg
     QQuickItem *m_panelBackgroundSvg{nullptr};

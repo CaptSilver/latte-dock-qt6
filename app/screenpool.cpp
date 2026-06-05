@@ -87,7 +87,7 @@ void ScreenPool::onPrimaryOutputNameChanged(const QString &oldOutputName, const 
     Q_UNUSED(oldOutputName);
     Q_UNUSED(newOutputName);
 
-    emit primaryScreenChanged(m_primaryWatcher->primaryScreen());
+    Q_EMIT primaryScreenChanged(m_primaryWatcher->primaryScreen());
 }
 
 void ScreenPool::onScreenAdded(const QScreen *screen)
@@ -124,7 +124,7 @@ void ScreenPool::updateScreenGeometry(const int &screenId, const QRect &screenGe
     m_screensTable[scrIdStr].geometry = screenGeometry;
     save();
 
-    emit screenGeometryChanged();
+    Q_EMIT screenGeometryChanged();
 }
 
 
@@ -135,7 +135,7 @@ Latte::Data::ScreensTable ScreenPool::screensTable()
 
 void ScreenPool::reload(QString path)
 {
-    QFile rcfile(QString(path + "/lattedockrc"));
+    QFile rcfile(path + QStringLiteral("/lattedockrc"));
 
     if (rcfile.exists()) {
         qDebug() << "load screen connectors from ::: " << rcfile.fileName();
@@ -200,7 +200,7 @@ void ScreenPool::insertScreenMapping(const QString &connector)
     //there are case that the QScreen instead of the correct screen name
     //returns "0:0", this check prevents from breaking the screens database
     //from garbage ids
-    if (m_screensTable.containsName(connector) || connector.startsWith(":")) {
+    if (m_screensTable.containsName(connector) || connector.startsWith(QLatin1Char(':'))) {
         return;
     }
 

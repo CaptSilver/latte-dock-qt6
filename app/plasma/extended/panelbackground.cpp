@@ -32,13 +32,13 @@ PanelBackground::~PanelBackground()
 {
 }
 
-bool PanelBackground::hasMask(Plasma::Svg *svg) const
+bool PanelBackground::hasMask(KSvg::Svg *svg) const
 {
     if (!svg) {
         return false;
     }
 
-    return svg->hasElement("mask-topleft");
+    return svg->hasElement(QStringLiteral("mask-topleft"));
 }
 
 int PanelBackground::paddingTop() const
@@ -84,22 +84,22 @@ QColor PanelBackground::shadowColor() const
 QString PanelBackground::prefixed(const QString &id)
 {
     if (m_location == Plasma::Types::TopEdge) {
-        return QString("north-"+id);
+        return QStringLiteral("north-") + id;
     } else if (m_location == Plasma::Types::LeftEdge) {
-        return QString("west-"+id);
+        return QStringLiteral("west-") + id;
     } else if (m_location == Plasma::Types::BottomEdge) {
-        return QString("south-"+id);
+        return QStringLiteral("south-") + id;
     } else if (m_location == Plasma::Types::RightEdge) {
-        return QString("east-"+id);
+        return QStringLiteral("east-") + id;
     }
 
     return id;
 }
 
-QString PanelBackground::element(Plasma::Svg *svg, const QString &id)
+QString PanelBackground::element(KSvg::Svg *svg, const QString &id)
 {
     if (!svg) {
-        return "";
+        return QString();
     }
 
     if (svg->hasElement(prefixed(id))) {
@@ -110,16 +110,16 @@ QString PanelBackground::element(Plasma::Svg *svg, const QString &id)
         return id;
     }
 
-    return "";
+    return QString();
 }
 
-void PanelBackground::updateMaxOpacity(Plasma::Svg *svg)
+void PanelBackground::updateMaxOpacity(KSvg::Svg *svg)
 {
     if (!svg) {
         return;
     }
 
-    QImage center = svg->image(QSize(CENTERWIDTH, CENTERHEIGHT), element(svg, "center"));
+    QImage center = svg->image(QSize(CENTERWIDTH, CENTERHEIGHT), element(svg, QStringLiteral("center")));
 
     if (center.format() != QImage::Format_ARGB32_Premultiplied) {
         center.convertTo(QImage::Format_ARGB32_Premultiplied);
@@ -146,24 +146,24 @@ void PanelBackground::updateMaxOpacity(Plasma::Svg *svg)
     //! all the upcoming calculations where returning a fully transparent plasma svg to the user
     m_maxOpacity = qMax(0.01f, m_maxOpacity);
 
-    emit maxOpacityChanged();
+    Q_EMIT maxOpacityChanged();
 }
 
-void PanelBackground::updatePaddings(Plasma::Svg *svg)
+void PanelBackground::updatePaddings(KSvg::Svg *svg)
 {
     if (!svg) {
         return;
     }
 
-    m_paddingTop = svg->elementSize(element(svg, "top")).height();
-    m_paddingLeft = svg->elementSize(element(svg, "left")).width();
-    m_paddingBottom = svg->elementSize(element(svg, "bottom")).height();
-    m_paddingRight = svg->elementSize(element(svg, "right")).width();
+    m_paddingTop = svg->elementSize(element(svg, QStringLiteral("top"))).height();
+    m_paddingLeft = svg->elementSize(element(svg, QStringLiteral("left"))).width();
+    m_paddingBottom = svg->elementSize(element(svg, QStringLiteral("bottom"))).height();
+    m_paddingRight = svg->elementSize(element(svg, QStringLiteral("right"))).width();
 
-    emit paddingsChanged();
+    Q_EMIT paddingsChanged();
 }
 
-void PanelBackground::updateRoundnessFromMask(Plasma::Svg *svg)
+void PanelBackground::updateRoundnessFromMask(KSvg::Svg *svg)
 {
     if (!svg) {
         return;
@@ -171,8 +171,8 @@ void PanelBackground::updateRoundnessFromMask(Plasma::Svg *svg)
 
     bool topLeftCorner = (m_location == Plasma::Types::BottomEdge || m_location == Plasma::Types::RightEdge);
 
-    QString cornerId = (topLeftCorner ? "mask-topleft" : "mask-bottomright");
-    QImage corner = svg->image(svg->elementSize(cornerId), cornerId);
+    QString cornerId = (topLeftCorner ? QStringLiteral("mask-topleft") : QStringLiteral("mask-bottomright"));
+    QImage corner = svg->image(svg->elementSize(cornerId).toSize(), cornerId);
 
     if (corner.format() != QImage::Format_ARGB32_Premultiplied) {
         corner.convertTo(QImage::Format_ARGB32_Premultiplied);
@@ -312,12 +312,12 @@ void PanelBackground::updateRoundnessFromMask(Plasma::Svg *svg)
     }
 
     m_roundness = roundnessLines;
-    emit roundnessChanged();
+    Q_EMIT roundnessChanged();
 }
 
 
 
-void PanelBackground::updateRoundnessFromShadows(Plasma::Svg *svg)
+void PanelBackground::updateRoundnessFromShadows(KSvg::Svg *svg)
 {
     //! 1.  Algorithm is choosing which corner shadow based on panel location
     //! 2.  For that corner discovers the maxOpacity (most solid shadow point) and
@@ -339,8 +339,8 @@ void PanelBackground::updateRoundnessFromShadows(Plasma::Svg *svg)
 
     bool topLeftCorner = (m_location == Plasma::Types::BottomEdge || m_location == Plasma::Types::RightEdge);
 
-    QString cornerId = (topLeftCorner ? "shadow-topleft" : "shadow-bottomright");
-    QImage corner = svg->image(svg->elementSize(cornerId), cornerId);
+    QString cornerId = (topLeftCorner ? QStringLiteral("shadow-topleft") : QStringLiteral("shadow-bottomright"));
+    QImage corner = svg->image(svg->elementSize(cornerId).toSize(), cornerId);
 
     if (corner.format() != QImage::Format_ARGB32_Premultiplied) {
         corner.convertTo(QImage::Format_ARGB32_Premultiplied);
@@ -491,17 +491,17 @@ void PanelBackground::updateRoundnessFromShadows(Plasma::Svg *svg)
     }
 
     m_roundness = roundnessLines;
-    emit roundnessChanged();
+    Q_EMIT roundnessChanged();
 }
 
-void PanelBackground::updateRoundnessFallback(Plasma::Svg *svg)
+void PanelBackground::updateRoundnessFallback(KSvg::Svg *svg)
 {
     if (!svg) {
         return;
     }
 
-    QString cornerId = element(svg, (m_location == Plasma::Types::LeftEdge ? "bottomright" : "topleft"));
-    QImage corner = svg->image(svg->elementSize(cornerId), cornerId);
+    QString cornerId = element(svg, (m_location == Plasma::Types::LeftEdge ? QStringLiteral("bottomright") : QStringLiteral("topleft")));
+    QImage corner = svg->image(svg->elementSize(cornerId).toSize(), cornerId);
 
     if (corner.format() != QImage::Format_ARGB32_Premultiplied) {
         corner.convertTo(QImage::Format_ARGB32_Premultiplied);
@@ -546,10 +546,10 @@ void PanelBackground::updateRoundnessFallback(Plasma::Svg *svg)
     }
 
     m_roundness = round;
-    emit roundnessChanged();
+    Q_EMIT roundnessChanged();
 }
 
-void PanelBackground::updateShadow(Plasma::Svg *svg)
+void PanelBackground::updateShadow(KSvg::Svg *svg)
 {
     if (!svg) {
         return;
@@ -563,17 +563,17 @@ void PanelBackground::updateShadow(Plasma::Svg *svg)
 
     bool horizontal = (m_location == Plasma::Types::BottomEdge || m_location == Plasma::Types::TopEdge);
 
-    QString borderId{"shadow-top"};
+    QString borderId{QStringLiteral("shadow-top")};
 
     if  (m_location == Plasma::Types::TopEdge) {
-        borderId = "shadow-bottom";
+        borderId = QStringLiteral("shadow-bottom");
     } else if (m_location == Plasma::Types::LeftEdge) {
-        borderId = "shadow-right";
+        borderId = QStringLiteral("shadow-right");
     } else if (m_location == Plasma::Types::RightEdge) {
-        borderId = "shadow-left";
+        borderId = QStringLiteral("shadow-left");
     }
 
-    QImage border = svg->image(svg->elementSize(borderId), borderId);
+    QImage border = svg->image(svg->elementSize(borderId).toSize(), borderId);
 
     if (border.format() != QImage::Format_ARGB32_Premultiplied) {
         border.convertTo(QImage::Format_ARGB32_Premultiplied);
@@ -583,13 +583,13 @@ void PanelBackground::updateShadow(Plasma::Svg *svg)
     int themeshadowsize{0};
 
     if  (m_location == Plasma::Types::TopEdge) {
-        themeshadowsize = svg->elementSize(element(svg, "shadow-hint-bottom-margin")).height();
+        themeshadowsize = svg->elementSize(element(svg, QStringLiteral("shadow-hint-bottom-margin"))).height();
     } else if (m_location == Plasma::Types::LeftEdge) {
-        themeshadowsize = svg->elementSize(element(svg, "shadow-hint-right-margin")).width();
+        themeshadowsize = svg->elementSize(element(svg, QStringLiteral("shadow-hint-right-margin"))).width();
     } else if (m_location == Plasma::Types::RightEdge) {
-        themeshadowsize = svg->elementSize(element(svg, "shadow-hint-left-margin")).width();
+        themeshadowsize = svg->elementSize(element(svg, QStringLiteral("shadow-hint-left-margin"))).width();
     } else {
-        themeshadowsize = svg->elementSize(element(svg, "shadow-hint-top-margin")).height();
+        themeshadowsize = svg->elementSize(element(svg, QStringLiteral("shadow-hint-top-margin"))).height();
     }
 
     //! find shadow size through heuristics, elementsize provided through svg may not be valid because it could contain
@@ -651,7 +651,7 @@ void PanelBackground::updateShadow(Plasma::Svg *svg)
 }
 
 
-void PanelBackground::updateRoundness(Plasma::Svg *svg)
+void PanelBackground::updateRoundness(KSvg::Svg *svg)
 {
     if (!svg) {
         return;
@@ -671,7 +671,7 @@ void PanelBackground::updateRoundness(Plasma::Svg *svg)
 
 void PanelBackground::update()
 {
-    Plasma::Svg *backSvg = new Plasma::Svg(this);
+    KSvg::Svg *backSvg = new KSvg::Svg(this);
     backSvg->setImagePath(QStringLiteral("widgets/panel-background"));
     backSvg->resize();
 

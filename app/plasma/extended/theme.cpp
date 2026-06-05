@@ -26,8 +26,8 @@
 // X11
 #include <KWindowSystem>
 
-#define DEFAULTCOLORSCHEME "default.colors"
-#define REVERSEDCOLORSCHEME "reversed.colors"
+#define DEFAULTCOLORSCHEME QStringLiteral("default.colors")
+#define REVERSEDCOLORSCHEME QStringLiteral("reversed.colors")
 
 namespace Latte {
 namespace PlasmaExtended {
@@ -44,22 +44,8 @@ Theme::Theme(KSharedConfig::Ptr config, QObject *parent) :
 
     m_corona = qobject_cast<Latte::Corona *>(parent);
 
-    //! compositing tracking
-    if (KWindowSystem::isPlatformWayland()) {
-        //! TODO: Wayland compositing active
-        m_compositing = true;
-    } else {
-        connect(KWindowSystem::self(), &KWindowSystem::compositingChanged
-                , this, [&](bool enabled) {
-            if (m_compositing == enabled)
-                return;
-
-            m_compositing = enabled;
-            emit compositingChanged();
-        });
-
-        m_compositing = KWindowSystem::compositingActive();
-    }
+    //! compositing tracking — Wayland always composites
+    m_compositing = true;
     //!
 
     loadConfig();
@@ -67,8 +53,8 @@ Theme::Theme(KSharedConfig::Ptr config, QObject *parent) :
     connect(this, &Theme::compositingChanged, this, &Theme::updateBackgrounds);
     connect(this, &Theme::outlineWidthChanged, this, &Theme::saveConfig);
 
-    connect(&m_theme, &Plasma::Theme::themeChanged, this, &Theme::load);
-    connect(&m_theme, &Plasma::Theme::themeChanged, this, &Theme::themeChanged);
+    connect(&m_theme, &KSvg::ImageSet::imageSetChanged, this, [this](const QString &) { load(); });
+    connect(&m_theme, &KSvg::ImageSet::imageSetChanged, this, [this](const QString &) { Q_EMIT themeChanged(); });
 }
 
 void Theme::load()
@@ -113,7 +99,7 @@ void Theme::setOutlineWidth(int width)
     }
 
     m_outlineWidth = width;
-    emit outlineWidthChanged();
+    Q_EMIT outlineWidthChanged();
 }
 
 int Theme::marginsAreaTop() const
@@ -188,7 +174,7 @@ void Theme::setOriginalSchemeFile(const QString &file)
 
     loadThemeLightness();
 
-    emit themeChanged();
+    Q_EMIT themeChanged();
 }
 
 //! WM records need to be updated based on the colors that
@@ -197,7 +183,7 @@ void Theme::setOriginalSchemeFile(const QString &file)
 //! WM and the plasma theme records
 void Theme::updateDefaultScheme()
 {
-    QString defaultFilePath = m_extendedThemeDir.path() + "/" + DEFAULTCOLORSCHEME;
+    QString defaultFilePath = m_extendedThemeDir.path() + QLatin1Char('/') + DEFAULTCOLORSCHEME;
     if (QFileInfo(defaultFilePath).exists()) {
         QFile(defaultFilePath).remove();
     }
@@ -225,11 +211,11 @@ void Theme::updateDefaultSchemeValues()
     KSharedConfigPtr defaultPtr = KSharedConfig::openConfig(m_defaultSchemePath);
 
     if (originalPtr && defaultPtr) {
-        KConfigGroup normalWindowGroup(originalPtr, "Colors:Window");
-        KConfigGroup defaultWMGroup(defaultPtr, "WM");
+        KConfigGroup normalWindowGroup(originalPtr, QStringLiteral("Colors:Window"));
+        KConfigGroup defaultWMGroup(defaultPtr, QStringLiteral("WM"));
 
-        defaultWMGroup.writeEntry("activeBackground", normalWindowGroup.readEntry("BackgroundNormal", QColor()));
-        defaultWMGroup.writeEntry("activeForeground", normalWindowGroup.readEntry("ForegroundNormal", QColor()));
+        defaultWMGroup.writeEntry(QStringLiteral("activeBackground"), normalWindowGroup.readEntry(QStringLiteral("BackgroundNormal"), QColor()));
+        defaultWMGroup.writeEntry(QStringLiteral("activeForeground"), normalWindowGroup.readEntry(QStringLiteral("ForegroundNormal"), QColor()));
 
         defaultWMGroup.sync();
     }
@@ -237,7 +223,7 @@ void Theme::updateDefaultSchemeValues()
 
 void Theme::updateReversedScheme()
 {
-    QString reversedFilePath = m_extendedThemeDir.path() + "/" + REVERSEDCOLORSCHEME;
+    QString reversedFilePath = m_extendedThemeDir.path() + QLatin1Char('/') + REVERSEDCOLORSCHEME;
 
     if (QFileInfo(reversedFilePath).exists()) {
         QFile(reversedFilePath).remove();
@@ -265,16 +251,16 @@ void Theme::updateReversedSchemeValues()
 
     if (originalPtr && reversedPtr) {
         for (const auto &groupName : reversedPtr->groupList()) {
-            if (groupName != "Colors:Button" && groupName != "Colors:Selection") {
+            if (groupName != QLatin1String("Colors:Button") && groupName != QLatin1String("Colors:Selection")) {
                 KConfigGroup reversedGroup(reversedPtr, groupName);
 
-                if (reversedGroup.keyList().contains("BackgroundNormal")
-                        && reversedGroup.keyList().contains("ForegroundNormal")) {
+                if (reversedGroup.keyList().contains(QStringLiteral("BackgroundNormal"))
+                        && reversedGroup.keyList().contains(QStringLiteral("ForegroundNormal"))) {
                     //! reverse usual text/background values
                     KConfigGroup originalGroup(originalPtr, groupName);
 
-                    reversedGroup.writeEntry("BackgroundNormal", originalGroup.readEntry("ForegroundNormal", QColor()));
-                    reversedGroup.writeEntry("ForegroundNormal", originalGroup.readEntry("BackgroundNormal", QColor()));
+                    reversedGroup.writeEntry(QStringLiteral("BackgroundNormal"), originalGroup.readEntry(QStringLiteral("ForegroundNormal"), QColor()));
+                    reversedGroup.writeEntry(QStringLiteral("ForegroundNormal"), originalGroup.readEntry(QStringLiteral("BackgroundNormal"), QColor()));
 
                     reversedGroup.sync();
                 }
@@ -282,34 +268,34 @@ void Theme::updateReversedSchemeValues()
         }
 
         //! update WM group
-        KConfigGroup reversedWMGroup(reversedPtr, "WM");
-        KConfigGroup normalWindowGroup(originalPtr, "Colors:Window");
+        KConfigGroup reversedWMGroup(reversedPtr, QStringLiteral("WM"));
+        KConfigGroup normalWindowGroup(originalPtr, QStringLiteral("Colors:Window"));
 
-        if (reversedWMGroup.keyList().contains("activeBackground")
-                && reversedWMGroup.keyList().contains("activeForeground")
-                && reversedWMGroup.keyList().contains("inactiveBackground")
-                && reversedWMGroup.keyList().contains("inactiveForeground")) {
+        if (reversedWMGroup.keyList().contains(QStringLiteral("activeBackground"))
+                && reversedWMGroup.keyList().contains(QStringLiteral("activeForeground"))
+                && reversedWMGroup.keyList().contains(QStringLiteral("inactiveBackground"))
+                && reversedWMGroup.keyList().contains(QStringLiteral("inactiveForeground"))) {
             //! reverse usual wm titlebar values
-            KConfigGroup originalGroup(originalPtr, "WM");
-            reversedWMGroup.writeEntry("activeBackground", normalWindowGroup.readEntry("ForegroundNormal", QColor()));
-            reversedWMGroup.writeEntry("activeForeground", normalWindowGroup.readEntry("BackgroundNormal", QColor()));
-            reversedWMGroup.writeEntry("inactiveBackground", originalGroup.readEntry("inactiveForeground", QColor()));
-            reversedWMGroup.writeEntry("inactiveForeground", originalGroup.readEntry("inactiveBackground", QColor()));
+            KConfigGroup originalGroup(originalPtr, QStringLiteral("WM"));
+            reversedWMGroup.writeEntry(QStringLiteral("activeBackground"), normalWindowGroup.readEntry(QStringLiteral("ForegroundNormal"), QColor()));
+            reversedWMGroup.writeEntry(QStringLiteral("activeForeground"), normalWindowGroup.readEntry(QStringLiteral("BackgroundNormal"), QColor()));
+            reversedWMGroup.writeEntry(QStringLiteral("inactiveBackground"), originalGroup.readEntry(QStringLiteral("inactiveForeground"), QColor()));
+            reversedWMGroup.writeEntry(QStringLiteral("inactiveForeground"), originalGroup.readEntry(QStringLiteral("inactiveBackground"), QColor()));
             reversedWMGroup.sync();
         }
 
-        if (reversedWMGroup.keyList().contains("activeBlend")
-                && reversedWMGroup.keyList().contains("inactiveBlend")) {
-            KConfigGroup originalGroup(originalPtr, "WM");
-            reversedWMGroup.writeEntry("activeBlend", originalGroup.readEntry("inactiveBlend", QColor()));
-            reversedWMGroup.writeEntry("inactiveBlend", originalGroup.readEntry("activeBlend", QColor()));
+        if (reversedWMGroup.keyList().contains(QStringLiteral("activeBlend"))
+                && reversedWMGroup.keyList().contains(QStringLiteral("inactiveBlend"))) {
+            KConfigGroup originalGroup(originalPtr, QStringLiteral("WM"));
+            reversedWMGroup.writeEntry(QStringLiteral("activeBlend"), originalGroup.readEntry(QStringLiteral("inactiveBlend"), QColor()));
+            reversedWMGroup.writeEntry(QStringLiteral("inactiveBlend"), originalGroup.readEntry(QStringLiteral("activeBlend"), QColor()));
             reversedWMGroup.sync();
         }
 
         //! update scheme name
         QString originalSchemeName = WindowSystem::SchemeColors::schemeName(m_originalSchemePath);
-        KConfigGroup generalGroup(reversedPtr, "General");
-        generalGroup.writeEntry("Name", originalSchemeName + "_reversed");
+        KConfigGroup generalGroup(reversedPtr, QStringLiteral("General"));
+        generalGroup.writeEntry(QStringLiteral("Name"), QString(originalSchemeName + QStringLiteral("_reversed")));
         generalGroup.sync();
     }
 }
@@ -326,12 +312,12 @@ void Theme::updateBackgrounds()
 
 void Theme::updateHasShadow()
 {
-    Plasma::Svg *svg = new Plasma::Svg(this);
+    KSvg::Svg *svg = new KSvg::Svg(this);
     svg->setImagePath(QStringLiteral("widgets/panel-background"));
     svg->resize();
 
-    QString cornerId = "shadow-topleft";
-    QImage corner = svg->image(svg->elementSize(cornerId), cornerId);
+    QString cornerId = QStringLiteral("shadow-topleft");
+    QImage corner = svg->image(svg->elementSize(cornerId).toSize(), cornerId);
 
     int fullTransparentPixels = 0;
 
@@ -349,7 +335,7 @@ void Theme::updateHasShadow()
     int pixels = (corner.width() * corner.height());
 
     m_hasShadow = (fullTransparentPixels != pixels );
-    emit hasShadowChanged();
+    Q_EMIT hasShadowChanged();
 
     qDebug() << "  PLASMA THEME TOPLEFT SHADOW :: pixels : " << pixels << "  transparent pixels" << fullTransparentPixels << " | HAS SHADOWS :" << m_hasShadow;
 
@@ -358,15 +344,15 @@ void Theme::updateHasShadow()
 
 void Theme::loadThemePaths()
 {
-    m_themePath = Layouts::Importer::standardPath("plasma/desktoptheme/" + m_theme.themeName());
+    m_themePath = Layouts::Importer::standardPath(QStringLiteral("plasma/desktoptheme/") + m_theme.imageSetName());
 
-    if (QDir(m_themePath+"/widgets").exists()) {
-        m_themeWidgetsPath = m_themePath + "/widgets";
+    if (QDir(m_themePath + QStringLiteral("/widgets")).exists()) {
+        m_themeWidgetsPath = m_themePath + QStringLiteral("/widgets");
     } else {
-        m_themeWidgetsPath = Layouts::Importer::standardPath("plasma/desktoptheme/default/widgets");
+        m_themeWidgetsPath = Layouts::Importer::standardPath(QStringLiteral("plasma/desktoptheme/default/widgets"));
     }
 
-    qDebug() << "current plasma theme ::: " << m_theme.themeName();
+    qDebug() << "current plasma theme ::: " << m_theme.imageSetName();
     qDebug() << "theme path ::: " << m_themePath;
     qDebug() << "theme widgets path ::: " << m_themeWidgetsPath;
 
@@ -376,30 +362,30 @@ void Theme::loadThemePaths()
     }
 
     //! assign color schemes
-    QString themeColorScheme = m_themePath + "/colors";
+    QString themeColorScheme = m_themePath + QStringLiteral("/colors");
 
     if (QFileInfo(themeColorScheme).exists()) {
         setOriginalSchemeFile(themeColorScheme);
     } else {
         //! when plasma theme uses the kde colors
         //! we track when kde color scheme is changing
-        QString kdeSettingsFile = Latte::configPath() + "/kdeglobals";
+        QString kdeSettingsFile = Latte::configPath() + QStringLiteral("/kdeglobals");
 
         KDirWatch::self()->addFile(kdeSettingsFile);
 
         m_kdeConnections[0] = connect(KDirWatch::self(), &KDirWatch::dirty, this, [ &, kdeSettingsFile](const QString & path) {
             if (path == kdeSettingsFile) {
-                this->setOriginalSchemeFile(WindowSystem::SchemeColors::possibleSchemeFile("kdeglobals"));
+                this->setOriginalSchemeFile(WindowSystem::SchemeColors::possibleSchemeFile(QStringLiteral("kdeglobals")));
             }
         });
 
         m_kdeConnections[1] = connect(KDirWatch::self(), &KDirWatch::created, this, [ &, kdeSettingsFile](const QString & path) {
             if (path == kdeSettingsFile) {
-                this->setOriginalSchemeFile(WindowSystem::SchemeColors::possibleSchemeFile("kdeglobals"));
+                this->setOriginalSchemeFile(WindowSystem::SchemeColors::possibleSchemeFile(QStringLiteral("kdeglobals")));
             }
         });
 
-        setOriginalSchemeFile(WindowSystem::SchemeColors::possibleSchemeFile("kdeglobals"));
+        setOriginalSchemeFile(WindowSystem::SchemeColors::possibleSchemeFile(QStringLiteral("kdeglobals")));
     }
 }
 
@@ -455,11 +441,11 @@ const CornerRegions &Theme::cornersMask(const int &radius)
             QRgb point = line[x];
 
             if (QColor(point) != Qt::white) {
-                bits = bits + "1 ";
+                bits = bits + QStringLiteral("1 ");
                 width = qMax(0, x);
                 break;
             } else {
-                bits = bits + "0 ";
+                bits = bits + QStringLiteral("0 ");
             }
         }
 
@@ -498,21 +484,21 @@ void Theme::updateMarginsAreaValues()
     m_marginsAreaBottom = 0;
     m_marginsAreaRight = 0;
 
-    Plasma::Svg *svg = new Plasma::Svg(this);
+    KSvg::Svg *svg = new KSvg::Svg(this);
     svg->setImagePath(QStringLiteral("widgets/panel-background"));
 
-    bool hasThickSeparatorMargins = svg->hasElement("thick-center");
+    bool hasThickSeparatorMargins = svg->hasElement(QStringLiteral("thick-center"));
 
     if (hasThickSeparatorMargins) {
-        int topMargin = svg->hasElement("hint-top-margin") ? svg->elementSize("hint-top-margin").height() : 0;
-        int leftMargin = svg->hasElement("hint-left-margin") ? svg->elementSize("hint-left-margin").width() : 0;
-        int bottomMargin = svg->hasElement("hint-bottom-margin") ? svg->elementSize("hint-bottom-margin").height() : 0;
-        int rightMargin = svg->hasElement("hint-right-margin") ? svg->elementSize("hint-right-margin").width() : 0;
+        int topMargin = svg->hasElement(QStringLiteral("hint-top-margin")) ? svg->elementSize(QStringLiteral("hint-top-margin")).height() : 0;
+        int leftMargin = svg->hasElement(QStringLiteral("hint-left-margin")) ? svg->elementSize(QStringLiteral("hint-left-margin")).width() : 0;
+        int bottomMargin = svg->hasElement(QStringLiteral("hint-bottom-margin")) ? svg->elementSize(QStringLiteral("hint-bottom-margin")).height() : 0;
+        int rightMargin = svg->hasElement(QStringLiteral("hint-right-margin")) ? svg->elementSize(QStringLiteral("hint-right-margin")).width() : 0;
 
-        int thickTopMargin = svg->hasElement("thick-hint-top-margin") ? svg->elementSize("thick-hint-top-margin").height() : 0;
-        int thickLeftMargin = svg->hasElement("thick-hint-left-margin") ? svg->elementSize("thick-hint-left-margin").width() : 0;
-        int thickBottomMargin = svg->hasElement("thick-hint-bottom-margin") ? svg->elementSize("thick-hint-bottom-margin").height() : 0;
-        int thickRightMargin = svg->hasElement("thick-hint-right-margin") ? svg->elementSize("thick-hint-right-margin").width() : 0;
+        int thickTopMargin = svg->hasElement(QStringLiteral("thick-hint-top-margin")) ? svg->elementSize(QStringLiteral("thick-hint-top-margin")).height() : 0;
+        int thickLeftMargin = svg->hasElement(QStringLiteral("thick-hint-left-margin")) ? svg->elementSize(QStringLiteral("thick-hint-left-margin")).width() : 0;
+        int thickBottomMargin = svg->hasElement(QStringLiteral("thick-hint-bottom-margin")) ? svg->elementSize(QStringLiteral("thick-hint-bottom-margin")).height() : 0;
+        int thickRightMargin = svg->hasElement(QStringLiteral("thick-hint-right-margin")) ? svg->elementSize(QStringLiteral("thick-hint-right-margin")).width() : 0;
 
         m_marginsAreaTop = qMax(0, thickTopMargin - topMargin);
         m_marginsAreaLeft = qMax(0, thickLeftMargin - leftMargin);
@@ -526,7 +512,7 @@ void Theme::updateMarginsAreaValues()
 
     svg->deleteLater();
 
-    emit marginsAreaChanged();
+    Q_EMIT marginsAreaChanged();
 }
 
 void Theme::loadConfig()

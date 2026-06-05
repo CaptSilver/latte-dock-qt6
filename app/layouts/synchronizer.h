@@ -112,13 +112,13 @@ public:
     Data::LayoutsTable layoutsTable() const;
     void setLayoutsTable(const Data::LayoutsTable &table);
 
-public slots:
+public Q_SLOTS:
     void initLayouts();
     void updateKWinDisabledBorders();
 
     void updateLayoutsTable();
 
-signals:
+Q_SIGNALS:
     void centralLayoutsChanged();
     void layoutsChanged();
     void runningActicitiesChanged();
@@ -129,7 +129,7 @@ signals:
     void newLayoutAdded(const Data::Layout &layout);
     void layoutActivitiesChanged(const Data::Layout &layout);
 
-private slots:
+private Q_SLOTS:
     void onActivityRemoved(const QString &activityid);
     void onLayoutAdded(const QString &layoutpath);
 

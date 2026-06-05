@@ -36,8 +36,8 @@ LayoutsTableView::LayoutsTableView(QWidget *parent)
     m_overlayDropMessage->setAlignment(Qt::AlignCenter);
 
     QPalette palette = m_overlayDropMessage->palette();
-    QColor backgroundColor = palette.color(QPalette::Background);
-    QColor foregroundColor = palette.color(QPalette::Foreground);
+    QColor backgroundColor = palette.color(QPalette::Window);
+    QColor foregroundColor = palette.color(QPalette::WindowText);
 
     QColor borderColor = foregroundColor;
     borderColor.setAlphaF(0.5);
@@ -46,8 +46,8 @@ LayoutsTableView::LayoutsTableView(QWidget *parent)
 
     qDebug() << borderColor.name() << " _ " << backgroundColor.name();
 
-    QString css = "QLabel{border: 1px solid "+borderColor.name(QColor::HexArgb)+"; border-radius: 15px;";
-    css += "background:"+backgroundColor.name(QColor::HexArgb)+"; color:" +foregroundColor.name(QColor::HexArgb)+ ";}";
+    QString css = QStringLiteral("QLabel{border: 1px solid ")+borderColor.name(QColor::HexArgb)+QStringLiteral("; border-radius: 15px;");
+    css += QStringLiteral("background:")+backgroundColor.name(QColor::HexArgb)+QStringLiteral("; color:") +foregroundColor.name(QColor::HexArgb)+ QStringLiteral(";}");
 
     m_overlayDropMessage->setStyleSheet(css);
 }

@@ -28,7 +28,7 @@ SubWindow::SubWindow(Latte::View *view, QString debugType) :
 {
     m_corona = qobject_cast<Latte::Corona *>(view->corona());
 
-    m_debugMode = (qApp->arguments().contains("-d") && qApp->arguments().contains("--kwinedges"));
+    m_debugMode = (qApp->arguments().contains(QStringLiteral("-d")) && qApp->arguments().contains(QStringLiteral("--kwinedges")));
     m_debugType = debugType;
 
     m_showColor = QColor(Qt::transparent);
@@ -84,7 +84,7 @@ SubWindow::SubWindow(Latte::View *view, QString debugType) :
         connectionsHack << connect(&m_visibleHackTimer1, &QTimer::timeout, this, [&]() {
             if (!m_inDelete && m_latteView && m_latteView->layout() && !isVisible()) {
                 show();
-                emit forcedShown();
+                Q_EMIT forcedShown();
                 //qDebug() << m_debugType + ":: Enforce reshow from timer 1...";
             } else {
                 //qDebug() << m_debugType + ":: No needed reshow from timer 1...";
@@ -94,7 +94,7 @@ SubWindow::SubWindow(Latte::View *view, QString debugType) :
         connectionsHack << connect(&m_visibleHackTimer2, &QTimer::timeout, this, [&]() {
             if (!m_inDelete && m_latteView && m_latteView->layout() && !isVisible()) {
                 show();
-                emit forcedShown();
+                Q_EMIT forcedShown();
                 //qDebug() << m_debugType + ":: Enforce reshow from timer 2...";
             } else {
                 //qDebug() << m_debugType + ":: No needed reshow from timer 2...";
@@ -154,7 +154,7 @@ int SubWindow::thickness() const
 
 QString SubWindow::validTitlePrefix() const
 {
-    return QString("#subwindow#");
+    return QStringLiteral("#subwindow#");
 }
 
 QString SubWindow::validTitle() const
@@ -199,7 +199,7 @@ void SubWindow::fixGeometry()
 
 void SubWindow::updateWaylandId()
 {
-    Latte::WindowSystem::WindowId newId = m_corona->wm()->winIdFor("latte-dock", validTitle());
+    Latte::WindowSystem::WindowId newId = m_corona->wm()->winIdFor(QStringLiteral("latte-dock"), validTitle());
 
     if (m_trackedWindowId != newId) {
         if (!m_trackedWindowId.isNull()) {
@@ -259,7 +259,7 @@ bool SubWindow::event(QEvent *e)
 void SubWindow::hideWithMask()
 {
     if (m_debugMode) {
-        qDebug() << m_debugType + " :: MASK HIDE...";
+        qDebug() << m_debugType + QStringLiteral(" :: MASK HIDE...");
     }
 
     setMask(VisibilityManager::ISHIDDENMASK);
@@ -271,7 +271,7 @@ void SubWindow::hideWithMask()
 void SubWindow::showWithMask()
 {
     if (m_debugMode) {
-        qDebug() << m_debugType + " :: MASK SHOW...";
+        qDebug() << m_debugType + QStringLiteral(" :: MASK SHOW...");
     }
 
     setMask(QRegion());

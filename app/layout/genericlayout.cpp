@@ -27,7 +27,7 @@
 #include <QScreen>
 
 // Plasma
-#include <Plasma>
+#include <Plasma/Plasma>
 #include <Plasma/Applet>
 #include <Plasma/Containment>
 
@@ -58,7 +58,7 @@ void GenericLayout::unloadContainments()
         return;
     }
 
-    qDebug() << "Layout - " + name() + " : [unloadContainments]"
+    qDebug() << QStringLiteral("Layout - ") + name() + QStringLiteral(" : [unloadContainments]")
              << "containments ::: " << m_containments.size()
              << " ,latteViews in memory ::: " << m_latteViews.size()
              << " ,hidden latteViews in memory :::  " << m_waitingLatteViews.size();
@@ -104,16 +104,16 @@ void GenericLayout::unloadLatteViews()
         return;
     }
 
-    qDebug() << "Layout - " + name() + " : [unloadLatteViews]"
+    qDebug() << QStringLiteral("Layout - ") + name() + QStringLiteral(" : [unloadLatteViews]")
              << "containments ::: " << m_containments.size()
              << " ,latteViews in memory ::: " << m_latteViews.size()
              << " ,hidden latteViews in memory :::  " << m_waitingLatteViews.size();
 
     //!disconnect signals in order to avoid crashes when the layout is unloading
-    disconnect(this, &GenericLayout::viewsCountChanged, m_corona, &Plasma::Corona::availableScreenRectChanged);
-    disconnect(this, &GenericLayout::viewsCountChanged, m_corona, &Plasma::Corona::availableScreenRegionChanged);
+    // In Plasma6, availableScreenRect/RegionChanged(int) take a screen id arg; lambdas used for connect — disconnect all from viewsCountChanged to corona
+    QObject::disconnect(this, &GenericLayout::viewsCountChanged, m_corona, nullptr);
     disconnect(this, &GenericLayout::activitiesChanged, this, &GenericLayout::updateLastUsedActivity);
-    disconnect(m_corona->activitiesConsumer(), &KActivities::Consumer::currentActivityChanged, this, &GenericLayout::updateLastUsedActivity);
+    disconnect(m_corona->activitiesConsumer(), &KActivities::Consumer::currentActivityChanged, this, nullptr);
 
     for (const auto view : m_latteViews) {
         view->disconnectSensitiveSignals();
@@ -169,18 +169,18 @@ void GenericLayout::setCorona(Latte::Corona *corona)
 
 QString GenericLayout::background() const
 {
-    QString colorsPath = m_corona->kPackage().path() + "../../shells/org.kde.latte.shell/contents/images/canvas/";
+    QString colorsPath = m_corona->kPackage().path() + QStringLiteral("../../shells/org.kde.latte.shell/contents/images/canvas/");
 
     if (backgroundStyle() == Layout::PatternBackgroundStyle) {
         if (customBackground().isEmpty()) {
 
-            return colorsPath + "defaultcustomprint.jpg";
+            return colorsPath + QStringLiteral("defaultcustomprint.jpg");
         } else {
             return AbstractLayout::customBackground();
         }
     }
 
-    return colorsPath + AbstractLayout::color() + "print.jpg";
+    return colorsPath + AbstractLayout::color() + QStringLiteral("print.jpg");
 }
 
 QString GenericLayout::textColor() const
@@ -361,7 +361,7 @@ void GenericLayout::setLastConfigViewFor(Latte::View *view)
     m_lastConfigViewFor = view;
 
     if (view) {
-        emit lastConfigViewForChanged(view);
+        Q_EMIT lastConfigViewForChanged(view);
     }
 }
 
@@ -752,7 +752,7 @@ void GenericLayout::appletCreated(Plasma::Applet *applet)
 {
     //! In Multiple Layout the orphaned subcontainments must be assigned to layouts
     //! when the user adds them
-    KConfigGroup appletSettings = applet->containment()->config().group("Applets").group(QString::number(applet->id()));
+    KConfigGroup appletSettings = applet->containment()->config().group(QStringLiteral("Applets")).group(QString::number(applet->id()));
 
     int subId = Layouts::Storage::self()->subContainmentId(appletSettings);
 
@@ -796,8 +796,8 @@ void GenericLayout::containmentDestroyed(QObject *cont)
             view->positioner()->slideOutDuringExit(containment->location());
             view->deleteLater();
 
-            emit viewEdgeChanged();
-            emit viewsCountChanged();
+            Q_EMIT viewEdgeChanged();
+            Q_EMIT viewsCountChanged();
         }
     }
 }
@@ -826,10 +826,10 @@ void GenericLayout::destroyedChanged(bool destroyed)
     }
 
     if (view) {
-        emit m_corona->availableScreenRectChangedFrom(view);
-        emit m_corona->availableScreenRegionChangedFrom(view);
-        emit viewEdgeChanged();
-        emit viewsCountChanged();
+        Q_EMIT m_corona->availableScreenRectChangedFrom(view);
+        Q_EMIT m_corona->availableScreenRegionChangedFrom(view);
+        Q_EMIT viewEdgeChanged();
+        Q_EMIT viewsCountChanged();
     }
 }
 
@@ -855,7 +855,7 @@ void GenericLayout::addView(Plasma::Containment *containment)
 {
     qDebug().noquote() << "Adding View: Called for layout:" << m_layoutName << "with m_containments.size() ::" << m_containments.size();
 
-    if (!containment || !m_corona || !containment->kPackage().isValid()) {
+    if (!containment || !m_corona || !containment->pluginMetaData().isValid()) {
         qWarning() << "Adding View: The requested containment plugin can not be located or loaded";
         return;
     }
@@ -878,7 +878,7 @@ void GenericLayout::addView(Plasma::Containment *containment)
     Data::View viewdata = Layouts::Storage::self()->view(this, containment);
     viewdata.screen = Layouts::Storage::self()->expectedViewScreenId(m_corona, viewdata);
 
-    QString nextScreenName = m_corona->screenPool()->hasScreenId(viewdata.screen) ? m_corona->screenPool()->connector(viewdata.screen) : "";
+    QString nextScreenName = m_corona->screenPool()->hasScreenId(viewdata.screen) ? m_corona->screenPool()->connector(viewdata.screen) : QString();
 
     qDebug().noquote() << "Adding View:" << viewdata.id << "-"
                        << "IsClonedFrom:" << viewdata.isClonedFrom
@@ -945,7 +945,7 @@ void GenericLayout::addView(Plasma::Containment *containment)
     latteView->show();
     //}
 
-    emit viewsCountChanged();
+    Q_EMIT viewsCountChanged();
 }
 
 void GenericLayout::toggleHiddenState(QString viewName, QString screenName, Plasma::Types::Location edge)
@@ -992,15 +992,18 @@ bool GenericLayout::initCorona()
 
     //! signals
     connect(this, &GenericLayout::activitiesChanged, this, &GenericLayout::updateLastUsedActivity);
-    connect(m_corona->activitiesConsumer(), &KActivities::Consumer::currentActivityChanged, this, &GenericLayout::updateLastUsedActivity);
-    connect(m_corona->activitiesConsumer(), &KActivities::Consumer::runningActivitiesChanged, this, &GenericLayout::updateLastUsedActivity);
+    connect(m_corona->activitiesConsumer(), &KActivities::Consumer::currentActivityChanged, this, [this](const QString &) { updateLastUsedActivity(); });
+    connect(m_corona->activitiesConsumer(), &KActivities::Consumer::activitiesChanged, this, [this](const QStringList &) { updateLastUsedActivity(); });
 
     connect(this, &GenericLayout::lastConfigViewForChanged, m_corona->layoutsManager(), &Layouts::Manager::lastConfigViewChangedFrom);
     connect(m_corona->layoutsManager(), &Layouts::Manager::lastConfigViewChangedFrom, this, &GenericLayout::onLastConfigViewChangedFrom);
 
     //!connect signals after adding the containment
-    connect(this, &GenericLayout::viewsCountChanged, m_corona, &Plasma::Corona::availableScreenRectChanged);
-    connect(this, &GenericLayout::viewsCountChanged, m_corona, &Plasma::Corona::availableScreenRegionChanged);
+    // In Plasma6, availableScreenRect/RegionChanged(int) requires a screen id; emit with -1 to indicate all screens
+    connect(this, &GenericLayout::viewsCountChanged, m_corona, [this]() {
+        Q_EMIT m_corona->availableScreenRectChanged(-1);
+        Q_EMIT m_corona->availableScreenRegionChanged(-1);
+    });
 
     return true;
 }
@@ -1036,7 +1039,7 @@ bool GenericLayout::initContainments()
         }
     }
     m_hasInitializedContainments = true;
-    emit viewsCountChanged();
+    Q_EMIT viewsCountChanged();
     return true;
 }
 
@@ -1049,10 +1052,10 @@ void GenericLayout::updateLastUsedActivity()
     QString currentId = m_corona->activitiesConsumer()->currentActivity();
     QStringList appliedActivitiesIds = appliedActivities();
 
-    if (appliedActivitiesIds.contains(Data::Layout::ALLACTIVITIESID)
+    if (appliedActivitiesIds.contains(QLatin1String(Data::Layout::ALLACTIVITIESID))
             || (m_lastUsedActivity != currentId && appliedActivitiesIds.contains(currentId))) {
         m_lastUsedActivity = currentId;
-        emit lastUsedActivityChanged();
+        Q_EMIT lastUsedActivityChanged();
     }
 }
 
@@ -1084,7 +1087,7 @@ void GenericLayout::assignToLayout(Latte::View *latteView, QList<Plasma::Contain
         latteView->setLayout(this);
     }
 
-    emit viewsCountChanged();
+    Q_EMIT viewsCountChanged();
 
     //! sync the original layout file for integrity
     if (m_corona->layoutsManager()->memoryUsage() == MemoryUsage::MultipleLayouts) {
@@ -1393,7 +1396,7 @@ QList<Plasma::Containment *> GenericLayout::subContainmentsOf(uint id) const
         return subs;
     }
 
-    auto applets = containment->config().group("Applets");
+    auto applets = containment->config().group(QStringLiteral("Applets"));
 
     for (const auto &applet : applets.groupList()) {
         int tSubId = Layouts::Storage::self()->subContainmentId(applets.group(applet));
@@ -1415,7 +1418,7 @@ QList<int> GenericLayout::subContainmentsOf(Plasma::Containment *containment) co
     QList<int> subs;
 
     if (Layouts::Storage::self()->isLatteContainment(containment)) {
-        auto applets = containment->config().group("Applets");
+        auto applets = containment->config().group(QStringLiteral("Applets"));
 
         for (const auto &applet : applets.groupList()) {
             int tSubId = Layouts::Storage::self()->subContainmentId(applets.group(applet));
@@ -1502,7 +1505,7 @@ Data::View GenericLayout::newView(const Latte::Data::View &nextViewData)
     }
 
     Data::View result = Layouts::Storage::self()->newView(this, nextViewData);
-    emit viewEdgeChanged();
+    Q_EMIT viewEdgeChanged();
 
     return result;
 }
@@ -1523,13 +1526,13 @@ void GenericLayout::updateView(const Latte::Data::View &viewData)
 
     if (view) {
         if (!viewMustBeDeleted) {
-            QString scrName = Latte::Data::Screen::ONPRIMARYNAME;
+            QString scrName = QLatin1String(Latte::Data::Screen::ONPRIMARYNAME);
 
             if (!viewData.onPrimary) {
                 if (m_corona->screenPool()->hasScreenId(viewData.screen)) {
                     scrName = m_corona->screenPool()->connector(viewData.screen);
                 } else {
-                    scrName = "";
+                    scrName = QString();
                 }
             }
 
@@ -1566,8 +1569,8 @@ void GenericLayout::updateView(const Latte::Data::View &viewData)
 
     //! complete update circle and inform the others about the changes
     if (viewMustBeDeleted) {
-        emit viewEdgeChanged();
-        emit viewsCountChanged();
+        Q_EMIT viewEdgeChanged();
+        Q_EMIT viewsCountChanged();
     }
 
     syncLatteViewsToScreens();

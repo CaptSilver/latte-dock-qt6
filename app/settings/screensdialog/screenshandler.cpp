@@ -16,6 +16,7 @@
 
 // KDE
 #include <KMessageBox>
+#include <KStandardGuiItem>
 
 namespace Latte {
 namespace Settings {
@@ -129,12 +130,14 @@ void ScreensHandler::save()
 
 bool ScreensHandler::removalConfirmation(const QStringList &screens) const
 {
-    return (KMessageBox::warningYesNo(m_dialog,
+    return (KMessageBox::warningTwoActions(m_dialog,
                                      i18np("You are going to <b>remove %2</b> reference completely.<br/>Would you like to continue?",
                                            "You are going to <b>remove %2</b> references completely.<br/>Would you like to continue?",
                                            screens.count(),
-                                           screens.join(", ")),
-                                     i18n("Approve Removal")) == KMessageBox::Yes);
+                                           screens.join(QStringLiteral(", "))),
+                                     i18n("Approve Removal"),
+                                     KStandardGuiItem::del(),
+                                     KStandardGuiItem::cancel()) == KMessageBox::PrimaryAction);
 }
 
 }

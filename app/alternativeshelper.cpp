@@ -12,7 +12,6 @@
 
 // KDE
 #include <KPackage/Package>
-#include <kconfig_version.h>
 
 // Plasma
 #include <Plasma/Containment>
@@ -30,20 +29,12 @@ AlternativesHelper::~AlternativesHelper()
 
 QStringList AlternativesHelper::appletProvides() const
 {
-#if KCONFIG_VERSION_MINOR >= 27
-    return KPluginMetaData::readStringList(m_applet->pluginMetaData().rawData(), QStringLiteral("X-Plasma-Provides"));
-#else
-    return KPluginMetaData::readStringList(m_applet->pluginInfo().toMetaData().rawData(), QStringLiteral("X-Plasma-Provides"));
-#endif
+    return m_applet->pluginMetaData().value(QStringLiteral("X-Plasma-Provides"), QStringList());
 }
 
 QString AlternativesHelper::currentPlugin() const
 {
-#if KCONFIG_VERSION_MINOR >= 27
     return m_applet->pluginMetaData().pluginId();
-#else
-    return m_applet->pluginInfo().toMetaData().pluginId();
-#endif
 }
 
 QQuickItem *AlternativesHelper::applet() const

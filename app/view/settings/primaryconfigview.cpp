@@ -29,14 +29,13 @@
 
 // KDE
 #include <KLocalizedContext>
-#include <KDeclarative/KDeclarative>
 #include <KWayland/Client/plasmashell.h>
 #include <KWayland/Client/surface.h>
 #include <KWindowEffects>
 #include <KWindowSystem>
 
 // Plasma
-#include <Plasma/Package>
+#include <KPackage/Package>
 
 #define CANVASWINDOWINTERVAL 50
 #define PRIMARYWINDOWINTERVAL 250
@@ -47,7 +46,7 @@ namespace Latte {
 namespace ViewPart {
 
 PrimaryConfigView::PrimaryConfigView(Latte::View *view)
-    : SubConfigView(view, QString("#primaryconfigview#")),
+    : SubConfigView(view, QStringLiteral("#primaryconfigview#")),
       m_indicatorUiManager(new Config::IndicatorUiManager(this))
 {
     connect(this, &QQuickWindow::xChanged, this, &PrimaryConfigView::xChanged);
@@ -287,7 +286,7 @@ void PrimaryConfigView::initParentView(Latte::View *view)
     }
 
     //! inform view about the current settings level
-    emit m_latteView->inSettingsAdvancedModeChanged();
+    Q_EMIT m_latteView->inSettingsAdvancedModeChanged();
 }
 
 void PrimaryConfigView::instantUpdateAvailableScreenGeometry()
@@ -308,7 +307,7 @@ void PrimaryConfigView::instantUpdateAvailableScreenGeometry()
     QString activityid = m_latteView->layout()->lastUsedActivity();
 
     m_availableScreenGeometry = m_corona->availableScreenRectWithCriteria(currentScrId, activityid, ignoreModes, {}, false, true);
-    emit availableScreenGeometryChanged();
+    Q_EMIT availableScreenGeometryChanged();
 }
 
 void PrimaryConfigView::updateAvailableScreenGeometry(View *origin)
@@ -411,7 +410,7 @@ void PrimaryConfigView::syncGeometry()
     setMinimumSize(size);
     resize(size);
 
-    emit m_latteView->configWindowGeometryChanged();
+    Q_EMIT m_latteView->configWindowGeometryChanged();
 }
 
 void PrimaryConfigView::showEvent(QShowEvent *ev)
@@ -441,7 +440,7 @@ void PrimaryConfigView::showEvent(QShowEvent *ev)
 
     showCanvasWindow();
 
-    emit showSignal();
+    Q_EMIT showSignal();
 
     if (m_latteView && m_latteView->layout()) {
         m_latteView->layout()->setLastConfigViewFor(m_latteView);
@@ -523,7 +522,7 @@ void PrimaryConfigView::setIsReady(bool ready)
     }
 
     m_isReady = ready;
-    emit isReadyChanged();
+    Q_EMIT isReadyChanged();
 }
 
 
@@ -551,7 +550,7 @@ void PrimaryConfigView::setShowInlineProperties(bool show)
     }
 
     m_showInlineProperties = show;
-    emit showInlinePropertiesChanged();
+    Q_EMIT showInlinePropertiesChanged();
 }
 
 void PrimaryConfigView::updateShowInlineProperties()
@@ -602,23 +601,23 @@ void PrimaryConfigView::updateEnabledBorders()
         return;
     }
 
-    Plasma::FrameSvg::EnabledBorders borders = Plasma::FrameSvg::AllBorders;
+    KSvg::FrameSvg::EnabledBorders borders = KSvg::FrameSvg::AllBorders;
 
     switch (m_latteView->location()) {
     case Plasma::Types::TopEdge:
-        borders &= m_inReverse ? ~Plasma::FrameSvg::BottomBorder : ~Plasma::FrameSvg::TopBorder;
+        borders &= m_inReverse ? ~KSvg::FrameSvg::BottomBorder : ~KSvg::FrameSvg::TopBorder;
         break;
 
     case Plasma::Types::LeftEdge:
-        borders &= ~Plasma::FrameSvg::LeftBorder;
+        borders &= ~KSvg::FrameSvg::LeftBorder;
         break;
 
     case Plasma::Types::RightEdge:
-        borders &= ~Plasma::FrameSvg::RightBorder;
+        borders &= ~KSvg::FrameSvg::RightBorder;
         break;
 
     case Plasma::Types::BottomEdge:
-        borders &= m_inReverse ? ~Plasma::FrameSvg::TopBorder : ~Plasma::FrameSvg::BottomBorder;
+        borders &= m_inReverse ? ~KSvg::FrameSvg::TopBorder : ~KSvg::FrameSvg::BottomBorder;
         break;
 
     default:
@@ -630,7 +629,7 @@ void PrimaryConfigView::updateEnabledBorders()
 
         m_corona->dialogShadows()->addWindow(this, m_enabledBorders);
 
-        emit enabledBordersChanged();
+        Q_EMIT enabledBordersChanged();
     }
 }
 //!END borders
@@ -644,10 +643,10 @@ void PrimaryConfigView::updateEffects()
     }
 
     if (!m_background) {
-        m_background = new Plasma::FrameSvg(this);
+        m_background = new KSvg::FrameSvg(this);
     }
 
-    if (m_background->imagePath() != "dialogs/background") {
+    if (m_background->imagePath() != QStringLiteral("dialogs/background")) {
         m_background->setImagePath(QStringLiteral("dialogs/background"));
     }
 
@@ -664,10 +663,10 @@ void PrimaryConfigView::updateEffects()
         setMask(QRegion());
     }
 
-    if (KWindowSystem::compositingActive()) {
-        KWindowEffects::enableBlurBehind(winId(), true, fixedMask);
+    if (true) {
+        KWindowEffects::enableBlurBehind(this, true, fixedMask);
     } else {
-        KWindowEffects::enableBlurBehind(winId(), false);
+        KWindowEffects::enableBlurBehind(this, false);
     }
 }
 

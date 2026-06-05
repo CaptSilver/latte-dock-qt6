@@ -74,7 +74,7 @@ void Windows::init()
         m_windows[wid] = m_wm->requestInfo(wid);
         updateAllHints();
 
-        emit windowChanged(wid);
+        Q_EMIT windowChanged(wid);
     });
 
     connect(m_wm, &AbstractWindowInterface::windowRemoved, this, [&](WindowId wid) {
@@ -86,7 +86,7 @@ void Windows::init()
 
         updateAllHints();
 
-        emit windowRemoved(wid);
+        Q_EMIT windowRemoved(wid);
     });
 
     connect(m_wm, &AbstractWindowInterface::windowAdded, this, [&](WindowId wid) {
@@ -109,7 +109,7 @@ void Windows::init()
         m_windows[wid] = m_wm->requestInfo(wid);
         updateAllHints();
 
-        emit activeWindowChanged(wid);
+        Q_EMIT activeWindowChanged(wid);
     });
 
     connect(m_wm, &AbstractWindowInterface::currentDesktopChanged, this, &Windows::updateAllHints);
@@ -178,7 +178,7 @@ void Windows::addView(Latte::View *view)
 
     updateAllHints();
 
-    emit informationAnnounced(view);
+    Q_EMIT informationAnnounced(view);
 }
 
 void Windows::removeView(Latte::View *view)
@@ -210,7 +210,7 @@ void Windows::addRelevantLayout(Latte::View *view)
 
         if (initializing) {
             updateHints(view->layout());
-            emit informationAnnouncedForLayout(view->layout());
+            Q_EMIT informationAnnouncedForLayout(view->layout());
         }
     }
 }
@@ -288,7 +288,7 @@ void Windows::setEnabled(Latte::View *view, const bool enabled)
 
     updateRelevantLayouts();
 
-    emit enabledChanged(view);
+    Q_EMIT enabledChanged(view);
 }
 
 bool Windows::activeWindowMaximized(Latte::View *view) const
@@ -307,7 +307,7 @@ void Windows::setActiveWindowMaximized(Latte::View *view, bool activeMaximized)
     }
 
     m_views[view]->setActiveWindowMaximized(activeMaximized);
-    emit activeWindowMaximizedChanged(view);
+    Q_EMIT activeWindowMaximizedChanged(view);
 }
 
 bool Windows::activeWindowTouching(Latte::View *view) const
@@ -326,7 +326,7 @@ void Windows::setActiveWindowTouching(Latte::View *view, bool activeTouching)
     }
 
     m_views[view]->setActiveWindowTouching(activeTouching);
-    emit activeWindowTouchingChanged(view);
+    Q_EMIT activeWindowTouchingChanged(view);
 }
 
 bool Windows::activeWindowTouchingEdge(Latte::View *view) const
@@ -345,7 +345,7 @@ void Windows::setActiveWindowTouchingEdge(Latte::View *view, bool activeTouching
     }
 
     m_views[view]->setActiveWindowTouchingEdge(activeTouchingEdge);
-    emit activeWindowTouchingEdgeChanged(view);
+    Q_EMIT activeWindowTouchingEdgeChanged(view);
 }
 
 bool Windows::existsWindowActive(Latte::View *view) const
@@ -364,7 +364,7 @@ void Windows::setExistsWindowActive(Latte::View *view, bool windowActive)
     }
 
     m_views[view]->setExistsWindowActive(windowActive);
-    emit existsWindowActiveChanged(view);
+    Q_EMIT existsWindowActiveChanged(view);
 }
 
 bool Windows::existsWindowMaximized(Latte::View *view) const
@@ -383,7 +383,7 @@ void Windows::setExistsWindowMaximized(Latte::View *view, bool windowMaximized)
     }
 
     m_views[view]->setExistsWindowMaximized(windowMaximized);
-    emit existsWindowMaximizedChanged(view);
+    Q_EMIT existsWindowMaximizedChanged(view);
 }
 
 bool Windows::existsWindowTouching(Latte::View *view) const
@@ -402,7 +402,7 @@ void Windows::setExistsWindowTouching(Latte::View *view, bool windowTouching)
     }
 
     m_views[view]->setExistsWindowTouching(windowTouching);
-    emit existsWindowTouchingChanged(view);
+    Q_EMIT existsWindowTouchingChanged(view);
 }
 
 bool Windows::existsWindowTouchingEdge(Latte::View *view) const
@@ -421,7 +421,7 @@ void Windows::setExistsWindowTouchingEdge(Latte::View *view, bool windowTouching
     }
 
     m_views[view]->setExistsWindowTouchingEdge(windowTouchingEdge);
-    emit existsWindowTouchingEdgeChanged(view);
+    Q_EMIT existsWindowTouchingEdgeChanged(view);
 }
 
 
@@ -441,7 +441,7 @@ void Windows::setIsTouchingBusyVerticalView(Latte::View *view, bool viewTouching
     }
 
     m_views[view]->setIsTouchingBusyVerticalView(viewTouching);
-    emit isTouchingBusyVerticalViewChanged(view);
+    Q_EMIT isTouchingBusyVerticalViewChanged(view);
 }
 
 SchemeColors *Windows::activeWindowScheme(Latte::View *view) const
@@ -460,7 +460,7 @@ void Windows::setActiveWindowScheme(Latte::View *view, WindowSystem::SchemeColor
     }
 
     m_views[view]->setActiveWindowScheme(scheme);
-    emit activeWindowSchemeChanged(view);
+    Q_EMIT activeWindowSchemeChanged(view);
 }
 
 SchemeColors *Windows::touchingWindowScheme(Latte::View *view) const
@@ -479,7 +479,7 @@ void Windows::setTouchingWindowScheme(Latte::View *view, WindowSystem::SchemeCol
     }
 
     m_views[view]->setTouchingWindowScheme(scheme);
-    emit touchingWindowSchemeChanged(view);
+    Q_EMIT touchingWindowSchemeChanged(view);
 }
 
 LastActiveWindow *Windows::lastActiveWindow(Latte::View *view)
@@ -517,7 +517,7 @@ void Windows::setActiveWindowMaximized(Latte::Layout::GenericLayout *layout, boo
     }
 
     m_layouts[layout]->setActiveWindowMaximized(activeMaximized);
-    emit activeWindowMaximizedChangedForLayout(layout);
+    Q_EMIT activeWindowMaximizedChangedForLayout(layout);
 }
 
 bool Windows::existsWindowActive(Latte::Layout::GenericLayout *layout) const
@@ -536,7 +536,7 @@ void Windows::setExistsWindowActive(Latte::Layout::GenericLayout *layout, bool w
     }
 
     m_layouts[layout]->setExistsWindowActive(windowActive);
-    emit existsWindowActiveChangedForLayout(layout);
+    Q_EMIT existsWindowActiveChangedForLayout(layout);
 }
 
 bool Windows::existsWindowMaximized(Latte::Layout::GenericLayout *layout) const
@@ -555,7 +555,7 @@ void Windows::setExistsWindowMaximized(Latte::Layout::GenericLayout *layout, boo
     }
 
     m_layouts[layout]->setExistsWindowMaximized(windowMaximized);
-    emit existsWindowMaximizedChangedForLayout(layout);
+    Q_EMIT existsWindowMaximizedChangedForLayout(layout);
 }
 
 SchemeColors *Windows::activeWindowScheme(Latte::Layout::GenericLayout *layout) const
@@ -574,7 +574,7 @@ void Windows::setActiveWindowScheme(Latte::Layout::GenericLayout *layout, Window
     }
 
     m_layouts[layout]->setActiveWindowScheme(scheme);
-    emit activeWindowSchemeChangedForLayout(layout);
+    Q_EMIT activeWindowSchemeChangedForLayout(layout);
 }
 
 LastActiveWindow *Windows::lastActiveWindow(Latte::Layout::GenericLayout *layout)
@@ -661,7 +661,7 @@ void Windows::updateApplicationData()
 
                 m_initializedApplicationData.append(wid);
 
-                emit applicationDataChanged(wid);
+                Q_EMIT applicationDataChanged(wid);
             }
         }
     }
@@ -809,7 +809,7 @@ void Windows::cleanupFaultyWindows()
         auto winfo = m_windows[key];
 
         //! garbage windows removing
-        if (winfo.wid()<=0 || winfo.geometry() == QRect(0, 0, 0, 0)) {
+        if (winfo.wid().toInt()<=0 || winfo.geometry() == QRect(0, 0, 0, 0)) {
             //qDebug() << "Faulty Geometry ::: " << winfo.wid();
             m_windows.remove(key);
         }
@@ -925,7 +925,7 @@ void Windows::updateHints(Latte::View *view)
             break;
         }
 
-        if (!existsFaultyWindow && (winfo.wid()<=0 || winfo.geometry() == QRect(0, 0, 0, 0))) {
+        if (!existsFaultyWindow && (winfo.wid().toInt()<=0 || winfo.geometry() == QRect(0, 0, 0, 0))) {
             existsFaultyWindow = true;
         }
 
@@ -1095,7 +1095,7 @@ void Windows::updateHints(Latte::Layout::GenericLayout *layout) {
             break;
         }
 
-        if (!existsFaultyWindow && (winfo.wid()<=0 || winfo.geometry() == QRect(0, 0, 0, 0))) {
+        if (!existsFaultyWindow && (winfo.wid().toInt()<=0 || winfo.geometry() == QRect(0, 0, 0, 0))) {
             existsFaultyWindow = true;
         }
 

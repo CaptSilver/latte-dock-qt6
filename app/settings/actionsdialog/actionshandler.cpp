@@ -55,65 +55,65 @@ void ActionsHandler::initItems()
 {
     o_alwaysActions = m_dialog->preferencesHandler()->contextMenuAlwaysActions();
 
-    QString itemid = Latte::Data::ContextMenu::LAYOUTSACTION;
+    QString itemid = QLatin1String(Latte::Data::ContextMenu::LAYOUTSACTION);
     int itemindex = Latte::Data::ContextMenu::ACTIONSEDITORDER.indexOf(itemid);
-    m_items[itemid] = new ActionsDialog::ActionListWidgetItem(QIcon::fromTheme("user-identity"),
+    m_items[itemid] = new ActionsDialog::ActionListWidgetItem(QIcon::fromTheme(QStringLiteral("user-identity")),
                                                               i18n("Layouts"),
                                                               itemindex,
                                                               itemid);
 
-    itemid = Latte::Data::ContextMenu::PREFERENCESACTION;
+    itemid = QLatin1String(Latte::Data::ContextMenu::PREFERENCESACTION);
     itemindex = Latte::Data::ContextMenu::ACTIONSEDITORDER.indexOf(itemid);
-    m_items[itemid] = new ActionsDialog::ActionListWidgetItem(QIcon::fromTheme("configure"),
+    m_items[itemid] = new ActionsDialog::ActionListWidgetItem(QIcon::fromTheme(QStringLiteral("configure")),
                                                               i18nc("global settings window", "Configure Latte..."),
                                                               itemindex,
                                                               itemid);
 
-    itemid = Latte::Data::ContextMenu::QUITLATTEACTION;
+    itemid = QLatin1String(Latte::Data::ContextMenu::QUITLATTEACTION);
     itemindex = Latte::Data::ContextMenu::ACTIONSEDITORDER.indexOf(itemid);
-    m_items[itemid] = new ActionsDialog::ActionListWidgetItem(QIcon::fromTheme("application-exit"),
+    m_items[itemid] = new ActionsDialog::ActionListWidgetItem(QIcon::fromTheme(QStringLiteral("application-exit")),
                                                               i18nc("quit application", "Quit Latte"),
                                                               itemindex,
                                                               itemid);
 
-    itemid = Latte::Data::ContextMenu::SEPARATOR1ACTION;
+    itemid = QLatin1String(Latte::Data::ContextMenu::SEPARATOR1ACTION);
     itemindex = Latte::Data::ContextMenu::ACTIONSEDITORDER.indexOf(itemid);
-    m_items[itemid] = new ActionsDialog::ActionListWidgetItem(QIcon::fromTheme(""),
+    m_items[itemid] = new ActionsDialog::ActionListWidgetItem(QIcon::fromTheme(QStringLiteral("")),
                                                               i18n(" --- separator --- "),
                                                               itemindex,
                                                               itemid);
 
-    itemid = Latte::Data::ContextMenu::ADDWIDGETSACTION;
+    itemid = QLatin1String(Latte::Data::ContextMenu::ADDWIDGETSACTION);
     itemindex = Latte::Data::ContextMenu::ACTIONSEDITORDER.indexOf(itemid);
-    m_items[itemid] = new ActionsDialog::ActionListWidgetItem(QIcon::fromTheme("list-add"),
+    m_items[itemid] = new ActionsDialog::ActionListWidgetItem(QIcon::fromTheme(QStringLiteral("list-add")),
                                                               i18n("Add Widgets..."),
                                                               itemindex,
                                                               itemid);
 
-    itemid = Latte::Data::ContextMenu::ADDVIEWACTION;
+    itemid = QLatin1String(Latte::Data::ContextMenu::ADDVIEWACTION);
     itemindex = Latte::Data::ContextMenu::ACTIONSEDITORDER.indexOf(itemid);
-    m_items[itemid] = new ActionsDialog::ActionListWidgetItem(QIcon::fromTheme("list-add"),
+    m_items[itemid] = new ActionsDialog::ActionListWidgetItem(QIcon::fromTheme(QStringLiteral("list-add")),
                                                               i18n("Add Dock/Panel"),
                                                               itemindex,
                                                               itemid);
 
-    itemid = Latte::Data::ContextMenu::MOVEVIEWACTION;
+    itemid = QLatin1String(Latte::Data::ContextMenu::MOVEVIEWACTION);
     itemindex = Latte::Data::ContextMenu::ACTIONSEDITORDER.indexOf(itemid);
-    m_items[itemid] = new ActionsDialog::ActionListWidgetItem(QIcon::fromTheme("transform-move-horizontal"),
+    m_items[itemid] = new ActionsDialog::ActionListWidgetItem(QIcon::fromTheme(QStringLiteral("transform-move-horizontal")),
                                                               i18n("Move Dock/Panel To Layout"),
                                                               itemindex,
                                                               itemid);
 
-    itemid = Latte::Data::ContextMenu::EXPORTVIEWTEMPLATEACTION;
+    itemid = QLatin1String(Latte::Data::ContextMenu::EXPORTVIEWTEMPLATEACTION);
     itemindex = Latte::Data::ContextMenu::ACTIONSEDITORDER.indexOf(itemid);
-    m_items[itemid] = new ActionsDialog::ActionListWidgetItem(QIcon::fromTheme("document-export"),
+    m_items[itemid] = new ActionsDialog::ActionListWidgetItem(QIcon::fromTheme(QStringLiteral("document-export")),
                                                               i18n("Export Dock/Panel as Template..."),
                                                               itemindex,
                                                               itemid);
 
-    itemid = Latte::Data::ContextMenu::REMOVEVIEWACTION;
+    itemid = QLatin1String(Latte::Data::ContextMenu::REMOVEVIEWACTION);
     itemindex = Latte::Data::ContextMenu::ACTIONSEDITORDER.indexOf(itemid);
-    m_items[itemid] = new ActionsDialog::ActionListWidgetItem(QIcon::fromTheme("delete"),
+    m_items[itemid] = new ActionsDialog::ActionListWidgetItem(QIcon::fromTheme(QStringLiteral("delete")),
                                                               i18n("Remove Dock/Panel"),
                                                               itemindex,
                                                               itemid);
@@ -167,7 +167,7 @@ Data::GenericTable<Data::Generic> ActionsHandler::table(const QStringList &ids)
     Data::GenericTable<Data::Generic> bastable;
 
     for(int i=0; i<ids.count(); ++i) {
-        bastable << Data::Generic(ids[i], "");
+        bastable << Data::Generic(ids[i], QStringLiteral(""));
     }
 
     return bastable;

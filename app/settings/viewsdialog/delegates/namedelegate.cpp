@@ -52,16 +52,16 @@ void NameDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, 
     float textopacity = 1.0;
 
     if (isEmpty) {
-        myOptions.text = "&lt; " + i18n("optional") + " &gt;";
+        myOptions.text = QStringLiteral("&lt; ") + i18n("optional") + QStringLiteral(" &gt;");
         textopacity = 0.5;
     }
 
     if (isActive) {
-        myOptions.text = "<b>" + myOptions.text + "</b>";
+        myOptions.text = QStringLiteral("<b>") + myOptions.text + QStringLiteral("</b>");
     }
 
     if (isChanged || isMoveOrigin) {
-        myOptions.text = "<i>" + myOptions.text + "</i>";
+        myOptions.text = QStringLiteral("<i>") + myOptions.text + QStringLiteral("</i>");
     }
 
     if (isMoveOrigin) {
@@ -81,9 +81,9 @@ void NameDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, 
     if (hasErrors || hasWarnings) {
         remainedrect = Latte::remainedFromIcon(myOptions, Qt::AlignRight, -1, 2);
         if (hasErrors) {
-            Latte::drawIcon(painter, myOptions, "data-error", Qt::AlignRight, -1, 2);
+            Latte::drawIcon(painter, myOptions, QStringLiteral("data-error"), Qt::AlignRight, -1, 2);
         } else if (hasWarnings) {
-            Latte::drawIcon(painter, myOptions, "data-warning", Qt::AlignRight, -1, 2);
+            Latte::drawIcon(painter, myOptions, QStringLiteral("data-warning"), Qt::AlignRight, -1, 2);
         }
         myOptions.rect = remainedrect;
     }

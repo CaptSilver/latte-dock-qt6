@@ -18,9 +18,9 @@
 #include <KConfigGroup>
 #include <KSharedConfig>
 
-// Plasma
-#include <Plasma/FrameSvg>
-#include <Plasma/Theme>
+// KSvg
+#include <KSvg/FrameSvg>
+#include <KSvg/ImageSet>
 
 namespace Latte {
 class Corona;
@@ -97,7 +97,7 @@ public:
 
     void load();
 
-signals:
+Q_SIGNALS:
     void backgroundsChanged();
     void compositingChanged();
     void hasShadowChanged();
@@ -105,7 +105,7 @@ signals:
     void marginsAreaChanged();
     void themeChanged();
 
-private slots:
+private Q_SLOTS:
     void loadConfig();
     void saveConfig();
     void loadThemeLightness();
@@ -149,7 +149,7 @@ private:
 
     QTemporaryDir m_extendedThemeDir;
     KConfigGroup m_themeGroup;
-    Plasma::Theme m_theme;
+    KSvg::ImageSet m_theme;
 
     PanelBackground *m_backgroundTopEdge{nullptr};
     PanelBackground *m_backgroundLeftEdge{nullptr};

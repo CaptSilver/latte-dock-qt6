@@ -14,9 +14,7 @@
 #include <QQuickItem>
 #include <QTimer>
 
-namespace KDeclarative {
-class ConfigPropertyMap;
-}
+class KConfigPropertyMap;
 
 namespace Latte{
 namespace Containment{
@@ -83,7 +81,7 @@ public:
     QQuickItem *metrics() const;
     void setMetrics(QQuickItem *metrics);
 
-public slots:
+public Q_SLOTS:
     Q_INVOKABLE void restore();
     Q_INVOKABLE void save();
     Q_INVOKABLE void saveOptions();
@@ -112,7 +110,7 @@ public slots:
     void setAppletInScheduledDestruction(const int &id, const bool &enabled);
 
 
-signals:
+Q_SIGNALS:
     void appletOrderChanged();
     void appletsInScheduledDestructionChanged();
     void hasRestoredAppletsChanged();
@@ -130,7 +128,7 @@ signals:
     void startLayoutChanged();
     void endLayoutChanged();
 
-private slots:
+private Q_SLOTS:
     void onRootItemChanged();
     void destroyJustifySplitters();
 
@@ -140,7 +138,7 @@ private slots:
 
 private:
     void restoreOptions();
-    void restoreOption(const char *option);
+    void restoreOption(const QString &option);
     void saveOption(const char *option);
 
     void destroyAppletContainer(QObject *applet);
@@ -200,7 +198,7 @@ private:
     QQuickItem *m_metrics{nullptr};
 
     QObject *m_plasmoid{nullptr};
-    KDeclarative::ConfigPropertyMap *m_configuration{nullptr};
+    KConfigPropertyMap *m_configuration{nullptr};
 
     QHash<int, QQuickItem *> m_appletsInScheduledDestruction;
 

@@ -19,7 +19,7 @@ DetailsDialog::DetailsDialog(SettingsDialog *parent, Controller::Layouts *contro
       m_parentDlg(parent),
       m_ui(new Ui::DetailsDialog),
       m_layoutsController(controller),
-      m_storage(KConfigGroup(KSharedConfig::openConfig(),"LatteSettingsDialog").group("DetailsDialog"))
+      m_storage(KConfigGroup(KSharedConfig::openConfig(),QStringLiteral("LatteSettingsDialog")).group(QStringLiteral("DetailsDialog")))
 {
     setAttribute(Qt::WA_DeleteOnClose, true);
     loadConfig();
