@@ -22,7 +22,6 @@
 #include <KWayland/Client/plasmawindowmanagement.h>
 #include <KWayland/Client/plasmashell.h>
 #include <KWayland/Client/surface.h>
-#include <KWindowInfo>
 #include <KWindowEffects>
 
 

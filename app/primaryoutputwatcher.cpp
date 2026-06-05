@@ -16,19 +16,6 @@
 #include <KWayland/Client/connection_thread.h>
 #include <KWayland/Client/registry.h>
 
-#include <config-latte.h>
-#if HAVE_X11
-#include <QTimer> //Used only in x11 case
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-#include <private/qtx11extras_p.h>
-#else
-#include <QX11Info>
-#endif
-#include <xcb/randr.h>
-#include <xcb/xcb.h>
-#include <xcb/xcb_event.h>
-#endif
-
 class WaylandPrimaryOutput : public QObject, public QtWayland::kde_primary_output_v1
 {
     Q_OBJECT
@@ -51,18 +38,6 @@ Q_SIGNALS:
 PrimaryOutputWatcher::PrimaryOutputWatcher(QObject *parent)
     : QObject(parent)
 {
-#if HAVE_X11
-    if (KWindowSystem::isPlatformX11()) {
-        m_primaryOutputName = qGuiApp->primaryScreen()->name();
-        qGuiApp->installNativeEventFilter(this);
-        const xcb_query_extension_reply_t *reply = xcb_get_extension_data(QX11Info::connection(), &xcb_randr_id);
-        m_xrandrExtensionOffset = reply->first_event;
-        setPrimaryOutputName(qGuiApp->primaryScreen()->name());
-        connect(qGuiApp, &QGuiApplication::primaryScreenChanged, this, [this](QScreen *newPrimary) {
-            setPrimaryOutputName(newPrimary->name());
-        });
-    }
-#endif
     if (KWindowSystem::isPlatformWayland()) {
         setupRegistry();
     }
@@ -110,35 +85,6 @@ void PrimaryOutputWatcher::setupRegistry()
 
     m_registry->create(m_connection);
     m_registry->setup();
-}
-
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-bool PrimaryOutputWatcher::nativeEventFilter(const QByteArray &eventType, void *message, long int *result)
-#else
-bool PrimaryOutputWatcher::nativeEventFilter(const QByteArray &eventType, void *message, qintptr *result)
-#endif
-{
-    Q_UNUSED(result);
-#if HAVE_X11
-    // a particular edge case: when we switch the only enabled screen
-    // we don't have any signal about it, the primary screen changes but we have the same old QScreen* getting recycled
-    // see https://bugs.kde.org/show_bug.cgi?id=373880
-    // if this slot will be invoked many times, their//second time on will do nothing as name and primaryOutputName will be the same by then
-    if (eventType[0] != 'x') {
-        return false;
-    }
-
-    xcb_generic_event_t *ev = static_cast<xcb_generic_event_t *>(message);
-
-    const auto responseType = XCB_EVENT_RESPONSE_TYPE(ev);
-
-    if (responseType == m_xrandrExtensionOffset + XCB_RANDR_SCREEN_CHANGE_NOTIFY) {
-        QTimer::singleShot(0, this, [this]() {
-            setPrimaryOutputName(qGuiApp->primaryScreen()->name());
-        });
-    }
-#endif
-    return false;
 }
 
 QScreen *PrimaryOutputWatcher::screenForName(const QString &outputName) const

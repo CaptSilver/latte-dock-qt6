@@ -19,20 +19,14 @@
 #include <QDebug>
 #include <QTimer>
 #include <QApplication>
-#include <QtX11Extras/QX11Info>
 #include <QQuickView>
 #include <QLatin1String>
 
 // KDE
 #include <KWindowSystem>
-#include <KWindowInfo>
 #include <KWayland/Client/surface.h>
 
 #include <KWayland/Client/plasmavirtualdesktop.h>
-
-
-// X11
-#include <NETWM>
 
 using namespace KWayland::Client;
 
@@ -426,7 +420,9 @@ WindowId WaylandInterface::activeWindow()
 
 void WaylandInterface::skipTaskBar(const QDialog &dialog)
 {
-    KWindowSystem::setState(dialog.winId(), NET::SkipTaskbar);
+    Q_UNUSED(dialog);
+    //! TODO Phase 4: set skip-taskbar via the Wayland window-management protocol
+    //! (KWindowSystem::setState/NET is X11-only and was removed from the Wayland path).
 }
 
 void WaylandInterface::slideWindow(QWindow &view, AbstractWindowInterface::Slide location)
