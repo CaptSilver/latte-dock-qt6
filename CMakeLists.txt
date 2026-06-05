@@ -30,7 +30,7 @@ include(KDEPackageAppTemplates)
 include(WriteBasicConfigVersionFile)
 
 
-find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS DBus Gui Qml Quick Widgets WaylandClient)
+find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS DBus Gui Qml Quick Widgets WaylandClient Test)
 
 # KF6 frameworks (Fedora 44 has no umbrella KF6 config -> find each individually)
 find_package(KF6Archive ${KF6_MIN_VERSION} REQUIRED)
@@ -119,5 +119,9 @@ add_subdirectory(containment)
 add_subdirectory(icons)
 add_subdirectory(plasmoid)
 add_subdirectory(shell)
+
+if(BUILD_TESTING)
+    add_subdirectory(tests)
+endif()
 
 ki18n_install(po)
