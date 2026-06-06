@@ -34,6 +34,7 @@
 // Qt
 #include <QAction>
 #include <QDragEnterEvent>
+#include <QUrl>
 #include <QDragMoveEvent>
 #include <QDropEvent>
 #include <QMouseEvent>
@@ -56,9 +57,9 @@
 #include <Plasma/ContainmentActions>
 #include <PlasmaQuick/AppletQuickItem>
 
-#define BLOCKHIDINGDRAGTYPE "View::ContainsDrag()"
-#define BLOCKHIDINGNEEDSATTENTIONTYPE "View::Containment::NeedsAttentionState()"
-#define BLOCKHIDINGREQUESTSINPUTTYPE "View::Containment::RequestsInputState()"
+#define BLOCKHIDINGDRAGTYPE QLatin1String("View::ContainsDrag()")
+#define BLOCKHIDINGNEEDSATTENTIONTYPE QLatin1String("View::Containment::NeedsAttentionState()")
+#define BLOCKHIDINGREQUESTSINPUTTYPE QLatin1String("View::Containment::RequestsInputState()")
 
 namespace Latte {
 
@@ -85,7 +86,6 @@ View::View(Plasma::Corona *corona, QScreen *targetScreen, bool byPassX11WM)
     setIcon(qGuiApp->windowIcon());
     setResizeMode(QuickViewSharedEngine::SizeRootObjectToView);
     setColor(QColor(Qt::transparent));
-    setClearBeforeRendering(true);
 
     const auto flags = Qt::FramelessWindowHint
             | Qt::NoDropShadowWindowHint
@@ -283,13 +283,14 @@ void View::init(Plasma::Containment *plasma_containment)
     connect(this, &QQuickWindow::heightChanged, this, &View::geometryChanged);
 
     connect(this, &QQuickWindow::xChanged, this, &View::xChanged);
-    connect(this, &QQuickWindow::xChanged, this, &View::updateAbsoluteGeometry);
+    //! Qt6 geometry-change signals carry an int; drop it and recompute (default bypassChecks=false)
+    connect(this, &QQuickWindow::xChanged, this, [this](int) { updateAbsoluteGeometry(); });
     connect(this, &QQuickWindow::yChanged, this, &View::yChanged);
-    connect(this, &QQuickWindow::yChanged, this, &View::updateAbsoluteGeometry);
+    connect(this, &QQuickWindow::yChanged, this, [this](int) { updateAbsoluteGeometry(); });
     connect(this, &QQuickWindow::widthChanged, this, &View::widthChanged);
-    connect(this, &QQuickWindow::widthChanged, this, &View::updateAbsoluteGeometry);
+    connect(this, &QQuickWindow::widthChanged, this, [this](int) { updateAbsoluteGeometry(); });
     connect(this, &QQuickWindow::heightChanged, this, &View::heightChanged);
-    connect(this, &QQuickWindow::heightChanged, this, &View::updateAbsoluteGeometry);
+    connect(this, &QQuickWindow::heightChanged, this, [this](int) { updateAbsoluteGeometry(); });
 
     connect(this, &View::fontPixelSizeChanged, this, &View::editThicknessChanged);
     connect(this, &View::maxNormalThicknessChanged, this, &View::editThicknessChanged);
@@ -390,7 +391,7 @@ void View::init(Plasma::Containment *plasma_containment)
         }
     }
 
-    setSource(corona()->kPackage().filePath("lattedockui"));
+    setSource(QUrl::fromLocalFile(corona()->kPackage().filePath("lattedockui")));
 
     //! immediateSyncGeometry helps avoiding binding loops from containment qml side
     m_positioner->immediateSyncGeometry();
@@ -531,7 +532,7 @@ void View::newView(const QString &templateFile)
 void View::removeView()
 {
     if (m_layout) {
-        QAction *removeAct = action("remove");
+        QAction *removeAct = action(QStringLiteral("remove"));
 
         if (removeAct) {
             removeAct->trigger();
@@ -653,7 +654,7 @@ QString View::validTitle() const
         return QString();
     }
 
-    return QString("#view#" + QString::number(containment()->id()));
+    return QStringLiteral("#view#") + QString::number(containment()->id());
 }
 
 void View::updateAbsoluteGeometry(bool bypassChecks)
@@ -748,14 +749,14 @@ void View::statusChanged(Plasma::Types::ItemStatus status)
 
 void View::addTransientWindow(QWindow *window)
 {
-    if (!m_transientWindows.contains(window) && !window->flags().testFlag(Qt::ToolTip) && !window->title().startsWith("#debugwindow#")) {
+    if (!m_transientWindows.contains(window) && !window->flags().testFlag(Qt::ToolTip) && !window->title().startsWith(QLatin1String("#debugwindow#"))) {
         m_transientWindows.append(window);
 
-        QString winPtrStr = "0x" + QString::number((qulonglong)window,16);
+        QString winPtrStr = QStringLiteral("0x") + QString::number((qulonglong)window,16);
         m_visibility->addBlockHidingEvent(winPtrStr);
 
-        if (m_visibility->hasBlockHidingEvent(Latte::GlobalShortcuts::SHORTCUTBLOCKHIDINGTYPE)) {
-            m_visibility->removeBlockHidingEvent(Latte::GlobalShortcuts::SHORTCUTBLOCKHIDINGTYPE);
+        if (m_visibility->hasBlockHidingEvent(QLatin1String(Latte::GlobalShortcuts::SHORTCUTBLOCKHIDINGTYPE))) {
+            m_visibility->removeBlockHidingEvent(QLatin1String(Latte::GlobalShortcuts::SHORTCUTBLOCKHIDINGTYPE));
         }
 
         connect(window, &QWindow::visibleChanged, this, &View::removeTransientWindow);
@@ -767,13 +768,13 @@ void View::removeTransientWindow(const bool &visible)
     QWindow *window = static_cast<QWindow *>(QObject::sender());
 
     if (window && !visible) {
-        QString winPtrStr = "0x" + QString::number((qulonglong)window,16);
+        QString winPtrStr = QStringLiteral("0x") + QString::number((qulonglong)window,16);
         m_visibility->removeBlockHidingEvent(winPtrStr);
         disconnect(window, &QWindow::visibleChanged, this, &View::removeTransientWindow);
         m_transientWindows.removeAll(window);
 
-        if (m_visibility->hasBlockHidingEvent(Latte::GlobalShortcuts::SHORTCUTBLOCKHIDINGTYPE)) {
-            m_visibility->removeBlockHidingEvent(Latte::GlobalShortcuts::SHORTCUTBLOCKHIDINGTYPE);
+        if (m_visibility->hasBlockHidingEvent(QLatin1String(Latte::GlobalShortcuts::SHORTCUTBLOCKHIDINGTYPE))) {
+            m_visibility->removeBlockHidingEvent(QLatin1String(Latte::GlobalShortcuts::SHORTCUTBLOCKHIDINGTYPE));
         }
 
         updateTransientWindowsTracking();
@@ -1159,7 +1160,7 @@ void View::setFontPixelSize(int size)
 
 bool View::isOnAllActivities() const
 {
-    return m_activities.isEmpty() || m_activities[0] == Data::Layout::ALLACTIVITIESID;
+    return m_activities.isEmpty() || m_activities[0] == QLatin1String(Data::Layout::ALLACTIVITIESID);
 }
 
 bool View::isOnActivity(const QString &activity) const
@@ -1171,7 +1172,7 @@ QStringList View::activities() const
 {
     QStringList running;
 
-    QStringList runningAll = m_corona->activitiesConsumer()->runningActivities();
+    QStringList runningAll = m_corona->activitiesConsumer()->activities(); //! P6: Consumer exposes all activities (no running-only filter)
 
     for(int i=0; i<m_activities.count(); ++i) {
         if (runningAll.contains(m_activities[i])) {
@@ -1210,7 +1211,7 @@ void View::applyActivitiesToWindows()
             if (KWindowSystem::isPlatformX11()) {
                 appletconfigviewid = m_appletConfigView->winId();
             } else {
-                appletconfigviewid = m_corona->wm()->winIdFor("latte-dock", m_appletConfigView->title());
+                appletconfigviewid = m_corona->wm()->winIdFor(QStringLiteral("latte-dock"), m_appletConfigView->title());
             }
 
             m_positioner->setWindowOnActivities(appletconfigviewid, runningActivities);
@@ -1297,10 +1298,10 @@ void View::setLayout(Layout::GenericLayout *layout)
         });
 
         if (latteCorona->layoutsManager()->memoryUsage() == MemoryUsage::MultipleLayouts) {
-            connectionsLayout << connect(latteCorona->activitiesConsumer(), &KActivities::Consumer::runningActivitiesChanged, this, [&]() {
+            connectionsLayout << connect(latteCorona->activitiesConsumer(), &KActivities::Consumer::activitiesChanged, this, [this](const QStringList &) {
                 if (m_layout && m_visibility) {
                     setActivities(m_layout->appliedActivities());
-                    qDebug() << "DOCK VIEW FROM LAYOUT (runningActivitiesChanged) ::: " << m_layout->name()
+                    qDebug() << "DOCK VIEW FROM LAYOUT (activitiesChanged) ::: " << m_layout->name()
                              << " - activities: " << m_activities;
                 }
             });
@@ -1369,8 +1370,8 @@ bool View::mimeContainsPlasmoid(QMimeData *mimeData, QString name)
     }
 
     if (mimeData->hasFormat(QStringLiteral("text/x-plasmoidservicename"))) {
-        QString data = mimeData->data(QStringLiteral("text/x-plasmoidservicename"));
-        const QStringList appletNames = data.split('\n', Qt::SkipEmptyParts);
+        QString data = QString::fromUtf8(mimeData->data(QStringLiteral("text/x-plasmoidservicename")));
+        const QStringList appletNames = data.split(QLatin1Char('\n'), Qt::SkipEmptyParts);
 
         for (const QString &appletName : appletNames) {
             if (appletName == name)
@@ -1397,7 +1398,7 @@ Latte::Data::View View::data() const
     vdata.screensGroup = screensGroup();
 
     //!screen edge margin can be more accurate in the config file
-    vdata.screenEdgeMargin = m_screenEdgeMargin > 0 ? m_screenEdgeMargin : containment()->config().group("General").readEntry("screenEdgeMargin", (int)-1);
+    vdata.screenEdgeMargin = m_screenEdgeMargin > 0 ? m_screenEdgeMargin : containment()->config().group(QStringLiteral("General")).readEntry(QStringLiteral("screenEdgeMargin"), (int)-1);
 
     vdata.edge = location();
     vdata.maxLength = m_maxLength * 100;
@@ -1649,7 +1650,7 @@ QAction *View::action(const QString &name)
         return nullptr;
     }
 
-    return this->containment()->actions()->action(name);
+    return this->containment()->internalAction(name);
 }
 
 QVariantList View::containmentActions() const
@@ -1660,7 +1661,7 @@ QVariantList View::containmentActions() const
         return actions;
     }
 
-    const QString trigger = "RightButton;NoModifier";
+    const QString trigger = QStringLiteral("RightButton;NoModifier");
     Plasma::ContainmentActions *plugin = this->containment()->containmentActions().value(trigger);
 
     if (!plugin) {
@@ -1670,7 +1671,7 @@ QVariantList View::containmentActions() const
     if (plugin->containment() != this->containment()) {
         plugin->setContainment(this->containment());
         // now configure it
-        KConfigGroup cfg(this->containment()->corona()->config(), "ActionPlugins");
+        KConfigGroup cfg(this->containment()->corona()->config(), QStringLiteral("ActionPlugins"));
         cfg = KConfigGroup(&cfg, QString::number(this->containment()->containmentType()));
         KConfigGroup pluginConfig = KConfigGroup(&cfg, trigger);
         plugin->restore(pluginConfig);
@@ -1742,7 +1743,7 @@ void View::restoreConfig()
 
     auto config = this->containment()->config();
     m_onPrimary = config.readEntry("onPrimary", true);
-    m_alignment = static_cast<Latte::Types::Alignment>(config.group("General").readEntry("alignment", (int)Latte::Types::Center));
+    m_alignment = static_cast<Latte::Types::Alignment>(config.group(QStringLiteral("General")).readEntry(QStringLiteral("alignment"), (int)Latte::Types::Center));
     m_byPassWM = config.readEntry("byPassWM", false);
     m_isPreferredForShortcuts = config.readEntry("isPreferredForShortcuts", false);
     m_name = config.readEntry("name", QString());
