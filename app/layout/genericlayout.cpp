@@ -934,8 +934,14 @@ void GenericLayout::addView(Plasma::Containment *containment)
     qDebug().noquote() << "Adding View:" << viewdata.id << "- Passed ALL checks !!!";
     m_latteViews[containment] = latteView;
 
+    //! Plasma 6 no longer restores the containment location from its config group,
+    //! so apply the stored dock edge before the view initializes; otherwise the
+    //! location stays Desktop and the panel geometry and form factor are wrong.
+    containment->setLocation(viewdata.edge);
+
     latteView->init(containment);
     latteView->setContainment(containment);
+    latteView->setLocation(viewdata.edge);
     latteView->setLayout(this);
 
     //! Qt 5.9 creates a crash for this in wayland, that is why the check is used
