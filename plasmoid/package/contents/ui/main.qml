@@ -11,6 +11,7 @@ import Qt5Compat.GraphicalEffects
 
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.ksvg 1.0 as KSvg
+import org.kde.plasma.plasma5support 2.0 as P5Support
 import org.kde.plasma.components 3.0 as PlasmaComponents
 import org.kde.plasma.plasmoid 2.0
 
@@ -620,7 +621,7 @@ Item {
         Component.onCompleted: previousActivity = currentActivity;
     }
 
-    PlasmaCore.DataSource {
+    P5Support.DataSource {
         id: mpris2Source
         engine: "mpris2"
         connectedSources: sources

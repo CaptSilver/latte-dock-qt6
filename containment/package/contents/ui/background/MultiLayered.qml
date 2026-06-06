@@ -35,11 +35,11 @@ BackgroundProperties{
 
     isShown: (solidBackground.opacity > 0) || (overlayedBackground.backgroundOpacity > 0)
 
-    hasAllBorders: solidBackground.enabledBorders === PlasmaCore.FrameSvg.AllBorders
-    hasLeftBorder: hasAllBorders || ((solidBackground.enabledBorders & PlasmaCore.FrameSvg.LeftBorder) > 0)
-    hasRightBorder: hasAllBorders || ((solidBackground.enabledBorders & PlasmaCore.FrameSvg.RightBorder) > 0)
-    hasTopBorder: hasAllBorders || ((solidBackground.enabledBorders & PlasmaCore.FrameSvg.TopBorder) > 0)
-    hasBottomBorder: hasAllBorders || ((solidBackground.enabledBorders & PlasmaCore.FrameSvg.BottomBorder) > 0)
+    hasAllBorders: solidBackground.enabledBorders === KSvg.FrameSvg.AllBorders
+    hasLeftBorder: hasAllBorders || ((solidBackground.enabledBorders & KSvg.FrameSvg.LeftBorder) > 0)
+    hasRightBorder: hasAllBorders || ((solidBackground.enabledBorders & KSvg.FrameSvg.RightBorder) > 0)
+    hasTopBorder: hasAllBorders || ((solidBackground.enabledBorders & KSvg.FrameSvg.TopBorder) > 0)
+    hasBottomBorder: hasAllBorders || ((solidBackground.enabledBorders & KSvg.FrameSvg.BottomBorder) > 0)
 
     shadows.left: hasLeftBorder && root.behaveAsDockWithMask ? (customShadowIsEnabled ? customShadow : shadowsSvgItem.margins.left) : 0
     shadows.right: hasRightBorder && root.behaveAsDockWithMask ? (customShadowIsEnabled ? customShadow : shadowsSvgItem.margins.right) : 0
@@ -327,7 +327,7 @@ BackgroundProperties{
         id: shadowsSvgItem
         width: root.isVertical ?  background.thickness + totals.shadowsThickness : totals.visualLength
         height: root.isVertical ? totals.visualLength : background.thickness + totals.shadowsThickness
-        enabledBorders: latteView && latteView.effects ? latteView.effects.enabledBorders : PlasmaCore.FrameSvg.NoBorder
+        enabledBorders: latteView && latteView.effects ? latteView.effects.enabledBorders : KSvg.FrameSvg.NoBorder
         imagePath: "widgets/panel-background"
         prefix: "shadow"
         opacity: hideShadow || !root.useThemePanel || (root.forceTransparentPanel && !root.forcePanelForBusyBackground) ? 0 : 1
@@ -505,7 +505,7 @@ BackgroundProperties{
                 adjustPrefix();
         }
 
-        enabledBorders: latteView && latteView.effects ? latteView.effects.enabledBorders : PlasmaCore.FrameSvg.NoBorder
+        enabledBorders: latteView && latteView.effects ? latteView.effects.enabledBorders : KSvg.FrameSvg.NoBorder
 
         Behavior on opacity{
             enabled: LatteCore.WindowSystem.compositingActive && !solidBackground.paintInstantly

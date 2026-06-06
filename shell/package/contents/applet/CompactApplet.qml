@@ -10,7 +10,8 @@ import Qt5Compat.GraphicalEffects
 
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.ksvg 1.0 as KSvg
-import org.kde.plasma.components 2.0 as PlasmaComponents
+import org.kde.kirigami 2.20 as Kirigami
+import org.kde.plasma.components 3.0 as PlasmaComponents
 import org.kde.kquickcontrolsaddons 2.0
 
 import org.kde.latte.core 0.2 as LatteCore
@@ -78,7 +79,7 @@ PlasmaCore.ToolTipArea {
             })
         } else {
             popupWindow.mainItem.width = Qt.binding(function() {
-                return PlasmaCore.Theme.mSize(PlasmaCore.Theme.defaultFont).width * 35
+                return _mSize.advanceWidth * 35
             })
         }
 
@@ -96,7 +97,7 @@ PlasmaCore.ToolTipArea {
             })
         } else {
             popupWindow.mainItem.height = Qt.binding(function() {
-                return PlasmaCore.Theme.mSize(PlasmaCore.Theme.defaultFont).height * 25
+                return _mSize.height * 25
             })
         }
 
@@ -132,11 +133,17 @@ PlasmaCore.ToolTipArea {
         opacity: plasmoid.expanded ? 1 : 0
         Behavior on opacity {
             NumberAnimation {
-                duration: PlasmaCore.Units.shortDuration
+                duration: Kirigami.Units.shortDuration
                 easing.type: Easing.InOutQuad
             }
         }
     }*/
+
+    TextMetrics {
+        id: _mSize
+        text: "M"
+        font: Kirigami.Theme.defaultFont
+    }
 
     //! This timer is needed in order for the applet popup to not reshow instantly and faulty after the user
     //! clicks compact representation to hide it

@@ -9,7 +9,7 @@ import QtQuick.Layouts 1.1
 import QtQuick.Window 2.1
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.ksvg 1.0 as KSvg
-import org.kde.plasma.components 2.0 as PlasmaComponents
+import org.kde.plasma.components 3.0 as PlasmaComponents
 import org.kde.plasma.extras 2.0 as PlasmaExtras
 
 import org.kde.latte.core 0.2 as LatteCore
@@ -19,7 +19,7 @@ KSvg.FrameSvgItem {
 
     imagePath: "widgets/panel-background"
     prefix:""
-    enabledBorders: infoWindow ? infoWindow.enabledBorders : PlasmaCore.FrameSvg.AllBorders
+    enabledBorders: infoWindow ? infoWindow.enabledBorders : KSvg.FrameSvg.AllBorders
 
     width: Screen.width + 1
     height: Math.min(Screen.height - units.gridUnit * 8, logo.height + messageLbl.height + 2 *units.gridUnit)

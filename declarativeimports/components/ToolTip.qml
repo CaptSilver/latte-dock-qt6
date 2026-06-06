@@ -34,6 +34,6 @@ T.ToolTip {
 
     background: KSvg.FrameSvgItem {
         imagePath: "widgets/background"
-        enabledBorders: PlasmaCore.FrameSvg.AllBorders
+        enabledBorders: KSvg.FrameSvg.AllBorders
     }
 }

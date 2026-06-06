@@ -16,7 +16,7 @@ Controls.SpinBox {
         KSvg.Svg {
             id: arrowSvg
             imagePath: "widgets/arrows"
-            colorGroup: PlasmaCore.Theme.ButtonColorGroup
+            colorSet: KSvg.Svg.Button
         }
         incrementControl: KSvg.SvgItem {
             implicitWidth: theme.mSize(theme.defaultFont).width * 1.8

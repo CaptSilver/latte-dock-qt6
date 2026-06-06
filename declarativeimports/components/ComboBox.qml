@@ -97,7 +97,7 @@ T.ComboBox {
         }
         svg: KSvg.Svg {
             imagePath: "widgets/arrows"
-            colorGroup: PlasmaCore.Theme.ButtonColorGroup
+            colorSet: KSvg.Svg.Button
         }
         elementId: "down-arrow"
     }
@@ -203,12 +203,11 @@ T.ComboBox {
                 rightMargin: control.mirrored ? 1 : 0
             }
 
-            PlasmaCore.IconItem {
+            Kirigami.Icon {
                 id: selectedIcon
                 implicitWidth: textLabel.height
                 implicitHeight: textLabel.height
 
-                colorGroup: PlasmaCore.Theme.ButtonColorGroup
                 source: {
                     if (control
                             && control.currentIndex>=0

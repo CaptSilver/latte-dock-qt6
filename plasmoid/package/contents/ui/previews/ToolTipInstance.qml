@@ -13,6 +13,7 @@ import Qt5Compat.GraphicalEffects
 import QtQml.Models 2.2
 
 import org.kde.plasma.core 2.0 as PlasmaCore
+import org.kde.kirigami 2.20 as Kirigami
 import org.kde.plasma.components 3.0 as PlasmaComponents
 import org.kde.plasma.extras 2.0 as PlasmaExtras
 import org.kde.kquickcontrolsaddons 2.0 as KQuickControlsAddons
@@ -89,12 +90,11 @@ Column {
         anchors.horizontalCenter: parent.horizontalCenter
 
         // launcher icon
-        PlasmaCore.IconItem {
+        Kirigami.Icon {
             Layout.preferredWidth: units.iconSizes.medium
             Layout.preferredHeight: units.iconSizes.medium
             source: icon
             animated: false
-            usesPlasmaTheme: false
             visible: !isWin
         }
         // all textlabels
@@ -211,8 +211,8 @@ Column {
                     anchors.fill:  previewThumbLoader.item
                     visible: previewThumbLoader.item.visible
                     horizontalOffset: 0
-                    verticalOffset: Math.round(3 * PlasmaCore.Units.devicePixelRatio)
-                    radius: Math.round(8.0 * PlasmaCore.Units.devicePixelRatio)
+                    verticalOffset: Math.round(3 * Kirigami.Units.devicePixelRatio)
+                    radius: Math.round(8.0 * Kirigami.Units.devicePixelRatio)
                     samples: Math.round(radius * 1.5)
                     color: "Black"
                     source: previewThumbLoader.item
@@ -258,13 +258,12 @@ Column {
             }
 
             // when minimized, we don't have a preview, so show the icon
-            PlasmaCore.IconItem {
+            Kirigami.Icon {
                 width: parent.width
                 height: thumbnail.height - playbackLoader.realHeight
                 anchors.horizontalCenter: parent.horizontalCenter
                 source: icon
                 animated: false
-                usesPlasmaTheme: false
                 visible: (thumbnailSourceItem.isMinimized && !albumArtImage.visible) //X11 case
                          || (!previewThumbLoader.active && !albumArtImage.visible) //Wayland case
             }
