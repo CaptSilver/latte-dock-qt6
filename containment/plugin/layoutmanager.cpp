@@ -314,8 +314,14 @@ QList<QObject *> LayoutManager::appletObjects() const
 
 QQuickItem *LayoutManager::appletGraphicItem(QObject *applet) const
 {
-    //! AppletItem.qml's "applet" is an Item (the graphic object), but here we hold a
+    //! AppletItem.qml's "applet" is an Item (the graphic object), but here we may hold a
     //! Plasma::Applet (a QObject). On Plasma 6 they are distinct; resolve the graphic item.
+    //! Callers pass either form: the raw applet (onAppletAdded) or the graphic item already
+    //! (re-add paths), so accept both.
+    if (auto *appletItem = qobject_cast<PlasmaQuick::AppletQuickItem *>(applet)) {
+        return appletItem;
+    }
+
     if (auto *plasmaApplet = qobject_cast<Plasma::Applet *>(applet)) {
         return PlasmaQuick::AppletQuickItem::itemForApplet(plasmaApplet);
     }
@@ -1139,9 +1145,15 @@ void LayoutManager::addAppletItem(QObject *applet, int index)
         return;
     }
 
+    //! createAppletItem in main.qml expects the graphic item, not the raw Plasma::Applet.
+    QQuickItem *appletGraphic = appletGraphicItem(applet);
+    if (!appletGraphic) {
+        return;
+    }
+
     Latte::Types::Alignment alignment = static_cast<Latte::Types::Alignment>((*m_configuration)[QStringLiteral("alignment")].toInt());
     QVariant appletItemVariant;
-    QVariant appletVariant; appletVariant.setValue(applet);
+    QVariant appletVariant; appletVariant.setValue(appletGraphic);
     m_createAppletItemMethod.invoke(m_rootItem, Q_RETURN_ARG(QVariant, appletItemVariant), Q_ARG(QVariant, appletVariant));
     QQuickItem *aitem = appletItemVariant.value<QQuickItem *>();
 
@@ -1186,21 +1198,34 @@ void LayoutManager::addAppletItem(QObject *applet, int x, int y)
 {
     if (!m_startLayout || !m_mainLayout || !m_endLayout) {
         return;
-    }    
+    }
 
-    PlasmaQuick::AppletQuickItem *aqi = qobject_cast<PlasmaQuick::AppletQuickItem *>(applet);
+    //! createAppletItem/initAppletContainer in main.qml expect the graphic item, not the raw
+    //! Plasma::Applet. onAppletAdded hands us the raw applet; re-add paths hand us the graphic
+    //! item already. Normalize to the graphic item and derive the applet id from either form.
+    QQuickItem *appletGraphic = appletGraphicItem(applet);
+    if (!appletGraphic) {
+        return;
+    }
 
-    if (aqi && aqi->applet() && !aqi->applet()->destroyed() && m_appletsInScheduledDestruction.contains(aqi->applet()->id())) {
-        int id = aqi->applet()->id();
+    Plasma::Applet *plasmaApplet = qobject_cast<Plasma::Applet *>(applet);
+    if (!plasmaApplet) {
+        if (auto *aqi = qobject_cast<PlasmaQuick::AppletQuickItem *>(applet)) {
+            plasmaApplet = aqi->applet();
+        }
+    }
+
+    if (plasmaApplet && !plasmaApplet->destroyed() && m_appletsInScheduledDestruction.contains(plasmaApplet->id())) {
+        int id = plasmaApplet->id();
         QVariant appletContainerVariant; appletContainerVariant.setValue(m_appletsInScheduledDestruction[id]);
-        QVariant appletVariant; appletVariant.setValue(applet);
+        QVariant appletVariant; appletVariant.setValue(appletGraphic);
         m_initAppletContainerMethod.invoke(m_rootItem, Q_ARG(QVariant, appletContainerVariant), Q_ARG(QVariant, appletVariant));
         setAppletInScheduledDestruction(id, false);
         return;
     }
 
     QVariant appletItemVariant;
-    QVariant appletVariant; appletVariant.setValue(applet);
+    QVariant appletVariant; appletVariant.setValue(appletGraphic);
     m_createAppletItemMethod.invoke(m_rootItem, Q_RETURN_ARG(QVariant, appletItemVariant), Q_ARG(QVariant, appletVariant));
     QQuickItem *appletItem = appletItemVariant.value<QQuickItem *>();
 
@@ -1234,20 +1259,27 @@ void LayoutManager::removeAppletItem(QObject *applet)
         return;
     }
 
-    PlasmaQuick::AppletQuickItem *aqi = qobject_cast<PlasmaQuick::AppletQuickItem *>(applet);
+    //! onAppletRemoved hands us the raw Plasma::Applet; other callers may hand the graphic item.
+    //! Resolve the Plasma::Applet from either form.
+    Plasma::Applet *plasmaApplet = qobject_cast<Plasma::Applet *>(applet);
+    if (!plasmaApplet) {
+        if (auto *aqi = qobject_cast<PlasmaQuick::AppletQuickItem *>(applet)) {
+            plasmaApplet = aqi->applet();
+        }
+    }
 
-    if (!aqi) {
+    if (!plasmaApplet) {
         return;
     }
 
-    int id = aqi->applet()->id();
+    int id = plasmaApplet->id();
 
-    if (aqi->applet() && aqi->applet()->destroyed() && !m_appletsInScheduledDestruction.contains(id)/*this way we really delete it in the end*/) {
+    if (plasmaApplet->destroyed() && !m_appletsInScheduledDestruction.contains(id)/*this way we really delete it in the end*/) {
         setAppletInScheduledDestruction(id, true);
         return;
     }
 
-    destroyAppletContainer(aqi->applet());
+    destroyAppletContainer(plasmaApplet);
 }
 
 void LayoutManager::destroyAppletContainer(QObject *applet)

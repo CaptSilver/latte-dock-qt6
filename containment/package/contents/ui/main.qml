@@ -558,6 +558,11 @@ ContainmentItem {
     }
 
     Containment.onAppletAdded: {
+        // Plasma 6 signal: appletAdded(Plasma::Applet *applet, const QRectF &geometryHint).
+        // The drop position arrives as a QRectF; pull x/y from it.
+        var x = geometryHint.x;
+        var y = geometryHint.y;
+
         if (fastLayoutManager.isMasqueradedIndex(x, y)) {
             var index = fastLayoutManager.masquearadedIndex(x, y);
             fastLayoutManager.addAppletItem(applet, index);
