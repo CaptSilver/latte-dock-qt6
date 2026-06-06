@@ -12,7 +12,8 @@ import QtGraphicalEffects 1.0
 import org.kde.plasma.plasmoid 2.0
 
 import org.kde.plasma.core 2.0 as PlasmaCore
-import org.kde.plasma.components 2.0 as PlasmaComponents
+import org.kde.ksvg 1.0 as KSvg
+import org.kde.plasma.components 3.0 as PlasmaComponents
 import org.kde.kquickcontrolsaddons 2.0
 
 import org.kde.latte.core 0.2 as LatteCore
@@ -322,7 +323,7 @@ BackgroundProperties{
     //! Layer 1: Shadows that are drawn around the background but always inside the View window (these are internal drawn shadows).
     //!          When the container has chosen external shadows (these are shadows that are drawn out of the View window from the compositor)
     //!          in such case the internal drawn shadows are NOT drawn at all.
-    PlasmaCore.FrameSvgItem{
+    KSvg.FrameSvgItem{
         id: shadowsSvgItem
         width: root.isVertical ?  background.thickness + totals.shadowsThickness : totals.visualLength
         height: root.isVertical ? totals.visualLength : background.thickness + totals.shadowsThickness
@@ -382,7 +383,7 @@ BackgroundProperties{
     //!          the original background when to special settings and options exist from the user. It is also
     //!          doing one very important job which is to calculate the Effects Rectangle which is used from
     //!          the compositor to provide blurriness and from Mask calculations to provide the View Local Geometry
-    PlasmaCore.FrameSvgItem{
+    KSvg.FrameSvgItem{
         id: solidBackground
         anchors.leftMargin: shadows.left
         anchors.rightMargin: shadows.right

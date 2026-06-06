@@ -10,7 +10,8 @@ import QtQuick.Layouts 1.1
 import QtGraphicalEffects 1.0
 
 import org.kde.plasma.core 2.0 as PlasmaCore
-import org.kde.plasma.components 2.0 as PlasmaComponents
+import org.kde.ksvg 1.0 as KSvg
+import org.kde.plasma.components 3.0 as PlasmaComponents
 import org.kde.plasma.plasmoid 2.0
 
 import org.kde.taskmanager 0.1 as TaskManager
@@ -840,7 +841,7 @@ Item {
 
 
         /// the current theme's panel
-        PlasmaCore.FrameSvgItem{
+        KSvg.FrameSvgItem{
             id: shadowsSvgItem
 
             anchors.bottom: (root.location === PlasmaCore.Types.BottomEdge) ? belower.bottom : undefined
@@ -870,7 +871,7 @@ Item {
             }
 
 
-            PlasmaCore.FrameSvgItem{
+            KSvg.FrameSvgItem{
                 anchors.margins: belower.width-1
                 anchors.fill:parent
                 imagePath: plasmoid.configuration.transparentPanel ? "translucent/widgets/panel-background" :

@@ -7,17 +7,18 @@ import QtQuick 2.0
 import QtQuick.Controls 1.4 as Controls
 import QtQuick.Controls.Styles.Plasma 2.0 as Styles
 import org.kde.plasma.core 2.0 as PlasmaCore
+import org.kde.ksvg 1.0 as KSvg
 
 Controls.SpinBox {
     implicitWidth: theme.mSize(theme.defaultFont).width * 10
 
     style: Styles.SpinBoxStyle {
-        PlasmaCore.Svg {
+        KSvg.Svg {
             id: arrowSvg
             imagePath: "widgets/arrows"
             colorGroup: PlasmaCore.Theme.ButtonColorGroup
         }
-        incrementControl: PlasmaCore.SvgItem {
+        incrementControl: KSvg.SvgItem {
             implicitWidth: theme.mSize(theme.defaultFont).width * 1.8
             anchors {
                 centerIn: parent
@@ -29,7 +30,7 @@ Controls.SpinBox {
             elementId: "up-arrow"
             opacity: control.enabled ? (styleData.upPressed ? 1 : 0.6) : 0.5
         }
-        decrementControl: PlasmaCore.SvgItem {
+        decrementControl: KSvg.SvgItem {
             implicitWidth: theme.mSize(theme.defaultFont).width * 1.8
             anchors {
                 centerIn: parent

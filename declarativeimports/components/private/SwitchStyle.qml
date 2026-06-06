@@ -7,12 +7,13 @@ import QtQuick 2.2
 import QtQuick.Controls.Styles 1.2 as QtQuickControlStyle
 import QtQuick.Controls 1.2
 import org.kde.plasma.core 2.0 as PlasmaCore
+import org.kde.ksvg 1.0 as KSvg
 
 QtQuickControlStyle.SwitchStyle {
     id: styleRoot
     padding { top: 0 ; left: 0 ; right: 0 ; bottom: 0 }
 
-    PlasmaCore.Svg {
+    KSvg.Svg {
         id: switchSvg
         imagePath: "widgets/switch"
         colorGroup: PlasmaCore.ColorScope.colorGroup
@@ -41,14 +42,14 @@ QtQuickControlStyle.SwitchStyle {
             anchors.fill: parent
             visible: !themeHandleItem.visible
 
-            PlasmaCore.FrameSvgItem {
+            KSvg.FrameSvgItem {
                 anchors.fill: parent
                 opacity: control.enabled ? 1.0 : 0.6
                 imagePath: "widgets/button"
                 prefix: "shadow"
             }
 
-            PlasmaCore.FrameSvgItem {
+            KSvg.FrameSvgItem {
                 id: button
                 anchors.fill: parent
                 imagePath: "widgets/button"
@@ -56,7 +57,7 @@ QtQuickControlStyle.SwitchStyle {
             }
         }
 
-        PlasmaCore.SvgItem {
+        KSvg.SvgItem {
             id: themeHandleShadow
             anchors.fill: themeHandleItem
             opacity: control.enabled ? 1.0 : 0.6
@@ -65,7 +66,7 @@ QtQuickControlStyle.SwitchStyle {
             visible: styleRoot.themeHasSwitch
         }
 
-        PlasmaCore.SvgItem {
+        KSvg.SvgItem {
             id: themeHandleItem
             anchors.centerIn: parent
             width: naturalSize.width
@@ -85,7 +86,7 @@ QtQuickControlStyle.SwitchStyle {
             anchors.fill: parent
             visible: !themeGroove.visible
 
-            PlasmaCore.FrameSvgItem {
+            KSvg.FrameSvgItem {
                 id: fallbackGrooveItem
                 anchors.fill: parent
                 imagePath: "widgets/slider"
@@ -99,7 +100,7 @@ QtQuickControlStyle.SwitchStyle {
                 }
             }
 
-            PlasmaCore.FrameSvgItem {
+            KSvg.FrameSvgItem {
                 id: fallbackHighlight
                 anchors.fill: fallbackGrooveItem
                 imagePath: "widgets/slider"
@@ -119,7 +120,7 @@ QtQuickControlStyle.SwitchStyle {
             anchors.fill: parent
             visible: styleRoot.themeHasSwitch
 
-            PlasmaCore.FrameSvgItem {
+            KSvg.FrameSvgItem {
                 id: themeGrooveItem
                 anchors.fill: parent
                 imagePath: "widgets/switch"
@@ -136,7 +137,7 @@ QtQuickControlStyle.SwitchStyle {
                 }
             }
 
-            PlasmaCore.FrameSvgItem {
+            KSvg.FrameSvgItem {
                 id: themeGrooveHighlight
                 anchors.fill: parent
                 imagePath: "widgets/switch"
