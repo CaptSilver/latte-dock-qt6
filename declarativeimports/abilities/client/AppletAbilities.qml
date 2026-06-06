@@ -18,19 +18,19 @@ Item {
     readonly property bool isLayoutListViewContainer: layout && layout.parent && layout.parent instanceof ListView
     readonly property bool isLayoutGridContainer: layout && layout instanceof Grid
 
-    readonly property bool inDesktop: plasmoid.location === PlasmaCore.Types.Floating
-                                      || plasmoid.location === PlasmaCore.Types.Desktop
+    readonly property bool inDesktop: Plasmoid.location === PlasmaCore.Types.Floating
+                                      || Plasmoid.location === PlasmaCore.Types.Desktop
 
     readonly property int alignment: _containment.alignment
-    readonly property int location: inDesktop ? PlasmaCore.Types.BottomEdge : plasmoid.location
+    readonly property int location: inDesktop ? PlasmaCore.Types.BottomEdge : Plasmoid.location
     readonly property int thickness: _animations.hasThicknessAnimation ? _metrics.mask.thickness.maxZoomedForItems : // dont clip bouncing tasks when zoom=1
                                                                          _metrics.mask.thickness.normalForItems
 
     readonly property real layoutWidth: {
         if (isLayoutListViewContainer) {
-            return plasmoid.formFactor !== PlasmaCore.Types.Vertical ? layout.parent.width : thickness;
+            return Plasmoid.formFactor !== PlasmaCore.Types.Vertical ? layout.parent.width : thickness;
         } else if (isLayoutGridContainer) {
-            return plasmoid.formFactor !== PlasmaCore.Types.Vertical ? layout.width : thickness
+            return Plasmoid.formFactor !== PlasmaCore.Types.Vertical ? layout.width : thickness
         }
 
         return 0;
@@ -38,9 +38,9 @@ Item {
 
     readonly property real layoutHeight: {
         if (isLayoutListViewContainer) {
-            return plasmoid.formFactor === PlasmaCore.Types.Vertical ? layout.parent.height : thickness;
+            return Plasmoid.formFactor === PlasmaCore.Types.Vertical ? layout.parent.height : thickness;
         } else if (isLayoutGridContainer) {
-            return plasmoid.formFactor !== PlasmaCore.Types.Vertical ? layout.height : thickness
+            return Plasmoid.formFactor !== PlasmaCore.Types.Vertical ? layout.height : thickness
         }
 
         return 0;

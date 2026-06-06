@@ -105,7 +105,7 @@ Item{
         //fix bug #478, when changing form factor sometimes the tasks are not positioned
         //correctly, in such case we make a fast reinitialization for the sizes
         Connections {
-            target: plasmoid
+            target: Plasmoid
             onFormFactorChanged:{
                 parabolicItem.zoom = 1.01;
                 parabolicItem.zoomLength = 1.01;

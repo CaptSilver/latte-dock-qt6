@@ -7,12 +7,13 @@
 import QtQuick 2.0
 
 import org.kde.plasma.core 2.0 as PlasmaCore
+import org.kde.plasma.plasmoid 2.0
 import org.kde.latte.core 0.2 as LatteCore
 
 Item{
     id: hiddenSpacer
-    width: plasmoid.formFactor === PlasmaCore.Types.Vertical ? abilityItem.parabolicItem.width : nHiddenSize
-    height: plasmoid.formFactor === PlasmaCore.Types.Vertical ? nHiddenSize : abilityItem.parabolicItem.height
+    width: Plasmoid.formFactor === PlasmaCore.Types.Vertical ? abilityItem.parabolicItem.width : nHiddenSize
+    height: Plasmoid.formFactor === PlasmaCore.Types.Vertical ? nHiddenSize : abilityItem.parabolicItem.height
 
     visible: (rightSpacer ? index === abilityItem.abilities.indexer.lastVisibleItemIndex : index === abilityItem.abilities.indexer.firstVisibleItemIndex)
              || (separatorSpace > 0)

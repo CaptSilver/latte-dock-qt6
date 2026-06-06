@@ -14,14 +14,14 @@ Item {
     Binding {
         target: _abilityContainer.layout.parent
         property: "width"
-        value: plasmoid.formFactor !== PlasmaCore.Types.Vertical ? _abilityContainer.layout.parent.contentWidth :
+        value: Plasmoid.formFactor !== PlasmaCore.Types.Vertical ? _abilityContainer.layout.parent.contentWidth :
                                                                    _abilityContainer.thickness
     }
 
     Binding {
         target: _abilityContainer.layout.parent
         property: "height"
-        value: plasmoid.formFactor !== PlasmaCore.Types.Vertical ? _abilityContainer.thickness :
+        value: Plasmoid.formFactor !== PlasmaCore.Types.Vertical ? _abilityContainer.thickness :
                                                                    _abilityContainer.layout.parent.contentHeight
     }
 
@@ -34,6 +34,6 @@ Item {
     Binding {
         target: _abilityContainer.layout.parent
         property: "orientation"
-        value: plasmoid.formFactor === PlasmaCore.Types.Vertical ? Qt.Vertical : Qt.Horizontal
+        value: Plasmoid.formFactor === PlasmaCore.Types.Vertical ? Qt.Vertical : Qt.Horizontal
     }
 }

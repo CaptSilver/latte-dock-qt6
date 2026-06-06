@@ -10,6 +10,7 @@ import QtQuick.Window 2.2
 import QtQuick.Controls 2.15 as QQC2
 
 import org.kde.plasma.core 2.0 as PlasmaCore
+import org.kde.plasma.plasmoid 2.0
 
 import org.kde.latte.core 0.2 as LatteCore
 
@@ -298,7 +299,7 @@ Window{
 
             Text{
                 text: {
-                    switch(plasmoid.location){
+                    switch(Plasmoid.location){
                     case PlasmaCore.Types.LeftEdge:
                         return "Left Edge";
                         break;
@@ -313,7 +314,7 @@ Window{
                         break;
                     }
 
-                    return " <unknown> : " + plasmoid.location;
+                    return " <unknown> : " + Plasmoid.location;
                 }
             }
 
@@ -323,7 +324,7 @@ Window{
 
             Text{
                 text: {
-                    switch(plasmoid.configuration.alignment){
+                    switch(Plasmoid.configuration.alignment){
                     case LatteCore.Types.Left:
                         return "Left";
                         break;
@@ -344,7 +345,7 @@ Window{
                         break;
                     }
 
-                    return "<unknown> : " + plasmoid.configuration.alignment;
+                    return "<unknown> : " + Plasmoid.configuration.alignment;
                 }
             }
 
@@ -432,7 +433,7 @@ Window{
             }
 
             Text{
-                text: plasmoid.configuration.iconSize
+                text: Plasmoid.configuration.iconSize
             }
 
             Text{
@@ -510,7 +511,7 @@ Window{
 
             Text{
                 text: {
-                    if (plasmoid.configuration.useThemePanel)
+                    if (Plasmoid.configuration.useThemePanel)
                         return "Yes";
                     else
                         return "No";
@@ -543,7 +544,7 @@ Window{
             }
 
             Text{
-                text: plasmoid.configuration.panelSize + "%"
+                text: Plasmoid.configuration.panelSize + "%"
             }
 
             Text{

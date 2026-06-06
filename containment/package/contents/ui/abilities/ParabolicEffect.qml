@@ -15,7 +15,7 @@ import "./privates" as Ability
 Ability.ParabolicEffectPrivate {
     isEnabled: factor.zoom>1 && !root.inConfigureAppletsMode
     factor.zoom: {
-        var storedZoom = LatteCore.WindowSystem.compositingActive && animations.active ? ( 1 + (plasmoid.configuration.zoomLevel / 20) ) : 1;
+        var storedZoom = LatteCore.WindowSystem.compositingActive && animations.active ? ( 1 + (Plasmoid.configuration.zoomLevel / 20) ) : 1;
         var maxSize = storedZoom * metrics.iconSize;
         //! round to nearest odd number
         maxSize = 2 * Math.round(Math.round(maxSize) / 2);

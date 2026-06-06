@@ -26,7 +26,7 @@ AbilityDefinition.ParabolicEffect {
     //! private properties can not go to definition because can not be made readonly in there
     //! special care must be taken in order to be redefined in local properties
     readonly property bool directRenderingEnabled: ref.parabolic._privates.directRenderingEnabled
-    readonly property bool horizontal: plasmoid.formFactor === PlasmaCore.Types.Horizontal
+    readonly property bool horizontal: Plasmoid.formFactor === PlasmaCore.Types.Horizontal
     readonly property bool isHovered: {
         if (bridge && bridge.parabolic.host.currentParabolicItem) {
             return bridge.parabolic.host.currentParabolicItem.parent.parent.parent === layout;

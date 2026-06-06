@@ -6,6 +6,7 @@
 import QtQuick 2.7
 
 import org.kde.plasma.core 2.0 as PlasmaCore
+import org.kde.plasma.plasmoid 2.0
 import org.kde.latte.core 0.2 as LatteCore
 
 Item {
@@ -49,12 +50,12 @@ Item {
 
         EventsSinkOriginArea {
             id: topArea
-            width: plasmoid.formFactor === PlasmaCore.Types.Horizontal ? destination.width + 2 * lengthPadding : thickness
+            width: Plasmoid.formFactor === PlasmaCore.Types.Horizontal ? destination.width + 2 * lengthPadding : thickness
             height: {
-                if (plasmoid.formFactor === PlasmaCore.Types.Vertical) {
+                if (Plasmoid.formFactor === PlasmaCore.Types.Vertical) {
                     //! Fitt;s Law consider the spacer also from parabolic effect
                     return appletItem.firstAppletInContainer ? lengthPadding + hiddenSpacerLeft.height + 1 : lengthPadding;
-                } else if (plasmoid.location === PlasmaCore.Types.TopEdge) {
+                } else if (Plasmoid.location === PlasmaCore.Types.TopEdge) {
                     return tailThickness;
                 } else {
                     return headThickness;
@@ -64,7 +65,7 @@ Item {
             states:[
                 State{
                     name: "horizontal"
-                    when: plasmoid.formFactor === PlasmaCore.Types.Horizontal
+                    when: Plasmoid.formFactor === PlasmaCore.Types.Horizontal
 
                     AnchorChanges{
                         target: topArea;
@@ -74,7 +75,7 @@ Item {
                 },
                 State{
                     name: "vertical"
-                    when: plasmoid.formFactor === PlasmaCore.Types.Vertical
+                    when: Plasmoid.formFactor === PlasmaCore.Types.Vertical
 
                     AnchorChanges{
                         target: topArea;
@@ -87,12 +88,12 @@ Item {
 
         EventsSinkOriginArea {
             id: bottomArea
-            width: plasmoid.formFactor === PlasmaCore.Types.Horizontal ? destination.width + 2 * lengthPadding : thickness
+            width: Plasmoid.formFactor === PlasmaCore.Types.Horizontal ? destination.width + 2 * lengthPadding : thickness
             height: {
-                if (plasmoid.formFactor === PlasmaCore.Types.Vertical) {
+                if (Plasmoid.formFactor === PlasmaCore.Types.Vertical) {
                     //! Fitt;s Law consider the spacer also from parabolic effect
                     return appletItem.lastAppletInContainer ? lengthPadding + hiddenSpacerRight.height + 1 : lengthPadding;
-                } else if (plasmoid.location === PlasmaCore.Types.BottomEdge) {
+                } else if (Plasmoid.location === PlasmaCore.Types.BottomEdge) {
                     return tailThickness;
                 } else {
                     return headThickness;
@@ -102,7 +103,7 @@ Item {
             states:[
                 State{
                     name: "horizontal"
-                    when: plasmoid.formFactor === PlasmaCore.Types.Horizontal
+                    when: Plasmoid.formFactor === PlasmaCore.Types.Horizontal
 
                     AnchorChanges{
                         target: bottomArea;
@@ -112,7 +113,7 @@ Item {
                 },
                 State{
                     name: "vertical"
-                    when: plasmoid.formFactor === PlasmaCore.Types.Vertical
+                    when: Plasmoid.formFactor === PlasmaCore.Types.Vertical
 
                     AnchorChanges{
                         target: bottomArea;
@@ -125,12 +126,12 @@ Item {
 
         EventsSinkOriginArea {
             id: leftArea
-            height: plasmoid.formFactor === PlasmaCore.Types.Horizontal ? thickness : destination.height + 2 * lengthPadding
+            height: Plasmoid.formFactor === PlasmaCore.Types.Horizontal ? thickness : destination.height + 2 * lengthPadding
             width: {
-                if (plasmoid.formFactor === PlasmaCore.Types.Horizontal) {
+                if (Plasmoid.formFactor === PlasmaCore.Types.Horizontal) {
                     //! Fitt;s Law consider the spacer also from parabolic effect
                     return appletItem.firstAppletInContainer ? lengthPadding + hiddenSpacerLeft.width + 1 : lengthPadding;
-                } else if (plasmoid.location === PlasmaCore.Types.LeftEdge) {
+                } else if (Plasmoid.location === PlasmaCore.Types.LeftEdge) {
                     return tailThickness;
                 } else {
                     return headThickness;
@@ -140,7 +141,7 @@ Item {
             states:[
                 State{
                     name: "horizontal"
-                    when: plasmoid.formFactor === PlasmaCore.Types.Horizontal
+                    when: Plasmoid.formFactor === PlasmaCore.Types.Horizontal
 
                     AnchorChanges{
                         target: leftArea;
@@ -150,7 +151,7 @@ Item {
                 },
                 State{
                     name: "vertical"
-                    when: plasmoid.formFactor === PlasmaCore.Types.Vertical
+                    when: Plasmoid.formFactor === PlasmaCore.Types.Vertical
 
                     AnchorChanges{
                         target: leftArea;
@@ -163,12 +164,12 @@ Item {
 
         EventsSinkOriginArea {
             id: rightArea
-            height: plasmoid.formFactor === PlasmaCore.Types.Horizontal ? thickness : destination.height + 2 * lengthPadding
+            height: Plasmoid.formFactor === PlasmaCore.Types.Horizontal ? thickness : destination.height + 2 * lengthPadding
             width: {
-                if (plasmoid.formFactor === PlasmaCore.Types.Horizontal) {
+                if (Plasmoid.formFactor === PlasmaCore.Types.Horizontal) {
                     //! Fitt;s Law consider the spacer also from parabolic effect
                     return appletItem.lastAppletInContainer ? lengthPadding + hiddenSpacerRight.width + 1 : lengthPadding;
-                } else if (plasmoid.location === PlasmaCore.Types.RightEdge) {
+                } else if (Plasmoid.location === PlasmaCore.Types.RightEdge) {
                     return tailThickness;
                 } else {
                     return headThickness;
@@ -178,7 +179,7 @@ Item {
             states:[
                 State{
                     name: "horizontal"
-                    when: plasmoid.formFactor === PlasmaCore.Types.Horizontal
+                    when: Plasmoid.formFactor === PlasmaCore.Types.Horizontal
 
                     AnchorChanges{
                         target: rightArea;
@@ -188,7 +189,7 @@ Item {
                 },
                 State{
                     name: "vertical"
-                    when: plasmoid.formFactor === PlasmaCore.Types.Vertical
+                    when: Plasmoid.formFactor === PlasmaCore.Types.Vertical
 
                     AnchorChanges{
                         target: rightArea;

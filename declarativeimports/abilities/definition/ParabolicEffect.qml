@@ -51,7 +51,7 @@ Item {
         }
         rightScales.push(1); //! clearing
 
-        var reversed = Qt.application.layoutDirection === Qt.RightToLeft && (plasmoid.formFactor === PlasmaCore.Types.Horizontal);
+        var reversed = Qt.application.layoutDirection === Qt.RightToLeft && (Plasmoid.formFactor === PlasmaCore.Types.Horizontal);
 
         if (reversed) {
             var temp = leftScales;

@@ -252,8 +252,8 @@ MouseArea {
         var positiveDirection = (mainAngle > 12);
         var negativeDirection = (mainAngle < -12);
 
-        var parallelScrolling = (verticalDirection && plasmoid.formFactor === PlasmaCore.Types.Vertical)
-                || (!verticalDirection && plasmoid.formFactor === PlasmaCore.Types.Horizontal);
+        var parallelScrolling = (verticalDirection && Plasmoid.formFactor === PlasmaCore.Types.Vertical)
+                || (!verticalDirection && Plasmoid.formFactor === PlasmaCore.Types.Horizontal);
 
         if (positiveDirection) {
             slotPublishGeometries();
@@ -326,7 +326,7 @@ MouseArea {
     //show window previews
     Timer {
         id: _hoveredTimer
-        interval: Math.max(150,plasmoid.configuration.previewsDelay)
+        interval: Math.max(150,Plasmoid.configuration.previewsDelay)
         repeat: false
 
         onTriggered: {

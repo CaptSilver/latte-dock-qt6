@@ -21,8 +21,8 @@ MouseArea {
     id: configurationArea
     z: 1000
 
-    width: plasmoid.formFactor === PlasmaCore.Types.Horizontal ? root.width : thickness
-    height: plasmoid.formFactor === PlasmaCore.Types.Vertical ? root.height : thickness
+    width: Plasmoid.formFactor === PlasmaCore.Types.Horizontal ? root.width : thickness
+    height: Plasmoid.formFactor === PlasmaCore.Types.Vertical ? root.height : thickness
 
     visible: root.inConfigureAppletsMode
     hoverEnabled: root.inConfigureAppletsMode
@@ -100,7 +100,7 @@ MouseArea {
     onPositionChanged: {
         if (pressed) {
             if(currentApplet){
-                if (plasmoid.formFactor === PlasmaCore.Types.Vertical) {
+                if (Plasmoid.formFactor === PlasmaCore.Types.Vertical) {
                     currentApplet.y += (mouse.y - lastY);
                 } else {
                     currentApplet.x += (mouse.x - lastX);
@@ -113,7 +113,7 @@ MouseArea {
             var mousesink = {x: mouse.x, y: mouse.y};
 
             //! ignore thickness moving at all cases
-            if (plasmoid.formFactor === PlasmaCore.Types.Horizontal) {
+            if (Plasmoid.formFactor === PlasmaCore.Types.Horizontal) {
                 mousesink.y = configurationArea.height / 2;
             } else {
                 mousesink.x = configurationArea.width / 2;
@@ -124,8 +124,8 @@ MouseArea {
             if (item && item !== placeHolder) {
                 var posInItem = mapToItem(item, mousesink.x, mousesink.y);
 
-                if ((plasmoid.formFactor === PlasmaCore.Types.Vertical && posInItem.y < item.height/2) ||
-                        (plasmoid.formFactor !== PlasmaCore.Types.Vertical && posInItem.x < item.width/2)) {
+                if ((Plasmoid.formFactor === PlasmaCore.Types.Vertical && posInItem.y < item.height/2) ||
+                        (Plasmoid.formFactor !== PlasmaCore.Types.Vertical && posInItem.x < item.width/2)) {
                     fastLayoutManager.insertBefore(item, placeHolder);
                 } else {
                     fastLayoutManager.insertAfter(item, placeHolder);
@@ -201,7 +201,7 @@ MouseArea {
         }
 
         if(currentApplet && currentApplet.applet){
-            if (plasmoid.formFactor === PlasmaCore.Types.Vertical) {
+            if (Plasmoid.formFactor === PlasmaCore.Types.Vertical) {
                 currentApplet.applet.configuration.length = handle.height;
             } else {
                 currentApplet.applet.configuration.length = handle.width;
@@ -326,7 +326,7 @@ MouseArea {
             states:[
                 State{
                     name: "bottom"
-                    when: plasmoid.location === PlasmaCore.Types.BottomEdge
+                    when: Plasmoid.location === PlasmaCore.Types.BottomEdge
 
                     AnchorChanges{
                         target: handleVisualItem;
@@ -341,7 +341,7 @@ MouseArea {
                 },
                 State{
                     name: "top"
-                    when: plasmoid.location === PlasmaCore.Types.TopEdge
+                    when: Plasmoid.location === PlasmaCore.Types.TopEdge
 
                     AnchorChanges{
                         target: handleVisualItem;
@@ -356,7 +356,7 @@ MouseArea {
                 },
                 State{
                     name: "left"
-                    when: plasmoid.location === PlasmaCore.Types.LeftEdge
+                    when: Plasmoid.location === PlasmaCore.Types.LeftEdge
 
                     AnchorChanges{
                         target: handleVisualItem;
@@ -371,7 +371,7 @@ MouseArea {
                 },
                 State{
                     name: "right"
-                    when: plasmoid.location === PlasmaCore.Types.RightEdge
+                    when: Plasmoid.location === PlasmaCore.Types.RightEdge
 
                     AnchorChanges{
                         target: handleVisualItem;
@@ -401,7 +401,7 @@ MouseArea {
 
         type: PlasmaCore.Dialog.Dock
         flags: Qt.WindowStaysOnTopHint | Qt.WindowDoesNotAcceptFocus | Qt.BypassWindowManagerHint | Qt.ToolTip
-        location: plasmoid.location
+        location: Plasmoid.location
 
         onVisualParentChanged: {
             if (visualParent && currentApplet
@@ -510,7 +510,7 @@ MouseArea {
     states: [
         State {
             name: "bottom"
-            when: (plasmoid.location === PlasmaCore.Types.BottomEdge)
+            when: (Plasmoid.location === PlasmaCore.Types.BottomEdge)
 
             AnchorChanges {
                 target: configurationArea
@@ -520,7 +520,7 @@ MouseArea {
         },
         State {
             name: "top"
-            when: (plasmoid.location === PlasmaCore.Types.TopEdge)
+            when: (Plasmoid.location === PlasmaCore.Types.TopEdge)
 
             AnchorChanges {
                 target: configurationArea
@@ -530,7 +530,7 @@ MouseArea {
         },
         State {
             name: "left"
-            when: (plasmoid.location === PlasmaCore.Types.LeftEdge)
+            when: (Plasmoid.location === PlasmaCore.Types.LeftEdge)
 
             AnchorChanges {
                 target: configurationArea
@@ -540,7 +540,7 @@ MouseArea {
         },
         State {
             name: "right"
-            when: (plasmoid.location === PlasmaCore.Types.RightEdge)
+            when: (Plasmoid.location === PlasmaCore.Types.RightEdge)
 
             AnchorChanges {
                 target: configurationArea

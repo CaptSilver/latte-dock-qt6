@@ -292,7 +292,7 @@ Item {
                 }
             }
         } else {
-            launchersList = plasmoid.configuration.launchers59;
+            launchersList = Plasmoid.configuration.launchers59;
         }
 
 
@@ -326,7 +326,7 @@ Item {
             }
         } else {
             console.log("Tasks: Applying UNIQUE Launchers List...");
-            tasksModel.launcherList = plasmoid.configuration.launchers59;
+            tasksModel.launcherList = Plasmoid.configuration.launchers59;
         }
     }
 
@@ -388,7 +388,7 @@ Item {
                         bridge.launchers.host.setUniversalLaunchers(_launchers.tasksModel.launcherList);
                     }
                 } else {
-                    plasmoid.configuration.launchers59 = _launchers.tasksModel.launcherList;
+                    Plasmoid.configuration.launchers59 = _launchers.tasksModel.launcherList;
                 }
 
                 if (inDraggingPhase) {
@@ -397,7 +397,7 @@ Item {
             } else if (!appletAbilities.myView.isReady) {
                 // This way we make sure that a delayed view.layout initialization does not store irrelevant launchers from different
                 // group to UNIQUE launchers group
-                plasmoid.configuration.launchers59 = _launchers.tasksModel.launcherList;
+                Plasmoid.configuration.launchers59 = _launchers.tasksModel.launcherList;
             }
         }
     }

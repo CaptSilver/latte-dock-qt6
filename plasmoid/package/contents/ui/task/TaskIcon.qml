@@ -167,7 +167,7 @@ Item {
 
                         Loader{
                             anchors.fill: parent
-                            active: plasmoid.configuration.forceMonochromaticIcons
+                            active: Plasmoid.configuration.forceMonochromaticIcons
 
                             sourceComponent: ColorOverlay {
                                 anchors.fill: parent

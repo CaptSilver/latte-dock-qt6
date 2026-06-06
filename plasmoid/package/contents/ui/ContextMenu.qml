@@ -49,9 +49,9 @@ PlasmaComponents.ContextMenu {
 
     property int activitiesCount: 0
 
-    readonly property string tailSeparatorText: plasmoid.formFactor === PlasmaCore.Types.Vertical ? i18n("Top Separator") :
+    readonly property string tailSeparatorText: Plasmoid.formFactor === PlasmaCore.Types.Vertical ? i18n("Top Separator") :
                                                                                                     (!root.LayoutMirroring.enabled ? i18n("Left Separator") : i18n("Right Separator"))
-    readonly property string headSeparatorText: plasmoid.formFactor === PlasmaCore.Types.Vertical ? i18n("Bottom Separator") :
+    readonly property string headSeparatorText: Plasmoid.formFactor === PlasmaCore.Types.Vertical ? i18n("Bottom Separator") :
                                                                                                     (!root.LayoutMirroring.enabled ? i18n("Right Separator") : i18n("Left Separator"))
 
     onStatusChanged: {
@@ -307,7 +307,7 @@ PlasmaComponents.ContextMenu {
     Component.onCompleted: {
         ActivitiesTools.launchersOnActivities = root.launchersOnActivities
         ActivitiesTools.currentActivity = activityInfo.currentActivity;
-        ActivitiesTools.plasmoid = plasmoid;
+        ActivitiesTools.plasmoid = Plasmoid;
 
         //From Plasma 5.10 and frameworks 5.34 jumpLists and
         //places are supported
@@ -645,7 +645,7 @@ PlasmaComponents.ContextMenu {
             }
 
             PlasmaComponents.MenuItem {
-                visible: (plasmoid.configuration.groupingStrategy !== 0) && menu.visualParent.m.IsWindow === true
+                visible: (Plasmoid.configuration.groupingStrategy !== 0) && menu.visualParent.m.IsWindow === true
 
                 checkable: true
                 checked: menu.visualParent && menu.visualParent.m.IsGroupable === true
@@ -674,7 +674,7 @@ PlasmaComponents.ContextMenu {
                  && get(atm.IsLauncher) !== true
                  && get(atm.IsStartup) !== true
                  && (activityInfo.numberOfRunningActivities < 2)
-        //&& plasmoid.immutability !== PlasmaCore.Types.SystemImmutable
+        //&& Plasmoid.immutability !== PlasmaCore.Types.SystemImmutable
 
         enabled: visualParent && get(atm.LauncherUrlWithoutIcon) !== ""
 
@@ -701,7 +701,7 @@ PlasmaComponents.ContextMenu {
         visible: visualParent && (!visualParent.isSeparator || (visualParent.isSeparator && root.inEditMode))
         // && get(atm.IsLauncher) !== true
                  && get(atm.IsStartup) !== true
-                 && plasmoid.immutability !== PlasmaCore.Types.SystemImmutable
+                 && Plasmoid.immutability !== PlasmaCore.Types.SystemImmutable
                  && (activityInfo.numberOfRunningActivities >= 2)
 
         Connections {
@@ -774,7 +774,7 @@ PlasmaComponents.ContextMenu {
 
     PlasmaComponents.MenuItem {
         visible: (visualParent && !visualParent.isSeparator && get(atm.IsLauncher) === true)
-                 && plasmoid.immutability !== PlasmaCore.Types.SystemImmutable
+                 && Plasmoid.immutability !== PlasmaCore.Types.SystemImmutable
 
         text: i18n("Unpin Launcher")
         icon: "window-unpin"
@@ -835,11 +835,11 @@ PlasmaComponents.ContextMenu {
     PlasmaComponents.MenuItem {
         id: alternativesMenuItem
         visible: (appletAbilities.myView.isReady && appletAbilities.myView.inEditMode)
-                 || (!appletAbilities.myView.isReady && plasmoid.userConfiguring /*normal plasmoid in the desktop*/)
-        text: plasmoid.action("alternatives").text
-        icon: plasmoid.action("alternatives").icon
+                 || (!appletAbilities.myView.isReady && Plasmoid.userConfiguring /*normal plasmoid in the desktop*/)
+        text: Plasmoid.internalAction("alternatives").text
+        icon: Plasmoid.internalAction("alternatives").icon
 
-        onClicked: plasmoid.action("alternatives").trigger();
+        onClicked: Plasmoid.internalAction("alternatives").trigger();
     }
 
     PlasmaComponents.MenuItem {
@@ -856,13 +856,13 @@ PlasmaComponents.ContextMenu {
     PlasmaComponents.MenuItem {
         id: removePlasmoidInMyViewEditMode
         //! Workaround: this is preferred compared to:
-        //!   action:plasmoid.action("remove")
+        //!   action:Plasmoid.action("remove")
         //! which shows the action always and not dependent of myView.inEditMode flag
-        text: plasmoid.action("remove").text
-        icon: plasmoid.action("remove").icon
+        text: Plasmoid.internalAction("remove").text
+        icon: Plasmoid.internalAction("remove").icon
         visible: appletAbilities.myView.isReady && appletAbilities.myView.inEditMode
 
-        onClicked: plasmoid.action("remove").trigger();
+        onClicked: Plasmoid.internalAction("remove").trigger();
     }
 
     PlasmaComponents.MenuItem {

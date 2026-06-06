@@ -257,7 +257,7 @@ Item {
 
         anchors.fill: parent
         property int wheelDelta: 0;
-        enabled: plasmoid.configuration.wheelEnabled
+        enabled: Plasmoid.configuration.wheelEnabled
 
         onWheel: wheelDelta = TaskTools.wheelActivateNextPrevTask(wheelDelta, wheel.angleDelta.y);
     } */

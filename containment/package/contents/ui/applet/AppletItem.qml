@@ -116,7 +116,7 @@ Item {
 
         if (appletItem.myView.alignment === LatteCore.Types.Justify) {
             //! Justify case
-            if (root.maxLengthPerCentage!==100 || plasmoid.configuration.offset!==0) {
+            if (root.maxLengthPerCentage!==100 || Plasmoid.configuration.offset!==0) {
                 return false;
             }
 
@@ -137,17 +137,17 @@ Item {
             return false;
         }
 
-        if (appletItem.myView.alignment === LatteCore.Types.Left && plasmoid.configuration.offset===0) {
+        if (appletItem.myView.alignment === LatteCore.Types.Left && Plasmoid.configuration.offset===0) {
             //! Left case
             return firstChildOfMainLayout;
-        } else if (appletItem.myView.alignment === LatteCore.Types.Right && plasmoid.configuration.offset===0) {
+        } else if (appletItem.myView.alignment === LatteCore.Types.Right && Plasmoid.configuration.offset===0) {
             //! Right case
             return lastChildOfMainLayout;
         }
 
-        if (appletItem.myView.alignment === LatteCore.Types.Top && plasmoid.configuration.offset===0) {
+        if (appletItem.myView.alignment === LatteCore.Types.Top && Plasmoid.configuration.offset===0) {
             return firstChildOfMainLayout && latteView && latteView.y === latteView.screenGeometry.y;
-        } else if (appletItem.myView.alignment === LatteCore.Types.Bottom && plasmoid.configuration.offset===0) {
+        } else if (appletItem.myView.alignment === LatteCore.Types.Bottom && Plasmoid.configuration.offset===0) {
             return lastChildOfMainLayout && latteView && ((latteView.y + latteView.height) === (latteView.screenGeometry.y + latteView.screenGeometry.height));
         }
 
@@ -852,8 +852,8 @@ Item {
                 }
 
                 readonly property int badgeThickness: {
-                    if (plasmoid.location === PlasmaCore.Types.BottomEdge
-                            || plasmoid.location === PlasmaCore.Types.RightEdge) {
+                    if (Plasmoid.location === PlasmaCore.Types.BottomEdge
+                            || Plasmoid.location === PlasmaCore.Types.RightEdge) {
                         var marginthickness = appletItem.metrics.margin.tailThickness * wrapper.zoomMarginScale;
                         return (appletItem.metrics.iconSize * wrapper.zoomScale) + marginthickness + appletItem.metrics.margin.screenEdge;
                     }
@@ -869,7 +869,7 @@ Item {
                 states:[
                     State{
                         name: "horizontal"
-                        when: plasmoid.formFactor === PlasmaCore.Types.Horizontal
+                        when: Plasmoid.formFactor === PlasmaCore.Types.Horizontal
 
                         AnchorChanges{
                             target: shortcutBadgeContainer;
@@ -879,7 +879,7 @@ Item {
                     },
                     State{
                         name: "vertical"
-                        when: plasmoid.formFactor === PlasmaCore.Types.Vertical
+                        when: Plasmoid.formFactor === PlasmaCore.Types.Vertical
 
                         AnchorChanges{
                             target: shortcutBadgeContainer;
@@ -923,7 +923,7 @@ Item {
         states:[
             State{
                 name: "top"
-                when: plasmoid.location === PlasmaCore.Types.TopEdge
+                when: Plasmoid.location === PlasmaCore.Types.TopEdge
 
                 AnchorChanges{
                     target: parabolicAreaLoader
@@ -933,7 +933,7 @@ Item {
             },
             State{
                 name: "left"
-                when: plasmoid.location === PlasmaCore.Types.LeftEdge
+                when: Plasmoid.location === PlasmaCore.Types.LeftEdge
 
                 AnchorChanges{
                     target: parabolicAreaLoader
@@ -943,7 +943,7 @@ Item {
             },
             State{
                 name: "right"
-                when: plasmoid.location === PlasmaCore.Types.RightEdge
+                when: Plasmoid.location === PlasmaCore.Types.RightEdge
 
                 AnchorChanges{
                     target: parabolicAreaLoader
@@ -953,7 +953,7 @@ Item {
             },
             State{
                 name: "bottom"
-                when: plasmoid.location === PlasmaCore.Types.BottomEdge
+                when: Plasmoid.location === PlasmaCore.Types.BottomEdge
 
                 AnchorChanges{
                     target: parabolicAreaLoader
@@ -999,7 +999,7 @@ Item {
     states: [
         State {
             name: "left"
-            when: (plasmoid.location === PlasmaCore.Types.LeftEdge)
+            when: (Plasmoid.location === PlasmaCore.Types.LeftEdge)
 
             AnchorChanges {
                 target: appletFlow
@@ -1008,7 +1008,7 @@ Item {
         },
         State {
             name: "right"
-            when: (plasmoid.location === PlasmaCore.Types.RightEdge)
+            when: (Plasmoid.location === PlasmaCore.Types.RightEdge)
 
             AnchorChanges {
                 target: appletFlow
@@ -1017,7 +1017,7 @@ Item {
         },
         State {
             name: "bottom"
-            when: (plasmoid.location === PlasmaCore.Types.BottomEdge)
+            when: (Plasmoid.location === PlasmaCore.Types.BottomEdge)
 
             AnchorChanges {
                 target: appletFlow
@@ -1026,7 +1026,7 @@ Item {
         },
         State {
             name: "top"
-            when: (plasmoid.location === PlasmaCore.Types.TopEdge)
+            when: (Plasmoid.location === PlasmaCore.Types.TopEdge)
 
             AnchorChanges {
                 target: appletFlow

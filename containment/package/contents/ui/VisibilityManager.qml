@@ -44,12 +44,12 @@ Item{
 
     property int slidingOutToPos: {
         if (root.behaveAsPlasmaPanel) {
-            var edgeMargin = screenEdgeMarginEnabled ? plasmoid.configuration.screenEdgeMargin : 0
+            var edgeMargin = screenEdgeMarginEnabled ? Plasmoid.configuration.screenEdgeMargin : 0
             var thickmarg = latteView.visibility.isSidebar ? 0 : 1;
 
             return root.isHorizontal ? root.height + edgeMargin - thickmarg : root.width + edgeMargin - thickmarg;
         } else {
-            var topOrLeftEdge = ((plasmoid.location===PlasmaCore.Types.LeftEdge)||(plasmoid.location===PlasmaCore.Types.TopEdge));
+            var topOrLeftEdge = ((Plasmoid.location===PlasmaCore.Types.LeftEdge)||(Plasmoid.location===PlasmaCore.Types.TopEdge));
             return (topOrLeftEdge ? -metrics.mask.thickness.normal : metrics.mask.thickness.normal);
         }
     }
@@ -276,25 +276,25 @@ Item{
                 var cleanThickness = metrics.totals.thickness;
                 var edgeMargin = metrics.mask.screenEdge;
 
-                if (plasmoid.location === PlasmaCore.Types.TopEdge) {
+                if (Plasmoid.location === PlasmaCore.Types.TopEdge) {
                     localGeometry.x = latteView.effects.rect.x; // from effects area
                     localGeometry.width = latteView.effects.rect.width; // from effects area
 
                     localGeometry.y = edgeMargin;
                     localGeometry.height = cleanThickness;
-                } else if (plasmoid.location === PlasmaCore.Types.BottomEdge) {
+                } else if (Plasmoid.location === PlasmaCore.Types.BottomEdge) {
                     localGeometry.x = latteView.effects.rect.x; // from effects area
                     localGeometry.width = latteView.effects.rect.width; // from effects area
 
                     localGeometry.y = root.height - cleanThickness - edgeMargin;
                     localGeometry.height = cleanThickness;
-                } else if (plasmoid.location === PlasmaCore.Types.LeftEdge) {
+                } else if (Plasmoid.location === PlasmaCore.Types.LeftEdge) {
                     localGeometry.y = latteView.effects.rect.y; // from effects area
                     localGeometry.height = latteView.effects.rect.height; // from effects area
 
                     localGeometry.x = edgeMargin;
                     localGeometry.width = cleanThickness;
-                } else if (plasmoid.location === PlasmaCore.Types.RightEdge) {
+                } else if (Plasmoid.location === PlasmaCore.Types.RightEdge) {
                     localGeometry.y = latteView.effects.rect.y; // from effects area
                     localGeometry.height = latteView.effects.rect.height; // from effects area
 
@@ -346,7 +346,7 @@ Item{
             var inputGeometry = Qt.rect(0, 0, root.width, root.height);
 
             //!use view.localGeometry for length properties
-            if (plasmoid.location === PlasmaCore.Types.TopEdge) {
+            if (Plasmoid.location === PlasmaCore.Types.TopEdge) {
                 if (!animated) {
                     inputGeometry.x = latteView.localGeometry.x;
                     inputGeometry.width = latteView.localGeometry.width;
@@ -354,7 +354,7 @@ Item{
 
                 inputGeometry.y = subtractedScreenEdge;
                 inputGeometry.height = inputThickness;
-            } else if (plasmoid.location === PlasmaCore.Types.BottomEdge) {
+            } else if (Plasmoid.location === PlasmaCore.Types.BottomEdge) {
                 if (!animated) {
                     inputGeometry.x = latteView.localGeometry.x;
                     inputGeometry.width = latteView.localGeometry.width;
@@ -362,7 +362,7 @@ Item{
 
                 inputGeometry.y = root.height - inputThickness - subtractedScreenEdge;
                 inputGeometry.height = inputThickness;
-            } else if (plasmoid.location === PlasmaCore.Types.LeftEdge) {
+            } else if (Plasmoid.location === PlasmaCore.Types.LeftEdge) {
                 if (!animated) {
                     inputGeometry.y = latteView.localGeometry.y;
                     inputGeometry.height = latteView.localGeometry.height;
@@ -370,7 +370,7 @@ Item{
 
                 inputGeometry.x = subtractedScreenEdge;
                 inputGeometry.width = inputThickness;
-            } else if (plasmoid.location === PlasmaCore.Types.RightEdge) {
+            } else if (Plasmoid.location === PlasmaCore.Types.RightEdge) {
                 if (!animated) {
                     inputGeometry.y = latteView.localGeometry.y;
                     inputGeometry.height = latteView.localGeometry.height;
@@ -442,7 +442,7 @@ Item{
                 if (LatteCore.WindowSystem.compositingActive) {
                     return slidingOutToPos;
                 } else {
-                    if ((plasmoid.location===PlasmaCore.Types.LeftEdge)||(plasmoid.location===PlasmaCore.Types.TopEdge)) {
+                    if ((Plasmoid.location===PlasmaCore.Types.LeftEdge)||(Plasmoid.location===PlasmaCore.Types.TopEdge)) {
                         return slidingOutToPos + 1;
                     } else {
                         return slidingOutToPos - 1;
@@ -605,7 +605,7 @@ Item{
         PropertyAnimation {
             target: latteView ? latteView.positioner : null
             property: "slideOffset"
-            to: plasmoid.configuration.screenEdgeMargin
+            to: Plasmoid.configuration.screenEdgeMargin
             duration: manager.animationSpeed
             easing.type: Easing.InQuad
         }

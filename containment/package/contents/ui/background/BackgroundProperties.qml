@@ -18,7 +18,7 @@ Item{
     property bool hasTopBorder: false
     property bool hasBottomBorder: false
     readonly property bool hasBothLengthShadows:{
-        if (plasmoid.formFactor === PlasmaCore.Types.Vertical) {
+        if (Plasmoid.formFactor === PlasmaCore.Types.Vertical) {
             return (hasTopBorder && hasBottomBorder);
         }
 

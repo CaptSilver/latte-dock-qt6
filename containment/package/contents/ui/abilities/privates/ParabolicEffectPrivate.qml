@@ -21,7 +21,7 @@ AbilityHost.ParabolicEffect {
     property QtObject view: null
     property QtObject settings: null
 
-    readonly property bool horizontal: plasmoid.formFactor === PlasmaCore.Types.Horizontal
+    readonly property bool horizontal: Plasmoid.formFactor === PlasmaCore.Types.Horizontal
 
     property bool restoreZoomIsBlockedFromApplet: false
     property int lastParabolicItemIndex: -1

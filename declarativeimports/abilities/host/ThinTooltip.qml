@@ -116,8 +116,8 @@ AbilityDefinition.ThinTooltip {
         type: PlasmaCore.Dialog.Tooltip
         flags: Qt.WindowStaysOnTopHint | Qt.WindowDoesNotAcceptFocus | Qt.ToolTip
 
-        location: plasmoid.location
-        edge: plasmoid.location
+        location: Plasmoid.location
+        edge: Plasmoid.location
         mainItem: RowLayout{
             Layout.fillWidth: true
             Layout.fillHeight: true

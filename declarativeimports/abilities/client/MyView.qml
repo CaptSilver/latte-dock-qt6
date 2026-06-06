@@ -50,8 +50,8 @@ AbilityDefinition.MyView {
 
     readonly property AbilityDefinition.MyView local: AbilityDefinition.MyView {
         isShownFully: true
-        inEditMode: plasmoid.userConfiguring
-        inConfigureAppletsMode: plasmoid.userConfiguring
+        inEditMode: Plasmoid.userConfiguring
+        inConfigureAppletsMode: Plasmoid.userConfiguring
     }
 
     Item {

@@ -13,7 +13,7 @@ import "./privates" as Ability
 
 Ability.AnimationsPrivate {
     //! Public Properties
-    active: plasmoid.configuration.animationsEnabled && LatteCore.WindowSystem.compositingActive
+    active: Plasmoid.configuration.animationsEnabled && LatteCore.WindowSystem.compositingActive
 
     duration.large: LatteCore.Environment.longDuration
     duration.proposed: speedFactor.current * 2.8 * duration.large
@@ -21,15 +21,15 @@ Ability.AnimationsPrivate {
 
     speedFactor.normal: 1.0
     speedFactor.current: {
-        if (!active || plasmoid.configuration.durationTime === 0) {
+        if (!active || Plasmoid.configuration.durationTime === 0) {
             return 0;
         }
 
-        if (plasmoid.configuration.durationTime === 1 ) {
+        if (Plasmoid.configuration.durationTime === 1 ) {
             return 0.75;
-        } else if (plasmoid.configuration.durationTime === 2) {
+        } else if (Plasmoid.configuration.durationTime === 2) {
             return speedFactor.normal;
-        } else if (plasmoid.configuration.durationTime === 3) {
+        } else if (Plasmoid.configuration.durationTime === 3) {
             return 1.15;
         }
 

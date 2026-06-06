@@ -49,7 +49,7 @@ Ability.LayouterPrivate {
     }
 
     Connections {
-        target: plasmoid
+        target: Plasmoid
         onFormFactorChanged: _layouter.updateSizeForAppletsInFill();
     }
 

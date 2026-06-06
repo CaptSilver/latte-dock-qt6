@@ -15,11 +15,11 @@ QtObject{
     property int bottom: 0
 
     readonly property int headThickness: {
-        if (plasmoid.location === PlasmaCore.Types.LeftEdge) {
+        if (Plasmoid.location === PlasmaCore.Types.LeftEdge) {
             return right;
-        } else if (plasmoid.location === PlasmaCore.Types.RightEdge) {
+        } else if (Plasmoid.location === PlasmaCore.Types.RightEdge) {
             return left;
-        } else if (plasmoid.location === PlasmaCore.Types.TopEdge) {
+        } else if (Plasmoid.location === PlasmaCore.Types.TopEdge) {
             return bottom;
         }
 
@@ -27,11 +27,11 @@ QtObject{
     }
 
     readonly property int tailThickness: {
-        if (plasmoid.location === PlasmaCore.Types.LeftEdge) {
+        if (Plasmoid.location === PlasmaCore.Types.LeftEdge) {
             return left;
-        } else if (plasmoid.location === PlasmaCore.Types.RightEdge) {
+        } else if (Plasmoid.location === PlasmaCore.Types.RightEdge) {
             return right;
-        } else if (plasmoid.location === PlasmaCore.Types.TopEdge) {
+        } else if (Plasmoid.location === PlasmaCore.Types.TopEdge) {
             return top;
         }
 

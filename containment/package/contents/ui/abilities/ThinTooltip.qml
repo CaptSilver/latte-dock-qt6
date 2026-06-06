@@ -12,6 +12,6 @@ import org.kde.latte.core 0.2 as LatteCore
 import "./privates" as Ability
 
 Ability.ThinTooltipPrivate {
-    isEnabled: plasmoid.configuration.titleTooltips
+    isEnabled: Plasmoid.configuration.titleTooltips
     showIsBlocked: !myView.isShownFully || showIsBlockedFromApplet || layouts.contextMenuIsShown
 }

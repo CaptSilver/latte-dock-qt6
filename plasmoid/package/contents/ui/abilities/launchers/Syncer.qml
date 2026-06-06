@@ -13,7 +13,7 @@ Item {
     id:_syncer
     property bool isBlocked: false
     readonly property bool isActive: bridge !== null && bridge.launchers.host !==null
-    readonly property int clientId: plasmoid.id
+    readonly property int clientId: Plasmoid.id
     // used to identify launchers that need to be synced event though their launchers group type
     // does not support it e.g. taskmanagers synced in different screens
     readonly property string syncedGroupId: _launchers.groupId

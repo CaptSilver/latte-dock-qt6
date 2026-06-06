@@ -18,17 +18,17 @@ Item{
     function v010_upgrade() {
         root.upgrader_v010_alignment();
 
-        if (!plasmoid.configuration.shadowsUpgraded) {
-            if (plasmoid.configuration.shadows > 0) {
-                plasmoid.configuration.appletShadowsEnabled = true;
+        if (!Plasmoid.configuration.shadowsUpgraded) {
+            if (Plasmoid.configuration.shadows > 0) {
+                Plasmoid.configuration.appletShadowsEnabled = true;
             } else {
-                plasmoid.configuration.appletShadowsEnabled = false;
+                Plasmoid.configuration.appletShadowsEnabled = false;
             }
 
-            plasmoid.configuration.shadowsUpgraded = true;
+            Plasmoid.configuration.shadowsUpgraded = true;
         }
 
-        if (!plasmoid.configuration.tasksUpgraded) {
+        if (!Plasmoid.configuration.tasksUpgraded) {
             v010_tasksMigrateTimer.start();
         }
 
@@ -38,7 +38,7 @@ Item{
         id: v010_tasksUpgrader
         Repeater {
             id: v010_tasksRepeater
-            model: latteView && !plasmoid.configuration.tasksUpgraded ? latteView.extendedInterface.latteTasksModel : null
+            model: latteView && !Plasmoid.configuration.tasksUpgraded ? latteView.extendedInterface.latteTasksModel : null
             Item {
                 id: tasksApplet
                 Component.onCompleted: {
@@ -49,37 +49,37 @@ Item{
                         console.log(" !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! !!!!!!!!!!!!!!!!");
                         console.log(" !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! !!!!!!!!!!!!!!!!");
                         console.log(" Migrating Tasks Applet for v0.10...");
-                        tasks.configuration.launchersGroup = plasmoid.configuration.launchersGroup;
-                        tasks.configuration.showWindowActions = plasmoid.configuration.showWindowActions;
-                        tasks.configuration.showWindowsOnlyFromLaunchers = plasmoid.configuration.showWindowsOnlyFromLaunchers;
-                        tasks.configuration.groupTasksByDefault = plasmoid.configuration.groupTasksByDefault;
-                        tasks.configuration.showOnlyCurrentScreen = plasmoid.configuration.showOnlyCurrentScreen;
-                        tasks.configuration.showOnlyCurrentDesktop = plasmoid.configuration.showOnlyCurrentDesktop;
-                        tasks.configuration.showOnlyCurrentActivity = plasmoid.configuration.showOnlyCurrentActivity;
-                        tasks.configuration.showInfoBadge = plasmoid.configuration.showInfoBadge;
-                        tasks.configuration.showProgressBadge = plasmoid.configuration.showProgressBadge;
-                        tasks.configuration.showAudioBadge = plasmoid.configuration.showAudioBadge;
-                        tasks.configuration.audioBadgeActionsEnabled = plasmoid.configuration.audioBadgeActionsEnabled;
-                        tasks.configuration.infoBadgeProminentColorEnabled = plasmoid.configuration.infoBadgeProminentColorEnabled;
-                        tasks.configuration.animationLauncherBouncing = plasmoid.configuration.animationLauncherBouncing;
-                        tasks.configuration.animationWindowInAttention = plasmoid.configuration.animationWindowInAttention;
-                        tasks.configuration.animationNewWindowSliding = plasmoid.configuration.animationNewWindowSliding;
-                        tasks.configuration.animationWindowAddedInGroup = plasmoid.configuration.animationWindowAddedInGroup;
-                        tasks.configuration.animationWindowRemovedFromGroup = plasmoid.configuration.animationWindowRemovedFromGroup;
-                        tasks.configuration.scrollTasksEnabled = plasmoid.configuration.scrollTasksEnabled;
-                        tasks.configuration.autoScrollTasksEnabled = plasmoid.configuration.autoScrollTasksEnabled;
-                        tasks.configuration.manualScrollTasksType = plasmoid.configuration.manualScrollTasksType;
-                        tasks.configuration.leftClickAction = plasmoid.configuration.leftClickAction;
-                        tasks.configuration.middleClickAction = plasmoid.configuration.middleClickAction;
-                        tasks.configuration.hoverAction = plasmoid.configuration.hoverAction;
-                        tasks.configuration.taskScrollAction = plasmoid.configuration.taskScrollAction;
-                        tasks.configuration.modifierClickAction = plasmoid.configuration.modifierClickAction;
-                        tasks.configuration.modifier = plasmoid.configuration.modifier;
-                        tasks.configuration.modifierClick = plasmoid.configuration.modifierClick;
-                        tasks.configuration.isDroppedLauncherAddedOnlyInCurrentTasks = plasmoid.configuration.addLaunchersInTaskManager;
+                        tasks.configuration.launchersGroup = Plasmoid.configuration.launchersGroup;
+                        tasks.configuration.showWindowActions = Plasmoid.configuration.showWindowActions;
+                        tasks.configuration.showWindowsOnlyFromLaunchers = Plasmoid.configuration.showWindowsOnlyFromLaunchers;
+                        tasks.configuration.groupTasksByDefault = Plasmoid.configuration.groupTasksByDefault;
+                        tasks.configuration.showOnlyCurrentScreen = Plasmoid.configuration.showOnlyCurrentScreen;
+                        tasks.configuration.showOnlyCurrentDesktop = Plasmoid.configuration.showOnlyCurrentDesktop;
+                        tasks.configuration.showOnlyCurrentActivity = Plasmoid.configuration.showOnlyCurrentActivity;
+                        tasks.configuration.showInfoBadge = Plasmoid.configuration.showInfoBadge;
+                        tasks.configuration.showProgressBadge = Plasmoid.configuration.showProgressBadge;
+                        tasks.configuration.showAudioBadge = Plasmoid.configuration.showAudioBadge;
+                        tasks.configuration.audioBadgeActionsEnabled = Plasmoid.configuration.audioBadgeActionsEnabled;
+                        tasks.configuration.infoBadgeProminentColorEnabled = Plasmoid.configuration.infoBadgeProminentColorEnabled;
+                        tasks.configuration.animationLauncherBouncing = Plasmoid.configuration.animationLauncherBouncing;
+                        tasks.configuration.animationWindowInAttention = Plasmoid.configuration.animationWindowInAttention;
+                        tasks.configuration.animationNewWindowSliding = Plasmoid.configuration.animationNewWindowSliding;
+                        tasks.configuration.animationWindowAddedInGroup = Plasmoid.configuration.animationWindowAddedInGroup;
+                        tasks.configuration.animationWindowRemovedFromGroup = Plasmoid.configuration.animationWindowRemovedFromGroup;
+                        tasks.configuration.scrollTasksEnabled = Plasmoid.configuration.scrollTasksEnabled;
+                        tasks.configuration.autoScrollTasksEnabled = Plasmoid.configuration.autoScrollTasksEnabled;
+                        tasks.configuration.manualScrollTasksType = Plasmoid.configuration.manualScrollTasksType;
+                        tasks.configuration.leftClickAction = Plasmoid.configuration.leftClickAction;
+                        tasks.configuration.middleClickAction = Plasmoid.configuration.middleClickAction;
+                        tasks.configuration.hoverAction = Plasmoid.configuration.hoverAction;
+                        tasks.configuration.taskScrollAction = Plasmoid.configuration.taskScrollAction;
+                        tasks.configuration.modifierClickAction = Plasmoid.configuration.modifierClickAction;
+                        tasks.configuration.modifier = Plasmoid.configuration.modifier;
+                        tasks.configuration.modifierClick = Plasmoid.configuration.modifierClick;
+                        tasks.configuration.isDroppedLauncherAddedOnlyInCurrentTasks = Plasmoid.configuration.addLaunchersInTaskManager;
                         console.log("Migrating Tasks Applet for v0.10 succeeded ...");
 
-                        plasmoid.configuration.tasksUpgraded = true;
+                        Plasmoid.configuration.tasksUpgraded = true;
                     }
                 }
             }
@@ -93,7 +93,7 @@ Item{
         id: v010_tasksMigrateTimer
         interval: 10000
         onTriggered: {
-            plasmoid.configuration.tasksUpgraded = true;
+            Plasmoid.configuration.tasksUpgraded = true;
             console.log("Tasks Migration ended....");
         }
     }

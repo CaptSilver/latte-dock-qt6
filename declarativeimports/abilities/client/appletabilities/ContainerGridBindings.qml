@@ -14,13 +14,13 @@ Item {
     Binding {
         target: _abilityContainer.layout
         property: "columns"
-        value: plasmoid.formFactor === PlasmaCore.Types.Vertical ? 1 : 0
+        value: Plasmoid.formFactor === PlasmaCore.Types.Vertical ? 1 : 0
     }
 
     Binding {
         target: _abilityContainer.layout
         property: "rows"
-        value: plasmoid.formFactor === PlasmaCore.Types.Vertical ? 0 : 1
+        value: Plasmoid.formFactor === PlasmaCore.Types.Vertical ? 0 : 1
     }
 
     Binding {
@@ -38,7 +38,7 @@ Item {
     Binding {
         target: _abilityContainer.layout
         property: "flow"
-        value: plasmoid.formFactor === PlasmaCore.Types.Vertical ? Grid.TopToBottom : Grid.LeftToRight
+        value: Plasmoid.formFactor === PlasmaCore.Types.Vertical ? Grid.TopToBottom : Grid.LeftToRight
     }
 
     states: [

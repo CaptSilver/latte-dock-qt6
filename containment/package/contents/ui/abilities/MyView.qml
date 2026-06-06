@@ -33,7 +33,7 @@ Ability.MyViewPrivate {
 
     badgesIn3DStyle: universalSettings ? universalSettings.badges3DStyle : true
 
-    alignment: plasmoid.configuration.alignment
+    alignment: Plasmoid.configuration.alignment
     visibilityMode: isReady ? view.visibility.mode : LatteCore.Types.None
 
     backgroundOpacity: background.currentOpacity
@@ -41,12 +41,12 @@ Ability.MyViewPrivate {
     lastUsedActivity: isReady ? view.layout.lastUsedActivity : ""
 
     appletsLayoutGeometry: isReady ? view.effects.appletsLayoutGeometry : Qt.rect(0, 0, -1, -1)
-    screenGeometry: isReady ? view.screenGeometry : plasmoid.screenGeometry
+    screenGeometry: isReady ? view.screenGeometry : Plasmoid.screenGeometry
 
     containmentActions: isReady ? view.containmentActions : []
 
-    itemShadow.isEnabled: plasmoid.configuration.appletShadowsEnabled
-    itemShadow.size: itemShadow.isEnabled ? (0.5*metrics.iconSize) * (plasmoid.configuration.shadowSize/100) : 0
+    itemShadow.isEnabled: Plasmoid.configuration.appletShadowsEnabled
+    itemShadow.size: itemShadow.isEnabled ? (0.5*metrics.iconSize) * (Plasmoid.configuration.shadowSize/100) : 0
     itemShadow.shadowColor: "#" + myView.decimalToHex(myView.itemShadowOpacity) + myView.itemShadowCurrentColor
     itemShadow.shadowSolidColor: "#" + myView.itemShadowCurrentColor
 }

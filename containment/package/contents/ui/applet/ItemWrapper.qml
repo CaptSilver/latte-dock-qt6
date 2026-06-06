@@ -589,7 +589,7 @@ Item{
         states:[
             State{
                 name: "bottom"
-                when: plasmoid.location === PlasmaCore.Types.BottomEdge
+                when: Plasmoid.location === PlasmaCore.Types.BottomEdge
 
                 AnchorChanges{
                     target: _wrapperContainer;
@@ -604,7 +604,7 @@ Item{
             },
             State{
                 name: "top"
-                when: plasmoid.location === PlasmaCore.Types.TopEdge
+                when: Plasmoid.location === PlasmaCore.Types.TopEdge
 
                 AnchorChanges{
                     target:_wrapperContainer;
@@ -619,7 +619,7 @@ Item{
             },
             State{
                 name: "left"
-                when: plasmoid.location === PlasmaCore.Types.LeftEdge
+                when: Plasmoid.location === PlasmaCore.Types.LeftEdge
 
                 AnchorChanges{
                     target: _wrapperContainer;
@@ -634,7 +634,7 @@ Item{
             },
             State{
                 name: "right"
-                when: plasmoid.location === PlasmaCore.Types.RightEdge
+                when: Plasmoid.location === PlasmaCore.Types.RightEdge
 
                 AnchorChanges{
                     target: _wrapperContainer;
@@ -666,10 +666,10 @@ Item{
     //! InternalViewSplitter
     Loader{
         anchors.fill: parent //_wrapperContainer
-        anchors.topMargin: plasmoid.location === PlasmaCore.Types.TopEdge ? wrapper.appletScreenMargin : 0
-        anchors.leftMargin: plasmoid.location === PlasmaCore.Types.LeftEdge ? wrapper.appletScreenMargin : 0
-        anchors.bottomMargin: plasmoid.location === PlasmaCore.Types.BottomEdge ? wrapper.appletScreenMargin : 0
-        anchors.rightMargin: plasmoid.location === PlasmaCore.Types.RightEdge ? wrapper.appletScreenMargin : 0
+        anchors.topMargin: Plasmoid.location === PlasmaCore.Types.TopEdge ? wrapper.appletScreenMargin : 0
+        anchors.leftMargin: Plasmoid.location === PlasmaCore.Types.LeftEdge ? wrapper.appletScreenMargin : 0
+        anchors.bottomMargin: Plasmoid.location === PlasmaCore.Types.BottomEdge ? wrapper.appletScreenMargin : 0
+        anchors.rightMargin: Plasmoid.location === PlasmaCore.Types.RightEdge ? wrapper.appletScreenMargin : 0
 
         active: appletItem.isInternalViewSplitter && root.inConfigureAppletsMode
 

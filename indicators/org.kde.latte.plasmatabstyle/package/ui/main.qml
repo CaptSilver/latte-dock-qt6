@@ -6,6 +6,7 @@
 import QtQuick 2.0
 
 import org.kde.plasma.core 2.0 as PlasmaCore
+import org.kde.plasma.plasmoid 2.0
 
 import org.kde.latte.components 1.0 as LatteComponents
 
@@ -18,10 +19,10 @@ LatteComponents.IndicatorItem {
     Loader{
         id: backLayer
         anchors.fill: parent
-        anchors.topMargin: plasmoid.location === PlasmaCore.Types.TopEdge ? indicator.screenEdgeMargin : 0
-        anchors.bottomMargin: plasmoid.location === PlasmaCore.Types.BottomEdge ? indicator.screenEdgeMargin : 0
-        anchors.leftMargin: plasmoid.location === PlasmaCore.Types.LeftEdge ? indicator.screenEdgeMargin : 0
-        anchors.rightMargin: plasmoid.location === PlasmaCore.Types.RightEdge ? indicator.screenEdgeMargin : 0
+        anchors.topMargin: Plasmoid.location === PlasmaCore.Types.TopEdge ? indicator.screenEdgeMargin : 0
+        anchors.bottomMargin: Plasmoid.location === PlasmaCore.Types.BottomEdge ? indicator.screenEdgeMargin : 0
+        anchors.leftMargin: Plasmoid.location === PlasmaCore.Types.LeftEdge ? indicator.screenEdgeMargin : 0
+        anchors.rightMargin: Plasmoid.location === PlasmaCore.Types.RightEdge ? indicator.screenEdgeMargin : 0
 
         active: level.isBackground && !indicator.isEmptySpace
         sourceComponent: BackLayer{}

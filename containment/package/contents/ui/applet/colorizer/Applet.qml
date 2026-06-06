@@ -23,7 +23,7 @@ Item {
         anchors.fill: colorizer
 
         active: appletItem.environment.isGraphicsSystemAccelerated
-                && plasmoid.configuration.appletShadowsEnabled
+                && Plasmoid.configuration.appletShadowsEnabled
                 && (appletColorizer.opacity>0)
 
         sourceComponent: DropShadow{
@@ -38,7 +38,7 @@ Item {
             readonly property int shadowSize : appletItem.myView.itemShadow.size
 
             readonly property bool forcedShadow: root.forceTransparentPanel
-                                                 && plasmoid.configuration.appletShadowsEnabled
+                                                 && Plasmoid.configuration.appletShadowsEnabled
                                                  && !appletItem.communicator.indexerIsSupported ? true : false
         }
     }

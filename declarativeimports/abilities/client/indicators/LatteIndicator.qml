@@ -25,7 +25,7 @@ LatteComponents.IndicatorItem{
     readonly property real factor: 0.08
     readonly property int size: factor * indicator.currentIconSize
 
-    readonly property int screenEdgeMargin: plasmoid.location === PlasmaCore.Types.Floating || reversedEnabled ? 0 : indicator.screenEdgeMargin
+    readonly property int screenEdgeMargin: Plasmoid.location === PlasmaCore.Types.Floating || reversedEnabled ? 0 : indicator.screenEdgeMargin
 
     property real textColorBrightness: colorBrightness(Kirigami.Theme.textColor)
 
@@ -79,7 +79,7 @@ LatteComponents.IndicatorItem{
 
         Flow{
             id: flowItem
-            flow: plasmoid.formFactor === PlasmaCore.Types.Vertical ? Flow.TopToBottom : Flow.LeftToRight
+            flow: Plasmoid.formFactor === PlasmaCore.Types.Vertical ? Flow.TopToBottom : Flow.LeftToRight
 
             LatteComponents.GlowPoint{
                 id:firstPoint
@@ -102,7 +102,7 @@ LatteComponents.IndicatorItem{
                 size: root.size
                 glow3D: glow3D
                 animation: Math.max(1.65*3*LatteCore.Environment.longDuration,indicator.durationTime*3*LatteCore.Environment.longDuration)
-                location: plasmoid.location
+                location: Plasmoid.location
                 glowOpacity: root.glowOpacity
                 contrastColor: indicator.shadowColor
                 attentionColor: Kirigami.Theme.negativeTextColor
@@ -126,7 +126,7 @@ LatteComponents.IndicatorItem{
 
                 property bool isActive: indicator.hasActive || indicator.isActive
 
-                property bool vertical: plasmoid.formFactor === PlasmaCore.Types.Vertical
+                property bool vertical: Plasmoid.formFactor === PlasmaCore.Types.Vertical
 
                 property real scaleFactor: indicator.scaleFactor
 
@@ -193,9 +193,9 @@ LatteComponents.IndicatorItem{
                 NumberAnimation{
                     id: activeAndReverseAnimation
                     target: firstPoint
-                    property: plasmoid.formFactor === PlasmaCore.Types.Vertical ? "height" : "width"
+                    property: Plasmoid.formFactor === PlasmaCore.Types.Vertical ? "height" : "width"
                     to: indicator.hasActive && activeStyle === 0 /*Line*/
-                        ? (plasmoid.formFactor === PlasmaCore.Types.Vertical ? firstPoint.stateHeight : firstPoint.stateWidth) : root.size
+                        ? (Plasmoid.formFactor === PlasmaCore.Types.Vertical ? firstPoint.stateHeight : firstPoint.stateWidth) : root.size
                     duration: firstPoint.animationTime
                     easing.type: Easing.InQuad
 
@@ -217,7 +217,7 @@ LatteComponents.IndicatorItem{
                 size: root.size
                 glow3D: glow3D
                 animation: Math.max(1.65*3*LatteCore.Environment.longDuration,indicator.durationTime*3*LatteCore.Environment.longDuration)
-                location: plasmoid.location
+                location: Plasmoid.location
                 glowOpacity: root.glowOpacity
                 contrastColor: indicator.shadowColor
                 showBorder: glowEnabled && glow3D
@@ -239,8 +239,8 @@ LatteComponents.IndicatorItem{
         states: [
             State {
                 name: "left"
-                when: ((plasmoid.location === PlasmaCore.Types.LeftEdge && !reversedEnabled) ||
-                       (plasmoid.location === PlasmaCore.Types.RightEdge && reversedEnabled))
+                when: ((Plasmoid.location === PlasmaCore.Types.LeftEdge && !reversedEnabled) ||
+                       (Plasmoid.location === PlasmaCore.Types.RightEdge && reversedEnabled))
 
                 AnchorChanges {
                     target: mainIndicatorElement
@@ -255,9 +255,9 @@ LatteComponents.IndicatorItem{
             },
             State {
                 name: "bottom"
-                when: (plasmoid.location === PlasmaCore.Types.Floating ||
-                       (plasmoid.location === PlasmaCore.Types.BottomEdge && !reversedEnabled) ||
-                       (plasmoid.location === PlasmaCore.Types.TopEdge && reversedEnabled))
+                when: (Plasmoid.location === PlasmaCore.Types.Floating ||
+                       (Plasmoid.location === PlasmaCore.Types.BottomEdge && !reversedEnabled) ||
+                       (Plasmoid.location === PlasmaCore.Types.TopEdge && reversedEnabled))
 
                 AnchorChanges {
                     target: mainIndicatorElement
@@ -272,8 +272,8 @@ LatteComponents.IndicatorItem{
             },
             State {
                 name: "top"
-                when: ((plasmoid.location === PlasmaCore.Types.TopEdge && !reversedEnabled) ||
-                       (plasmoid.location === PlasmaCore.Types.BottomEdge && reversedEnabled))
+                when: ((Plasmoid.location === PlasmaCore.Types.TopEdge && !reversedEnabled) ||
+                       (Plasmoid.location === PlasmaCore.Types.BottomEdge && reversedEnabled))
 
                 AnchorChanges {
                     target: mainIndicatorElement
@@ -288,8 +288,8 @@ LatteComponents.IndicatorItem{
             },
             State {
                 name: "right"
-                when: ((plasmoid.location === PlasmaCore.Types.RightEdge && !reversedEnabled) ||
-                       (plasmoid.location === PlasmaCore.Types.LeftEdge && reversedEnabled))
+                when: ((Plasmoid.location === PlasmaCore.Types.RightEdge && !reversedEnabled) ||
+                       (Plasmoid.location === PlasmaCore.Types.LeftEdge && reversedEnabled))
 
                 AnchorChanges {
                     target: mainIndicatorElement

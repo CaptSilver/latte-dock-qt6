@@ -34,7 +34,7 @@ AbilityItem.BasicItem {
                             || taskItem.inRemoveStage
                             || (taskItem.containsMouse && inAttentionBuiltinAnimation && taskItem.parabolicItem.zoom!==taskItem.abilities.parabolic.factor.zoom)
 
-    isMonochromaticForcedContentItem: plasmoid.configuration.forceMonochromaticIcons
+    isMonochromaticForcedContentItem: Plasmoid.configuration.forceMonochromaticIcons
     monochromizedItem: taskIcon.monochromizedItem
 
     isSeparatorHidden: isSeparator && (lastValidIndex > taskItem.abilities.indexer.lastVisibleItemIndex)
@@ -66,7 +66,7 @@ AbilityItem.BasicItem {
     property bool hasActive: isActive
     property bool hasMinimized: (IsGroupParent === true) ? subWindows.hasMinimized : isMinimized
     property bool hasShown: (IsGroupParent === true) ? subWindows.hasShown : !isMinimized && isWindow
-    property bool inAttention: isDemandingAttention && plasmoid.status === PlasmaCore.Types.NeedsAttentionStatus ? true : false
+    property bool inAttention: isDemandingAttention && Plasmoid.status === PlasmaCore.Types.NeedsAttentionStatus ? true : false
 
     /*animations flags*/
     property bool inAnimation: true
@@ -550,7 +550,7 @@ AbilityItem.BasicItem {
     function generateSubText(task) {
         var subTextEntries = new Array();
 
-        if (!plasmoid.configuration.showOnlyCurrentDesktop
+        if (!Plasmoid.configuration.showOnlyCurrentDesktop
                 && virtualDesktopInfo.numberOfDesktops > 1
                 && model.IsOnAllVirtualDesktops !== true
                 && model.VirtualDesktop != -1
@@ -571,7 +571,7 @@ AbilityItem.BasicItem {
             for (var i = 0; i < model.Activities.length; i++) {
                 var activity = model.Activities[i];
 
-                if (plasmoid.configuration.showOnlyCurrentActivity) {
+                if (Plasmoid.configuration.showOnlyCurrentActivity) {
                     if (activity != activityInfo.currentActivity) {
                         activityNames.push(activityInfo.activityName(model.Activities[i]));
                     }
@@ -580,7 +580,7 @@ AbilityItem.BasicItem {
                 }
             }
 
-            if (plasmoid.configuration.showOnlyCurrentActivity) {
+            if (Plasmoid.configuration.showOnlyCurrentActivity) {
                 if (activityNames.length > 0) {
                     subTextEntries.push(i18nc("Activities a window is currently on (apart from the current one)",
                                               "Also available on %1", activityNames.join(", ")));
@@ -825,7 +825,7 @@ AbilityItem.BasicItem {
     //fix bug #478, when changing form factor sometimes the tasks are not positioned
     //correctly, in such case we make a fast reinitialization for the sizes
     Connections {
-        target: plasmoid
+        target: Plasmoid
         onFormFactorChanged:{
             taskItem.inAddRemoveAnimation = false;
         }

@@ -48,10 +48,10 @@ Item {
 
     Rectangle {
         id: tailPadding
-        anchors.topMargin: plasmoid.location === PlasmaCore.Types.TopEdge ? appletItem.metrics.margin.screenEdge : 0
-        anchors.leftMargin: plasmoid.location === PlasmaCore.Types.LeftEdge ? appletItem.metrics.margin.screenEdge : 0
-        anchors.bottomMargin: plasmoid.location === PlasmaCore.Types.BottomEdge ? appletItem.metrics.margin.screenEdge : 0
-        anchors.rightMargin: plasmoid.location === PlasmaCore.Types.RightEdge ? appletItem.metrics.margin.screenEdge : 0
+        anchors.topMargin: Plasmoid.location === PlasmaCore.Types.TopEdge ? appletItem.metrics.margin.screenEdge : 0
+        anchors.leftMargin: Plasmoid.location === PlasmaCore.Types.LeftEdge ? appletItem.metrics.margin.screenEdge : 0
+        anchors.bottomMargin: Plasmoid.location === PlasmaCore.Types.BottomEdge ? appletItem.metrics.margin.screenEdge : 0
+        anchors.rightMargin: Plasmoid.location === PlasmaCore.Types.RightEdge ? appletItem.metrics.margin.screenEdge : 0
 
         width: root.isHorizontal ? length : tailThickness
         height: root.isHorizontal ? tailThickness : length
@@ -61,7 +61,7 @@ Item {
         states:[
             State{
                 name: "bottom"
-                when: plasmoid.location === PlasmaCore.Types.BottomEdge
+                when: Plasmoid.location === PlasmaCore.Types.BottomEdge
 
                 AnchorChanges{
                     target: tailPadding
@@ -71,7 +71,7 @@ Item {
             },
             State{
                 name: "top"
-                when: plasmoid.location === PlasmaCore.Types.TopEdge
+                when: Plasmoid.location === PlasmaCore.Types.TopEdge
 
                 AnchorChanges{
                     target: tailPadding
@@ -81,7 +81,7 @@ Item {
             },
             State{
                 name: "left"
-                when: plasmoid.location === PlasmaCore.Types.LeftEdge
+                when: Plasmoid.location === PlasmaCore.Types.LeftEdge
 
                 AnchorChanges{
                     target: tailPadding
@@ -91,7 +91,7 @@ Item {
             },
             State{
                 name: "right"
-                when: plasmoid.location === PlasmaCore.Types.RightEdge
+                when: Plasmoid.location === PlasmaCore.Types.RightEdge
 
                 AnchorChanges{
                     target: tailPadding
@@ -104,10 +104,10 @@ Item {
 
     Rectangle {
         id: headPadding
-        anchors.topMargin: plasmoid.location === PlasmaCore.Types.TopEdge ? normalMargin : 0
-        anchors.leftMargin: plasmoid.location === PlasmaCore.Types.LeftEdge ? normalMargin : 0
-        anchors.bottomMargin: plasmoid.location === PlasmaCore.Types.BottomEdge ? normalMargin : 0
-        anchors.rightMargin: plasmoid.location === PlasmaCore.Types.RightEdge ? normalMargin : 0
+        anchors.topMargin: Plasmoid.location === PlasmaCore.Types.TopEdge ? normalMargin : 0
+        anchors.leftMargin: Plasmoid.location === PlasmaCore.Types.LeftEdge ? normalMargin : 0
+        anchors.bottomMargin: Plasmoid.location === PlasmaCore.Types.BottomEdge ? normalMargin : 0
+        anchors.rightMargin: Plasmoid.location === PlasmaCore.Types.RightEdge ? normalMargin : 0
 
         width: root.isHorizontal ? length : headThickness
         height: root.isHorizontal ? headThickness : length
@@ -118,7 +118,7 @@ Item {
         states:[
             State{
                 name: "bottom"
-                when: plasmoid.location === PlasmaCore.Types.BottomEdge
+                when: Plasmoid.location === PlasmaCore.Types.BottomEdge
 
                 AnchorChanges{
                     target: headPadding
@@ -128,7 +128,7 @@ Item {
             },
             State{
                 name: "top"
-                when: plasmoid.location === PlasmaCore.Types.TopEdge
+                when: Plasmoid.location === PlasmaCore.Types.TopEdge
 
                 AnchorChanges{
                     target: headPadding
@@ -138,7 +138,7 @@ Item {
             },
             State{
                 name: "left"
-                when: plasmoid.location === PlasmaCore.Types.LeftEdge
+                when: Plasmoid.location === PlasmaCore.Types.LeftEdge
 
                 AnchorChanges{
                     target: headPadding
@@ -148,7 +148,7 @@ Item {
             },
             State{
                 name: "right"
-                when: plasmoid.location === PlasmaCore.Types.RightEdge
+                when: Plasmoid.location === PlasmaCore.Types.RightEdge
 
                 AnchorChanges{
                     target: headPadding
@@ -163,8 +163,8 @@ Item {
         id: marginsAreaSeparatorVisual
         active: appletItem.isMarginsAreaSeparator && root.inConfigureAppletsMode
         sourceComponent: Item {
-            width: plasmoid.formFactor === PlasmaCore.Types.Vertical ? appletItem.metrics.totals.thickness : paddingsVisual.length
-            height: plasmoid.formFactor === PlasmaCore.Types.Vertical ? paddingsVisual.length : appletItem.metrics.totals.thickness
+            width: Plasmoid.formFactor === PlasmaCore.Types.Vertical ? appletItem.metrics.totals.thickness : paddingsVisual.length
+            height: Plasmoid.formFactor === PlasmaCore.Types.Vertical ? paddingsVisual.length : appletItem.metrics.totals.thickness
 
             Rectangle {
                 anchors.centerIn: parent
@@ -178,7 +178,7 @@ Item {
         states:[
             State{
                 name: "bottom"
-                when: plasmoid.location === PlasmaCore.Types.BottomEdge
+                when: Plasmoid.location === PlasmaCore.Types.BottomEdge
 
                 AnchorChanges{
                     target: marginsAreaSeparatorVisual
@@ -188,7 +188,7 @@ Item {
             },
             State{
                 name: "top"
-                when: plasmoid.location === PlasmaCore.Types.TopEdge
+                when: Plasmoid.location === PlasmaCore.Types.TopEdge
 
                 AnchorChanges{
                     target: marginsAreaSeparatorVisual
@@ -198,7 +198,7 @@ Item {
             },
             State{
                 name: "left"
-                when: plasmoid.location === PlasmaCore.Types.LeftEdge
+                when: Plasmoid.location === PlasmaCore.Types.LeftEdge
 
                 AnchorChanges{
                     target: marginsAreaSeparatorVisual
@@ -208,7 +208,7 @@ Item {
             },
             State{
                 name: "right"
-                when: plasmoid.location === PlasmaCore.Types.RightEdge
+                when: Plasmoid.location === PlasmaCore.Types.RightEdge
 
                 AnchorChanges{
                     target: marginsAreaSeparatorVisual

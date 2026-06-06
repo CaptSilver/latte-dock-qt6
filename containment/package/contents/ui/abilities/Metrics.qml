@@ -33,7 +33,7 @@ Ability.MetricsPrivate {
     margin.screenEdge: (root.screenEdgeMarginEnabled && root.behaveAsPlasmaPanel)
                        || !root.screenEdgeMarginEnabled
                        || root.hideThickScreenGap ?
-                           0 : plasmoid.configuration.screenEdgeMargin
+                           0 : Plasmoid.configuration.screenEdgeMargin
 
     //! MarginsAra
     marginsArea.tailThickness: {
@@ -42,11 +42,11 @@ Ability.MetricsPrivate {
         }
 
         var areamargin = 0;
-        if (plasmoid.location === PlasmaCore.Types.TopEdge) {
+        if (Plasmoid.location === PlasmaCore.Types.TopEdge) {
             areamargin = themeExtended.marginsAreaTop;
-        } else if (plasmoid.location === PlasmaCore.Types.LeftEdge) {
+        } else if (Plasmoid.location === PlasmaCore.Types.LeftEdge) {
             areamargin = themeExtended.marginsAreaLeft;
-        } else if (plasmoid.location === PlasmaCore.Types.RightEdge) {
+        } else if (Plasmoid.location === PlasmaCore.Types.RightEdge) {
             areamargin = themeExtended.marginsAreaRight;
         } else {
             areamargin = themeExtended.marginsAreaBottom;
@@ -61,11 +61,11 @@ Ability.MetricsPrivate {
         }
 
         var areamargin = 0;
-        if (plasmoid.location === PlasmaCore.Types.TopEdge) {
+        if (Plasmoid.location === PlasmaCore.Types.TopEdge) {
             areamargin = themeExtended.marginsAreaBottom;
-        } else if (plasmoid.location === PlasmaCore.Types.LeftEdge) {
+        } else if (Plasmoid.location === PlasmaCore.Types.LeftEdge) {
             areamargin = themeExtended.marginsAreaRight;
-        } else if (plasmoid.location === PlasmaCore.Types.RightEdge) {
+        } else if (Plasmoid.location === PlasmaCore.Types.RightEdge) {
             areamargin = themeExtended.marginsAreaLeft;
         } else {
             areamargin = themeExtended.marginsAreaTop;
@@ -75,9 +75,9 @@ Ability.MetricsPrivate {
     }
 
     //! Mask
-    mask.maxScreenEdge : root.behaveAsDockWithMask ? Math.max(0, plasmoid.configuration.screenEdgeMargin) : 0
+    mask.maxScreenEdge : root.behaveAsDockWithMask ? Math.max(0, Plasmoid.configuration.screenEdgeMargin) : 0
       // window geometry is updated after the local screen margin animation was zeroed*/
-    mask.screenEdge: (!root.screenEdgeMarginEnabled || root.hideThickScreenGap) ? 0 : plasmoid.configuration.screenEdgeMargin
+    mask.screenEdge: (!root.screenEdgeMarginEnabled || root.hideThickScreenGap) ? 0 : Plasmoid.configuration.screenEdgeMargin
 
     mask.thickness.hidden: LatteCore.WindowSystem.compositingActive ?  2 : 1
     mask.thickness.normal: mask.screenEdge + Math.max(totals.thickness + extraThicknessForNormal, background.thickness + background.shadows.headThickness)

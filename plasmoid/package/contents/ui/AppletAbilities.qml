@@ -27,21 +27,21 @@ AbilityClient.AppletAbilities {
     }
 
     //! local properties
-    readonly property int maxIconSizeInPlasma: Math.max(plasmoid.configuration.iconSize, 16)
+    readonly property int maxIconSizeInPlasma: Math.max(Plasmoid.configuration.iconSize, 16)
     readonly property int panelThickness: (root.vertical ? root.width : root.height)
 
     //! Connections
     Connections {
         target: _abilityContainer.shortcuts
         onDisabledIsStealingGlobalPositionShortcuts: {
-            plasmoid.configuration.isPreferredForPositionShortcuts = false;
+            Plasmoid.configuration.isPreferredForPositionShortcuts = false;
         }
     }
 
     Connections {
         target: _abilityContainer.launchers
         onDisabledIsStealingDroppedLaunchers: {
-            plasmoid.configuration.isPreferredForDroppedLaunchers = false;
+            Plasmoid.configuration.isPreferredForDroppedLaunchers = false;
         }
     }
 
@@ -49,13 +49,13 @@ AbilityClient.AppletAbilities {
         target: _abilityContainer.userRequests
         onSglViewType: {
             if (viewType === LatteCore.Types.DockView) {
-                plasmoid.configuration.animationLauncherBouncing = true;
-                plasmoid.configuration.animationWindowInAttention = true;
-                plasmoid.configuration.animationWindowAddedInGroup = true;
+                Plasmoid.configuration.animationLauncherBouncing = true;
+                Plasmoid.configuration.animationWindowInAttention = true;
+                Plasmoid.configuration.animationWindowAddedInGroup = true;
             } else if (viewType === LatteCore.Types.PanelView) {
-                plasmoid.configuration.animationLauncherBouncing = false;
-                plasmoid.configuration.animationWindowInAttention = false;
-                plasmoid.configuration.animationWindowAddedInGroup = false;
+                Plasmoid.configuration.animationLauncherBouncing = false;
+                Plasmoid.configuration.animationWindowInAttention = false;
+                Plasmoid.configuration.animationWindowAddedInGroup = false;
             }
         }
     }

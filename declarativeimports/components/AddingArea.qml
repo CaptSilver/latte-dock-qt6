@@ -48,9 +48,9 @@ Rectangle{
         font.bold: true
 
         rotation: {
-            if (plasmoid.location === PlasmaCore.Types.LeftEdge) {
+            if (Plasmoid.location === PlasmaCore.Types.LeftEdge) {
                 return 90;
-            } else if (plasmoid.location === PlasmaCore.Types.RightEdge) {
+            } else if (Plasmoid.location === PlasmaCore.Types.RightEdge) {
                 return -90;
             }
 
@@ -58,9 +58,9 @@ Rectangle{
         }
 
         transformOrigin: {
-            if (plasmoid.location === PlasmaCore.Types.LeftEdge) {
+            if (Plasmoid.location === PlasmaCore.Types.LeftEdge) {
                 return Item.TopLeft;
-            } else if (plasmoid.location === PlasmaCore.Types.RightEdge) {
+            } else if (Plasmoid.location === PlasmaCore.Types.RightEdge) {
                 return Item.TopRight;
             }
 
@@ -81,7 +81,7 @@ Rectangle{
             ///Bottom Edge
             State {
                 name: "left"
-                when: plasmoid.location === PlasmaCore.Types.LeftEdge
+                when: Plasmoid.location === PlasmaCore.Types.LeftEdge
 
                 AnchorChanges {
                     target: heading
@@ -95,7 +95,7 @@ Rectangle{
             },
             State {
                 name: "right"
-                when: plasmoid.location === PlasmaCore.Types.RightEdge
+                when: Plasmoid.location === PlasmaCore.Types.RightEdge
 
                 AnchorChanges {
                     target: heading
@@ -109,7 +109,7 @@ Rectangle{
             },
             State {
                 name: "top"
-                when:  plasmoid.location === PlasmaCore.Types.TopEdge
+                when:  Plasmoid.location === PlasmaCore.Types.TopEdge
 
                 AnchorChanges {
                     target: heading
@@ -123,9 +123,9 @@ Rectangle{
             },
             State {
                 name: "bottom"
-                when: plasmoid.location !== PlasmaCore.Types.TopEdge
-                      && plasmoid.location !== PlasmaCore.Types.LeftEdge
-                      && plasmoid.location !== PlasmaCore.Types.RightEdge
+                when: Plasmoid.location !== PlasmaCore.Types.TopEdge
+                      && Plasmoid.location !== PlasmaCore.Types.LeftEdge
+                      && Plasmoid.location !== PlasmaCore.Types.RightEdge
 
                 AnchorChanges {
                     target: heading
@@ -147,7 +147,7 @@ Rectangle{
         height: thickness
 
         readonly property int thickness: Math.min(addingArea.iconSize,
-                                                  plasmoid.formFactor === PlasmaCore.Types.Horizontal ? (parent.height - freeSpace):(parent.width - freeSpace))
+                                                  Plasmoid.formFactor === PlasmaCore.Types.Horizontal ? (parent.height - freeSpace):(parent.width - freeSpace))
 
         readonly property int freeSpace: Math.max(16, (heading.implicitHeight + Kirigami.Units.smallSpacing*2))
     }
