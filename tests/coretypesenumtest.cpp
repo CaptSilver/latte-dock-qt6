@@ -13,6 +13,7 @@ class CoreTypesEnumTest : public QObject
     Q_OBJECT
 private Q_SLOTS:
     void popupPlacementHasUsedValues();
+    void popupPlacementMatchesPlasmaExtras();
     void edgePositionHasUsedValues();
 };
 
@@ -23,6 +24,16 @@ void CoreTypesEnumTest::popupPlacementHasUsedValues()
     QVERIFY(me.keyToValue("BottomPosedLeftAlignedPopup") >= 0);
     QVERIFY(me.keyToValue("LeftPosedTopAlignedPopup") >= 0);
     QVERIFY(me.keyToValue("RightPosedTopAlignedPopup") >= 0);
+}
+
+void CoreTypesEnumTest::popupPlacementMatchesPlasmaExtras()
+{
+    // These integers are assigned to a PlasmaExtras menu's `placement` (a C++
+    // enum property), so they must equal PlasmaExtras::PopupPlacement's values.
+    QMetaEnum me = QMetaEnum::fromType<Types::PopupPlacement>();
+    QCOMPARE(me.keyToValue("FloatingPopup"), 0);
+    QCOMPARE(me.keyToValue("TopPosedLeftAlignedPopup"), 1);
+    QCOMPARE(me.keyToValue("RightPosedBottomAlignedPopup"), 8);
 }
 
 void CoreTypesEnumTest::edgePositionHasUsedValues()

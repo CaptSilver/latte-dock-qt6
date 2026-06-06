@@ -100,16 +100,20 @@ public:
     };
     Q_ENUM(EdgePosition)
 
+    // Values mirror PlasmaExtras::PopupPlacement exactly, because these are
+    // assigned to a PlasmaExtras menu's `placement` (a C++ enum property): the
+    // integers must line up or popups land in the wrong spot.
     enum PopupPlacement
     {
-        TopPosedLeftAlignedPopup = 0,
-        TopPosedRightAlignedPopup,
-        LeftPosedTopAlignedPopup,
-        LeftPosedBottomAlignedPopup,
-        RightPosedTopAlignedPopup,
-        RightPosedBottomAlignedPopup,
-        BottomPosedLeftAlignedPopup,
-        BottomPosedRightAlignedPopup
+        FloatingPopup = 0,
+        TopPosedLeftAlignedPopup = 1,
+        TopPosedRightAlignedPopup = 2,
+        LeftPosedTopAlignedPopup = 3,
+        LeftPosedBottomAlignedPopup = 4,
+        BottomPosedLeftAlignedPopup = 5,
+        BottomPosedRightAlignedPopup = 6,
+        RightPosedTopAlignedPopup = 7,
+        RightPosedBottomAlignedPopup = 8
     };
     Q_ENUM(PopupPlacement)
 };
