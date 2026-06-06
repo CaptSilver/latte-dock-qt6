@@ -303,7 +303,7 @@ PC3.Page {
             cellHeight: cellWidth + Kirigami.Units.gridUnit * 4 + Kirigami.Units.smallSpacing * 2
 
             delegate: AppletDelegate {}
-            highlight: PC2.Highlight {} // FIXME(stage4): PC2 type removed in PC3
+            highlight: PlasmaExtras.Highlight {}
             highlightMoveDuration: 0
             //highlightResizeDuration: 0
 
