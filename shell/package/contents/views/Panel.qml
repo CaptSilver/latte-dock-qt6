@@ -31,12 +31,14 @@ KSvg.FrameSvgItem {
         border.width: 1
     }*/
 
+    readonly property var containmentApplet: containment && containment.plasmoid ? containment.plasmoid : containment
+
     function adjustPrefix() {
-        if (!containment) {
+        if (!containmentApplet) {
             return "";
         }
         var pre;
-        switch (containment.location) {
+        switch (containmentApplet.location) {
         case PlasmaCore.Types.LeftEdge:
             pre = "west";
             break;
@@ -61,9 +63,12 @@ KSvg.FrameSvgItem {
 
     Component.onDestruction: {
         console.log("latte view qml source deleting...");
+    }
 
-        if (containment) {
-            containment.locationChanged.disconnect(adjustPrefix);
+    Connections {
+        target: root.containmentApplet
+        function onLocationChanged() {
+            root.adjustPrefix();
         }
     }
 
@@ -77,7 +82,6 @@ KSvg.FrameSvgItem {
         containment.parent = containmentParent;
         containment.visible = true;
         containment.anchors.fill = containmentParent;
-        containment.locationChanged.connect(adjustPrefix);
         adjustPrefix();
 
         for(var i=0; i<containment.children.length; ++i){
