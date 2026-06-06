@@ -5,6 +5,7 @@
 
 import QtQuick 2.0
 
+import org.kde.kirigami 2.20 as Kirigami
 import org.kde.plasma.plasmoid 2.0
 
 import org.kde.latte.core 0.2 as LatteCore
@@ -46,7 +47,7 @@ Item {
 
     property var containmentActions: []
 
-    property QtObject colorPalette: theme
+    property QtObject colorPalette: Kirigami.Theme
 
     property MyViewTypes.ItemShadow itemShadow: MyViewTypes.ItemShadow {
         isEnabled: true

@@ -551,7 +551,7 @@ BackgroundProperties{
 
         readonly property bool busyBackground: root.forcePanelForBusyBackground
                                                && (solidBackground.opacity === 0 || !solidBackground.paintInstantly)
-        readonly property bool coloredView: colorizerManager.mustBeShown && colorizerManager.applyTheme !== theme
+        readonly property bool coloredView: colorizerManager.mustBeShown && colorizerManager.applyTheme !== themeExtended.defaultTheme
 
         backgroundOpacity: {
             if (busyBackground && !forceSolidness) {
