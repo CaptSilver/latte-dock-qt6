@@ -6,7 +6,6 @@
 import QtQuick 2.2
 import QtQuick.Controls.Styles 1.2 as QtQuickControlStyle
 import QtQuick.Controls 1.2
-import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.ksvg 1.0 as KSvg
 
 QtQuickControlStyle.SwitchStyle {
@@ -16,7 +15,7 @@ QtQuickControlStyle.SwitchStyle {
     KSvg.Svg {
         id: switchSvg
         imagePath: "widgets/switch"
-        colorGroup: PlasmaCore.ColorScope.colorGroup
+        colorSet: KSvg.Svg.View
     }
 
     property bool themeHasSwitch: false
@@ -92,8 +91,7 @@ QtQuickControlStyle.SwitchStyle {
                 imagePath: "widgets/slider"
                 prefix: "groove"
                 opacity: control.checked ? 0 : 1
-                colorGroup: PlasmaCore.ColorScope.colorGroup
-                visible: opacity > 0                
+                visible: opacity > 0
 
                 Behavior on opacity {
                     PropertyAnimation { duration: units.shortDuration * 2 }
@@ -106,7 +104,6 @@ QtQuickControlStyle.SwitchStyle {
                 imagePath: "widgets/slider"
                 prefix: "groove-highlight"
                 opacity: control.checked ? 1 : 0
-                colorGroup: PlasmaCore.ColorScope.colorGroup
                 visible: opacity > 0
 
                 Behavior on opacity {
@@ -126,7 +123,6 @@ QtQuickControlStyle.SwitchStyle {
                 imagePath: "widgets/switch"
                 prefix: "groove"
                 opacity: control.checked ? 0 : 1
-                colorGroup: PlasmaCore.ColorScope.colorGroup
                 visible: opacity > 0
 
                 Component.onCompleted: styleRoot.themeHasSwitch = fromCurrentTheme;
@@ -143,7 +139,6 @@ QtQuickControlStyle.SwitchStyle {
                 imagePath: "widgets/switch"
                 prefix: "groove-highlight"
                 opacity: control.checked ? 1 : 0
-                colorGroup: PlasmaCore.ColorScope.colorGroup
                 visible: opacity > 0
 
                 Behavior on opacity {

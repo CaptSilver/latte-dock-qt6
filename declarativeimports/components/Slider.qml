@@ -5,7 +5,6 @@
 
 import QtQuick 2.7
 import QtQuick.Templates 2.0 as T
-import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.ksvg 1.0 as KSvg
 import "private" as Private
 
@@ -33,7 +32,7 @@ T.Slider {
     KSvg.Svg {
         id: grooveSvg
         imagePath: "widgets/slider"
-        colorGroup: PlasmaCore.ColorScope.colorGroup
+        colorSet: KSvg.Svg.View
     }
 
     KSvg.FrameSvgItem {
