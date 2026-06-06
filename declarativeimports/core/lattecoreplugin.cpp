@@ -23,6 +23,9 @@
 void LatteCorePlugin::registerTypes(const char *uri)
 {
     Q_ASSERT(QLatin1String(uri) == QLatin1String("org.kde.latte.core"));
+    // Qt6 warns "Invalid QML element name 'Types'" (value-type names want lowercase).
+    // Kept uppercase deliberately: the public QML API is LatteCore.Types, used in 595+ call
+    // sites; renaming for a benign, non-fatal warning is not worth the churn.
     qmlRegisterUncreatableType<Latte::Types>(uri, 0, 2, "Types", QStringLiteral("Latte Types uncreatable"));
     qmlRegisterType<Latte::IconItem>(uri, 0, 2, "IconItem");
     qmlRegisterType<Latte::Quick::Dialog>(uri, 0, 2, "Dialog");
