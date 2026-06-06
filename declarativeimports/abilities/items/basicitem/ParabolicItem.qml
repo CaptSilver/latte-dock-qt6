@@ -214,7 +214,7 @@ Item{
 
             sourceComponent: ColorOverlay {
                 anchors.fill: parent
-                color: latteBridge ? latteBridge.palette.textColor : "transparent"
+                color: latteBridge ? latteBridge.colorPalette.textColor : "transparent"
                 source: abilityItem.monochromizedItem
             }
         }

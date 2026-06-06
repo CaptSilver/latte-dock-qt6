@@ -46,7 +46,7 @@ Item {
 
     property var containmentActions: []
 
-    property QtObject palette: theme
+    property QtObject colorPalette: theme
 
     property MyViewTypes.ItemShadow itemShadow: MyViewTypes.ItemShadow {
         isEnabled: true

@@ -74,7 +74,7 @@ Loader {
                 anchors.centerIn: parent
                 width: abilityItem.isVertical ? abilityItem.abilities.metrics.iconSize - 4  : 1
                 height: abilityItem.isHorizontal ? abilityItem.abilities.metrics.iconSize - 4 : 1
-                color: abilityItem.abilities.myView.palette.textColor
+                color: abilityItem.abilities.myView.colorPalette.textColor
             }
         }
     }

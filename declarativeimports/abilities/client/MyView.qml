@@ -46,7 +46,7 @@ AbilityDefinition.MyView {
 
     itemShadow: ref.myView.itemShadow
 
-    palette: bridge && bridge.applyPalette ? bridge.palette : theme
+    colorPalette: bridge && bridge.applyPalette ? bridge.colorPalette : theme
 
     readonly property AbilityDefinition.MyView local: AbilityDefinition.MyView {
         isShownFully: true

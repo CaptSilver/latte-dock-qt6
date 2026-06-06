@@ -55,7 +55,7 @@ AbilityDefinition.MyView {
 
         readonly property alias itemShadow: apis.itemShadow
 
-        readonly property alias palette: apis.palette
+        readonly property alias colorPalette: apis.colorPalette
 
         function action(name) {
             return apis.action(name);

@@ -43,14 +43,14 @@ Item{
     // @since: 0.9
     readonly property bool inPlasmaPanelStyle: root.behaveAsPlasmaPanel
 
-    // NAME: palette
+    // NAME: colorPalette
     //   USAGE: read-only
     //   EXPLANATION: Latte updates it to its coloring palette in order for the applet
     //       to take responsibility of its coloring.
     //   USE CASE: when Latte is transparent and applets colors need to be adjusted in order
     //       to look consistent with the underlying desktop background
     // @since: 0.9
-    readonly property QtObject palette: !applet.latteSideColoringEnabled ? colorizerManager : null
+    readonly property QtObject colorPalette: !applet.latteSideColoringEnabled ? colorizerManager : null
 
     // NAME: applyPalette
     //   USAGE: read-only
