@@ -23,4 +23,11 @@ ecm_add_test(visibilityrevealtest.cpp
 )
 target_include_directories(visibilityrevealtest PRIVATE ${CMAKE_BINARY_DIR}/app)
 
+qt_wrap_cpp(coretypesenumtest_MOC_SRCS ${CMAKE_BINARY_DIR}/app/coretypes.h)
+ecm_add_test(coretypesenumtest.cpp ${coretypesenumtest_MOC_SRCS}
+    TEST_NAME coretypesenumtest
+    LINK_LIBRARIES Qt6::Test Qt6::Core
+)
+target_include_directories(coretypesenumtest PRIVATE ${CMAKE_BINARY_DIR}/app)
+
 add_subdirectory(manual)

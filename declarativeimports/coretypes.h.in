@@ -89,6 +89,29 @@ public:
         AllSecondaryScreensGroup
     };
     Q_ENUM(ScreensGroup)
+
+    enum EdgePosition
+    {
+        CenterPositioned = 0,
+        TopPositioned,
+        BottomPositioned,
+        LeftPositioned,
+        RightPositioned
+    };
+    Q_ENUM(EdgePosition)
+
+    enum PopupPlacement
+    {
+        TopPosedLeftAlignedPopup = 0,
+        TopPosedRightAlignedPopup,
+        LeftPosedTopAlignedPopup,
+        LeftPosedBottomAlignedPopup,
+        RightPosedTopAlignedPopup,
+        RightPosedBottomAlignedPopup,
+        BottomPosedLeftAlignedPopup,
+        BottomPosedRightAlignedPopup
+    };
+    Q_ENUM(PopupPlacement)
 };
 
 }//end of namespace
