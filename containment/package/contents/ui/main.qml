@@ -744,10 +744,6 @@ Item {
 
     ///////////////END components
 
-    PlasmaCore.ColorScope{
-        id: colorScopePalette
-    }
-
     LatteContainment.LayoutManager{
         id:fastLayoutManager
         plasmoidObj: plasmoid

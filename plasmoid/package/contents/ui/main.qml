@@ -283,9 +283,6 @@ Item {
     }
 
     /////
-    PlasmaCore.ColorScope{
-        id: colorScopePalette
-    }
 
     ///UPDATE
     function updateListViewParent() {
