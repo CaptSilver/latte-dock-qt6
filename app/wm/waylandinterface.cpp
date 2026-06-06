@@ -9,6 +9,7 @@
 
 // local
 #include <coretypes.h>
+#include "waylandlayershell.h"
 #include "../view/positioner.h"
 #include "../view/view.h"
 #include "../view/settings/subconfigview.h"
@@ -30,84 +31,14 @@
 
 using namespace KWayland::Client;
 
-namespace Latte {
-
-class Private::GhostWindow : public QQuickView
+namespace {
+inline Latte::WindowSystem::WindowId idFor(const KWayland::Client::PlasmaWindow *w)
 {
-    Q_OBJECT
+    return w ? QVariant(QString::fromUtf8(w->uuid())) : QVariant();
+}
+}
 
-public:
-    WindowSystem::WindowId m_winId;
-
-    GhostWindow(WindowSystem::WaylandInterface *waylandInterface)
-        : m_waylandInterface(waylandInterface) {
-        setFlags(Qt::FramelessWindowHint
-                 | Qt::WindowStaysOnTopHint
-                 | Qt::NoDropShadowWindowHint
-                 | Qt::WindowDoesNotAcceptFocus);
-
-        setColor(QColor(Qt::transparent));
-        setClearBeforeRendering(true);
-
-        connect(m_waylandInterface, &WindowSystem::AbstractWindowInterface::latteWindowAdded, this, &GhostWindow::identifyWinId);
-
-        setupWaylandIntegration();
-        show();
-    }
-
-    ~GhostWindow() {
-        m_waylandInterface->unregisterIgnoredWindow(m_winId);
-        delete m_shellSurface;
-    }
-
-    void setGeometry(const QRect &rect) {
-        if (geometry() == rect) {
-            return;
-        }
-
-        m_validGeometry = rect;
-
-        setMinimumSize(rect.size());
-        setMaximumSize(rect.size());
-        resize(rect.size());
-
-        m_shellSurface->setPosition(rect.topLeft());
-    }
-
-    void setupWaylandIntegration() {
-        using namespace KWayland::Client;
-
-        if (m_shellSurface)
-            return;
-
-        Surface *s{Surface::fromWindow(this)};
-
-        if (!s)
-            return;
-
-        m_shellSurface = m_waylandInterface->waylandCoronaInterface()->createSurface(s, this);
-        qDebug() << "wayland ghost window surface was created...";
-
-        m_shellSurface->setSkipTaskbar(true);
-        m_shellSurface->setPanelTakesFocus(false);
-        m_shellSurface->setRole(PlasmaShellSurface::Role::Panel);
-        m_shellSurface->setPanelBehavior(PlasmaShellSurface::PanelBehavior::AlwaysVisible);
-    }
-
-    KWayland::Client::PlasmaShellSurface *m_shellSurface{nullptr};
-    WindowSystem::WaylandInterface *m_waylandInterface{nullptr};
-
-    //! geometry() function under wayland does not return nice results
-    QRect m_validGeometry;
-
-public Q_SLOTS:
-    void identifyWinId() {
-        if (m_winId.isNull()) {
-            m_winId = m_waylandInterface->winIdFor("latte-dock", m_validGeometry);
-            m_waylandInterface->registerIgnoredWindow(m_winId);
-        }
-    }
-};
+namespace Latte {
 
 namespace WindowSystem {
 
@@ -136,8 +67,8 @@ void WaylandInterface::initWindowManagement(KWayland::Client::PlasmaWindowManage
     connect(m_windowManagement, &PlasmaWindowManagement::windowCreated, this, &WaylandInterface::windowCreatedProxy);
     connect(m_windowManagement, &PlasmaWindowManagement::activeWindowChanged, this, [&]() noexcept {
         auto w = m_windowManagement->activeWindow();
-        if (!w || (w && (!m_ignoredWindows.contains(w->internalId()))) ) {
-            Q_EMIT activeWindowChanged(w ? w->internalId() : 0);
+        if (!w || (w && (!m_ignoredWindows.contains(idFor(w)))) ) {
+            Q_EMIT activeWindowChanged(idFor(w));
         }
 
     }, Qt::QueuedConnection);
@@ -228,86 +159,19 @@ void WaylandInterface::unregisterIgnoredWindow(WindowId wid)
 
 void WaylandInterface::setViewExtraFlags(QObject *view, bool isPanelWindow, Latte::Types::Visibility mode)
 {
-    KWayland::Client::PlasmaShellSurface *surface = qobject_cast<KWayland::Client::PlasmaShellSurface *>(view);
-    Latte::View *latteView = qobject_cast<Latte::View *>(view);
-    Latte::ViewPart::SubConfigView *configView = qobject_cast<Latte::ViewPart::SubConfigView *>(view);
+    Q_UNUSED(isPanelWindow) // layer-shell expresses panel-ness via anchors + exclusive zone
 
-    WindowId winId;
-
-    if (latteView) {
-        surface = latteView->surface();
-        winId = latteView->positioner()->trackedWindowId();
-    } else if (configView) {
-        surface = configView->surface();
-        winId = configView->trackedWindowId();
-    }
-
-    if (!surface) {
+    QWindow *window = qobject_cast<QWindow *>(view);
+    if (!window) {
         return;
     }
 
-    surface->setSkipTaskbar(true);
-    surface->setSkipSwitcher(true);
-
-    bool atBottom{!isPanelWindow && (mode == Latte::Types::WindowsCanCover || mode == Latte::Types::WindowsAlwaysCover)};
-
-    if (isPanelWindow) {
-        surface->setRole(PlasmaShellSurface::Role::Panel);
-        surface->setPanelBehavior(PlasmaShellSurface::PanelBehavior::AutoHide);
-    } else {
-        surface->setRole(PlasmaShellSurface::Role::Normal);
-    }
-
-    if (latteView || configView) {
-        auto w = windowFor(winId);
-        if (w && !w->isOnAllDesktops()) {
-            requestToggleIsOnAllDesktops(winId);
-        }
-
-        //! Layer to be applied
-        if (mode == Latte::Types::WindowsCanCover || mode == Latte::Types::WindowsAlwaysCover) {
-            setKeepBelow(winId, true);
-        } else if (mode == Latte::Types::NormalWindow) {
-            setKeepBelow(winId, false);
-            setKeepAbove(winId, false);
-        } else {
-            setKeepAbove(winId, true);
-        }
-    }
-
-    if (atBottom){
-        //! trying to workaround WM behavior in order
-        //!  1. View at the end MUST NOT HAVE FOCUSABILITY (issue example: clicking a single active task is not minimized)
-        //!  2. View at the end MUST BE AT THE BOTTOM of windows stack
-
-        QTimer::singleShot(50, [this, surface]() {
-            surface->setRole(PlasmaShellSurface::Role::ToolTip);
-        });
-    }
+    LayerShell::applyLayer(window, mode);
 }
 
 void WaylandInterface::setViewStruts(QWindow &view, const QRect &rect, Plasma::Types::Location location)
 {
-    if (!m_ghostWindows.contains(view.winId())) {
-        m_ghostWindows[view.winId()] = new Private::GhostWindow(this);
-    }
-
-    auto w = m_ghostWindows[view.winId()];
-
-    switch (location) {
-    case Plasma::Types::TopEdge:
-    case Plasma::Types::BottomEdge:
-        w->setGeometry({rect.x() + rect.width() / 2 - rect.height(), rect.y(), rect.height() + 1, rect.height()});
-        break;
-
-    case Plasma::Types::LeftEdge:
-    case Plasma::Types::RightEdge:
-        w->setGeometry({rect.x(), rect.y() + rect.height() / 2 - rect.width(), rect.width(), rect.width() + 1});
-        break;
-
-    default:
-        break;
-    }
+    LayerShell::setExclusiveZone(&view, LayerShell::exclusiveZoneFor(rect, location));
 }
 
 void WaylandInterface::switchToNextVirtualDesktop()
@@ -404,18 +268,18 @@ void WaylandInterface::setWindowOnActivities(const WindowId &wid, const QStringL
 
 void WaylandInterface::removeViewStruts(QWindow &view)
 {
-    delete m_ghostWindows.take(view.winId());
+    LayerShell::setExclusiveZone(&view, 0);
 }
 
 WindowId WaylandInterface::activeWindow()
 {
     if (!m_windowManagement) {
-        return 0;
+        return {};
     }
 
     auto wid = m_windowManagement->activeWindow();
 
-    return wid ? wid->internalId() : 0;
+    return idFor(wid);
 }
 
 void WaylandInterface::skipTaskBar(const QDialog &dialog)
@@ -450,12 +314,12 @@ void WaylandInterface::slideWindow(QWindow &view, AbstractWindowInterface::Slide
         break;
     }
 
-    KWindowEffects::slideWindow(view.winId(), slideLocation, -1);
+    KWindowEffects::slideWindow(&view, slideLocation, -1);
 }
 
 void WaylandInterface::enableBlurBehind(QWindow &view)
 {
-    KWindowEffects::enableBlurBehind(view.winId());
+    KWindowEffects::enableBlurBehind(&view);
 }
 
 void WaylandInterface::setActiveEdge(QWindow *view, bool active)
@@ -471,12 +335,14 @@ void WaylandInterface::setActiveEdge(QWindow *view, bool active)
                 || window->parentView()->visibility()->mode() == Types::DodgeMaximized
                 || window->parentView()->visibility()->mode() == Types::DodgeAllWindows
                 || window->parentView()->visibility()->mode() == Types::AutoHide)) {
+        //! Under wlr-layer-shell the auto-hiding panel reveal is driven client-side by
+        //! VisibilityManager (showing/hiding the dock itself); the plasma-shell
+        //! requestShow/HideAutoHidingPanel protocol used previously has no layer-shell
+        //! equivalent, so the edge ghost window here only toggles its own mask.
         if (active) {
             window->showWithMask();
-            window->surface()->requestHideAutoHidingPanel();
         } else {
             window->hideWithMask();
-            window->surface()->requestShowAutoHidingPanel();
         }
     }
 }
@@ -501,7 +367,7 @@ WindowInfoWrap WaylandInterface::requestInfoActive()
 
     if (!w) return {};
 
-    return requestInfo(w->internalId());
+    return requestInfo(idFor(w));
 }
 
 WindowInfoWrap WaylandInterface::requestInfo(WindowId wid)
@@ -516,7 +382,7 @@ WindowInfoWrap WaylandInterface::requestInfo(WindowId wid)
     if (w) {
         winfoWrap.setIsValid(isValidWindow(w) && !plasmaBlockedWindow);
         winfoWrap.setWid(wid);
-        winfoWrap.setParentId(w->parentWindow() ? w->parentWindow()->internalId() : 0);
+        winfoWrap.setParentId(idFor(w->parentWindow()));
         winfoWrap.setIsActive(w->isActive());
         winfoWrap.setIsMinimized(w->isMinimized());
         winfoWrap.setIsMaxVert(w->isMaximized());
@@ -551,7 +417,7 @@ WindowInfoWrap WaylandInterface::requestInfo(WindowId wid)
     }
 
     if (plasmaBlockedWindow) {
-        windowRemoved(w->internalId());
+        windowRemoved(idFor(w));
     }
 
     return winfoWrap;
@@ -576,7 +442,7 @@ AppData WaylandInterface::appDataFor(WindowId wid)
 KWayland::Client::PlasmaWindow *WaylandInterface::windowFor(WindowId wid)
 {
     auto it = std::find_if(m_windowManagement->windows().constBegin(), m_windowManagement->windows().constEnd(), [&wid](PlasmaWindow * w) noexcept {
-            return w->isValid() && w->internalId() == wid;
+            return w->isValid() && idFor(w) == wid;
 });
 
     if (it == m_windowManagement->windows().constEnd()) {
@@ -608,7 +474,7 @@ WindowId WaylandInterface::winIdFor(QString appId, QString title)
         return QVariant();
     }
 
-    return (*it)->internalId();
+    return idFor(*it);
 }
 
 WindowId WaylandInterface::winIdFor(QString appId, QRect geometry)
@@ -621,7 +487,7 @@ WindowId WaylandInterface::winIdFor(QString appId, QRect geometry)
         return QVariant();
     }
 
-    return (*it)->internalId();
+    return idFor(*it);
 }
 
 bool WaylandInterface::windowCanBeDragged(WindowId wid)
@@ -805,7 +671,7 @@ bool WaylandInterface::isValidWindow(const KWayland::Client::PlasmaWindow *w)
         return false;
     }
 
-    if (windowsTracker()->isValidFor(w->internalId())) {
+    if (windowsTracker()->isValidFor(idFor(w))) {
         return true;
     }
 
@@ -819,12 +685,12 @@ bool WaylandInterface::isAcceptableWindow(const KWayland::Client::PlasmaWindow *
     }
 
     //! ignored windows that are not tracked
-    if (hasBlockedTracking(w->internalId())) {
+    if (hasBlockedTracking(idFor(w))) {
         return false;
     }
 
     //! whitelisted/approved windows
-    if (isWhitelistedWindow(w->internalId())) {
+    if (isWhitelistedWindow(idFor(w))) {
         return true;
     }
 
@@ -837,19 +703,19 @@ bool WaylandInterface::isAcceptableWindow(const KWayland::Client::PlasmaWindow *
     if (isSkipped
             && ((w->appId() == QLatin1String("yakuake")
                  || (w->appId() == QLatin1String("krunner"))) )) {
-        registerWhitelistedWindow(w->internalId());
+        registerWhitelistedWindow(idFor(w));
     } else if (w->appId() == QLatin1String("org.kde.plasmashell")) {
         if (isSkipped && isSidepanel(w)) {
-            registerWhitelistedWindow(w->internalId());
+            registerWhitelistedWindow(idFor(w));
             return true;
         } else if (isPlasmaPanel(w) || isFullScreenWindow(w)) {
-            registerPlasmaIgnoredWindow(w->internalId());
+            registerPlasmaIgnoredWindow(idFor(w));
             return false;
         }
     } else if ((w->appId() == QLatin1String("latte-dock"))
                || (w->appId().startsWith(QLatin1String("ksmserver")))) {
         if (isFullScreenWindow(w)) {
-            registerIgnoredWindow(w->internalId());
+            registerIgnoredWindow(idFor(w));
             return false;
         }
     }
@@ -862,7 +728,7 @@ void WaylandInterface::updateWindow()
     PlasmaWindow *pW = qobject_cast<PlasmaWindow*>(QObject::sender());
 
     if (isValidWindow(pW)) {
-        considerWindowChanged(pW->internalId());
+        considerWindowChanged(idFor(pW));
     }
 }
 
@@ -872,7 +738,7 @@ void WaylandInterface::windowUnmapped()
 
     if (pW) {
         untrackWindow(pW);
-        Q_EMIT windowRemoved(pW->internalId());
+        Q_EMIT windowRemoved(idFor(pW));
     }
 }
 
@@ -930,7 +796,7 @@ void WaylandInterface::windowCreatedProxy(KWayland::Client::PlasmaWindow *w)
     }
 
     trackWindow(w);
-    Q_EMIT windowAdded(w->internalId());
+    Q_EMIT windowAdded(idFor(w));
 
     if (w->appId() == QLatin1String("latte-dock")) {
         Q_EMIT latteWindowAdded();

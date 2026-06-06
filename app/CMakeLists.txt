@@ -84,6 +84,7 @@ target_link_libraries(latte-dock
     KF6::Package
     Plasma::PlasmaQuick
     Plasma::KWaylandClient
+    LayerShellQt::Interface
     KF6::XmlGui
     KF6::WindowSystem
     Wayland::Client

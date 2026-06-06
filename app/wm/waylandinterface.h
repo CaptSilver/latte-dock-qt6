@@ -27,10 +27,6 @@
 
 namespace Latte {
 class Corona;
-namespace Private {
-//! this class is used to create the struts inside wayland
-class GhostWindow;
-}
 }
 
 namespace Latte {
@@ -119,9 +115,6 @@ private:
 
 
 private:
-    friend class Private::GhostWindow;
-    mutable QMap<WindowId, Private::GhostWindow *> m_ghostWindows;
-
     KWayland::Client::PlasmaWindowManagement *m_windowManagement{nullptr};
 
     //! VirtualDesktopsSupport

@@ -86,10 +86,6 @@ void CanvasConfigView::syncGeometry()
 
     setPosition(geometry.topLeft());
 
-    if (m_shellSurface) {
-        m_shellSurface->setPosition(geometry.topLeft());
-    }
-
     setMaximumSize(geometry.size());
     setMinimumSize(geometry.size());
     resize(geometry.size());
@@ -122,11 +118,6 @@ bool CanvasConfigView::event(QEvent *e)
 
 void CanvasConfigView::showEvent(QShowEvent *ev)
 {
-    if (m_shellSurface) {
-        //! under wayland it needs to be set again after its hiding
-        m_shellSurface->setPosition(m_geometryWhenVisible.topLeft());
-    }
-
     SubConfigView::showEvent(ev);
 
     if (!m_latteView) {
@@ -176,7 +167,7 @@ void CanvasConfigView::focusOutEvent(QFocusEvent *ev)
 
 void CanvasConfigView::hideConfigWindow()
 {
-    if (m_shellSurface) {
+    if (KWindowSystem::isPlatformWayland()) {
         //!NOTE: Avoid crash in wayland environment with qt5.9
         close();
     } else {

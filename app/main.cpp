@@ -505,7 +505,7 @@ inline void configureAboutData()
 
     about.setHomepage(QStringLiteral(WEBSITE));
     about.setProgramLogo(QIcon::fromTheme(QStringLiteral("latte-dock")));
-    about.setDesktopFileName(QStringLiteral("latte-dock"));
+    about.setDesktopFileName(QStringLiteral("org.kde.latte-dock"));
     about.setProductName(QByteArray("lattedock"));
 
     // Authors

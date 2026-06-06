@@ -150,10 +150,6 @@ void SecondaryConfigView::syncGeometry()
 
     setPosition(position);
 
-    if (m_shellSurface) {
-        m_shellSurface->setPosition(position);
-    }
-
     setMaximumSize(size);
     setMinimumSize(size);
     resize(size);
@@ -167,11 +163,6 @@ void SecondaryConfigView::syncGeometry()
 
 void SecondaryConfigView::showEvent(QShowEvent *ev)
 {
-    if (m_shellSurface) {
-        //! under wayland it needs to be set again after its hiding
-        m_shellSurface->setPosition(m_geometryWhenVisible.topLeft());
-    }
-
     SubConfigView::showEvent(ev);
 
     if (!m_latteView) {
@@ -213,7 +204,7 @@ void SecondaryConfigView::focusOutEvent(QFocusEvent *ev)
 
 void SecondaryConfigView::hideConfigWindow()
 {
-    if (m_shellSurface) {
+    if (KWindowSystem::isPlatformWayland()) {
         //!NOTE: Avoid crash in wayland environment with qt5.9
         close();
     } else {
@@ -225,13 +216,13 @@ void SecondaryConfigView::updateEffects()
 {
     //! Don't apply any effect before the wayland surface is created under wayland
     //! https://bugs.kde.org/show_bug.cgi?id=392890
-    if (KWindowSystem::isPlatformWayland() && !m_shellSurface) {
+    if (KWindowSystem::isPlatformWayland() && !isVisible()) {
         return;
     }
 
     //! Don't apply any effect before the wayland surface is created under wayland
     //! https://bugs.kde.org/show_bug.cgi?id=392890
-    if (KWindowSystem::isPlatformWayland() && !m_shellSurface) {
+    if (KWindowSystem::isPlatformWayland() && !isVisible()) {
         return;
     }
 

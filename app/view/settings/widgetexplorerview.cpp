@@ -132,10 +132,6 @@ void WidgetExplorerView::syncGeometry()
 
     setPosition(geometry.topLeft());
 
-    if (m_shellSurface) {
-        m_shellSurface->setPosition(geometry.topLeft());
-    }
-
     setMaximumSize(geometry.size());
     setMinimumSize(geometry.size());
     resize(geometry.size());
@@ -143,11 +139,6 @@ void WidgetExplorerView::syncGeometry()
 
 void WidgetExplorerView::showEvent(QShowEvent *ev)
 {
-    if (m_shellSurface) {
-        //! under wayland it needs to be set again after its hiding
-        m_shellSurface->setPosition(m_geometryWhenVisible.topLeft());
-    }
-
     SubConfigView::showEvent(ev);
 
     if (!m_latteView) {
@@ -179,7 +170,7 @@ void WidgetExplorerView::updateEffects()
 {
     //! Don't apply any effect before the wayland surface is created under wayland
     //! https://bugs.kde.org/show_bug.cgi?id=392890
-    if (KWindowSystem::isPlatformWayland() && !m_shellSurface) {
+    if (KWindowSystem::isPlatformWayland() && !isVisible()) {
         return;
     }
 

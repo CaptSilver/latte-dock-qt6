@@ -8,6 +8,7 @@
 // local
 #include "../view.h"
 #include "../visibilitymanager.h"
+#include "../../wm/waylandlayershell.h"
 
 // Qt
 #include <QDebug>
@@ -16,9 +17,10 @@
 #include <QTimer>
 
 // KDE
-#include <KWayland/Client/plasmashell.h>
-#include <KWayland/Client/surface.h>
 #include <KWindowSystem>
+
+// Plasma
+#include <Plasma/Plasma>
 
 namespace Latte {
 namespace ViewPart {
@@ -136,10 +138,6 @@ SubWindow::~SubWindow()
     for (auto &c : connectionsHack) {
         disconnect(c);
     }
-
-    if (m_shellSurface) {
-        delete m_shellSurface;
-    }
 }
 
 int SubWindow::location()
@@ -169,16 +167,11 @@ Latte::View *SubWindow::parentView()
 
 Latte::WindowSystem::WindowId SubWindow::trackedWindowId()
 {
-    if (KWindowSystem::isPlatformWayland() && m_trackedWindowId.toInt() <= 0) {
+    if (KWindowSystem::isPlatformWayland() && m_trackedWindowId.toString().isEmpty()) {
         updateWaylandId();
     }
 
     return m_trackedWindowId;
-}
-
-KWayland::Client::PlasmaShellSurface *SubWindow::surface()
-{
-    return m_shellSurface;
 }
 
 void SubWindow::fixGeometry()
@@ -190,10 +183,6 @@ void SubWindow::fixGeometry()
         setMaximumSize(m_calculatedGeometry.size());
         resize(m_calculatedGeometry.size());
         setPosition(m_calculatedGeometry.x(), m_calculatedGeometry.y());
-
-        if (m_shellSurface) {
-            m_shellSurface->setPosition(m_calculatedGeometry.topLeft());
-        }
     }
 }
 
@@ -218,32 +207,14 @@ void SubWindow::startGeometryTimer()
 
 void SubWindow::setupWaylandIntegration()
 {
-    if (m_shellSurface || !KWindowSystem::isPlatformWayland() || !m_latteView || !m_latteView->containment()) {
-        // already setup
+    if (!KWindowSystem::isPlatformWayland() || !m_latteView || !m_latteView->containment()) {
         return;
     }
 
-    if (m_corona) {
-        using namespace KWayland::Client;
-
-        PlasmaShell *interface = m_corona->waylandCoronaInterface();
-
-        if (!interface) {
-            return;
-        }
-
-        Surface *s = Surface::fromWindow(this);
-
-        if (!s) {
-            return;
-        }
-
-        qDebug() << "wayland screen edge ghost window surface was created...";
-        m_shellSurface = interface->createSurface(s, this);
-        m_corona->wm()->setViewExtraFlags(m_shellSurface);
-
-        m_shellSurface->setPanelTakesFocus(false);
-    }
+    namespace LS = Latte::WindowSystem::LayerShell;
+    LS::configureView(this, m_latteView->screen(),
+                      static_cast<Plasma::Types::Location>(location()), Latte::Types::Center);
+    LS::setFocusPolicy(this, /*takesFocus=*/false);
 }
 
 bool SubWindow::event(QEvent *e)

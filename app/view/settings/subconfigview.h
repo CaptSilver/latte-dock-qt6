@@ -19,12 +19,6 @@
 // Plasma
 #include <KSvg/FrameSvg>
 
-namespace KWayland {
-namespace Client {
-class PlasmaShellSurface;
-}
-}
-
 namespace Latte {
 class Corona;
 class View;
@@ -55,7 +49,6 @@ public:
     virtual void showAfter(int msecs = 0);
 
     Latte::WindowSystem::WindowId trackedWindowId();
-    KWayland::Client::PlasmaShellSurface *surface();
 
 public Q_SLOTS:
     virtual void syncGeometry() = 0;
@@ -71,7 +64,6 @@ protected:
     virtual void updateEnabledBorders() = 0;
 
     void showEvent(QShowEvent *ev) override;
-    bool event(QEvent *e) override;
 
     virtual Qt::WindowFlags wFlags() const;
 
@@ -87,7 +79,6 @@ protected:
     KSvg::FrameSvg::EnabledBorders m_enabledBorders{KSvg::FrameSvg::AllBorders};
 
     Latte::Corona *m_corona{nullptr};
-    KWayland::Client::PlasmaShellSurface *m_shellSurface{nullptr};
 
 private Q_SLOTS:
     void updateWaylandId();
