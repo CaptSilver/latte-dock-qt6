@@ -386,10 +386,19 @@ void View::init(Plasma::Containment *plasma_containment)
         containmentGraphicItem->setProperty("_latte_universalSettings_object", QVariant::fromValue(m_corona->universalSettings()));
         containmentGraphicItem->setProperty("_latte_view_object", QVariant::fromValue(this));
 
+        //! On Plasma 6 the containment graphic object (and its LatteApp.Interfaces child) is
+        //! created by the shell before this View wrapper, so Interfaces::setPlasmoidInterface
+        //! already ran and read a null _latte_view_object. The property is registered back to us
+        //! only once view becomes non-null, which never happens on its own -> chicken-and-egg.
+        //! Locate the Interfaces object directly and make it re-read now that the properties exist.
         Latte::Interfaces *ifacesGraphicObject = qobject_cast<Latte::Interfaces *>(containmentGraphicItem->property("_latte_view_interfacesobject").value<QObject *>());
 
+        if (!ifacesGraphicObject) {
+            ifacesGraphicObject = containmentGraphicItem->findChild<Latte::Interfaces *>();
+        }
+
         if (ifacesGraphicObject) {
-            ifacesGraphicObject->updateView();
+            ifacesGraphicObject->updateInterfaces();
             setInterfacesGraphicObj(ifacesGraphicObject);
         }
     }

@@ -296,6 +296,33 @@ void LayoutManager::onRootItemChanged()
     m_initAppletContainerMethod = rootMetaObject->method(initAppletContainerIndex);
 }
 
+QList<QObject *> LayoutManager::appletObjects() const
+{
+    QList<QObject *> applets;
+
+    if (!m_plasmoid) {
+        return applets;
+    }
+
+    const QList<Plasma::Applet *> rawApplets = m_plasmoid->property("applets").value<QList<Plasma::Applet *>>();
+    for (auto *applet : rawApplets) {
+        applets.append(applet);
+    }
+
+    return applets;
+}
+
+QQuickItem *LayoutManager::appletGraphicItem(QObject *applet) const
+{
+    //! AppletItem.qml's "applet" is an Item (the graphic object), but here we hold a
+    //! Plasma::Applet (a QObject). On Plasma 6 they are distinct; resolve the graphic item.
+    if (auto *plasmaApplet = qobject_cast<Plasma::Applet *>(applet)) {
+        return PlasmaQuick::AppletQuickItem::itemForApplet(plasmaApplet);
+    }
+
+    return nullptr;
+}
+
 bool LayoutManager::isValidApplet(const int &id)
 {
     //! should be loaded after m_plasmoid has been set properly
@@ -303,7 +330,7 @@ bool LayoutManager::isValidApplet(const int &id)
         return false;
     }
 
-    QList<QObject *> applets = m_plasmoid->property("applets").value<QList<QObject *>>();
+    QList<QObject *> applets = appletObjects();
 
     for(int i=0; i<applets.count(); ++i) {
         uint appletid = applets[i]->property("id").toUInt();
@@ -319,7 +346,7 @@ bool LayoutManager::isValidApplet(const int &id)
 void LayoutManager::restore()
 {
     QList<int> appletIdsOrder = toIntList((*m_configuration)[QStringLiteral("appletOrder")].toString());
-    QList<QObject *> applets = m_plasmoid->property("applets").value<QList<QObject *>>();
+    QList<QObject *> applets = appletObjects();
 
     Latte::Types::Alignment alignment = static_cast<Latte::Types::Alignment>((*m_configuration)[QStringLiteral("alignment")].toInt());
     int splitterPosition = (*m_configuration)[QStringLiteral("splitterPosition")].toInt();
@@ -406,11 +433,18 @@ void LayoutManager::restore()
                 continue;
             }
 
+            QQuickItem *appletGraphic = appletGraphicItem(orderedApplets[i]);
+            if (!appletGraphic) {
+                continue;
+            }
+
             QVariant appletItemVariant;
-            QVariant appletVariant; appletVariant.setValue(orderedApplets[i]);
+            QVariant appletVariant; appletVariant.setValue(appletGraphic);
             m_createAppletItemMethod.invoke(m_rootItem, Q_RETURN_ARG(QVariant, appletItemVariant), Q_ARG(QVariant, appletVariant));
             QQuickItem *appletItem = appletItemVariant.value<QQuickItem *>();
-            appletItem->setParentItem(m_mainLayout);
+            if (appletItem) {
+                appletItem->setParentItem(m_mainLayout);
+            }
         }
     } else {
         QQuickItem *parentlayout = m_startLayout;
@@ -434,11 +468,18 @@ void LayoutManager::restore()
                 continue;
             }
 
+            QQuickItem *appletGraphic = appletGraphicItem(orderedApplets[i]);
+            if (!appletGraphic) {
+                continue;
+            }
+
             QVariant appletItemVariant;
-            QVariant appletVariant; appletVariant.setValue(orderedApplets[i]);
+            QVariant appletVariant; appletVariant.setValue(appletGraphic);
             m_createAppletItemMethod.invoke(m_rootItem, Q_RETURN_ARG(QVariant, appletItemVariant), Q_ARG(QVariant, appletVariant));
             QQuickItem *appletItem = appletItemVariant.value<QQuickItem *>();
-            appletItem->setParentItem(parentlayout);
+            if (appletItem) {
+                appletItem->setParentItem(parentlayout);
+            }
         }
     }
 

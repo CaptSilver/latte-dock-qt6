@@ -536,7 +536,10 @@ void ContainmentInterface::setPlasmoid(QObject *plasmoid)
     m_plasmoid = plasmoid;
 
     if (m_plasmoid) {
-        m_configuration = qobject_cast<KConfigPropertyMap *>(m_plasmoid->property("configuration").value<QObject *>());
+        QObject *appletObj = m_plasmoid->property("plasmoid").value<QObject *>();
+        m_configuration = appletObj
+            ? qobject_cast<KConfigPropertyMap *>(appletObj->property("configuration").value<QObject *>())
+            : nullptr;
 
         if (m_configuration) {
             connect(m_configuration, &QQmlPropertyMap::valueChanged, this, &ContainmentInterface::containmentConfigPropertyChanged);

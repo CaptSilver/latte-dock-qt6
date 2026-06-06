@@ -102,9 +102,16 @@ void Interfaces::setUniversalSettings(QObject *settings)
     Q_EMIT universalSettingsChanged();
 }
 
-void Interfaces::updateView()
+void Interfaces::updateInterfaces()
 {
+    //! On Plasma 6 the Latte::View C++ wrapper injects the _latte_* objects onto the graphic
+    //! object after this Interfaces was already bound, so the initial read in setPlasmoidInterface
+    //! saw nulls. Re-read everything once the View has injected the real objects.
     if (m_plasmoid) {
+        setGlobalShortcuts(m_plasmoid->property("_latte_globalShortcuts_object").value<QObject *>());
+        setLayoutsManager(m_plasmoid->property("_latte_layoutsManager_object").value<QObject *>());
+        setThemeExtended(m_plasmoid->property("_latte_themeExtended_object").value<QObject *>());
+        setUniversalSettings(m_plasmoid->property("_latte_universalSettings_object").value<QObject *>());
         setView(m_plasmoid->property("_latte_view_object").value<QObject *>());
     }
 }
@@ -143,11 +150,7 @@ void Interfaces::setPlasmoidInterface(QObject *interface)
     if (plasmoid && m_plasmoid != plasmoid) {
         m_plasmoid = plasmoid;
 
-        setGlobalShortcuts(plasmoid->property("_latte_globalShortcuts_object").value<QObject *>());
-        setLayoutsManager(plasmoid->property("_latte_layoutsManager_object").value<QObject *>());
-        setThemeExtended(plasmoid->property("_latte_themeExtended_object").value<QObject *>());
-        setUniversalSettings(plasmoid->property("_latte_universalSettings_object").value<QObject *>());
-        setView(plasmoid->property("_latte_view_object").value<QObject *>());
+        updateInterfaces();
 
         Q_EMIT interfaceChanged();
     }

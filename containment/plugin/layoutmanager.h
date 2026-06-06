@@ -143,6 +143,15 @@ private:
 
     void destroyAppletContainer(QObject *applet);
 
+    //! The containment exposes "applets" as QList<Plasma::Applet*>, an unrelated metatype to
+    //! QList<QObject*> on Qt6 so a direct QVariant::value<QList<QObject*>>() yields an empty list.
+    //! Convert element-by-element instead.
+    QList<QObject *> appletObjects() const;
+
+    //! Resolves a Plasma::Applet to its graphic item (AppletQuickItem), the object AppletItem.qml
+    //! expects. Returns nullptr if the applet has no graphic item yet.
+    QQuickItem *appletGraphicItem(QObject *applet) const;
+
     void initSaveConnections();
 
     void insertAtLayoutTail(QQuickItem *layout, QQuickItem *item);

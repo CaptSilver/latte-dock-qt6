@@ -39,7 +39,7 @@ public:
     void setPlasmoidInterface(QObject *interface);
 
 public Q_SLOTS:
-    Q_INVOKABLE void updateView();
+    Q_INVOKABLE void updateInterfaces();
 
 Q_SIGNALS:
     void interfaceChanged();

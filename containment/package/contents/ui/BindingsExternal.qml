@@ -13,6 +13,8 @@ import org.kde.latte.core 0.2 as LatteCore
 import org.kde.latte.private.containment 0.1 as LatteContainment
 
 Item {
+    property Item containmentItem
+
     property bool updateIsEnabled: autosize.inCalculatedIconSize
                                    && !visibilityManager.inSlidingIn
                                    && !visibilityManager.inSlidingOut
@@ -350,7 +352,7 @@ Item {
         target: latteView && latteView.extendedInterface ? latteView.extendedInterface : null
         property: "plasmoid"
         when: latteView && latteView.extendedInterface
-        value: plasmoid
+        value: containmentItem
     }
 
     Binding{

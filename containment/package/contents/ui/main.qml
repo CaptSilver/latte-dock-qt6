@@ -746,7 +746,7 @@ ContainmentItem {
 
     LatteContainment.LayoutManager{
         id:fastLayoutManager
-        plasmoidObj: plasmoid
+        plasmoidObj: Plasmoid
         rootItem: root
         dndSpacerItem: dndSpacer
         mainLayout: layoutsContainer.mainLayout
@@ -782,6 +782,7 @@ ContainmentItem {
 
     BindingsExternal {
         id: bindingsExternal
+        containmentItem: root
     }
 
     VisibilityManager{
@@ -1035,10 +1036,15 @@ ContainmentItem {
 
     LatteApp.Interfaces {
         id: _interfaces
-        plasmoidInterface: plasmoid
+        plasmoidInterface: root
 
         Component.onCompleted: {
-            view.interfacesGraphicObj = _interfaces;
+            //! view can be null here: on Plasma 6 the C++ View wrapper is constructed after this
+            //! containment graphic object, so _latte_view_object is not injected yet. The View ctor
+            //! re-reads it and onViewChanged below does the wiring once view becomes available.
+            if (view) {
+                view.interfacesGraphicObj = _interfaces;
+            }
         }
 
         onViewChanged: {
