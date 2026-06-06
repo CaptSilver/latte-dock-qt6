@@ -5,6 +5,7 @@
 */
 
 import QtQuick 2.7
+import QtQuick.Controls 2.15 as QQC2
 import QtQuick.Layouts 1.0
 import Qt5Compat.GraphicalEffects
 
@@ -444,8 +445,9 @@ MouseArea {
                     PlasmaComponents.ToolButton {
                         id: configureButton
                         anchors.verticalCenter: parent.verticalCenter
-                        iconSource: "configure"
-                        tooltip: i18n("Configure applet")
+                        icon.name: "configure"
+                        QQC2.ToolTip.text: i18n("Configure applet")
+                        QQC2.ToolTip.visible: hovered
                         onClicked: {
                             tooltip.visible = false;
                             currentApplet.applet.action("configure").trigger();
@@ -466,8 +468,9 @@ MouseArea {
                         PlasmaComponents.ToolButton{
                             id: colorizingButton
                             checkable: true
-                            iconSource: "color-picker"
-                            tooltip: i18n("Enable painting  for this applet")
+                            icon.name: "color-picker"
+                            QQC2.ToolTip.text: i18n("Enable painting  for this applet")
+                            QQC2.ToolTip.visible: hovered
 
                             onClicked: {
                                 fastLayoutManager.setOption(currentApplet.applet.id, "userBlocksColorizing", !checked);
@@ -477,8 +480,9 @@ MouseArea {
                         PlasmaComponents.ToolButton{
                             id: lockButton
                             checkable: true
-                            iconSource: checked ? "lock" : "unlock"
-                            tooltip: i18n("Disable parabolic effect for this applet")
+                            icon.name: checked ? "lock" : "unlock"
+                            QQC2.ToolTip.text: i18n("Disable parabolic effect for this applet")
+                            QQC2.ToolTip.visible: hovered
 
                             onClicked: {
                                 fastLayoutManager.setOption(currentApplet.applet.id, "lockZoom", checked);
@@ -488,8 +492,9 @@ MouseArea {
                         PlasmaComponents.ToolButton {
                             id: closeButton
                             anchors.verticalCenter: parent.verticalCenter
-                            iconSource: "delete"
-                            tooltip: i18n("Remove applet")
+                            icon.name: "delete"
+                            QQC2.ToolTip.text: i18n("Remove applet")
+                            QQC2.ToolTip.visible: hovered
                             onClicked: {
                                 tooltip.visible = false;
                                 if(currentApplet && currentApplet.applet)
