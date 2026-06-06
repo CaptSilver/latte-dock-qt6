@@ -539,7 +539,9 @@ void Effects::updateEffects()
 {
     //! Don't apply any effect before the wayland surface is created under wayland
     //! https://bugs.kde.org/show_bug.cgi?id=392890
-    if (KWindowSystem::isPlatformWayland() && !m_view->surface()) {
+    //! Under wlr-layer-shell the view is backed by its wl_surface as soon as it is exposed (there is
+    //! no separate plasma-shell surface to wait on), so gate on the native handle being realized.
+    if (KWindowSystem::isPlatformWayland() && !m_view->handle()) {
         return;
     }
 

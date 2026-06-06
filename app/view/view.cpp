@@ -482,11 +482,6 @@ void View::setupWaylandIntegration()
     }
 }
 
-KWayland::Client::PlasmaShellSurface *View::surface()
-{
-    return m_shellSurface;
-}
-
 void View::setupWaylandLayerShell()
 {
     if (m_layerShellConfigured) {

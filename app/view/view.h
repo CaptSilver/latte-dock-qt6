@@ -253,8 +253,6 @@ public:
     Layout::GenericLayout *layout() const;
     void setLayout(Layout::GenericLayout *layout);
 
-    KWayland::Client::PlasmaShellSurface *surface();
-
     //! release grab and restore mouse state
     void unblockMouse(int x, int y);
 

@@ -25,7 +25,6 @@
 
 // KDE
 #include <KWindowSystem>
-#include <KWayland/Client/surface.h>
 
 #include <KWayland/Client/plasmavirtualdesktop.h>
 
@@ -330,15 +329,15 @@ void WaylandInterface::setActiveEdge(QWindow *view, bool active)
         return;
     }
 
-    if (window->parentView()->surface() && window->parentView()->visibility()
-            && (window->parentView()->visibility()->mode() == Types::DodgeActive
-                || window->parentView()->visibility()->mode() == Types::DodgeMaximized
-                || window->parentView()->visibility()->mode() == Types::DodgeAllWindows
-                || window->parentView()->visibility()->mode() == Types::AutoHide)) {
+    if (window->parentView()->visibility()
+            && ViewPart::VisibilityManager::revealsOnScreenEdge(window->parentView()->visibility()->mode())) {
         //! Under wlr-layer-shell the auto-hiding panel reveal is driven client-side by
-        //! VisibilityManager (showing/hiding the dock itself); the plasma-shell
-        //! requestShow/HideAutoHidingPanel protocol used previously has no layer-shell
-        //! equivalent, so the edge ghost window here only toggles its own mask.
+        //! VisibilityManager: arming the edge ghost (un-masking it) lets its mouse detection fire
+        //! ScreenEdgeGhostWindow::containsMouseChanged, which raises the view (slides the dock in)
+        //! and re-hides it on leave. The plasma-shell requestShow/HideAutoHidingPanel protocol used
+        //! previously has no layer-shell equivalent, so the edge ghost window here only toggles its
+        //! own mask. (Previously a dead `parentView()->surface()` guard — always null under
+        //! layer-shell — short-circuited this whole block, so the edge detector never armed.)
         if (active) {
             window->showWithMask();
         } else {

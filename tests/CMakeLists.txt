@@ -17,4 +17,10 @@ ecm_add_test(windowinfowraptest.cpp ../app/wm/windowinfowrap.cpp
 )
 target_include_directories(windowinfowraptest PRIVATE ${CMAKE_BINARY_DIR}/app)
 
+ecm_add_test(visibilityrevealtest.cpp
+    TEST_NAME visibilityrevealtest
+    LINK_LIBRARIES Qt6::Test Qt6::Gui Plasma::Plasma Plasma::PlasmaQuick
+)
+target_include_directories(visibilityrevealtest PRIVATE ${CMAKE_BINARY_DIR}/app)
+
 add_subdirectory(manual)

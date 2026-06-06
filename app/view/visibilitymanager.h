@@ -67,6 +67,22 @@ class VisibilityManager : public QObject
 public:
     static const QRect ISHIDDENMASK;
 
+    //! Whether a dock in visibility \a mode reveals itself when the pointer reaches the screen edge.
+    //!
+    //! These are the modes for which Latte arms the edge-ghost detector so its mouse detection can
+    //! slide the hidden dock back in: the three Dodge modes and AutoHide. AlwaysVisible never hides;
+    //! WindowsCanCover/WindowsGoBelow use a stacking-layer mechanism rather than edge reveal. This
+    //! predicate is the gate used by WaylandInterface::setActiveEdge() to decide whether to arm the
+    //! edge ghost — under wlr-layer-shell the reveal is otherwise fully client-side (QML slide in/out
+    //! driven by the ghost's containsMouseChanged), with no exclusive-zone change.
+    static bool revealsOnScreenEdge(Latte::Types::Visibility mode)
+    {
+        return mode == Latte::Types::DodgeActive
+                || mode == Latte::Types::DodgeMaximized
+                || mode == Latte::Types::DodgeAllWindows
+                || mode == Latte::Types::AutoHide;
+    }
+
     explicit VisibilityManager(PlasmaQuick::ContainmentView *view);
     virtual ~VisibilityManager();
 
