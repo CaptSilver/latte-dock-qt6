@@ -680,10 +680,10 @@ Item{
             spritePosition: {
                 if (root.isHorizontal) {
                     return appletItem.parent === appletItem.layouts.startLayout ?
-                                PlasmaCore.Types.RightPositioned : PlasmaCore.Types.LeftPositioned;
+                                LatteCore.Types.RightPositioned : LatteCore.Types.LeftPositioned;
                 } else {
                     return appletItem.parent === appletItem.layouts.startLayout ?
-                                PlasmaCore.Types.BottomPositioned : PlasmaCore.Types.TopPositioned;
+                                LatteCore.Types.BottomPositioned : LatteCore.Types.TopPositioned;
                 }
             }
         }

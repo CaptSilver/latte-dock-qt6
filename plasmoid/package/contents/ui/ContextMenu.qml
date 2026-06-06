@@ -31,13 +31,13 @@ PlasmaComponents.ContextMenu {
 
     placement: {
         if (root.location === PlasmaCore.Types.LeftEdge) {
-            return PlasmaCore.Types.RightPosedTopAlignedPopup;
+            return LatteCore.Types.RightPosedTopAlignedPopup;
         } else if (root.location === PlasmaCore.Types.TopEdge) {
-            return PlasmaCore.Types.BottomPosedLeftAlignedPopup;
+            return LatteCore.Types.BottomPosedLeftAlignedPopup;
         } else if (root.location === PlasmaCore.Types.RightEdge) {
-            return PlasmaCore.Types.LeftPosedTopAlignedPopup;
+            return LatteCore.Types.LeftPosedTopAlignedPopup;
         } else {
-            return PlasmaCore.Types.TopPosedLeftAlignedPopup;
+            return LatteCore.Types.TopPosedLeftAlignedPopup;
         }
     }
 

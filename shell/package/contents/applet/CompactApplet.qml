@@ -172,7 +172,7 @@ PlasmaCore.ToolTipArea {
        // location: PlasmaCore.Types.Floating //plasmoid.location
         edge: plasmoid.location /*this way dialog borders are not updated and it is used only for adjusting dialog position*/
         hideOnWindowDeactivate: plasmoid.hideOnWindowDeactivate
-        backgroundHints: (plasmoid.containmentDisplayHints & PlasmaCore.Types.DesktopFullyCovered) ? PlasmaCore.Dialog.SolidBackground : PlasmaCore.Dialog.StandardBackground
+        backgroundHints: (plasmoid.containmentDisplayHints & PlasmaCore.Types.ContainmentPrefersOpaqueBackground) ? PlasmaCore.Dialog.SolidBackground : PlasmaCore.Dialog.StandardBackground
 
         property var oldStatus: PlasmaCore.Types.UnknownStatus
 

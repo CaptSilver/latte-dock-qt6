@@ -22,6 +22,8 @@ import QtQuick.Layouts 1.1
 
 import org.kde.plasma.private.shell 2.0 as PlasmaShell
 
+import org.kde.latte.core 0.2 as LatteCore
+
 PC3.Page {
     id: main
     width: Math.max(heading.paintedWidth, Kirigami.Units.iconSizes.enormous * 3 + Kirigami.Units.smallSpacing * 4 + Kirigami.Units.gridUnit * 2)
@@ -154,7 +156,7 @@ PC3.Page {
     PC2.ModelContextMenu { // FIXME(stage4): PC2 type removed in PC3
         id: getWidgetsDialog
         visualParent: getWidgetsButton
-        placement: PlasmaCore.Types.TopPosedLeftAlignedPopup
+        placement: LatteCore.Types.TopPosedLeftAlignedPopup
         // model set on first invocation
         onClicked: model.trigger()
     }

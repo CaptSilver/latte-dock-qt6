@@ -6,12 +6,13 @@
 import QtQuick 2.7
 
 import org.kde.plasma.core 2.0 as PlasmaCore
+import org.kde.latte.core 0.2 as LatteCore
 
 Canvas {
     property color color: "lightblue"
     property bool isHorizontal: true
     property int spriteMargin: 1
-    property int spritePosition: PlasmaCore.Types.CenterPositioned
+    property int spritePosition: LatteCore.Types.CenterPositioned
     property int spriteSize: 5
 
     readonly property int length: isHorizontal ? width : height
@@ -20,11 +21,11 @@ Canvas {
     readonly property int maxSpriteSize: (length - 2*spriteMargin)/7
 
     readonly property int centeredrectstart: {
-        if (spritePosition === PlasmaCore.Types.LeftPositioned
-                || spritePosition === PlasmaCore.Types.TopPositioned) {
+        if (spritePosition === LatteCore.Types.LeftPositioned
+                || spritePosition === LatteCore.Types.TopPositioned) {
             return spriteMargin;
-        } else if (spritePosition === PlasmaCore.Types.RightPositioned
-                   || spritePosition === PlasmaCore.Types.BottomPositioned) {
+        } else if (spritePosition === LatteCore.Types.RightPositioned
+                   || spritePosition === LatteCore.Types.BottomPositioned) {
             return isHorizontal ? (width - (7*currentSprite) - spriteMargin) : (height - (7*currentSprite) - spriteMargin)
         }
 
