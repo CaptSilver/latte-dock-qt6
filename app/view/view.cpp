@@ -377,7 +377,7 @@ void View::init(Plasma::Containment *plasma_containment)
     connect(m_corona->indicatorFactory(), &Latte::Indicator::Factory::indicatorRemoved, this, &View::indicatorPluginRemoved);
 
     //! Assign app interfaces in be accessible through containment graphic item
-    QQuickItem *containmentGraphicItem = qobject_cast<QQuickItem *>(plasma_containment->property("_plasma_graphicObject").value<QObject *>());
+    QQuickItem *containmentGraphicItem = PlasmaQuick::AppletQuickItem::itemForApplet(plasma_containment);
 
     if (containmentGraphicItem) {
         containmentGraphicItem->setProperty("_latte_globalShortcuts_object", QVariant::fromValue(m_corona->globalShortcuts()->shortcutsTracker()));
@@ -1509,7 +1509,7 @@ void View::setInterfacesGraphicObj(Latte::Interfaces *ifaces)
     m_interfacesGraphicObj = ifaces;
 
     if (containment()) {
-        QQuickItem *containmentGraphicItem = qobject_cast<QQuickItem *>(containment()->property("_plasma_graphicObject").value<QObject *>());
+        QQuickItem *containmentGraphicItem = PlasmaQuick::AppletQuickItem::itemForApplet(containment());
 
         if (containmentGraphicItem) {
             containmentGraphicItem->setProperty("_latte_view_interfacesobject", QVariant::fromValue(m_interfacesGraphicObj));
