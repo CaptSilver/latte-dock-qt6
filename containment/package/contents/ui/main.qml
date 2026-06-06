@@ -589,7 +589,7 @@ ContainmentItem {
 
         // don't show applet if it chooses to be hidden but still make it  accessible in the panelcontroller
         appletContainer.visible = Qt.binding(function() {
-            return (appletContainer.applet && appletContainer.applet.status !== PlasmaCore.Types.HiddenStatus || (!Plasmoid.immutable && root.inConfigureAppletsMode)) && !appletContainer.isHidden;
+            return (appletContainer.applet && appletContainer.applet.plasmoid.status !== PlasmaCore.Types.HiddenStatus || (!Plasmoid.immutable && root.inConfigureAppletsMode)) && !appletContainer.isHidden;
         });
         return appletContainer;
     }
@@ -615,21 +615,21 @@ ContainmentItem {
         for (var i = 0; i < layoutsContainer.startLayout.children.length; ++i) {
             var child = layoutsContainer.startLayout.children[i];
 
-            if (child && child.applet && child.applet.id === appletId && child.containsPos(pos))
+            if (child && child.applet && child.applet.plasmoid.id === appletId && child.containsPos(pos))
                 return true;
         }
 
         for (var i = 0; i < layoutsContainer.mainLayout.children.length; ++i) {
             var child = layoutsContainer.mainLayout.children[i];
 
-            if (child && child.applet && child.applet.id === appletId && child.containsPos(pos))
+            if (child && child.applet && child.applet.plasmoid.id === appletId && child.containsPos(pos))
                 return true;
         }
 
         for (var i = 0; i < layoutsContainer.endLayout.children.length; ++i) {
             var child = layoutsContainer.endLayout.children[i];
 
-            if (child && child.applet && child.applet.id === appletId && child.containsPos(pos))
+            if (child && child.applet && child.applet.plasmoid.id === appletId && child.containsPos(pos))
                 return true;
         }
 

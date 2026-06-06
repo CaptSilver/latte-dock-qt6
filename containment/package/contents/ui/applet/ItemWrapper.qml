@@ -378,7 +378,7 @@ Item{
         Connections {
             target: root.latteView ? root.latteView.extendedInterface : null
             onAppletRequestedVisualIndicator: {
-                if (plasmoidId === appletItem.applet.id) {
+                if (plasmoidId === appletItem.applet.plasmoid.id) {
                     visualIndicator.showVisualIndicatorRequested = true;
                 }
             }

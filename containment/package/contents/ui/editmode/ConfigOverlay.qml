@@ -202,9 +202,9 @@ MouseArea {
 
         if(currentApplet && currentApplet.applet){
             if (Plasmoid.formFactor === PlasmaCore.Types.Vertical) {
-                currentApplet.applet.configuration.length = handle.height;
+                currentApplet.applet.plasmoid.configuration.length = handle.height;
             } else {
-                currentApplet.applet.configuration.length = handle.width;
+                currentApplet.applet.plasmoid.configuration.length = handle.width;
             }
         }
 
@@ -408,7 +408,7 @@ MouseArea {
                     && (currentApplet.applet || currentApplet.isSeparator || currentApplet.isInternalViewSplitter)) {
 
                 configureButton.visible = !currentApplet.isInternalViewSplitter
-                        && (currentApplet.applet.pluginName !== "org.kde.latte.plasmoid")
+                        && (currentApplet.applet.plasmoid.pluginName !== "org.kde.latte.plasmoid")
                         && currentApplet.applet.action("configure")
                         && currentApplet.applet.action("configure").enabled;
                 closeButton.visible = !currentApplet.isInternalViewSplitter && currentApplet.applet.action("remove") && currentApplet.applet.action("remove").enabled;
@@ -419,7 +419,7 @@ MouseArea {
 
                 colorizingButton.visible = root.colorizerEnabled && !currentApplet.appletBlocksColorizing && !currentApplet.isInternalViewSplitter;
 
-                label.text = currentApplet.isInternalViewSplitter ? i18n("Justify Splitter") : currentApplet.applet.title;
+                label.text = currentApplet.isInternalViewSplitter ? i18n("Justify Splitter") : currentApplet.applet.plasmoid.title;
             }
         }
 
@@ -473,7 +473,7 @@ MouseArea {
                             QQC2.ToolTip.visible: hovered
 
                             onClicked: {
-                                fastLayoutManager.setOption(currentApplet.applet.id, "userBlocksColorizing", !checked);
+                                fastLayoutManager.setOption(currentApplet.applet.plasmoid.id, "userBlocksColorizing", !checked);
                             }
                         }
 
@@ -485,7 +485,7 @@ MouseArea {
                             QQC2.ToolTip.visible: hovered
 
                             onClicked: {
-                                fastLayoutManager.setOption(currentApplet.applet.id, "lockZoom", checked);
+                                fastLayoutManager.setOption(currentApplet.applet.plasmoid.id, "lockZoom", checked);
                             }
                         }
 

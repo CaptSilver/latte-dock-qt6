@@ -14,7 +14,7 @@ Loader{
     active: appletItem.canShowAppletNumberBadge &&
             (appletItem.shortcuts.showPositionShortcutBadges
              || appletItem.shortcuts.showAppletShortcutBadges
-             || appletItem.shortcuts.showMetaBadge && applet.id===appletItem.shortcuts.applicationLauncherId)
+             || appletItem.shortcuts.showMetaBadge && applet.plasmoid.id===appletItem.shortcuts.applicationLauncherId)
 
     asynchronous: true
     visible: badgeString!==""
@@ -43,12 +43,12 @@ Loader{
         property:"badgeString"
         when: appletItem.shortcuts.showMetaBadge || appletItem.shortcuts.showAppletShortcutBadges
         value: {
-            if (appletItem.shortcuts.showMetaBadge && applet && applet.id === appletItem.shortcuts.applicationLauncherId) {
+            if (appletItem.shortcuts.showMetaBadge && applet && applet.plasmoid.id === appletItem.shortcuts.applicationLauncherId) {
                 return '\u2318';
             }
 
             if (appletItem.shortcuts.showAppletShortcutBadges) {
-                var plasmaShortcut = applet ? shortcutsEngine.appletShortcutBadge(applet.id) : "";
+                var plasmaShortcut = applet ? shortcutsEngine.appletShortcutBadge(applet.plasmoid.id) : "";
 
                 if (plasmaShortcut !== "") {
                     return plasmaShortcut;

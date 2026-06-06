@@ -37,7 +37,7 @@ Ability.IndexerPrivate {
             var appletItem = sLayout.children[i];
 
             if (visibleIndexBelongsAtApplet(appletItem, itemVisibleIndex)) {
-                return appletItem.applet ? appletItem.applet.id : -1;
+                return appletItem.applet ? appletItem.applet.plasmoid.id : -1;
             }
         }
 
@@ -46,7 +46,7 @@ Ability.IndexerPrivate {
             var appletItem = mLayout.children[i];
 
             if (visibleIndexBelongsAtApplet(appletItem, itemVisibleIndex)) {
-                return appletItem.applet ? appletItem.applet.id : -1;
+                return appletItem.applet ? appletItem.applet.plasmoid.id : -1;
             }
         }
 
@@ -55,7 +55,7 @@ Ability.IndexerPrivate {
             var appletItem = eLayout.children[i];
 
             if (visibleIndexBelongsAtApplet(appletItem, itemVisibleIndex)) {
-                return appletItem.applet ? appletItem.applet.id : -1;
+                return appletItem.applet ? appletItem.applet.plasmoid.id : -1;
             }
         }
 
