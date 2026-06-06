@@ -129,6 +129,8 @@ public:
 
     void init(Plasma::Containment *plasma_containment = nullptr);
 
+    void setupWaylandLayerShell();
+
     Types::ViewType type() const;
     void setType(Types::ViewType type);
 
@@ -395,6 +397,7 @@ private:
     bool m_containsMouse{false};
     bool m_inDelete{false};
     bool m_isPreferredForShortcuts{false};
+    bool m_layerShellConfigured{false};
     bool m_onPrimary{true};
     bool m_screenEdgeMarginEnabled{false};
 

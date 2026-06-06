@@ -91,6 +91,28 @@ int exclusiveZoneFor(const QRect &strutRect, Plasma::Types::Location location)
     }
 }
 
+QSize seededLayerSize(LSW::Anchors anchors, Plasma::Types::Location location,
+                      const QSize &currentSize, const QSize &screenSize)
+{
+    const bool horizontal = (location == Plasma::Types::TopEdge || location == Plasma::Types::BottomEdge);
+    const bool spansH = anchors.testFlag(LSW::AnchorLeft) && anchors.testFlag(LSW::AnchorRight);
+    const bool spansV = anchors.testFlag(LSW::AnchorTop) && anchors.testFlag(LSW::AnchorBottom);
+
+    int w = currentSize.width();
+    int h = currentSize.height();
+
+    //! Only seed an axis the anchors do NOT span (a spanned axis may legally be 0 — the compositor
+    //! stretches it). The length axis takes the screen extent; the thickness axis a 1px minimum.
+    if (!spansH && w <= 0) {
+        w = horizontal ? screenSize.width() : 1;
+    }
+    if (!spansV && h <= 0) {
+        h = horizontal ? 1 : screenSize.height();
+    }
+
+    return QSize(w, h);
+}
+
 void configureView(QWindow *window, QScreen *screen,
                    Plasma::Types::Location location, Latte::Types::Alignment alignment)
 {
@@ -99,11 +121,24 @@ void configureView(QWindow *window, QScreen *screen,
         return;
     }
 
+    const LSW::Anchors anchors = anchorsFor(location, alignment);
+
+    //! wlr-layer-shell rejects a surface whose size is 0 on an axis its anchors do not span
+    //! (e.g. a single-edge-anchored Center dock, or an as-yet-unsized edge helper). Seed a legal
+    //! initial size so the first commit succeeds; the window's own geometry management resizes it
+    //! immediately after.
+    if (screen) {
+        const QSize seeded = seededLayerSize(anchors, location, window->size(), screen->geometry().size());
+        if (seeded != window->size()) {
+            window->resize(seeded);
+        }
+    }
+
     ls->setScope(QStringLiteral("dock"));
     if (screen) {
         ls->setScreen(screen);
     }
-    ls->setAnchors(anchorsFor(location, alignment));
+    ls->setAnchors(anchors);
     ls->setExclusiveEdge(edgeFor(location));
     ls->setLayer(LSW::LayerTop);
     ls->setKeyboardInteractivity(LSW::KeyboardInteractivityNone);

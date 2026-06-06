@@ -441,6 +441,10 @@ AppData WaylandInterface::appDataFor(WindowId wid)
 
 KWayland::Client::PlasmaWindow *WaylandInterface::windowFor(WindowId wid)
 {
+    if (!m_windowManagement) {
+        return nullptr;
+    }
+
     auto it = std::find_if(m_windowManagement->windows().constBegin(), m_windowManagement->windows().constEnd(), [&wid](PlasmaWindow * w) noexcept {
             return w->isValid() && idFor(w) == wid;
 });
@@ -466,6 +470,10 @@ QIcon WaylandInterface::iconFor(WindowId wid)
 
 WindowId WaylandInterface::winIdFor(QString appId, QString title)
 {
+    if (!m_windowManagement) {
+        return QVariant();
+    }
+
     auto it = std::find_if(m_windowManagement->windows().constBegin(), m_windowManagement->windows().constEnd(), [&appId, &title](PlasmaWindow * w) noexcept {
         return w->isValid() && w->appId() == appId && w->title().startsWith(title);
     });
@@ -479,6 +487,10 @@ WindowId WaylandInterface::winIdFor(QString appId, QString title)
 
 WindowId WaylandInterface::winIdFor(QString appId, QRect geometry)
 {
+    if (!m_windowManagement) {
+        return QVariant();
+    }
+
     auto it = std::find_if(m_windowManagement->windows().constBegin(), m_windowManagement->windows().constEnd(), [&appId, &geometry](PlasmaWindow * w) noexcept {
         return w->isValid() && w->appId() == appId && w->geometry() == geometry;
     });

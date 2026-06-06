@@ -942,6 +942,7 @@ void GenericLayout::addView(Plasma::Containment *containment)
     //! but on the other hand we need this for copy to work correctly and show
     //! the copied dock under X11
     //if (!KWindowSystem::isPlatformWayland()) {
+    latteView->setupWaylandLayerShell();
     latteView->show();
     //}
 

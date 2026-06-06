@@ -52,6 +52,9 @@
 #include <KWindowSystem>
 #include <KX11Extras>
 
+// local wm
+#include "../wm/waylandlayershell.h"
+
 // Plasma
 #include <Plasma/Containment>
 #include <Plasma/ContainmentActions>
@@ -482,6 +485,24 @@ void View::setupWaylandIntegration()
 KWayland::Client::PlasmaShellSurface *View::surface()
 {
     return m_shellSurface;
+}
+
+void View::setupWaylandLayerShell()
+{
+    if (m_layerShellConfigured) {
+        return;
+    }
+
+    if (!KWindowSystem::isPlatformWayland() || !containment()) {
+        return;
+    }
+
+    namespace LS = Latte::WindowSystem::LayerShell;
+    LS::configureView(this, screen(), location(), static_cast<Latte::Types::Alignment>(alignment()));
+    LS::applyLayer(this, m_visibility ? m_visibility->mode() : Latte::Types::None);
+    LS::setFocusPolicy(this, !flags().testFlag(Qt::WindowDoesNotAcceptFocus));
+
+    m_layerShellConfigured = true;
 }
 
 //! the main function which decides if this dock is at the

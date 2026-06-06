@@ -195,6 +195,12 @@ private Q_SLOTS:
     void onScreenGeometryChanged(const QRect &geometry);
     void syncLatteViewsToScreens();
 
+    //! Forward Latte's own ...ChangedFrom signals to the base Plasma::Corona signals,
+    //! which in Plasma 6 require the changed screen's id (derived from the origin view).
+    //! These are member-function slots so the forwarding connects can use Qt::UniqueConnection.
+    void onAvailableScreenRectChangedFrom(Latte::View *origin);
+    void onAvailableScreenRegionChangedFrom(Latte::View *origin);
+
 private:
     void cleanConfig();
     void qmlRegisterTypes() const;

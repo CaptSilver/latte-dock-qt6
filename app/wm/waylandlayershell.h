@@ -11,6 +11,7 @@
 
 // Qt
 #include <QRect>
+#include <QSize>
 
 // Plasma
 #include <Plasma/Plasma>  // Plasma::Types::Location
@@ -44,6 +45,14 @@ LayerShellQt::Window::Anchor edgeFor(Plasma::Types::Location location);
 
 //! Perpendicular thickness (px) to reserve as the exclusive zone (struts).
 int exclusiveZoneFor(const QRect &strutRect, Plasma::Types::Location location);
+
+//! wlr-layer-shell rejects a surface whose size is 0 on an axis its anchors do not span. Given the
+//! current window size and the screen size, returns a legal initial size for a surface anchored per
+//! @p anchors at @p location: the length axis is seeded from the screen, the thickness axis to 1px,
+//! and an axis the anchors already span is left untouched (the compositor stretches it). Pure;
+//! unit-tested. configureView() applies the result before the window is shown.
+QSize seededLayerSize(LayerShellQt::Window::Anchors anchors, Plasma::Types::Location location,
+                      const QSize &currentSize, const QSize &screenSize);
 
 //! Make @p window a layer surface anchored for @p location/@p alignment on @p screen.
 //! MUST be called before @p window is first shown.

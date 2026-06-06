@@ -221,14 +221,11 @@ void Corona::load()
         m_templatesManager->init();
         m_layoutsManager->init();
 
-        //! Plasma 6's base availableScreenRe{ct,gion}Changed take an int screen id; derive it
-        //! from the origin view's positioner when forwarding Latte's own ...ChangedFrom signals.
-        connect(this, &Corona::availableScreenRectChangedFrom, this, [this](Latte::View *origin) {
-            Q_EMIT Plasma::Corona::availableScreenRectChanged(origin->positioner()->currentScreenId());
-        }, Qt::UniqueConnection);
-        connect(this, &Corona::availableScreenRegionChangedFrom, this, [this](Latte::View *origin) {
-            Q_EMIT Plasma::Corona::availableScreenRegionChanged(origin->positioner()->currentScreenId());
-        }, Qt::UniqueConnection);
+        //! Plasma 6's base availableScreenRe{ct,gion}Changed take an int screen id; derive it from
+        //! the origin view's positioner. Member-function slots (not lambdas) so Qt::UniqueConnection
+        //! stays valid — UniqueConnection is illegal with functor/lambda connections and aborts.
+        connect(this, &Corona::availableScreenRectChangedFrom, this, &Corona::onAvailableScreenRectChangedFrom, Qt::UniqueConnection);
+        connect(this, &Corona::availableScreenRegionChangedFrom, this, &Corona::onAvailableScreenRegionChangedFrom, Qt::UniqueConnection);
         connect(m_screenPool, &ScreenPool::primaryScreenChanged, this, &Corona::onScreenCountChanged, Qt::UniqueConnection);
 
         QString loadLayoutName;
@@ -897,6 +894,20 @@ void Corona::onScreenGeometryChanged(const QRect &geometry)
         Q_EMIT screenGeometryChanged(id);
         Q_EMIT availableScreenRegionChanged(id);
         Q_EMIT availableScreenRectChanged(id);
+    }
+}
+
+void Corona::onAvailableScreenRectChangedFrom(Latte::View *origin)
+{
+    if (origin && origin->positioner()) {
+        Q_EMIT availableScreenRectChanged(origin->positioner()->currentScreenId());
+    }
+}
+
+void Corona::onAvailableScreenRegionChangedFrom(Latte::View *origin)
+{
+    if (origin && origin->positioner()) {
+        Q_EMIT availableScreenRegionChanged(origin->positioner()->currentScreenId());
     }
 }
 
