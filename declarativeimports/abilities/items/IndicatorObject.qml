@@ -52,7 +52,7 @@ Item{
 
     property int screenEdgeMargin: _indicator.metrics ? Math.max(0, _indicator.metrics.margin.screenEdge) : 0 /*since 0.10*/
 
-    property QtObject palette: null
+    property QtObject colorPalette: null
 
     //!icon colors
     property color iconBackgroundColor: "black"
@@ -104,7 +104,7 @@ Item{
 
         readonly property alias screenEdgeMargin: _indicator.screenEdgeMargin
 
-        readonly property QtObject palette: _indicator.palette ? _indicator.palette : theme
+        readonly property QtObject colorPalette: _indicator.colorPalette ? _indicator.colorPalette : theme
 
         //!icon colors
         readonly property alias iconBackgroundColor: _indicator.iconBackgroundColor

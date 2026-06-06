@@ -760,7 +760,7 @@ Item {
                 panelOpacity: root.background.currentOpacity
                 shadowColor: appletItem.myView.itemShadow.shadowSolidColor
 
-                palette: colorizerManager.applyTheme
+                colorPalette: colorizerManager.applyTheme
 
                 //!icon colors
                 iconBackgroundColor: appletItem.wrapper.overlayIconLoader.backgroundColor

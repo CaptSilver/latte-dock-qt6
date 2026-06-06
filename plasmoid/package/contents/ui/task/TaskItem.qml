@@ -170,7 +170,7 @@ AbilityItem.BasicItem {
     indicator.progressVisible: taskIcon.progressVisible /*since 0.9.2*/
     indicator.progress: taskIcon.progress /*since 0.9.2*/
 
-    indicator.palette: taskItem.abilities.myView.palette
+    indicator.colorPalette: taskItem.abilities.myView.palette
 
     indicator.iconBackgroundColor: taskIcon.backgroundColor
     indicator.iconGlowColor: taskIcon.glowColor
