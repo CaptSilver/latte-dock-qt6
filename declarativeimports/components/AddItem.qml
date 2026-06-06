@@ -6,6 +6,7 @@
 import QtQuick 2.1
 
 import org.kde.plasma.plasmoid 2.0
+import org.kde.kirigami 2.20 as Kirigami
 
 import "code/ColorizerTools.js" as ColorizerTools
 
@@ -21,13 +22,13 @@ Item{
 
         radius: 0.05 * Math.max(width,height)
 
-        color: Qt.rgba(theme.backgroundColor.r, theme.backgroundColor.g, theme.backgroundColor.b, backgroundOpacity)
+        color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, backgroundOpacity)
         border.width: 1
         border.color: outlineColor
 
         property int crossSize: Math.min(0.4*parent.width, 0.4 * parent.height)
 
-        readonly property color outlineColorBase: theme.backgroundColor
+        readonly property color outlineColorBase: Kirigami.Theme.backgroundColor
         readonly property real outlineColorBaseBrightness: ColorizerTools.colorBrightness(outlineColorBase)
         readonly property color outlineColor: {
             if (outlineColorBaseBrightness > 127.5) {
@@ -37,7 +38,7 @@ Item{
             }
         }
 
-        Rectangle{width: parent.crossSize; height: 4; radius:2; anchors.centerIn: parent; color: theme.highlightColor}
-        Rectangle{width: 4; height: parent.crossSize; radius:2; anchors.centerIn: parent; color: theme.highlightColor}
+        Rectangle{width: parent.crossSize; height: 4; radius:2; anchors.centerIn: parent; color: Kirigami.Theme.highlightColor}
+        Rectangle{width: 4; height: parent.crossSize; radius:2; anchors.centerIn: parent; color: Kirigami.Theme.highlightColor}
     }
 }

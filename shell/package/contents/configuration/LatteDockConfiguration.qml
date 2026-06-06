@@ -60,7 +60,13 @@ Loader {
 
         //! propose size based on font size
         property int proposedWidth: 0.82 * proposedHeight + Kirigami.Units.smallSpacing * 2
-        property int proposedHeight: 36 * theme.mSize(theme.defaultFont).height
+        property int proposedHeight: 36 * defaultFontMetrics.height
+
+        TextMetrics {
+            id: defaultFontMetrics
+            text: "M"
+            font: Kirigami.Theme.defaultFont
+        }
 
         //! chosen size to be applied, if the user has set or not a different scale for the settings window
         property int chosenWidth: userScaleWidth !== 1 ? userScaleWidth * proposedWidth : proposedWidth
@@ -92,8 +98,8 @@ Loader {
         property bool panelIsVertical: plasmoid.formFactor === PlasmaCore.Types.Vertical
         property int subGroupSpacing: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing * 1.5
 
-        property color bC: theme.backgroundColor
-        property color tC: theme.textColor
+        property color bC: Kirigami.Theme.backgroundColor
+        property color tC: Kirigami.Theme.textColor
         property color transparentBackgroundColor: Qt.rgba(bC.r, bC.g, bC.b, 0.7)
         property color borderColor: Qt.rgba(tC.r, tC.g, tC.b, 0.12)
 
@@ -246,15 +252,15 @@ Loader {
                             //! it must remain or be changed
                             text: i18nc("advanced settings", "Advanced")
 
-                            readonly property real textColorBrightness: colorBrightness(theme.textColor)
+                            readonly property real textColorBrightness: colorBrightness(Kirigami.Theme.textColor)
                             readonly property real basicOpacity: textColorBrightness > 127 ? 0.7 : 0.3
 
                             color: {
                                 if (dialog.basicLevel) {
-                                    return textColorBrightness > 127 ? Qt.darker(theme.textColor, 1.4) : Qt.lighter(theme.textColor, 2.8);
+                                    return textColorBrightness > 127 ? Qt.darker(Kirigami.Theme.textColor, 1.4) : Qt.lighter(Kirigami.Theme.textColor, 2.8);
                                 }
 
-                                return theme.textColor;
+                                return Kirigami.Theme.textColor;
                             }
 
                             function colorBrightness(color) {
@@ -381,7 +387,7 @@ Loader {
                     anchors.rightMargin: -2*Kirigami.Units.smallSpacing
 
                     height: parent.height // dialog.height - (header.height + tabBar.height + Kirigami.Units.smallSpacing * 1.5) + 2
-                    color: theme.backgroundColor
+                    color: Kirigami.Theme.backgroundColor
                     border.width: 1
                     border.color: dialog.borderColor
                 }

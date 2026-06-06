@@ -7,6 +7,7 @@ import QtQuick 2.7
 import Qt5Compat.GraphicalEffects
 
 import org.kde.plasma.plasmoid 2.0
+import org.kde.kirigami 2.20 as Kirigami
 import org.kde.latte.components 1.0 as LatteComponents
 
 Loader{
@@ -18,10 +19,10 @@ Loader{
     property int fixedIndex:-1
 
     readonly property int maxFixedIndex: abilityItem.abilities.shortcuts.badges.length
-    readonly property real textColorBrightness: colorBrightness(theme.textColor)
+    readonly property real textColorBrightness: colorBrightness(Kirigami.Theme.textColor)
     readonly property string badgeString: (shorcutBadge.fixedIndex>=1 && shorcutBadge.fixedIndex<=maxFixedIndex) ?
                                               abilityItem.abilities.shortcuts.badges[shorcutBadge.fixedIndex-1] : ""
-    readonly property color lightTextColor: textColorBrightness > 127.5 ? theme.textColor : theme.backgroundColor
+    readonly property color lightTextColor: textColorBrightness > 127.5 ? Kirigami.Theme.textColor : Kirigami.Theme.backgroundColor
 
     onActiveChanged: updateShorcutIndex();
 

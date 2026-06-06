@@ -20,6 +20,12 @@ ColumnLayout {
     id: root
     Layout.fillWidth: true
 
+    TextMetrics {
+        id: defaultFontMetrics
+        text: "M"
+        font: Kirigami.Theme.defaultFont
+    }
+
     LatteComponents.SubHeader {
         text: i18nc("indicator style","Style")
     }
@@ -103,8 +109,8 @@ ColumnLayout {
         PlasmaComponents.Label {
             text: i18nc("number in percentage, e.g. 85 %","%1 %", currentValue)
             horizontalAlignment: Text.AlignRight
-            Layout.minimumWidth: theme.mSize(theme.defaultFont).width * 4
-            Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 4
+            Layout.minimumWidth: defaultFontMetrics.advanceWidth * 4
+            Layout.maximumWidth: defaultFontMetrics.advanceWidth * 4
 
             readonly property int currentValue: sizeSlider.value
         }
@@ -139,8 +145,8 @@ ColumnLayout {
         PlasmaComponents.Label {
             text: i18nc("number in percentage, e.g. 85 %","%1 %", currentValue)
             horizontalAlignment: Text.AlignRight
-            Layout.minimumWidth: theme.mSize(theme.defaultFont).width * 4
-            Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 4
+            Layout.minimumWidth: defaultFontMetrics.advanceWidth * 4
+            Layout.maximumWidth: defaultFontMetrics.advanceWidth * 4
 
             readonly property int currentValue: thickMarginSlider.value
         }
@@ -177,8 +183,8 @@ ColumnLayout {
         PlasmaComponents.Label {
             text: i18nc("number in percentage, e.g. 85 %","%1 %", currentValue)
             horizontalAlignment: Text.AlignRight
-            Layout.minimumWidth: theme.mSize(theme.defaultFont).width * 4
-            Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 4
+            Layout.minimumWidth: defaultFontMetrics.advanceWidth * 4
+            Layout.maximumWidth: defaultFontMetrics.advanceWidth * 4
 
             readonly property int currentValue: lengthIntMarginSlider.value
         }
@@ -213,8 +219,8 @@ ColumnLayout {
         PlasmaComponents.Label {
             text: i18nc("number in percentage, e.g. 85 %","%1 %", currentValue)
             horizontalAlignment: Text.AlignRight
-            Layout.minimumWidth: theme.mSize(theme.defaultFont).width * 4
-            Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 4
+            Layout.minimumWidth: defaultFontMetrics.advanceWidth * 4
+            Layout.maximumWidth: defaultFontMetrics.advanceWidth * 4
 
             readonly property int currentValue: backgroundCornerMarginSlider.value
         }
@@ -332,8 +338,8 @@ ColumnLayout {
         PlasmaComponents.Label {
             text: i18nc("number in percentage, e.g. 85 %","%1 %", glowOpacitySlider.value)
             horizontalAlignment: Text.AlignRight
-            Layout.minimumWidth: theme.mSize(theme.defaultFont).width * 4
-            Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 4
+            Layout.minimumWidth: defaultFontMetrics.advanceWidth * 4
+            Layout.maximumWidth: defaultFontMetrics.advanceWidth * 4
         }
     }
 

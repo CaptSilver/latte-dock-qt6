@@ -21,7 +21,7 @@ import org.kde.kirigami 2.20 as Kirigami
 Grid {
     id: typeRow
 
-    width: horizontal ? content.width - 4*Kirigami.Units.smallSpacing : 9 * theme.defaultFont.pixelSize
+    width: horizontal ? content.width - 4*Kirigami.Units.smallSpacing : 9 * Kirigami.Theme.defaultFont.pixelSize
     anchors.leftMargin: horizontal ? Kirigami.Units.smallSpacing : 0
     anchors.rightMargin: horizontal ? Kirigami.Units.smallSpacing : 0
 

@@ -233,9 +233,12 @@ T.ComboBox {
                 Layout.leftMargin: !selectedIcon.visible && !control.mirrored ? Kirigami.Units.smallSpacing : 0
                 Layout.rightMargin: !selectedIcon.visible && control.mirrored ? Kirigami.Units.smallSpacing : 0
 
+                Kirigami.Theme.colorSet: Kirigami.Theme.Button
+                Kirigami.Theme.inherit: false
+
                 text: control.displayText
                 font: control.font
-                color: control.pressed ? theme.highlightedTextColor : theme.buttonTextColor
+                color: control.pressed ? Kirigami.Theme.highlightedTextColor : Kirigami.Theme.textColor
                 horizontalAlignment: Text.AlignLeft
                 verticalAlignment: Text.AlignVCenter
                 opacity: control.enabled ? 1 : 0.6
@@ -437,8 +440,12 @@ T.ComboBox {
                 margins: -1
             }
             radius: 2
-            color: theme.viewBackgroundColor
-            border.color: Qt.rgba(theme.textColor.r, theme.textColor.g, theme.textColor.b, 0.3)
+
+            Kirigami.Theme.colorSet: Kirigami.Theme.View
+            Kirigami.Theme.inherit: false
+
+            color: Kirigami.Theme.backgroundColor
+            border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.3)
             layer.enabled: true
 
             layer.effect: DropShadow {

@@ -312,7 +312,7 @@ Column {
                         anchors.bottom: parent.bottom
                         width: parent.width
                         height: playerControlsRow.height
-                        color: theme.backgroundColor
+                        color: Kirigami.Theme.backgroundColor
                         opacity: 0.8
                     }
                 }
@@ -362,7 +362,7 @@ Column {
                             elide: Text.ElideRight
                             text: artist || ""
                             visible: text != ""
-                            font.pointSize: theme.smallestFont.pointSize
+                            font.pointSize: Kirigami.Theme.smallFont.pointSize
                         }
                     }
 
@@ -406,7 +406,7 @@ Column {
             width: header.width
             height: 3
             opacity: isTaskActive() ? 1 : 0
-            color: theme.buttonFocusColor
+            color: Kirigami.Theme.focusColor
         }
     }
 

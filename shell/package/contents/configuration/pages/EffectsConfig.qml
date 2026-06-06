@@ -27,6 +27,12 @@ PlasmaComponents.Page {
     width: content.width + content.Layout.leftMargin * 2
     height: content.height + Kirigami.Units.smallSpacing
 
+    TextMetrics {
+        id: defaultFontMetrics
+        text: "M"
+        font: Kirigami.Theme.defaultFont
+    }
+
     ColumnLayout {
         id: content
         anchors.horizontalCenter: parent.horizontalCenter
@@ -101,8 +107,8 @@ PlasmaComponents.Page {
                         enabled: showAppletShadow.checked
                         text: i18nc("number in percentage, e.g. 85 %","%1 %", shadowSizeSlider.value)
                         horizontalAlignment: Text.AlignRight
-                        Layout.minimumWidth: theme.mSize(theme.defaultFont).width * 4
-                        Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 4
+                        Layout.minimumWidth: defaultFontMetrics.advanceWidth * 4
+                        Layout.maximumWidth: defaultFontMetrics.advanceWidth * 4
                     }
                 }
 
@@ -149,8 +155,8 @@ PlasmaComponents.Page {
                         enabled: showAppletShadow.checked
                         text: i18nc("number in percentage, e.g. 85 %","%1 %", shadowOpacitySlider.value)
                         horizontalAlignment: Text.AlignRight
-                        Layout.minimumWidth: theme.mSize(theme.defaultFont).width * 4
-                        Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 4
+                        Layout.minimumWidth: defaultFontMetrics.advanceWidth * 4
+                        Layout.maximumWidth: defaultFontMetrics.advanceWidth * 4
                     }
                 }
 
@@ -163,7 +169,7 @@ PlasmaComponents.Page {
 
                     readonly property string defaultShadow: "080808"
                     readonly property string themeShadow: {
-                        var strC = String(theme.textColor);
+                        var strC = String(Kirigami.Theme.textColor);
 
                         return strC.indexOf("#") === 0 ? strC.substr(1) : strC;
                     }
@@ -243,7 +249,7 @@ PlasmaComponents.Page {
                                 anchors.fill: parent
                                 color: "transparent"
                                 border.width: 1
-                                border.color: theme.textColor
+                                border.color: Kirigami.Theme.textColor
                                 opacity: parent.opacity - 0.4
                             }
 
@@ -499,7 +505,7 @@ PlasmaComponents.Page {
                         anchors.leftMargin: 2
                         width: tabBar.width - 2*2
                         height: 2
-                        color: theme.textColor
+                        color: Kirigami.Theme.textColor
                         opacity: 0.25
                     }
                 }

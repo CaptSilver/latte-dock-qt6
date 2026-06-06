@@ -8,6 +8,7 @@ import Qt5Compat.GraphicalEffects
 
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.plasma.components 3.0 as PlasmaComponents
+import org.kde.kirigami 2.20 as Kirigami
 
 import org.kde.latte.private.app 0.1 as LatteApp
 import org.kde.latte.core 0.2 as LatteCore
@@ -40,7 +41,7 @@ Loader {
 
         property string appChosenShadowColor: {
             if (plasmoid.configuration.shadowColorType === LatteContainment.Types.ThemeColorShadow) {
-                var strC = String(theme.textColor);
+                var strC = String(Kirigami.Theme.textColor);
                 return strC.indexOf("#") === 0 ? strC.substr(1) : strC;
             } else if (plasmoid.configuration.shadowColorType === LatteContainment.Types.UserColorShadow) {
                 return plasmoid.configuration.shadowColor;

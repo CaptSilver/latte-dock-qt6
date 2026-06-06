@@ -7,6 +7,7 @@ import QtQuick 2.7
 
 import org.kde.plasma.plasmoid 2.0
 import org.kde.plasma.core 2.0 as PlasmaCore
+import org.kde.kirigami 2.20 as Kirigami
 
 import org.kde.latte.core 0.2 as LatteCore
 import org.kde.latte.private.app 0.1 as LatteApp
@@ -22,8 +23,17 @@ Loader{
 
     readonly property bool backgroundIsBusy: item ? item.isBusy : false
 
-    readonly property real originalThemeTextColorBrightness: ColorizerTools.colorBrightness(theme.textColor)
-    readonly property color originalLightTextColor: originalThemeTextColorBrightness > 127.5 ? theme.textColor : theme.backgroundColor
+    //! The Plasma 5 global "theme" context property is gone in Plasma 6. The default Plasma
+    //! color scheme it exposed is available through themeExtended.defaultTheme (a SchemeColors
+    //! object that, unlike Kirigami.Theme, carries the schemeFile/inactive* members this
+    //! colorizer compares against and switches between).
+    readonly property QtObject plasmaTheme: themeExtended ? themeExtended.defaultTheme : null
+
+    readonly property real originalThemeTextColorBrightness: ColorizerTools.colorBrightness(plasmaTheme ? plasmaTheme.textColor : Kirigami.Theme.textColor)
+    readonly property color originalLightTextColor: {
+        var base = plasmaTheme ? plasmaTheme : Kirigami.Theme;
+        return originalThemeTextColorBrightness > 127.5 ? base.textColor : base.backgroundColor;
+    }
 
     readonly property real themeTextColorBrightness: ColorizerTools.colorBrightness(textColor)
     readonly property real backgroundColorBrightness: ColorizerTools.colorBrightness(backgroundColor)
@@ -47,7 +57,7 @@ Loader{
     readonly property bool editModeTextColorIsBright: ColorizerTools.colorBrightness(editModeTextColor) > 127.5
     readonly property color editModeTextColor: latteView && latteView.layout ? latteView.layout.textColor : "white"
 
-    readonly property bool mustBeShown: (applyTheme && applyTheme !== theme)
+    readonly property bool mustBeShown: (applyTheme && applyTheme !== plasmaTheme)
                                         || (root.inConfigureAppletsMode && (root.themeColors === LatteContainment.Types.SmartThemeColors))
 
     readonly property real currentBackgroundBrightness: item ? item.currentBrightness : -1000
@@ -59,7 +69,7 @@ Loader{
 
     property QtObject applyTheme: {
         if (!root.environment.isGraphicsSystemAccelerated) {
-            return theme;
+            return plasmaTheme;
         }
 
         if (latteView && latteView.windowsTracker && !(root.plasmaBackgroundForPopups && root.hasExpandedApplet)) {
@@ -87,7 +97,7 @@ Loader{
                         && root.windowColors === LatteContainment.Types.NoneWindowColors
                         && root.forceSolidPanel) ) {
                 /* plasma style*/
-                return theme;
+                return plasmaTheme;
             }
 
             if (root.themeColors === LatteContainment.Types.DarkThemeColors) {
@@ -118,13 +128,13 @@ Loader{
                         return themeExtended.darkTheme;
                     } else {
                         //! default plasma theme should be better for panel transparency > 70
-                        return theme;
+                        return plasmaTheme;
                     }
                 }
             }
         }
 
-        return theme;
+        return plasmaTheme;
     }
 
     property color applyColor: textColor
@@ -142,8 +152,8 @@ Loader{
         return applyTheme.textColor;
     }
 
-    readonly property color inactiveBackgroundColor: applyTheme === theme ? theme.backgroundColor : applyTheme.inactiveBackgroundColor
-    readonly property color inactiveTextColor: applyTheme === theme ? theme.textColor : applyTheme.inactiveTextColor
+    readonly property color inactiveBackgroundColor: applyTheme === plasmaTheme ? (plasmaTheme ? plasmaTheme.backgroundColor : Kirigami.Theme.backgroundColor) : applyTheme.inactiveBackgroundColor
+    readonly property color inactiveTextColor: applyTheme === plasmaTheme ? (plasmaTheme ? plasmaTheme.textColor : Kirigami.Theme.textColor) : applyTheme.inactiveTextColor
 
     readonly property color highlightColor: applyTheme.highlightColor
     readonly property color highlightedTextColor: applyTheme.highlightedTextColor
@@ -158,7 +168,7 @@ Loader{
 
     readonly property string scheme: {
         if (root.inConfigureAppletsMode && (root.themeColors === LatteContainment.Types.SmartThemeColors)) {
-            if (!LatteCore.WindowSystem.compositingActive && applyTheme !== theme) {
+            if (!LatteCore.WindowSystem.compositingActive && applyTheme !== plasmaTheme) {
                 return applyTheme.schemeFile;
             }
 
@@ -179,7 +189,7 @@ Loader{
             }
         }
 
-        if (applyTheme===theme || !mustBeShown) {
+        if (applyTheme===plasmaTheme || !mustBeShown) {
             if (themeExtended) {
                 return themeExtended.defaultTheme.schemeFile;
             } else {

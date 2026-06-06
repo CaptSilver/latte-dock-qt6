@@ -116,11 +116,17 @@ Item {
                 Rectangle {
                     id: runningBadge
                     width: height
-                    height: Math.round(theme.mSize(countLabel.font).height * 1.3)
+                    height: Math.round(runningBadgeMetrics.height * 1.3)
                     radius: height
-                    color: theme.highlightColor
+                    color: Kirigami.Theme.highlightColor
                     visible: running && delegate.GridView.isCurrentItem
                     onVisibleChanged: maskShaderSource.scheduleUpdate()
+
+                    TextMetrics {
+                        id: runningBadgeMetrics
+                        text: "M"
+                        font: countLabel.font
+                    }
 
                     PlasmaComponents.Label {
                         id: countLabel
@@ -214,7 +220,7 @@ Item {
                 // otherwise causes binding loop due to the way the Plasma sets the height
                 height: implicitHeight
                 text: model.description
-                font: theme.smallestFont
+                font: Kirigami.Theme.smallFont
                 wrapMode: Text.WordWrap
                 elide: Text.ElideRight
                 maximumLineCount: heading.lineCount === 1 ? 3 : 2

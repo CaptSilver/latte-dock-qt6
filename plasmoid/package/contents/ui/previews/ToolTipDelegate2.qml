@@ -58,7 +58,13 @@ PlasmaExtras.ScrollArea {
     LayoutMirroring.enabled: Qt.application.layoutDirection === Qt.RightToLeft
     LayoutMirroring.childrenInherit: true
 
-    property int textWidth: theme.mSize(theme.defaultFont).width * 20
+    property int textWidth: defaultFontMetrics.advanceWidth * 20
+
+    TextMetrics {
+        id: defaultFontMetrics
+        text: "M"
+        font: Kirigami.Theme.defaultFont
+    }
 
     verticalScrollBarPolicy: Qt.ScrollBarAlwaysOff
     horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOff

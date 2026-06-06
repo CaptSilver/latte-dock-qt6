@@ -24,6 +24,12 @@ PlasmaComponents.Page {
     width: content.width + content.Layout.leftMargin * 2
     height: content.height + Kirigami.Units.smallSpacing * 2
 
+    TextMetrics {
+        id: defaultFontMetrics
+        text: "M"
+        font: Kirigami.Theme.defaultFont
+    }
+
     Timer {
         id: syncGeometry
 
@@ -101,8 +107,8 @@ PlasmaComponents.Page {
                     PlasmaComponents.Label {
                         text: i18nc("number in pixels, e.g. 12 px.", "%1 px.", appletsSizeSlider.value)//.arg(appletsSizeSlider.value)
                         horizontalAlignment: Text.AlignRight
-                        Layout.minimumWidth: theme.mSize(theme.defaultFont).width * 4
-                        Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 4
+                        Layout.minimumWidth: defaultFontMetrics.advanceWidth * 4
+                        Layout.maximumWidth: defaultFontMetrics.advanceWidth * 4
                     }
                 }
 
@@ -152,8 +158,8 @@ PlasmaComponents.Page {
 
                     PlasmaComponents.Label {
                         id: absoluteSizeLbl
-                        Layout.minimumWidth: theme.mSize(theme.defaultFont).width * 4
-                        Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 4
+                        Layout.minimumWidth: defaultFontMetrics.advanceWidth * 4
+                        Layout.maximumWidth: defaultFontMetrics.advanceWidth * 4
 
                         text: proportionSizeSlider.value !== proportionSizeSlider.from ?
                                   (absoluteSizeLblMouseArea.containsMouse ?
@@ -214,8 +220,8 @@ PlasmaComponents.Page {
                     PlasmaComponents.Label {
                         text: i18nc("number in percentage, e.g. 85 %","%1 %", Number((zoomSlider.value * 100) - 100).toFixed(0))
                         horizontalAlignment: Text.AlignRight
-                        Layout.minimumWidth: theme.mSize(theme.defaultFont).width * 4
-                        Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 4
+                        Layout.minimumWidth: defaultFontMetrics.advanceWidth * 4
+                        Layout.maximumWidth: defaultFontMetrics.advanceWidth * 4
                     }
                 }
             }
@@ -321,8 +327,8 @@ PlasmaComponents.Page {
                     PlasmaComponents.Label {
                         text: i18nc("number in percentage, e.g. 85 %","%1 %", maxLengthSlider.value)
                         horizontalAlignment: Text.AlignRight
-                        Layout.minimumWidth: theme.mSize(theme.defaultFont).width * 4
-                        Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 4
+                        Layout.minimumWidth: defaultFontMetrics.advanceWidth * 4
+                        Layout.maximumWidth: defaultFontMetrics.advanceWidth * 4
 
                         LatteComponents.ScrollArea {
                             anchors.fill: parent
@@ -404,8 +410,8 @@ PlasmaComponents.Page {
                     PlasmaComponents.Label {
                         text: i18nc("number in percentage, e.g. 85 %","%1 %", minLengthSlider.value)
                         horizontalAlignment: Text.AlignRight
-                        Layout.minimumWidth: theme.mSize(theme.defaultFont).width * 4
-                        Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 4
+                        Layout.minimumWidth: defaultFontMetrics.advanceWidth * 4
+                        Layout.maximumWidth: defaultFontMetrics.advanceWidth * 4
 
                         LatteComponents.ScrollArea {
                             anchors.fill: parent
@@ -534,8 +540,8 @@ PlasmaComponents.Page {
                     PlasmaComponents.Label {
                         text: i18nc("number in percentage, e.g. 85 %","%1 %", offsetSlider.value)
                         horizontalAlignment: Text.AlignRight
-                        Layout.minimumWidth: theme.mSize(theme.defaultFont).width * 4
-                        Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 4
+                        Layout.minimumWidth: defaultFontMetrics.advanceWidth * 4
+                        Layout.maximumWidth: defaultFontMetrics.advanceWidth * 4
 
                         LatteComponents.ScrollArea {
                             anchors.fill: parent
@@ -641,8 +647,8 @@ PlasmaComponents.Page {
                                   i18nc("number in pixels, e.g. 8 px.","%1 px.", currentValueInPixels) :
                                   i18nc("number in percentage, e.g. 85 %","%1 %", lengthExtMarginSlider.value)
                         horizontalAlignment: Text.AlignRight
-                        Layout.minimumWidth: theme.mSize(theme.defaultFont).width * 4
-                        Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 4
+                        Layout.minimumWidth: defaultFontMetrics.advanceWidth * 4
+                        Layout.maximumWidth: defaultFontMetrics.advanceWidth * 4
 
                         readonly property int currentValueInPixels: (lengthExtMarginSlider.value/100) * latteView.metrics.maxIconSize
 
@@ -687,8 +693,8 @@ PlasmaComponents.Page {
                                   i18nc("number in pixels, e.g. 8 px.","%1 px.", currentValueInPixels) :
                                   i18nc("number in percentage, e.g. 85 %","%1 %", currentValue)
                         horizontalAlignment: Text.AlignRight
-                        Layout.minimumWidth: theme.mSize(theme.defaultFont).width * 4
-                        Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 4
+                        Layout.minimumWidth: defaultFontMetrics.advanceWidth * 4
+                        Layout.maximumWidth: defaultFontMetrics.advanceWidth * 4
 
                         readonly property int currentValue: Math.max(thickMarginSlider.minimumInternalValue, thickMarginSlider.value)
                         readonly property int currentValueInPixels: (currentValue/100) * latteView.metrics.maxIconSize
@@ -731,8 +737,8 @@ PlasmaComponents.Page {
                     PlasmaComponents.Label {
                         text: currentValue < 0 ? "---" : i18nc("number in pixels, e.g. 85 px.","%1 px.", currentValue)
                         horizontalAlignment: Text.AlignRight
-                        Layout.minimumWidth: theme.mSize(theme.defaultFont).width * 4
-                        Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 4
+                        Layout.minimumWidth: defaultFontMetrics.advanceWidth * 4
+                        Layout.maximumWidth: defaultFontMetrics.advanceWidth * 4
 
                         readonly property int currentValue: screenEdgeMarginSlider.value
                     }
@@ -925,8 +931,8 @@ PlasmaComponents.Page {
                         enabled: showBackground.checked
                         text: i18nc("number in percentage, e.g. 85 %","%1 %", panelSizeSlider.value)
                         horizontalAlignment: Text.AlignRight
-                        Layout.minimumWidth: theme.mSize(theme.defaultFont).width * 4
-                        Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 4
+                        Layout.minimumWidth: defaultFontMetrics.advanceWidth * 4
+                        Layout.maximumWidth: defaultFontMetrics.advanceWidth * 4
                     }
                 }
 
@@ -975,8 +981,8 @@ PlasmaComponents.Page {
                         enabled: transparencySlider.enabled
                         text: transparencySlider.value >= 0 ? i18nc("number in percentage, e.g. 85 %","%1 %", transparencySlider.value) : i18nc("Default word abbreviation", "Def.")
                         horizontalAlignment: Text.AlignRight
-                        Layout.minimumWidth: theme.mSize(theme.defaultFont).width * 4
-                        Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 4
+                        Layout.minimumWidth: defaultFontMetrics.advanceWidth * 4
+                        Layout.maximumWidth: defaultFontMetrics.advanceWidth * 4
                     }
                 }
 
@@ -1017,8 +1023,8 @@ PlasmaComponents.Page {
                         enabled: radiusSlider.enabled
                         text: radiusSlider.value >= 0 ? i18nc("number in percentage, e.g. 85 %","%1 %", radiusSlider.value) : i18nc("Default word abbreviation", "Def.")
                         horizontalAlignment: Text.AlignRight
-                        Layout.minimumWidth: theme.mSize(theme.defaultFont).width * 4
-                        Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 4
+                        Layout.minimumWidth: defaultFontMetrics.advanceWidth * 4
+                        Layout.maximumWidth: defaultFontMetrics.advanceWidth * 4
                     }
                 }
 
@@ -1060,8 +1066,8 @@ PlasmaComponents.Page {
                         enabled: shadowSlider.enabled
                         text: shadowSlider.value >= 0 ? i18nc("number in pixels, e.g. 12 px.", "%1 px.", shadowSlider.value ) : i18nc("Default word abbreviation", "Def.")
                         horizontalAlignment: Text.AlignRight
-                        Layout.minimumWidth: theme.mSize(theme.defaultFont).width * 4
-                        Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 4
+                        Layout.minimumWidth: defaultFontMetrics.advanceWidth * 4
+                        Layout.maximumWidth: defaultFontMetrics.advanceWidth * 4
                     }
                 }
 

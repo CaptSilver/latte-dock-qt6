@@ -38,15 +38,15 @@ Rectangle {
 
     width: Math.max(minimumWidth, valueText.width + 4*Kirigami.Units.smallSpacing)
 
-    color: theme.backgroundColor
+    color: Kirigami.Theme.backgroundColor
     radius: (radiusPerCentage / 100) * (height / 2)
     border.width: 0 //Math.max(1,width/64)
 
     property int borderWidth: 1
     property real borderOpacity: 1
-    property color borderColor: theme.textColor
-    property color textColor: theme.textColor
-    property color highlightedColor: theme.buttonFocusColor
+    property color borderColor: Kirigami.Theme.textColor
+    property color textColor: Kirigami.Theme.textColor
+    property color highlightedColor: Kirigami.Theme.focusColor
 
     readonly property bool singleCharacter: (showNumber && numberValue<=9 && numberValue>=0)|| (showText && textValue.length===1)
 

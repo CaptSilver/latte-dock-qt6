@@ -14,8 +14,14 @@ Label {
     Layout.alignment: Qt.AlignLeft
     Layout.topMargin: Kirigami.Units.smallSpacing
     Layout.bottomMargin: Kirigami.Units.smallSpacing
-    color: theme.textColor
+    color: Kirigami.Theme.textColor
     font.weight: Font.DemiBold
     font.letterSpacing: 1.05
-    font.pixelSize: 1.2 * theme.mSize(theme.defaultFont).height
+    font.pixelSize: 1.2 * defaultFontMetrics.height
+
+    TextMetrics {
+        id: defaultFontMetrics
+        text: "M"
+        font: Kirigami.Theme.defaultFont
+    }
 }

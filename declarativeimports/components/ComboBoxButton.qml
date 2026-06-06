@@ -145,7 +145,11 @@ Rectangle {
         height: parent.height
         text: buttonText
         font: mainButton.font
-        color: buttonIsTransparent ? theme.textColor : theme.buttonTextColor
+
+        Kirigami.Theme.colorSet: buttonIsTransparent ? Kirigami.Theme.Window : Kirigami.Theme.Button
+        Kirigami.Theme.inherit: false
+
+        color: Kirigami.Theme.textColor
         visible: root.checkable || (mainButton.opacity === 0)
 
         elide: Text.ElideRight

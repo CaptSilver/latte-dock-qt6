@@ -5,6 +5,7 @@
 
 import QtQuick 2.7
 import org.kde.plasma.plasmoid 2.0
+import org.kde.kirigami 2.20 as Kirigami
 
 import org.kde.latte.core 0.2 as LatteCore
 
@@ -24,7 +25,7 @@ AbilityHost.MyView {
 
     readonly property string itemShadowCurrentColor: {
         if (plasmoid.configuration.shadowColorType === LatteContainment.Types.ThemeColorShadow) {
-            var strC = String(theme.textColor);
+            var strC = String(Kirigami.Theme.textColor);
             return strC.indexOf("#") === 0 ? strC.substr(1) : strC;
         } else if (plasmoid.configuration.shadowColorType === LatteContainment.Types.UserColorShadow) {
             return plasmoid.configuration.shadowColor;

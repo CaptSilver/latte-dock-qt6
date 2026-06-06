@@ -8,9 +8,17 @@ import QtQuick.Controls 1.4 as Controls
 import QtQuick.Controls.Styles.Plasma 2.0 as Styles
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.ksvg 1.0 as KSvg
+import org.kde.kirigami 2.20 as Kirigami
 
 Controls.SpinBox {
-    implicitWidth: theme.mSize(theme.defaultFont).width * 10
+    id: spinBox
+    implicitWidth: spinBoxMetrics.advanceWidth * 10
+
+    TextMetrics {
+        id: spinBoxMetrics
+        text: "M"
+        font: Kirigami.Theme.defaultFont
+    }
 
     style: Styles.SpinBoxStyle {
         KSvg.Svg {
@@ -19,7 +27,7 @@ Controls.SpinBox {
             colorSet: KSvg.Svg.Button
         }
         incrementControl: KSvg.SvgItem {
-            implicitWidth: theme.mSize(theme.defaultFont).width * 1.8
+            implicitWidth: spinBoxMetrics.advanceWidth * 1.8
             anchors {
                 centerIn: parent
                 margins: 1
@@ -31,7 +39,7 @@ Controls.SpinBox {
             opacity: control.enabled ? (styleData.upPressed ? 1 : 0.6) : 0.5
         }
         decrementControl: KSvg.SvgItem {
-            implicitWidth: theme.mSize(theme.defaultFont).width * 1.8
+            implicitWidth: spinBoxMetrics.advanceWidth * 1.8
             anchors {
                 centerIn: parent
                 margins: 1

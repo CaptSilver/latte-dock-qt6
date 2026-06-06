@@ -12,6 +12,7 @@ import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.plasma.components 3.0 as PlasmaComponents
 import org.kde.activities 0.1 as Activities
 import org.kde.taskmanager 0.1 as TaskManager
+import org.kde.kirigami 2.20 as Kirigami
 
 import org.kde.latte.core 0.2 as LatteCore
 import org.kde.latte.private.tasks 0.1 as LatteTasks
@@ -125,7 +126,9 @@ PlasmaComponents.ContextMenu {
         // QMenu does not limit its width automatically. Even if we set a maximumWidth
         // it would just cut off text rather than eliding. So we do this manually.
         var textMetrics = Qt.createQmlObject("import QtQuick 2.4; TextMetrics {}", menu);
-        var maximumWidth = theme.mSize(theme.defaultFont).width * 22;
+        textMetrics.font = Kirigami.Theme.defaultFont;
+        textMetrics.text = "M";
+        var maximumWidth = textMetrics.advanceWidth * 22;
 
         sections.forEach(function (section) {
             if (section["actions"].length > 0 || section["group"] == "actions") {

@@ -23,8 +23,8 @@ Item {
     anchors.fill: parent
     property bool toBeDestroyed: false
 
-    readonly property color backgroundColor: iconColorsLoader.active ? iconColorsLoader.item.backgroundColor : theme.backgroundColor
-    readonly property color glowColor: iconColorsLoader.active ? iconColorsLoader.item.glowColor : theme.textColor
+    readonly property color backgroundColor: iconColorsLoader.active ? iconColorsLoader.item.backgroundColor : Kirigami.Theme.backgroundColor
+    readonly property color glowColor: iconColorsLoader.active ? iconColorsLoader.item.glowColor : Kirigami.Theme.textColor
 
     readonly property bool smartLauncherEnabled: (taskItem.isStartup === false) //! it needs to be enabled independent of user-set option because it is used from indicators
     readonly property bool progressVisible: smartLauncherItem && smartLauncherItem.progressVisible
@@ -42,10 +42,10 @@ Item {
         radius: 3
         anchors.margins: 5
 
-        property color tempColor: theme.highlightColor
+        property color tempColor: Kirigami.Theme.highlightColor
         color: tempColor
         border.width: 1
-        border.color: theme.highlightColor
+        border.color: Kirigami.Theme.highlightColor
 
         onTempColorChanged: tempColor.a = 0.35;
     }

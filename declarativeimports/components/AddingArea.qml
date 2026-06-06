@@ -14,7 +14,7 @@ import org.kde.kirigami 2.20 as Kirigami
 
 Rectangle{
     id: addingArea
-    color: Qt.rgba(theme.backgroundColor.r, theme.backgroundColor.g, theme.backgroundColor.b, backgroundOpacity)
+    color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, backgroundOpacity)
     border.width: 1
     border.color: outlineColor
 
@@ -22,7 +22,7 @@ Rectangle{
 
     property int iconSize: 64
 
-    readonly property color outlineColorBase: theme.backgroundColor
+    readonly property color outlineColorBase: Kirigami.Theme.backgroundColor
     readonly property real outlineColorBaseBrightness: ColorizerTools.colorBrightness(outlineColorBase)
     readonly property color outlineColor: {
         if (outlineColorBaseBrightness > 127.5) {
@@ -43,8 +43,8 @@ Rectangle{
 
     Label {
         id: heading
-        text: title       
-        color: theme.textColor
+        text: title
+        color: Kirigami.Theme.textColor
         font.bold: true
 
         rotation: {

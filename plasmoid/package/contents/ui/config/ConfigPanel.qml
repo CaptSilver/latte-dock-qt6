@@ -11,6 +11,7 @@ import Qt5Compat.GraphicalEffects
 
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.plasma.components 3.0 as PlasmaComponents
+import org.kde.kirigami 2.20 as Kirigami
 
 Item {
     id: mainItem
@@ -147,7 +148,7 @@ Item {
         horizontalAlignment: Text.AlignHCenter
         //  font.bold: true
         font.italic: true
-        font.pointSize: 1.2 * theme.defaultFont.pointSize
+        font.pointSize: 1.2 * Kirigami.Theme.defaultFont.pointSize
 
         wrapMode: Text.WordWrap
     }

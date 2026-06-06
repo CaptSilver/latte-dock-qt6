@@ -299,7 +299,7 @@ MouseArea {
 
             Rectangle{
                 anchors.fill: parent
-                color: theme.backgroundColor
+                color: Kirigami.Theme.backgroundColor
                 radius: 3
                 opacity: 0.35
             }

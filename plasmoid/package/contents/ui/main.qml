@@ -14,6 +14,7 @@ import org.kde.ksvg 1.0 as KSvg
 import org.kde.plasma.plasma5support 2.0 as P5Support
 import org.kde.plasma.components 3.0 as PlasmaComponents
 import org.kde.plasma.plasmoid 2.0
+import org.kde.kirigami 2.20 as Kirigami
 
 import org.kde.taskmanager 0.1 as TaskManager
 import org.kde.plasma.private.taskmanager 0.1 as TaskManagerApplet
@@ -99,8 +100,8 @@ Item {
 
     property real textColorBrightness: ColorizerTools.colorBrightness(themeTextColor)
 
-    property color themeTextColor: theme.textColor
-    property color themeBackgroundColor: theme.backgroundColor
+    property color themeTextColor: Kirigami.Theme.textColor
+    property color themeBackgroundColor: Kirigami.Theme.backgroundColor
 
     property color lightTextColor: textColorBrightness > 127.5 ? themeTextColor : themeBackgroundColor
 

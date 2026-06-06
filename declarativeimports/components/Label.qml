@@ -23,7 +23,7 @@ T.Label {
     //font data is the system one by default
     //TODO: from theme singleton?
     color: Kirigami.Theme.textColor
-    linkColor: theme.linkColor
+    linkColor: Kirigami.Theme.linkColor
 
     opacity: enabled? 1 : 0.6
 

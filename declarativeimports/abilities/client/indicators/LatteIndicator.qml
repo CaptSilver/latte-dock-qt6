@@ -10,6 +10,7 @@ import Qt5Compat.GraphicalEffects
 import org.kde.plasma.plasmoid 2.0
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.plasma.components 3.0 as PlasmaComponents
+import org.kde.kirigami 2.20 as Kirigami
 
 import org.kde.latte.core 0.2 as LatteCore
 import org.kde.latte.components 1.0 as LatteComponents
@@ -26,12 +27,12 @@ LatteComponents.IndicatorItem{
 
     readonly property int screenEdgeMargin: plasmoid.location === PlasmaCore.Types.Floating || reversedEnabled ? 0 : indicator.screenEdgeMargin
 
-    property real textColorBrightness: colorBrightness(theme.textColor)
+    property real textColorBrightness: colorBrightness(Kirigami.Theme.textColor)
 
-    property color isActiveColor: theme.buttonFocusColor
+    property color isActiveColor: Kirigami.Theme.focusColor
     property color minimizedColor: {
         if (minimizedTaskColoredDifferently) {
-            return (textColorBrightness > 127.5 ? Qt.darker(theme.textColor, 1.7) : Qt.lighter(theme.textColor, 7));
+            return (textColorBrightness > 127.5 ? Qt.darker(Kirigami.Theme.textColor, 1.7) : Qt.lighter(Kirigami.Theme.textColor, 7));
         }
 
         return isActiveColor;
@@ -104,7 +105,7 @@ LatteComponents.IndicatorItem{
                 location: plasmoid.location
                 glowOpacity: root.glowOpacity
                 contrastColor: indicator.shadowColor
-                attentionColor: theme.negativeTextColor
+                attentionColor: Kirigami.Theme.negativeTextColor
 
                 roundCorners: true
                 showAttention: indicator.inAttention
