@@ -53,7 +53,7 @@ Item {
         }
     }
 
-    onParabolicEntered: {
+    onParabolicEntered: (mouseX, mouseY) => {
         lastMousePoint.x = mouseX;
         lastMousePoint.y = mouseY;
 
@@ -84,7 +84,7 @@ Item {
         }
     }
 
-    onParabolicMove: {
+    onParabolicMove: (mouseX, mouseY) => {
         lastMousePoint.x = mouseX;
         lastMousePoint.y = mouseY;
 
