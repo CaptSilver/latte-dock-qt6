@@ -4,10 +4,17 @@
 */
 
 import org.kde.plasma.components 3.0 as PlasmaComponents
-import "private" as Private
 
 PlasmaComponents.CheckBox {
+    id: checkBox
+
     property int value: 0
+
+    //! Compatibility aliases for the public API that used to live on the old
+    //! QtQuick Controls CheckBox. QQC2/PlasmaComponents 3 renamed these
+    //! to "tristate" and "checkState"; expose the old names so consumers keep working.
+    property alias partiallyCheckedEnabled: checkBox.tristate
+    property alias checkedState: checkBox.checkState
 
     onValueChanged: {
         if (partiallyCheckedEnabled) {
@@ -16,7 +23,4 @@ PlasmaComponents.CheckBox {
             checked = value;
         }
     }
-
-    style: Private.CheckBoxStyle {}
 }
-
