@@ -25,6 +25,7 @@ import org.kde.latte.components 1.0 as LatteComponents
 
 import "pages" as Pages
 import "../controls" as LatteExtraControls
+import org.kde.kirigami 2.20 as Kirigami
 
 Loader {
     active: plasmoid && plasmoid.configuration && latteView
@@ -46,8 +47,8 @@ Loader {
         //!    we use 100px. or 50px. in order to give space for other views to be shown and to also
         //!    have some space around the settings window
         property int maxHeight: plasmoid.formFactor === PlasmaCore.Types.Horizontal ?
-                                    viewConfig.availableScreenGeometry.height - canvasHeadThickness - units.largeSpacing :
-                                    viewConfig.availableScreenGeometry.height - 2 * units.largeSpacing
+                                    viewConfig.availableScreenGeometry.height - canvasHeadThickness - Kirigami.Units.largeSpacing :
+                                    viewConfig.availableScreenGeometry.height - 2 * Kirigami.Units.largeSpacing
 
         property int maxWidth: 0.6 * latteView.screenGeometry.width
 
@@ -58,14 +59,14 @@ Loader {
         }
 
         //! propose size based on font size
-        property int proposedWidth: 0.82 * proposedHeight + units.smallSpacing * 2
+        property int proposedWidth: 0.82 * proposedHeight + Kirigami.Units.smallSpacing * 2
         property int proposedHeight: 36 * theme.mSize(theme.defaultFont).height
 
         //! chosen size to be applied, if the user has set or not a different scale for the settings window
         property int chosenWidth: userScaleWidth !== 1 ? userScaleWidth * proposedWidth : proposedWidth
         property int chosenHeight: userScaleHeight !== 1 ? userScaleHeight * heightLevel * proposedHeight : heightLevel * proposedHeight
 
-        readonly property int optionsWidth: appliedWidth - units.smallSpacing * 10
+        readonly property int optionsWidth: appliedWidth - Kirigami.Units.smallSpacing * 10
 
         //! user set scales based on its preference, e.g. 96% of the proposed size
         property real userScaleWidth: 1
@@ -89,7 +90,7 @@ Loader {
         readonly property bool viewIsPanel: latteView.type === LatteCore.Types.PanelView
 
         property bool panelIsVertical: plasmoid.formFactor === PlasmaCore.Types.Vertical
-        property int subGroupSpacing: units.largeSpacing + units.smallSpacing * 1.5
+        property int subGroupSpacing: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing * 1.5
 
         property color bC: theme.backgroundColor
         property color tC: theme.textColor
@@ -150,11 +151,11 @@ Loader {
             Layout.minimumHeight: calculatedHeight
             Layout.preferredWidth: width
             Layout.preferredHeight: calculatedHeight
-            width: (dialog.appliedWidth - units.smallSpacing * 2)
+            width: (dialog.appliedWidth - Kirigami.Units.smallSpacing * 2)
 
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: parent.top
-            spacing: units.smallSpacing
+            spacing: Kirigami.Units.smallSpacing
 
             property int calculatedHeight: header.height + headerSpacer.height+ tabBar.height + pagesBackground.height + actionButtons.height + spacing * 3
 
@@ -176,11 +177,11 @@ Loader {
                     id: trademark
                     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                     Layout.fillWidth: false
-                    Layout.topMargin: units.smallSpacing
+                    Layout.topMargin: Kirigami.Units.smallSpacing
                     Layout.preferredWidth: width
                     Layout.preferredHeight: height
 
-                    width: latteTrademark.width + units.smallSpacing
+                    width: latteTrademark.width + Kirigami.Units.smallSpacing
                     height: trademarkHeight
 
                     readonly property int trademarkHeight: 48
@@ -198,16 +199,16 @@ Loader {
 
                 Item{
                     id: headerSpacer
-                    Layout.minimumHeight: advancedSettings.height + 2*units.smallSpacing
+                    Layout.minimumHeight: advancedSettings.height + 2*Kirigami.Units.smallSpacing
                 }
 
                 ColumnLayout {
                     PlasmaComponents3.ToolButton {
                         id: pinButton
                         Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                        Layout.bottomMargin: units.smallSpacing * 1.5
-                        Layout.topMargin: units.smallSpacing * 3
-                        Layout.rightMargin: units.smallSpacing * 2
+                        Layout.bottomMargin: Kirigami.Units.smallSpacing * 1.5
+                        Layout.topMargin: Kirigami.Units.smallSpacing * 3
+                        Layout.rightMargin: Kirigami.Units.smallSpacing * 2
                         icon.name: "window-pin"
                         checkable: true
 
@@ -227,7 +228,7 @@ Loader {
                     RowLayout {
                         id: advancedSettings
                         Layout.fillWidth: true
-                        Layout.rightMargin: units.smallSpacing * 2
+                        Layout.rightMargin: Kirigami.Units.smallSpacing * 2
                         Layout.alignment: Qt.AlignRight | Qt.AlignTop
 
                         PlasmaComponents.Label {
@@ -293,7 +294,7 @@ Loader {
             PlasmaComponents.TabBar {
                 id: tabBar
                 Layout.fillWidth: true
-                Layout.maximumWidth: (dialog.appliedWidth - units.smallSpacing * 2)
+                Layout.maximumWidth: (dialog.appliedWidth - Kirigami.Units.smallSpacing * 2)
 
                 readonly property int visibleStaticPages: dialog.advancedLevel ? 3 : 2
 
@@ -360,26 +361,26 @@ Loader {
                 id: pagesBackground
                 Layout.fillWidth: true
                 Layout.fillHeight: false
-                Layout.minimumWidth: dialog.appliedWidth - units.smallSpacing * 4
+                Layout.minimumWidth: dialog.appliedWidth - Kirigami.Units.smallSpacing * 4
                 Layout.minimumHeight: height
                 Layout.maximumHeight: height
 
-                width: dialog.appliedWidth - units.smallSpacing * 3
-                height: availableFreeHeight + units.smallSpacing * 4
+                width: dialog.appliedWidth - Kirigami.Units.smallSpacing * 3
+                height: availableFreeHeight + Kirigami.Units.smallSpacing * 4
 
                 //fix the height binding loop when showing the configuration window
-                property int availableFreeHeight: dialog.appliedHeight - header.height - headerSpacer.height - tabBar.height - actionButtons.height - 2 * units.smallSpacing
+                property int availableFreeHeight: dialog.appliedHeight - header.height - headerSpacer.height - tabBar.height - actionButtons.height - 2 * Kirigami.Units.smallSpacing
 
                 // Header
                 Rectangle {
                     anchors.top: parent.top
                     anchors.left: parent.left
                     anchors.right: parent.right
-                    anchors.topMargin: -units.smallSpacing + 2
-                    anchors.leftMargin: -2*units.smallSpacing
-                    anchors.rightMargin: -2*units.smallSpacing
+                    anchors.topMargin: -Kirigami.Units.smallSpacing + 2
+                    anchors.leftMargin: -2*Kirigami.Units.smallSpacing
+                    anchors.rightMargin: -2*Kirigami.Units.smallSpacing
 
-                    height: parent.height // dialog.height - (header.height + tabBar.height + units.smallSpacing * 1.5) + 2
+                    height: parent.height // dialog.height - (header.height + tabBar.height + Kirigami.Units.smallSpacing * 1.5) + 2
                     color: theme.backgroundColor
                     border.width: 1
                     border.color: dialog.borderColor
@@ -486,7 +487,7 @@ Loader {
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
 
-                spacing: units.largeSpacing
+                spacing: Kirigami.Units.largeSpacing
 
                 LatteComponents.ComboBoxButton {
                     id: actionsComboBtn
@@ -643,7 +644,7 @@ Loader {
                 left: parent.left
                 right: parent.right
             }
-            height: actionButtons.height + units.smallSpacing * 2.5
+            height: actionButtons.height + Kirigami.Units.smallSpacing * 2.5
             // So that it doesn't appear over the content view, which results in
             // the footer controls being inaccessible
             z: -9999

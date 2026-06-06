@@ -10,6 +10,7 @@ import org.kde.plasma.plasmoid 2.0
 import org.kde.plasma.core 2.0 as PlasmaCore
 
 import "code/ColorizerTools.js" as ColorizerTools
+import org.kde.kirigami 2.20 as Kirigami
 
 Rectangle{
     id: addingArea
@@ -66,7 +67,7 @@ Rectangle{
             return Item.Center;
         }
 
-        readonly property int lengthEdge: addingArea.radius + units.smallSpacing
+        readonly property int lengthEdge: addingArea.radius + Kirigami.Units.smallSpacing
 
         layer.enabled: true
         layer.effect: DropShadow {
@@ -89,7 +90,7 @@ Rectangle{
 
                 PropertyChanges {
                     target: heading
-                    anchors{ topMargin: heading.lengthEdge; bottomMargin:0; leftMargin:-units.smallSpacing; rightMargin:-0;}
+                    anchors{ topMargin: heading.lengthEdge; bottomMargin:0; leftMargin:-Kirigami.Units.smallSpacing; rightMargin:-0;}
                 }
             },
             State {
@@ -103,7 +104,7 @@ Rectangle{
 
                 PropertyChanges {
                     target: heading
-                    anchors{ topMargin:heading.lengthEdge; bottomMargin:0; leftMargin: 0; rightMargin:-units.smallSpacing;}
+                    anchors{ topMargin:heading.lengthEdge; bottomMargin:0; leftMargin: 0; rightMargin:-Kirigami.Units.smallSpacing;}
                 }
             },
             State {
@@ -117,7 +118,7 @@ Rectangle{
 
                 PropertyChanges {
                     target: heading
-                    anchors{ topMargin:0; bottomMargin:units.smallSpacing; leftMargin: heading.lengthEdge; rightMargin:0;}
+                    anchors{ topMargin:0; bottomMargin:Kirigami.Units.smallSpacing; leftMargin: heading.lengthEdge; rightMargin:0;}
                 }
             },
             State {
@@ -133,7 +134,7 @@ Rectangle{
 
                 PropertyChanges {
                     target: heading
-                    anchors{ topMargin:units.smallSpacing; bottomMargin:0; leftMargin: heading.lengthEdge; rightMargin:0;}
+                    anchors{ topMargin:Kirigami.Units.smallSpacing; bottomMargin:0; leftMargin: heading.lengthEdge; rightMargin:0;}
                 }
             }
         ]
@@ -148,6 +149,6 @@ Rectangle{
         readonly property int thickness: Math.min(addingArea.iconSize,
                                                   plasmoid.formFactor === PlasmaCore.Types.Horizontal ? (parent.height - freeSpace):(parent.width - freeSpace))
 
-        readonly property int freeSpace: Math.max(16, (heading.implicitHeight + units.smallSpacing*2))
+        readonly property int freeSpace: Math.max(16, (heading.implicitHeight + Kirigami.Units.smallSpacing*2))
     }
 }

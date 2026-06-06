@@ -7,6 +7,7 @@ import QtQuick 2.2
 import Qt5Compat.GraphicalEffects
 
 import org.kde.plasma.plasmoid 2.0
+import org.kde.kirigami 2.20 as Kirigami
 
 Rectangle {
     property double proportion: 0
@@ -35,7 +36,7 @@ Rectangle {
     property double partSize: height / 2
     property double pi2: Math.PI * 2
 
-    width: Math.max(minimumWidth, valueText.width + 4*units.smallSpacing)
+    width: Math.max(minimumWidth, valueText.width + 4*Kirigami.Units.smallSpacing)
 
     color: theme.backgroundColor
     radius: (radiusPerCentage / 100) * (height / 2)
@@ -119,7 +120,7 @@ Rectangle {
         id: valueText
         anchors.centerIn: canvas
 
-        width: Math.min(maximumWidth - 4*units.smallSpacing, implicitWidth)
+        width: Math.min(maximumWidth - 4*Kirigami.Units.smallSpacing, implicitWidth)
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
 

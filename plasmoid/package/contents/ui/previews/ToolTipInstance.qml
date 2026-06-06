@@ -37,7 +37,7 @@ Column {
     property int virtualDesktop: (typeof model !== 'undefined') && (typeof model.VirtualDesktop !== 'undefined') ? VirtualDesktop : 0
     property var activities : (typeof model !== 'undefined') && (typeof model.Activities !== 'undefined') ? Activities : []
 
-    spacing: units.smallSpacing
+    spacing: Kirigami.Units.smallSpacing
 
     readonly property bool descriptionIsVisible: winDescription.text !== ""
 
@@ -91,8 +91,8 @@ Column {
 
         // launcher icon
         Kirigami.Icon {
-            Layout.preferredWidth: units.iconSizes.medium
-            Layout.preferredHeight: units.iconSizes.medium
+            Layout.preferredWidth: Kirigami.Units.iconSizes.medium
+            Layout.preferredHeight: Kirigami.Units.iconSizes.medium
             source: icon
             animated: false
             visible: !isWin

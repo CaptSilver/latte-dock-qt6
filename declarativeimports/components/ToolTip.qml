@@ -18,7 +18,7 @@ T.ToolTip {
     implicitWidth: contentItem.implicitWidth + leftPadding + rightPadding
     implicitHeight: contentItem.implicitHeight + topPadding + bottomPadding
 
-    margins: units.gridUnit
+    margins: Kirigami.Units.gridUnit
     leftPadding: background.margins.left
     topPadding: background.margins.top
     rightPadding: background.margins.right

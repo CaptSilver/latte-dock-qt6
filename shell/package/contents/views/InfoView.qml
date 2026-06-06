@@ -13,6 +13,7 @@ import org.kde.plasma.components 3.0 as PlasmaComponents
 import org.kde.plasma.extras 2.0 as PlasmaExtras
 
 import org.kde.latte.core 0.2 as LatteCore
+import org.kde.kirigami 2.20 as Kirigami
 
 KSvg.FrameSvgItem {
     id: dialog
@@ -22,7 +23,7 @@ KSvg.FrameSvgItem {
     enabledBorders: infoWindow ? infoWindow.enabledBorders : KSvg.FrameSvg.AllBorders
 
     width: Screen.width + 1
-    height: Math.min(Screen.height - units.gridUnit * 8, logo.height + messageLbl.height + 2 *units.gridUnit)
+    height: Math.min(Screen.height - Kirigami.Units.gridUnit * 8, logo.height + messageLbl.height + 2 *Kirigami.Units.gridUnit)
 
     property string message
 
@@ -40,7 +41,7 @@ KSvg.FrameSvgItem {
                 id: logo
                 anchors.centerIn: parent
 
-                width: units.iconSizes.huge
+                width: Kirigami.Units.iconSizes.huge
                 height: width
 
                 source: "latte-dock"

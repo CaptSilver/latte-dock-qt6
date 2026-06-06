@@ -25,7 +25,7 @@ KSvg.FrameSvgItem {
         prefix: "hover"
         anchors.fill: parent
         opacity: control.hovered && !control.pressed ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: units.longDuration } }
+        Behavior on opacity { NumberAnimation { duration: Kirigami.Units.longDuration } }
     }
 
     KSvg.SvgItem {

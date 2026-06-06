@@ -8,11 +8,12 @@ import QtQuick.Controls 1.4
 import QtQuick.Layouts 1.3
 
 import org.kde.plasma.plasmoid 2.0
+import org.kde.kirigami 2.20 as Kirigami
 
 Label {
     Layout.alignment: Qt.AlignLeft
-    Layout.topMargin: units.smallSpacing
-    Layout.bottomMargin: units.smallSpacing
+    Layout.topMargin: Kirigami.Units.smallSpacing
+    Layout.bottomMargin: Kirigami.Units.smallSpacing
     color: theme.textColor
     font.weight: Font.DemiBold
     font.letterSpacing: 1.05

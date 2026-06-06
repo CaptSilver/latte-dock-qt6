@@ -11,6 +11,7 @@ import org.kde.plasma.components 3.0 as PlasmaComponents
 import org.kde.plasma.components 3.0 as PlasmaComponents3
 
 import org.kde.latte.components 1.0 as LatteComponents
+import org.kde.kirigami 2.20 as Kirigami
 
 Rectangle {
     id: root
@@ -109,7 +110,7 @@ Rectangle {
         anchors.right: mainButton.right
         anchors.top: parent.top
 
-        width:  units.iconSizes.medium - 2 * units.smallSpacing
+        width:  Kirigami.Units.iconSizes.medium - 2 * Kirigami.Units.smallSpacing
         height: parent.height
 
         enabled: comboBoxEnabled

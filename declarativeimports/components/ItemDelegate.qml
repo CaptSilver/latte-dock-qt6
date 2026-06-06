@@ -24,7 +24,7 @@ T.CheckDelegate {
     bottomPadding: margin
     leftPadding: isSeparator ? 0 : margin
     rightPadding: isSeparator ? 0 : margin
-    spacing: units.smallSpacing
+    spacing: Kirigami.Units.smallSpacing
 
     property bool isSeparator: false
 
@@ -42,7 +42,7 @@ T.CheckDelegate {
     contentItem: RowLayout {
         Layout.leftMargin: control.mirrored && !isSeparator ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
         Layout.rightMargin: !control.mirrored && !isSeparator ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
-        spacing: isSeparator ? 0 : units.smallSpacing
+        spacing: isSeparator ? 0 : Kirigami.Units.smallSpacing
         enabled: control.enabled
 
         Rectangle {
@@ -63,7 +63,7 @@ T.CheckDelegate {
                 parent: iconElement
                 text: iconToolTip
                 visible: iconMouseArea.containsMouse
-                delay: 6 * units.longDuration
+                delay: 6 * Kirigami.Units.longDuration
             }
 
             MouseArea {

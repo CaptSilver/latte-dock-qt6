@@ -55,7 +55,7 @@ MouseArea {
     property int appletY
 
     readonly property int thickness: metrics.mask.thickness.maxNormal - metrics.extraThicknessForNormal
-    readonly property int spacerHandleSize: units.smallSpacing
+    readonly property int spacerHandleSize: Kirigami.Units.smallSpacing
 
     onHeightChanged: tooltip.visible = false;
     onWidthChanged: tooltip.visible = false;
@@ -437,10 +437,10 @@ MouseArea {
             Row {
                 id: handleRow
                 anchors.horizontalCenter: parent.horizontalCenter
-                spacing: 2*units.smallSpacing
+                spacing: 2*Kirigami.Units.smallSpacing
 
                 Row{
-                    spacing: units.smallSpacing
+                    spacing: Kirigami.Units.smallSpacing
                     PlasmaComponents.ToolButton {
                         id: configureButton
                         anchors.verticalCenter: parent.verticalCenter
@@ -455,13 +455,13 @@ MouseArea {
                     PlasmaComponents.Label {
                         id: label
                         anchors.verticalCenter: parent.verticalCenter
-                        anchors.rightMargin: units.smallSpacing
+                        anchors.rightMargin: Kirigami.Units.smallSpacing
                         textFormat: Text.PlainText
                         maximumLineCount: 1
                     }
 
                     Row{
-                        spacing: units.smallSpacing/2
+                        spacing: Kirigami.Units.smallSpacing/2
 
                         PlasmaComponents.ToolButton{
                             id: colorizingButton

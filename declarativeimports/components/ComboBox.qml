@@ -21,13 +21,13 @@ T.ComboBox {
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             contentItem.implicitWidth + leftPadding + rightPadding) + indicator.implicitWidth + rightPadding
-    implicitHeight: units.gridUnit * 1.6
+    implicitHeight: Kirigami.Units.gridUnit * 1.6
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     hoverEnabled: true
     topPadding: surfaceNormal.margins.top
     leftPadding: surfaceNormal.margins.left
-    rightPadding: surfaceNormal.margins.right + units.gridUnit * 2
+    rightPadding: surfaceNormal.margins.right + Kirigami.Units.gridUnit * 2
     bottomPadding: surfaceNormal.margins.bottom
 
     wheelEnabled: false
@@ -88,7 +88,7 @@ T.ComboBox {
     }
 
     indicator: KSvg.SvgItem {
-        implicitWidth: units.iconSizes.small
+        implicitWidth: Kirigami.Units.iconSizes.small
         implicitHeight: implicitWidth
         anchors {
             right: parent.right
@@ -230,8 +230,8 @@ T.ComboBox {
                 id: textLabel
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                Layout.leftMargin: !selectedIcon.visible && !control.mirrored ? units.smallSpacing : 0
-                Layout.rightMargin: !selectedIcon.visible && control.mirrored ? units.smallSpacing : 0
+                Layout.leftMargin: !selectedIcon.visible && !control.mirrored ? Kirigami.Units.smallSpacing : 0
+                Layout.rightMargin: !selectedIcon.visible && control.mirrored ? Kirigami.Units.smallSpacing : 0
 
                 text: control.displayText
                 font: control.font
@@ -314,7 +314,7 @@ T.ComboBox {
     background: KSvg.FrameSvgItem {
         id: surfaceNormal
         //retrocompatibility with old controls
-        implicitWidth: units.gridUnit * 6
+        implicitWidth: Kirigami.Units.gridUnit * 6
         width: parent.width
         height: parent.height
 

@@ -14,6 +14,7 @@ import org.kde.plasma.components 3.0 as PlasmaComponents3
 import org.kde.plasma.plasmoid 2.0
 
 import org.kde.latte.components 1.0 as LatteComponents
+import org.kde.kirigami 2.20 as Kirigami
 
 ColumnLayout {
     id: root
@@ -75,7 +76,7 @@ ColumnLayout {
 
     RowLayout {
         Layout.fillWidth: true
-        spacing: units.smallSpacing
+        spacing: Kirigami.Units.smallSpacing
 
         PlasmaComponents.Label {
             text: i18n("Thickness")
@@ -111,7 +112,7 @@ ColumnLayout {
 
     RowLayout {
         Layout.fillWidth: true
-        spacing: units.smallSpacing
+        spacing: Kirigami.Units.smallSpacing
 
         PlasmaComponents.Label {
             text: i18n("Position")
@@ -147,7 +148,7 @@ ColumnLayout {
 
     RowLayout {
         Layout.fillWidth: true
-        spacing: units.smallSpacing
+        spacing: Kirigami.Units.smallSpacing
 
         PlasmaComponents.Label {
             text: i18n("Padding")
@@ -185,7 +186,7 @@ ColumnLayout {
 
     RowLayout {
         Layout.fillWidth: true
-        spacing: units.smallSpacing
+        spacing: Kirigami.Units.smallSpacing
 
         PlasmaComponents.Label {
             text: i18n("Corner Margin")
@@ -223,7 +224,7 @@ ColumnLayout {
         id: glowEnabled
         Layout.fillWidth: true
         Layout.minimumHeight: implicitHeight
-        Layout.bottomMargin: units.smallSpacing
+        Layout.bottomMargin: Kirigami.Units.smallSpacing
 
         checked: indicator.configuration.glowEnabled
         level: 2
@@ -295,7 +296,7 @@ ColumnLayout {
         PlasmaComponents.Label {
             Layout.minimumWidth: implicitWidth
             horizontalAlignment: Text.AlignLeft
-            Layout.rightMargin: units.smallSpacing
+            Layout.rightMargin: Kirigami.Units.smallSpacing
             text: i18n("Opacity")
         }
 

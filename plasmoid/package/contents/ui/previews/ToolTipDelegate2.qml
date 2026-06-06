@@ -20,6 +20,7 @@ import org.kde.plasma.extras 2.0 as PlasmaExtras
 import org.kde.kquickcontrolsaddons 2.0 as KQuickControlsAddons
 
 import org.kde.taskmanager 0.1 as TaskManager
+import org.kde.kirigami 2.20 as Kirigami
 
 PlasmaExtras.ScrollArea {
     id: mainToolTip
@@ -102,7 +103,7 @@ PlasmaExtras.ScrollArea {
                 rows: !isVerticalPanel
                 columns: isVerticalPanel
                 flow: isVerticalPanel ? Grid.TopToBottom : Grid.LeftToRight
-                spacing: units.largeSpacing
+                spacing: Kirigami.Units.largeSpacing
 
                 readonly property bool hasVisibleDescription: {
                     for (var i=0; i<children.length; ++i) {

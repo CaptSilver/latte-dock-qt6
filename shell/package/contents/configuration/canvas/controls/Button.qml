@@ -8,6 +8,7 @@ import QtQuick.Layouts 1.1
 
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.plasma.components 3.0 as PlasmaComponents
+import org.kde.kirigami 2.20 as Kirigami
 
 Item{
     id: button
@@ -70,12 +71,12 @@ Item{
             border.width: 1
             border.color: appliedBorderColor
 
-            readonly property int margin: units.smallSpacing
+            readonly property int margin: Kirigami.Units.smallSpacing
 
             RowLayout{
                 id: buttonRow
                 anchors.centerIn: parent
-                spacing: units.smallSpacing
+                spacing: Kirigami.Units.smallSpacing
                 layoutDirection: iconPositionReversed ? Qt.RightToLeft : Qt.LeftToRight
 
                 Loader {

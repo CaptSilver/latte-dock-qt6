@@ -17,11 +17,12 @@ import org.kde.plasma.components 3.0 as PlasmaComponents3
 import org.kde.latte.core 0.2 as LatteCore
 import org.kde.latte.components 1.0 as LatteComponents
 import org.kde.latte.private.containment 0.1 as LatteContainment
+import org.kde.kirigami 2.20 as Kirigami
 
 PlasmaComponents.Page {
     id: page
     width: content.width + content.Layout.leftMargin * 2
-    height: content.height + units.smallSpacing * 2
+    height: content.height + Kirigami.Units.smallSpacing * 2
 
     Timer {
         id: syncGeometry
@@ -35,31 +36,31 @@ PlasmaComponents.Page {
     ColumnLayout {
         id: content
 
-        width: (dialog.appliedWidth - units.smallSpacing * 2) - Layout.leftMargin * 2
+        width: (dialog.appliedWidth - Kirigami.Units.smallSpacing * 2) - Layout.leftMargin * 2
         spacing: dialog.subGroupSpacing
         anchors.horizontalCenter: parent.horizontalCenter
-        Layout.leftMargin: units.smallSpacing * 2
+        Layout.leftMargin: Kirigami.Units.smallSpacing * 2
 
         //! BEGIN: Items
         ColumnLayout {
             Layout.fillWidth: true
-            Layout.topMargin: units.smallSpacing
+            Layout.topMargin: Kirigami.Units.smallSpacing
 
-            spacing: units.smallSpacing
+            spacing: Kirigami.Units.smallSpacing
 
             LatteComponents.Header {
                 text: i18n("Items")
             }
 
             ColumnLayout {
-                Layout.leftMargin: units.smallSpacing * 2
-                Layout.rightMargin: units.smallSpacing * 2
+                Layout.leftMargin: Kirigami.Units.smallSpacing * 2
+                Layout.rightMargin: Kirigami.Units.smallSpacing * 2
                 spacing: 0
 
                 RowLayout {
                     Layout.minimumWidth: dialog.optionsWidth
                     Layout.maximumWidth: Layout.minimumWidth
-                    spacing: units.smallSpacing
+                    spacing: Kirigami.Units.smallSpacing
                     enabled: proportionSizeSlider.value === 1
 
                     PlasmaComponents.Label {
@@ -108,7 +109,7 @@ PlasmaComponents.Page {
                 RowLayout {
                     Layout.minimumWidth: dialog.optionsWidth
                     Layout.maximumWidth: Layout.minimumWidth
-                    spacing: units.smallSpacing
+                    spacing: Kirigami.Units.smallSpacing
                     visible: dialog.advancedLevel || plasmoid.configuration.proportionIconSize>0
 
                     PlasmaComponents.Label {
@@ -173,7 +174,7 @@ PlasmaComponents.Page {
                 RowLayout {
                     Layout.minimumWidth: dialog.optionsWidth
                     Layout.maximumWidth: Layout.minimumWidth
-                    spacing: units.smallSpacing
+                    spacing: Kirigami.Units.smallSpacing
                     enabled: LatteCore.WindowSystem.compositingActive && plasmoid.configuration.animationsEnabled
 
                     PlasmaComponents.Label {
@@ -225,7 +226,7 @@ PlasmaComponents.Page {
         ColumnLayout {
             Layout.fillWidth: true
 
-            spacing: units.smallSpacing
+            spacing: Kirigami.Units.smallSpacing
 
             LatteComponents.Header {
                 text: i18n("Length")
@@ -233,8 +234,8 @@ PlasmaComponents.Page {
 
             ColumnLayout {
                 id: lengthColumn
-                Layout.leftMargin: units.smallSpacing * 2
-                Layout.rightMargin: units.smallSpacing * 2
+                Layout.leftMargin: Kirigami.Units.smallSpacing * 2
+                Layout.rightMargin: Kirigami.Units.smallSpacing * 2
                 spacing: 0
 
                 readonly property int labelsMaxWidth: Math.max(maxLengthLbl.implicitWidth,
@@ -244,7 +245,7 @@ PlasmaComponents.Page {
                 RowLayout {
                     Layout.minimumWidth: dialog.optionsWidth
                     Layout.maximumWidth: Layout.minimumWidth
-                    spacing: units.smallSpacing
+                    spacing: Kirigami.Units.smallSpacing
 
                     PlasmaComponents.Label {
                         id: maxLengthLbl
@@ -353,7 +354,7 @@ PlasmaComponents.Page {
                 RowLayout {
                     Layout.minimumWidth: dialog.optionsWidth
                     Layout.maximumWidth: Layout.minimumWidth
-                    spacing: units.smallSpacing
+                    spacing: Kirigami.Units.smallSpacing
                     visible: dialog.advancedLevel
                     enabled: (plasmoid.configuration.alignment !== LatteCore.Types.Justify)
 
@@ -436,7 +437,7 @@ PlasmaComponents.Page {
                 RowLayout {
                     Layout.minimumWidth: dialog.optionsWidth
                     Layout.maximumWidth: Layout.minimumWidth
-                    spacing: units.smallSpacing
+                    spacing: Kirigami.Units.smallSpacing
                     visible: dialog.advancedLevel
                     enabled: offsetSlider.to > offsetSlider.from
 
@@ -593,7 +594,7 @@ PlasmaComponents.Page {
             id: marginsColumn
             Layout.fillWidth: true
 
-            spacing: units.smallSpacing
+            spacing: Kirigami.Units.smallSpacing
             visible: dialog.advancedLevel
 
             readonly property int maxMargin: 25
@@ -603,15 +604,15 @@ PlasmaComponents.Page {
             }
 
             ColumnLayout{
-                Layout.leftMargin: units.smallSpacing * 2
-                Layout.rightMargin: units.smallSpacing * 2
+                Layout.leftMargin: Kirigami.Units.smallSpacing * 2
+                Layout.rightMargin: Kirigami.Units.smallSpacing * 2
                 spacing: 0
 
                 RowLayout {
                     Layout.minimumWidth: dialog.optionsWidth
                     Layout.maximumWidth: Layout.minimumWidth
 
-                    spacing: units.smallSpacing
+                    spacing: Kirigami.Units.smallSpacing
 
                     PlasmaComponents.Label {
                         text: i18n("Length")
@@ -656,7 +657,7 @@ PlasmaComponents.Page {
                 RowLayout {
                     Layout.minimumWidth: dialog.optionsWidth
                     Layout.maximumWidth: Layout.minimumWidth
-                    spacing: units.smallSpacing
+                    spacing: Kirigami.Units.smallSpacing
 
                     PlasmaComponents.Label {
                         text: i18n("Thickness")
@@ -703,7 +704,7 @@ PlasmaComponents.Page {
                 RowLayout {
                     Layout.minimumWidth: dialog.optionsWidth
                     Layout.maximumWidth: Layout.minimumWidth
-                    spacing: units.smallSpacing
+                    spacing: Kirigami.Units.smallSpacing
 
                     PlasmaComponents.Label {
                         text: i18n("Floating gap")
@@ -742,7 +743,7 @@ PlasmaComponents.Page {
 
         //! BEGIN: Colors
         ColumnLayout {
-            spacing: units.smallSpacing
+            spacing: Kirigami.Units.smallSpacing
             visible: dialog.advancedLevel
 
             LatteComponents.Header {
@@ -754,11 +755,11 @@ PlasmaComponents.Page {
                 id: colorsGridLayout
                 Layout.minimumWidth: dialog.optionsWidth
                 Layout.maximumWidth: Layout.minimumWidth
-                Layout.leftMargin: units.smallSpacing * 2
-                Layout.rightMargin: units.smallSpacing * 2
-                Layout.topMargin: units.smallSpacing
-                columnSpacing: units.smallSpacing
-                rowSpacing: units.smallSpacing
+                Layout.leftMargin: Kirigami.Units.smallSpacing * 2
+                Layout.rightMargin: Kirigami.Units.smallSpacing * 2
+                Layout.topMargin: Kirigami.Units.smallSpacing
+                columnSpacing: Kirigami.Units.smallSpacing
+                rowSpacing: Kirigami.Units.smallSpacing
                 columns: 2
 
                 readonly property bool colorsScriptIsPresent: universalSettings.colorsScriptIsPresent
@@ -856,14 +857,14 @@ PlasmaComponents.Page {
         //! BEGIN: Background
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: units.smallSpacing
+            spacing: Kirigami.Units.smallSpacing
 
             LatteComponents.HeaderSwitch {
                 id: showBackground
-                Layout.minimumWidth: dialog.optionsWidth + 2 *units.smallSpacing
+                Layout.minimumWidth: dialog.optionsWidth + 2 *Kirigami.Units.smallSpacing
                 Layout.maximumWidth: Layout.minimumWidth
                 Layout.minimumHeight: implicitHeight
-                Layout.bottomMargin: units.smallSpacing
+                Layout.bottomMargin: Kirigami.Units.smallSpacing
                 enabled: LatteCore.WindowSystem.compositingActive
 
                 checked: plasmoid.configuration.useThemePanel
@@ -876,8 +877,8 @@ PlasmaComponents.Page {
             }
 
             ColumnLayout {
-                Layout.leftMargin: units.smallSpacing * 2
-                Layout.rightMargin: units.smallSpacing * 2
+                Layout.leftMargin: Kirigami.Units.smallSpacing * 2
+                Layout.rightMargin: Kirigami.Units.smallSpacing * 2
                 spacing: 0
 
                 RowLayout {
@@ -1067,7 +1068,7 @@ PlasmaComponents.Page {
                 RowLayout {
                     Layout.minimumWidth: dialog.optionsWidth
                     Layout.maximumWidth: Layout.minimumWidth
-                    Layout.topMargin: units.smallSpacing
+                    Layout.topMargin: Kirigami.Units.smallSpacing
                     spacing: 2
                     visible: dialog.advancedLevel
 

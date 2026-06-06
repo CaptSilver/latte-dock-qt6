@@ -20,31 +20,32 @@ import org.kde.latte.components 1.0 as LatteComponents
 import org.kde.latte.private.containment 0.1 as LatteContainment
 
 import "../../controls" as LatteExtraControls
+import org.kde.kirigami 2.20 as Kirigami
 
 PlasmaComponents.Page {
     id: page
     width: content.width + content.Layout.leftMargin * 2
-    height: content.height + units.smallSpacing
+    height: content.height + Kirigami.Units.smallSpacing
 
     ColumnLayout {
         id: content
         anchors.horizontalCenter: parent.horizontalCenter
-        Layout.leftMargin: units.smallSpacing * 2
-        width: (dialog.appliedWidth - units.smallSpacing * 2) - Layout.leftMargin * 2
+        Layout.leftMargin: Kirigami.Units.smallSpacing * 2
+        width: (dialog.appliedWidth - Kirigami.Units.smallSpacing * 2) - Layout.leftMargin * 2
         spacing: dialog.subGroupSpacing
 
         //! BEGIN: Shadows
         ColumnLayout {
             Layout.fillWidth: true
-            Layout.topMargin: units.smallSpacing
+            Layout.topMargin: Kirigami.Units.smallSpacing
 
-            spacing: units.smallSpacing
+            spacing: Kirigami.Units.smallSpacing
 
             LatteComponents.HeaderSwitch {
                 id: showAppletShadow
                 Layout.fillWidth: true
                 Layout.minimumHeight: implicitHeight
-                Layout.topMargin: units.smallSpacing
+                Layout.topMargin: Kirigami.Units.smallSpacing
 
                 checked: plasmoid.configuration.appletShadowsEnabled
                 text: i18n("Shadows")
@@ -54,8 +55,8 @@ PlasmaComponents.Page {
             }
 
             ColumnLayout {
-                Layout.leftMargin: units.smallSpacing * 2
-                Layout.rightMargin: units.smallSpacing * 2
+                Layout.leftMargin: Kirigami.Units.smallSpacing * 2
+                Layout.rightMargin: Kirigami.Units.smallSpacing * 2
                 spacing: 0
 
                 RowLayout{
@@ -156,7 +157,7 @@ PlasmaComponents.Page {
                 RowLayout {
                     id: shadowColorRow
                     Layout.fillWidth: true
-                    Layout.topMargin: units.smallSpacing
+                    Layout.topMargin: Kirigami.Units.smallSpacing
                     spacing: 2
                     enabled: showAppletShadow.checked
 
@@ -232,7 +233,7 @@ PlasmaComponents.Page {
 
                         Rectangle{
                             anchors.fill: parent
-                            anchors.margins: 1.5*units.smallSpacing
+                            anchors.margins: 1.5*Kirigami.Units.smallSpacing
 
                             color: "#" + plasmoid.configuration.shadowColor;
 
@@ -294,14 +295,14 @@ PlasmaComponents.Page {
         //! BEGIN: Animations
         ColumnLayout {
             Layout.fillWidth: true
-            Layout.topMargin: units.smallSpacing
-            spacing: units.smallSpacing
+            Layout.topMargin: Kirigami.Units.smallSpacing
+            spacing: Kirigami.Units.smallSpacing
 
             LatteComponents.HeaderSwitch {
                 id: animationsHeader
                 Layout.fillWidth: true
                 Layout.minimumHeight: implicitHeight
-                Layout.topMargin: units.smallSpacing
+                Layout.topMargin: Kirigami.Units.smallSpacing
 
                 checked: plasmoid.configuration.animationsEnabled
                 text: i18n("Animations")
@@ -313,8 +314,8 @@ PlasmaComponents.Page {
             }
 
             ColumnLayout {
-                Layout.leftMargin: units.smallSpacing * 2
-                Layout.rightMargin: units.smallSpacing * 2
+                Layout.leftMargin: Kirigami.Units.smallSpacing * 2
+                Layout.rightMargin: Kirigami.Units.smallSpacing * 2
                 spacing: 0
                 enabled: plasmoid.configuration.animationsEnabled
 
@@ -385,7 +386,7 @@ PlasmaComponents.Page {
 
         //! BEGIN: Active Indicator General Settings
         ColumnLayout{
-            spacing: units.smallSpacing
+            spacing: Kirigami.Units.smallSpacing
 
             LatteComponents.HeaderSwitch {
                 id: indicatorsSwitch
@@ -402,9 +403,9 @@ PlasmaComponents.Page {
             }
 
             ColumnLayout {
-                Layout.leftMargin: units.smallSpacing * 2
-                Layout.rightMargin: units.smallSpacing * 2
-                spacing: units.smallSpacing
+                Layout.leftMargin: Kirigami.Units.smallSpacing * 2
+                Layout.rightMargin: Kirigami.Units.smallSpacing * 2
+                spacing: Kirigami.Units.smallSpacing
                 enabled: indicatorsSwitch.checked
 
                 /*   LatteComponents.SubHeader {

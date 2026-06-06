@@ -33,7 +33,7 @@ Popup {
         if (desiredY >= 0) {
             return Math.min(desiredY, controlRoot.Window.contentItem.height - root.height);
         } else {
-            return Math.min(Math.max(0, controlRoot.mapToItem(root.parent, 0, controlRoot.positionToRectangle(controlRoot.selectionEnd).y + Math.round(units.gridUnit*1.5)).y), controlRoot.Window.contentItem.height - root.height);
+            return Math.min(Math.max(0, controlRoot.mapToItem(root.parent, 0, controlRoot.positionToRectangle(controlRoot.selectionEnd).y + Math.round(Kirigami.Units.gridUnit*1.5)).y), controlRoot.Window.contentItem.height - root.height);
         }
     }
 

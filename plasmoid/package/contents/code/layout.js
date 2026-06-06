@@ -15,8 +15,8 @@ function verticalMargins() {
 function adjustMargin(height, margin) {
     var available = height - verticalMargins();
 
-    if (available < units.iconSizes.small) {
-        return Math.floor((margin * (units.iconSizes.small / available)) / 3);
+    if (available < Kirigami.Units.iconSizes.small) {
+        return Math.floor((margin * (Kirigami.Units.iconSizes.small / available)) / 3);
     }
 
     return margin;
@@ -91,7 +91,7 @@ function preferredMinWidth() {
     var width = launcherWidth();
 
     if (!tasks.vertical && !tasks.iconsOnly) {
-        width += (units.smallSpacing * 2) + (theme.mSize(theme.defaultFont).width * 12);
+        width += (Kirigami.Units.smallSpacing * 2) + (theme.mSize(theme.defaultFont).width * 12);
     }
 
     return width;
@@ -119,7 +119,7 @@ function preferredMinHeight() {
 }
 
 function preferredMaxHeight() {
-    return verticalMargins() + Math.min(units.iconSizes.small * 3, theme.mSize(theme.defaultFont).height * 3);
+    return verticalMargins() + Math.min(Kirigami.Units.iconSizes.small * 3, theme.mSize(theme.defaultFont).height * 3);
 }
 
 function taskWidth() {
@@ -147,7 +147,7 @@ function taskHeight() {
 }
 
 function launcherWidth() {
-    var baseWidth = tasks.vertical ? preferredMinHeight() : Math.min(tasks.height, units.iconSizes.small * 3);
+    var baseWidth = tasks.vertical ? preferredMinHeight() : Math.min(tasks.height, Kirigami.Units.iconSizes.small * 3);
 
     return (baseWidth + horizontalMargins())
         - (adjustMargin(baseWidth, taskFrame.margins.top) + adjustMargin(baseWidth, taskFrame.margins.bottom));

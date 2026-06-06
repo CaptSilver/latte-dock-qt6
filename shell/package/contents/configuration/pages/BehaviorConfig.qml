@@ -18,18 +18,19 @@ import org.kde.latte.components 1.0 as LatteComponents
 import org.kde.latte.private.containment 0.1 as LatteContainment
 
 import "../../controls" as LatteExtraControls
+import org.kde.kirigami 2.20 as Kirigami
 
 PlasmaComponents.Page {
     id: page
     width: content.width + content.Layout.leftMargin * 2
-    height: content.height + units.smallSpacing * 2
+    height: content.height + Kirigami.Units.smallSpacing * 2
 
     ColumnLayout {
         id: content       
-        width: (dialog.appliedWidth - units.smallSpacing * 2) - Layout.leftMargin * 2
+        width: (dialog.appliedWidth - Kirigami.Units.smallSpacing * 2) - Layout.leftMargin * 2
         spacing: dialog.subGroupSpacing
         anchors.horizontalCenter: parent.horizontalCenter
-        Layout.leftMargin: units.smallSpacing * 2
+        Layout.leftMargin: Kirigami.Units.smallSpacing * 2
 
         //! BEGIN: Inline Dock/Panel Type, it is used only when the secondary window
         //! overlaps the main dock config window
@@ -40,8 +41,8 @@ PlasmaComponents.Page {
 
             sourceComponent: ColumnLayout {
                 Layout.fillWidth: true
-                Layout.topMargin: units.smallSpacing
-                spacing: units.smallSpacing
+                Layout.topMargin: Kirigami.Units.smallSpacing
+                spacing: Kirigami.Units.smallSpacing
 
                 LatteComponents.Header {
                     text: i18n("Type")
@@ -58,8 +59,8 @@ PlasmaComponents.Page {
         //! BEGIN: Location
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: units.smallSpacing
-            Layout.topMargin: units.smallSpacing
+            spacing: Kirigami.Units.smallSpacing
+            Layout.topMargin: Kirigami.Units.smallSpacing
 
             LatteComponents.Header {
                 text: screenRow.visible ? i18n("Screen") : i18n("Location")
@@ -73,8 +74,8 @@ PlasmaComponents.Page {
             RowLayout {
                 id: screenRow
                 Layout.fillWidth: true
-                Layout.leftMargin: units.smallSpacing * 2
-                Layout.rightMargin: units.smallSpacing * 3
+                Layout.leftMargin: Kirigami.Units.smallSpacing * 2
+                Layout.rightMargin: Kirigami.Units.smallSpacing * 3
                 spacing: 2
                 visible: screensCount > 1 || dialog.advancedLevel
 
@@ -171,9 +172,9 @@ PlasmaComponents.Page {
             RowLayout {
                 id: locationLayout
                 Layout.fillWidth: true
-                Layout.leftMargin: units.smallSpacing * 2
-                Layout.rightMargin: units.smallSpacing * 2
-                Layout.topMargin: screenRow.visible ? units.smallSpacing : 0
+                Layout.leftMargin: Kirigami.Units.smallSpacing * 2
+                Layout.rightMargin: Kirigami.Units.smallSpacing * 2
+                Layout.topMargin: screenRow.visible ? Kirigami.Units.smallSpacing : 0
                 LayoutMirroring.enabled: false
                 spacing: 2
 
@@ -266,7 +267,7 @@ PlasmaComponents.Page {
         //! BEGIN: Alignment
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: units.smallSpacing
+            spacing: Kirigami.Units.smallSpacing
 
             LatteComponents.Header {
                 text: i18n("Alignment")
@@ -275,8 +276,8 @@ PlasmaComponents.Page {
             RowLayout {
                 id: alignmentRow
                 Layout.fillWidth: true
-                Layout.leftMargin: units.smallSpacing * 2
-                Layout.rightMargin: units.smallSpacing * 2
+                Layout.leftMargin: Kirigami.Units.smallSpacing * 2
+                Layout.rightMargin: Kirigami.Units.smallSpacing * 2
                 LayoutMirroring.enabled: false
                 spacing: 2
 
@@ -363,7 +364,7 @@ PlasmaComponents.Page {
         //! BEGIN: Visibility
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: units.smallSpacing
+            spacing: Kirigami.Units.smallSpacing
 
             LatteComponents.Header {
                 text: i18n("Visibility")
@@ -373,8 +374,8 @@ PlasmaComponents.Page {
                 width: parent.width
                 rowSpacing: 1
                 columnSpacing: 2
-                Layout.leftMargin: units.smallSpacing * 2
-                Layout.rightMargin: units.smallSpacing * 2
+                Layout.leftMargin: Kirigami.Units.smallSpacing * 2
+                Layout.rightMargin: Kirigami.Units.smallSpacing * 2
 
                 columns: 2
 
@@ -528,7 +529,7 @@ PlasmaComponents.Page {
         //! BEGIN: Delay
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: units.smallSpacing
+            spacing: Kirigami.Units.smallSpacing
 
             enabled: !(latteView.visibility.mode === LatteCore.Types.AlwaysVisible
                        || latteView.visibility.mode === LatteCore.Types.WindowsGoBelow
@@ -543,9 +544,9 @@ PlasmaComponents.Page {
                 width: dialog.optionsWidth
                 Layout.minimumWidth: dialog.optionsWidth
                 Layout.maximumWidth: dialog.optionsWidth
-                Layout.leftMargin: units.smallSpacing * 2
-                Layout.rightMargin: units.smallSpacing * 2
-                Layout.topMargin: units.smallSpacing
+                Layout.leftMargin: Kirigami.Units.smallSpacing * 2
+                Layout.rightMargin: Kirigami.Units.smallSpacing * 2
+                Layout.topMargin: Kirigami.Units.smallSpacing
 
                 spacing: 2
 
@@ -566,8 +567,8 @@ PlasmaComponents.Page {
                         anchors.horizontalCenter: parent.horizontalCenter
                         enabled: latteView.visibility.mode !== LatteCore.Types.SidebarAutoHide
                         PlasmaComponents.Label {
-                            Layout.leftMargin: Qt.application.layoutDirection === Qt.RightToLeft ? units.smallSpacing : 0
-                            Layout.rightMargin: Qt.application.layoutDirection === Qt.RightToLeft ? 0 : units.smallSpacing
+                            Layout.leftMargin: Qt.application.layoutDirection === Qt.RightToLeft ? Kirigami.Units.smallSpacing : 0
+                            Layout.rightMargin: Qt.application.layoutDirection === Qt.RightToLeft ? 0 : Kirigami.Units.smallSpacing
                             text: i18n("Show ")
                         }
 
@@ -597,8 +598,8 @@ PlasmaComponents.Page {
                         anchors.horizontalCenter: parent.horizontalCenter
 
                         PlasmaComponents.Label {
-                            Layout.leftMargin: Qt.application.layoutDirection === Qt.RightToLeft ? units.smallSpacing : 0
-                            Layout.rightMargin: Qt.application.layoutDirection === Qt.RightToLeft ? 0 : units.smallSpacing
+                            Layout.leftMargin: Qt.application.layoutDirection === Qt.RightToLeft ? Kirigami.Units.smallSpacing : 0
+                            Layout.rightMargin: Qt.application.layoutDirection === Qt.RightToLeft ? 0 : Kirigami.Units.smallSpacing
                             text: i18n("Hide")
                         }
 
@@ -619,7 +620,7 @@ PlasmaComponents.Page {
 
         //! BEGIN: Actions
         ColumnLayout {
-            spacing: units.smallSpacing
+            spacing: Kirigami.Units.smallSpacing
             visible: dialog.advancedLevel
 
             LatteComponents.Header {
@@ -628,8 +629,8 @@ PlasmaComponents.Page {
 
             ColumnLayout {
                 id: actionsPropertiesColumn
-                Layout.leftMargin: units.smallSpacing * 2
-                Layout.rightMargin: units.smallSpacing * 2
+                Layout.leftMargin: Kirigami.Units.smallSpacing * 2
+                Layout.rightMargin: Kirigami.Units.smallSpacing * 2
                 spacing: 0
 
                 readonly property int maxLabelWidth: Math.max(trackActiveLbl.implicitWidth,
@@ -639,7 +640,7 @@ PlasmaComponents.Page {
 
                 ColumnLayout {
                     RowLayout {
-                        Layout.topMargin: units.smallSpacing
+                        Layout.topMargin: Kirigami.Units.smallSpacing
 
                         PlasmaComponents.Label {
                             id: trackActiveLbl
@@ -671,7 +672,7 @@ PlasmaComponents.Page {
                 }
 
                 ColumnLayout {
-                    Layout.topMargin: units.smallSpacing
+                    Layout.topMargin: Kirigami.Units.smallSpacing
                     RowLayout {
                         PlasmaComponents.Label {
                             id: leftBtnLbl
@@ -723,7 +724,7 @@ PlasmaComponents.Page {
                     }
 
                     RowLayout {
-                       // Layout.topMargin: units.smallSpacing
+                       // Layout.topMargin: Kirigami.Units.smallSpacing
 
                         PlasmaComponents.Label {
                             id: mouseWheelLbl
@@ -834,8 +835,8 @@ PlasmaComponents.Page {
             }
 
             LatteComponents.CheckBoxesColumn {
-                Layout.leftMargin: units.smallSpacing * 2
-                Layout.rightMargin: units.smallSpacing * 2
+                Layout.leftMargin: Kirigami.Units.smallSpacing * 2
+                Layout.rightMargin: Kirigami.Units.smallSpacing * 2
                 enabled: floatingSubCategory.enabled
 
                 LatteComponents.CheckBoxesColumn {
@@ -892,7 +893,7 @@ PlasmaComponents.Page {
 
         //! BEGIN: Adjust
         ColumnLayout {
-            spacing: units.smallSpacing
+            spacing: Kirigami.Units.smallSpacing
 
             visible: dialog.advancedLevel
             enabled: !(latteView.visibility.mode === LatteCore.Types.AlwaysVisible
@@ -905,8 +906,8 @@ PlasmaComponents.Page {
             }
 
             LatteComponents.CheckBoxesColumn {
-                Layout.leftMargin: units.smallSpacing * 2
-                Layout.rightMargin: units.smallSpacing * 2
+                Layout.leftMargin: Kirigami.Units.smallSpacing * 2
+                Layout.rightMargin: Kirigami.Units.smallSpacing * 2
 
                 LatteComponents.CheckBox {
                     Layout.maximumWidth: dialog.optionsWidth
