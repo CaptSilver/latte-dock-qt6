@@ -58,6 +58,10 @@ find_package(PlasmaActivities ${KF6_MIN_VERSION} REQUIRED)
 find_package(KF6Service ${KF6_MIN_VERSION} REQUIRED)
 # Launcher badge/progress in the tasks plugin reads NotificationManager job data.
 find_package(LibNotificationManager REQUIRED)
+# Recent-document and jump-list actions in the tasks backend query the activity store.
+find_package(PlasmaActivitiesStats ${KF6_MIN_VERSION} REQUIRED)
+# parentPid() resolves a process tree to match audio streams to tasks.
+find_package(KSysGuard ${KF6_MIN_VERSION} REQUIRED)
 # Pre-staged for Phase 6 (Plasma::Svg -> KSvg QML/C++ port).
 find_package(KF6Svg ${KF6_MIN_VERSION} REQUIRED)
 find_package(KWayland REQUIRED)

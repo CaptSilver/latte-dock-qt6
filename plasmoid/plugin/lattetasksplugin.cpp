@@ -6,6 +6,7 @@
 #include "lattetasksplugin.h"
 
 // local
+#include "backend.h"
 #include "smartlauncheritem.h"
 #include "types.h"
 
@@ -22,5 +23,6 @@ void LatteTasksPlugin::registerTypes(const char *uri)
     qmlRegisterUncreatableType<Latte::Tasks::Types>(uri, 0, 1, "Types", QStringLiteral("Latte Tasks Types uncreatable"));
 
     qmlRegisterType<SmartLauncher::Item>(uri, 0, 1, "SmartLauncherItem");
+    qmlRegisterType<Backend>(uri, 0, 1, "Backend");
 }
 
