@@ -6,6 +6,7 @@
 #include "lattetasksplugin.h"
 
 // local
+#include "smartlauncheritem.h"
 #include "types.h"
 
 // Qt
@@ -19,5 +20,7 @@ void LatteTasksPlugin::registerTypes(const char *uri)
     // Kept uppercase deliberately: the public QML API is LatteTasks.Types, used across
     // the QML tree; renaming for a benign, non-fatal warning is not worth the churn.
     qmlRegisterUncreatableType<Latte::Tasks::Types>(uri, 0, 1, "Types", QStringLiteral("Latte Tasks Types uncreatable"));
+
+    qmlRegisterType<SmartLauncher::Item>(uri, 0, 1, "SmartLauncherItem");
 }
 

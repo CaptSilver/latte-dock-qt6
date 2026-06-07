@@ -55,6 +55,9 @@ find_package(KF6KirigamiPlatform ${KF6_MIN_VERSION} REQUIRED)
 find_package(Plasma ${KF6_MIN_VERSION} REQUIRED)
 find_package(PlasmaQuick ${KF6_MIN_VERSION} REQUIRED)
 find_package(PlasmaActivities ${KF6_MIN_VERSION} REQUIRED)
+find_package(KF6Service ${KF6_MIN_VERSION} REQUIRED)
+# Launcher badge/progress in the tasks plugin reads NotificationManager job data.
+find_package(LibNotificationManager REQUIRED)
 # Pre-staged for Phase 6 (Plasma::Svg -> KSvg QML/C++ port).
 find_package(KF6Svg ${KF6_MIN_VERSION} REQUIRED)
 find_package(KWayland REQUIRED)

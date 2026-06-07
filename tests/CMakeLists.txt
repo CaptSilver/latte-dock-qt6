@@ -60,4 +60,12 @@ target_compile_definitions(contextmenudefaulttest PRIVATE
     VIEW_CPP_PATH="${CMAKE_SOURCE_DIR}/app/view/view.cpp"
     LATTE_CONTEXTMENU_PLUGIN="${CMAKE_BINARY_DIR}/bin/org.kde.latte.contextmenu.so")
 
+ecm_add_test(smartlauncheritemtest.cpp
+    ${CMAKE_SOURCE_DIR}/plasmoid/plugin/smartlauncheritem.cpp
+    ${CMAKE_SOURCE_DIR}/plasmoid/plugin/smartlauncherbackend.cpp
+    TEST_NAME smartlauncheritemtest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::DBus KF6::Service KF6::ConfigCore PW::LibNotificationManager
+)
+target_include_directories(smartlauncheritemtest PRIVATE ${CMAKE_SOURCE_DIR}/plasmoid/plugin)
+
 add_subdirectory(manual)
