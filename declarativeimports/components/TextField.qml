@@ -32,12 +32,13 @@ PlasmaComponents.TextField {
     placeholderText: i18n("none")
     horizontalAlignment: Text.AlignLeft
 
-    readonly property int implicitWidth: internalContent.width + defaultFontMetrics.advanceWidth * 3.5
+    implicitWidth: internalContent.width + defaultFontMetrics.advanceWidth * 3.5
 
     readonly property int value: text === "" ? minValue : parseInt(text)
     property int step: 100
     property int minValue: 0
     property int maxValue: 3000
+    property color textColor: Kirigami.Theme.textColor
 
     function increment() {
         var val = text === "" ? minValue : parseInt(text)

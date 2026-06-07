@@ -29,7 +29,7 @@ T.CheckDelegate {
     property bool isSeparator: false
 
     property bool blankSpaceForEmptyIcons: false
-    property string icon
+    property string iconSource
     property string iconToolTip
     property bool iconOnlyWhenHovered
     property string toolTip
@@ -50,13 +50,13 @@ T.CheckDelegate {
             Layout.maximumWidth: parent.height
             Layout.minimumHeight: parent.height
             Layout.maximumHeight: parent.height
-            visible: !isSeparator && icon && (!control.iconOnlyWhenHovered || (control.iconOnlyWhenHovered && control.isHovered))
+            visible: !isSeparator && control.iconSource && (!control.iconOnlyWhenHovered || (control.iconOnlyWhenHovered && control.isHovered))
             color: control.iconToolTip && iconMouseArea.containsMouse ? Kirigami.Theme.highlightColor : "transparent"
 
             Kirigami.Icon {
                 id: iconElement
                 anchors.fill: parent
-                source: control.icon
+                source: control.iconSource
             }
 
             LatteComponents.ToolTip{
@@ -80,7 +80,7 @@ T.CheckDelegate {
             //blank space when no icon is shown
             Layout.minimumHeight: parent.height
             Layout.minimumWidth: parent.height
-            visible: !isSeparator && control.blankSpaceForEmptyIcons && (!icon || (control.iconOnlyWhenHovered && !control.isHovered) )
+            visible: !isSeparator && control.blankSpaceForEmptyIcons && (!control.iconSource || (control.iconOnlyWhenHovered && !control.isHovered) )
             color: "transparent"
         }
 

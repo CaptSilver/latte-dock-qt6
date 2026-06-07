@@ -4,6 +4,7 @@
 */
 
 import QtQuick 2.7
+import QtQuick.Controls 2.15 as QQC2
 
 import QtQuick.Layouts 1.0
 
@@ -316,6 +317,8 @@ Item{
     PlasmaComponents.Button {
         anchors.fill: parent
         opacity: 0
-        tooltip: rulerItem.tooltip
+
+        QQC2.ToolTip.text: rulerItem.tooltip
+        QQC2.ToolTip.visible: hovered && rulerItem.tooltip.length > 0
     }
 }

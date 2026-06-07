@@ -18,8 +18,8 @@ Item{
 
     readonly property bool isHorizontal : (shadowDirection !== PlasmaCore.Types.LeftEdge) && (shadowDirection !== PlasmaCore.Types.RightEdge)
 
-    readonly property int implicitWidth: shadow.width
-    readonly property int implicitHeight: shadow.height
+    implicitWidth: shadow.width
+    implicitHeight: shadow.height
 
     Item{
         id: shadow

@@ -106,8 +106,8 @@ Loader {
         onAdvancedLevelChanged: {
             //! switch to appearancePage when effectsPage becomes hidden because
             //! advancedLevel was disabled by the user
-            if (!advancedLevel && tabBar.currentTab === effectsTabBtn) {
-                tabBar.currentTab = appearanceTabBtn;
+            if (!advancedLevel && tabBar.currentItem === effectsTabBtn) {
+                tabBar.currentIndex = 1;
             }
         }
 
@@ -306,7 +306,7 @@ Loader {
                     id: behaviorTabBtn
                     text: i18n("Behavior")
                     onCheckedChanged: {
-                        if (checked && pagesStackView.currentItem !== behaviorPage) {
+                        if (checked && pagesStackView && pagesStackView.currentItem !== behaviorPage) {
                             pagesStackView.forwardSliding = true;
                             pagesStackView.replace(pagesStackView.currentItem, behaviorPage);
                         }
@@ -316,7 +316,7 @@ Loader {
                         target: viewConfig
                         onIsReadyChanged: {
                             if (viewConfig.isReady) {
-                                tabBar.currentTab = behaviorTabBtn;
+                                tabBar.currentIndex = 0;
                             }
                         }
                     }
@@ -326,8 +326,8 @@ Loader {
                     id: appearanceTabBtn
                     text: i18n("Appearance")
                     onCheckedChanged: {
-                        if (checked && pagesStackView.currentItem !== appearancePage) {
-                            pagesStackView.forwardSliding = (pagesStackView.currentItem.pageIndex > 1);
+                        if (checked && pagesStackView && pagesStackView.currentItem !== appearancePage) {
+                            pagesStackView.forwardSliding = (pagesStackView.currentItem && pagesStackView.currentItem.pageIndex > 1);
                             pagesStackView.replace(pagesStackView.currentItem, appearancePage);
                         }
                     }
@@ -338,8 +338,8 @@ Loader {
                     visible: dialog.advancedLevel
 
                     onCheckedChanged: {
-                        if (checked && pagesStackView.currentItem !== effectsPage) {
-                            pagesStackView.forwardSliding = (pagesStackView.currentItem.pageIndex > 2);
+                        if (checked && pagesStackView && pagesStackView.currentItem !== effectsPage) {
+                            pagesStackView.forwardSliding = (pagesStackView.currentItem && pagesStackView.currentItem.pageIndex > 2);
                             pagesStackView.replace(pagesStackView.currentItem, effectsPage);
                         }
                     }
@@ -352,8 +352,8 @@ Loader {
                     PlasmaComponents.TabButton {
                         text: index >= 1 ? i18nc("tasks header and index","Tasks <%1>", index+1) : i18n("Tasks")
                         onCheckedChanged: {
-                            if (checked && pagesStackView.currentItem !== tasksRepeater.itemAt(index)) {
-                                pagesStackView.forwardSliding = (pagesStackView.currentItem.pageIndex > (tabBar.visibleStaticPages + index));
+                            if (checked && pagesStackView && pagesStackView.currentItem !== tasksRepeater.itemAt(index)) {
+                                pagesStackView.forwardSliding = (pagesStackView.currentItem && pagesStackView.currentItem.pageIndex > (tabBar.visibleStaticPages + index));
                                 pagesStackView.replace(pagesStackView.currentItem, tasksRepeater.itemAt(index));
                             }
                         }
@@ -390,19 +390,17 @@ Loader {
                     border.color: dialog.borderColor
                 }
 
-                PlasmaExtras.ScrollArea {
+                QQC2.ScrollView {
                     id: scrollArea
 
                     anchors.fill: parent
-                    verticalScrollBarPolicy: Qt.ScrollBarAsNeeded
-                    horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOff
-
-                    flickableItem.flickableDirection: Flickable.VerticalFlick
+                    QQC2.ScrollBar.vertical.policy: QQC2.ScrollBar.AsNeeded
+                    QQC2.ScrollBar.horizontal.policy: QQC2.ScrollBar.AlwaysOff
 
                     QQC2.StackView {
                         id: pagesStackView
-                        width: currentItem.width
-                        height: currentItem.height
+                        width: currentItem ? currentItem.width : 0
+                        height: currentItem ? currentItem.height : 0
 
                         property bool forwardSliding: true
 

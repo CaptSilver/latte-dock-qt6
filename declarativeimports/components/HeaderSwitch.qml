@@ -4,6 +4,7 @@
 */
 
 import QtQuick 2.7
+import QtQuick.Controls 2.15 as QQC2
 import QtQuick.Layouts 1.3
 
 import org.kde.plasma.components 3.0 as PlasmaComponents
@@ -33,9 +34,9 @@ Item {
     property bool checked: false
     property bool isFirstSubCategory: false
 
-    readonly property int implicitWidth: row.width
+    implicitWidth: row.width
 
-    readonly property int implicitHeight: {
+    implicitHeight: {
         if (level === 1) {
             return Math.max(headerText.implicitHeight, itemSwitch.implicitHeight);
         } else if (level === 2) {
@@ -88,7 +89,8 @@ Item {
         PlasmaComponents.Button {
             //tooltip ghost
             anchors.fill: textElement
-            tooltip: item.tooltip
+            QQC2.ToolTip.text: item.tooltip
+            QQC2.ToolTip.visible: hovered && item.tooltip.length > 0
             opacity: 0
             onPressedChanged: {
                 if (pressed) {
@@ -108,7 +110,8 @@ Item {
         PlasmaComponents.Button {
             //tooltip ghost
             anchors.fill: parent
-            tooltip: item.tooltip
+            QQC2.ToolTip.text: item.tooltip
+            QQC2.ToolTip.visible: hovered && item.tooltip.length > 0
             opacity: 0
             onPressedChanged: {
                 if (pressed) {

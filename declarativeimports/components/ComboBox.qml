@@ -56,7 +56,7 @@ T.ComboBox {
         width: control.popup.width
         enabled: !isSeparator && (control.enabledRole.length>0 ? (isArray ? modelData[control.enabledRole] : model[control.enabledRole]) : true)
         text: control.textRole.length>0 ? (isArray ? modelData[control.textRole] : model[control.textRole]) : modelData
-        icon: control.iconRole.length>0 ? (isArray ? modelData[control.iconRole] : model[control.iconRole]) : ''
+        iconSource: control.iconRole.length>0 ? (isArray ? modelData[control.iconRole] : model[control.iconRole]) : ''
         iconToolTip: control.iconToolTipRole.length>0 ? (isArray ? modelData[control.iconToolTipRole] : model[control.iconToolTipRole]) : ''
         iconOnlyWhenHovered: control.iconOnlyWhenHoveredRole.length>0 ? (isArray ? modelData[control.iconOnlyWhenHoveredRole] : model[control.iconOnlyWhenHoveredRole]) : ''
         isSeparator: control.isSeparatorRole.length>0 ? (isArray ? modelData[control.isSeparatorRole] : model[control.isSeparatorRole]) : false
@@ -73,8 +73,9 @@ T.ComboBox {
             id: tooltipBtn
             anchors.fill: parent
             opacity: 0
-            tooltip: parent.toolTip
-            visible: tooltip !== ''
+            Controls.ToolTip.text: parent.toolTip
+            Controls.ToolTip.visible: hovered && parent.toolTip !== ''
+            visible: parent.toolTip !== ''
 
             onPressedChanged: {
                 if (!pressed) {
@@ -173,17 +174,18 @@ T.ComboBox {
             anchors.fill: parent
             opacity: 0
             visible: control && control.currentIndex>=0 && control.toolTipRole.length>0
-            tooltip: {
+            Controls.ToolTip.text: {
                 if (!visible) {
                     return "";
                 }
 
-                if (Array.isArray(control.model)) {
-                    return control.model[control.currentIndex][control.toolTipRole];
-                } else {
+                if (typeof control.model.get === "function") {
                     return control.model.get(control.currentIndex)[control.toolTipRole];
+                } else {
+                    return control.model[control.currentIndex][control.toolTipRole];
                 }
             }
+            Controls.ToolTip.visible: hovered
 
             onPressedChanged: {
                 if (pressed) {
@@ -213,10 +215,10 @@ T.ComboBox {
                             && control.currentIndex>=0
                             && control.iconRole.length>0) {
 
-                        if (Array.isArray(control.model)) {
-                            return control.model[control.currentIndex][control.iconRole];
-                        } else {
+                        if (typeof control.model.get === "function") {
                             return control.model.get(control.currentIndex)[control.iconRole];
+                        } else {
+                            return control.model[control.currentIndex][control.iconRole];
                         }
                     }
 

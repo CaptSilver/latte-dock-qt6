@@ -4,6 +4,7 @@
 */
 
 import QtQuick 2.7
+import QtQuick.Controls 2.15 as QQC2
 import QtQuick.Layouts 1.1
 
 import org.kde.plasma.core 2.0 as PlasmaCore
@@ -24,7 +25,7 @@ Item{
     property string tooltip: ""
 
     readonly property bool containsMouse: tooltipBtn.hovered
-    readonly property int implicitHeight: visibleButton.height
+    implicitHeight: visibleButton.height
 
     readonly property color appliedTextColor: checked ? checkedTextColor : textColor
     readonly property color appliedBackgroundColor: checked ? checkedBackgroundColor : backgroundColor
@@ -102,7 +103,9 @@ Item{
         id: tooltipBtn
         anchors.fill: visibleButtonRoot
         opacity: 0
-        tooltip: button.tooltip
+
+        QQC2.ToolTip.text: button.tooltip
+        QQC2.ToolTip.visible: hovered && button.tooltip.length > 0
 
         onPressedChanged: button.pressedChanged(pressed)
     }

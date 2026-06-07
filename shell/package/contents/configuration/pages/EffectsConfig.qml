@@ -6,7 +6,7 @@
 import QtQuick 2.7
 import QtQuick.Layouts 1.3
 import Qt5Compat.GraphicalEffects
-import QtQuick.Dialogs 1.2
+import QtQuick.Dialogs
 import QtQuick.Controls 2.15 as QQC2
 
 import org.kde.plasma.core 2.0 as PlasmaCore
@@ -265,11 +265,9 @@ PlasmaComponents.Page {
 
                             sourceComponent: ColorDialog {
                                 title: i18n("Please choose shadow color")
-                                showAlphaChannel: false
 
                                 onAccepted: {
-                                    //console.log("You chose: " + String(color));
-                                    var strC = String(color);
+                                    var strC = String(selectedColor);
                                     if (strC.indexOf("#") === 0) {
                                         plasmoid.configuration.shadowColor = strC.substr(1);
                                     }
@@ -282,8 +280,8 @@ PlasmaComponents.Page {
                                     viewConfig.setSticker(false);
                                 }
                                 Component.onCompleted: {
-                                    color = String("#" + plasmoid.configuration.shadowColor);
-                                    visible = true;
+                                    selectedColor = String("#" + plasmoid.configuration.shadowColor);
+                                    open();
                                 }
                             }
                         }
@@ -467,11 +465,11 @@ PlasmaComponents.Page {
 
                         function selectTab(type) {
                             if (type === latteBtn.type) {
-                                tabBar.currentTab = latteBtn;
+                                tabBar.currentIndex = 0;
                             } else if (type === plasmaBtn.type) {
-                                tabBar.currentTab = plasmaBtn;
+                                tabBar.currentIndex = 1;
                             } else if (type === customIndicator.type) {
-                                tabBar.currentTab = customBtn;
+                                tabBar.currentIndex = 2;
                             }
                         }
 

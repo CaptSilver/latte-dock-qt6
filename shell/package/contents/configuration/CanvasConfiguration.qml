@@ -4,6 +4,7 @@
 */
 
 import QtQuick 2.8
+import QtQuick.Controls 2.15 as QQC2
 import Qt5Compat.GraphicalEffects
 
 import org.kde.plasma.core 2.0 as PlasmaCore
@@ -138,7 +139,9 @@ Loader {
         PlasmaComponents.Button {
             anchors.fill: editBackMouseArea
             opacity: 0
-            tooltip: editBackMouseArea.tooltip
+
+            QQC2.ToolTip.text: editBackMouseArea.tooltip
+            QQC2.ToolTip.visible: hovered && editBackMouseArea.tooltip.length > 0
         }
 
         //! Settings Overlay
