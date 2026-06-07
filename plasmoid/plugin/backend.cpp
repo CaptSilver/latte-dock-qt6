@@ -33,6 +33,11 @@
 #include <QTimer>
 #include <QVersionNumber>
 
+#include <QDBusConnection>
+#include <QDBusConnectionInterface>
+#include <QDBusMessage>
+#include <QDBusServiceWatcher>
+
 #include <PlasmaActivities/Consumer>
 #include <PlasmaActivities/Stats/Cleaning>
 #include <PlasmaActivities/Stats/ResultSet>
@@ -62,6 +67,26 @@ Backend::Backend(QObject *parent)
                     m_activityManagerPluginsSettings.load();
                 }
             });
+
+    m_windowViewWatcher = new QDBusServiceWatcher(QStringLiteral("org.kde.KWin.Effect.WindowView1"),
+                                                  QDBusConnection::sessionBus(),
+                                                  QDBusServiceWatcher::WatchForRegistration | QDBusServiceWatcher::WatchForUnregistration,
+                                                  this);
+    connect(m_windowViewWatcher, &QDBusServiceWatcher::serviceRegistered, this, [this] {
+        if (!m_windowViewAvailable) {
+            m_windowViewAvailable = true;
+            Q_EMIT windowViewAvailableChanged();
+        }
+    });
+    connect(m_windowViewWatcher, &QDBusServiceWatcher::serviceUnregistered, this, [this] {
+        if (m_windowViewAvailable) {
+            m_windowViewAvailable = false;
+            Q_EMIT windowViewAvailableChanged();
+        }
+    });
+
+    QDBusConnectionInterface *bus = QDBusConnection::sessionBus().interface();
+    m_windowViewAvailable = bus && bus->isServiceRegistered(QStringLiteral("org.kde.KWin.Effect.WindowView1"));
 }
 
 Backend::~Backend()
@@ -574,6 +599,63 @@ void Backend::ungrabMouse(QQuickItem *item) const
     if (item) {
         item->ungrabMouse();
     }
+}
+
+bool Backend::windowViewAvailable() const
+{
+    return m_windowViewAvailable;
+}
+
+QStringList Backend::winIdsToStrings(const QVariant &winIds) const
+{
+    QStringList ids;
+
+    const QVariantList list = winIds.toList();
+    for (const QVariant &id : list) {
+        ids << id.toString();
+    }
+
+    if (ids.isEmpty() && winIds.isValid() && !winIds.toString().isEmpty()) {
+        ids << winIds.toString();
+    }
+
+    return ids;
+}
+
+void Backend::windowsHovered(const QVariant &winIds, bool hovered)
+{
+    if (!m_highlightWindows) {
+        return;
+    }
+
+    QDBusMessage msg = QDBusMessage::createMethodCall(QStringLiteral("org.kde.KWin.HighlightWindow"),
+                                                      QStringLiteral("/org/kde/KWin/HighlightWindow"),
+                                                      QStringLiteral("org.kde.KWin.HighlightWindow"),
+                                                      QStringLiteral("highlightWindows"));
+    msg << (hovered ? winIdsToStrings(winIds) : QStringList());
+    QDBusConnection::sessionBus().asyncCall(msg);
+}
+
+void Backend::cancelHighlightWindows()
+{
+    QDBusMessage msg = QDBusMessage::createMethodCall(QStringLiteral("org.kde.KWin.HighlightWindow"),
+                                                      QStringLiteral("/org/kde/KWin/HighlightWindow"),
+                                                      QStringLiteral("org.kde.KWin.HighlightWindow"),
+                                                      QStringLiteral("highlightWindows"));
+    msg << QStringList();
+    QDBusConnection::sessionBus().asyncCall(msg);
+}
+
+void Backend::activateWindowView(const QVariant &winIds)
+{
+    cancelHighlightWindows();
+
+    QDBusMessage msg = QDBusMessage::createMethodCall(QStringLiteral("org.kde.KWin.Effect.WindowView1"),
+                                                      QStringLiteral("/org/kde/KWin/Effect/WindowView1"),
+                                                      QStringLiteral("org.kde.KWin.Effect.WindowView1"),
+                                                      QStringLiteral("activate"));
+    msg << winIdsToStrings(winIds);
+    QDBusConnection::sessionBus().asyncCall(msg);
 }
 
 #include "moc_backend.cpp"

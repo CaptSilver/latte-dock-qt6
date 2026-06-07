@@ -20,6 +20,7 @@
 
 class QAction;
 class QActionGroup;
+class QDBusServiceWatcher;
 class QQuickItem;
 class QQuickWindow;
 class QJsonArray;
@@ -35,6 +36,7 @@ class Backend : public QObject
 
     Q_PROPERTY(QQuickItem *taskManagerItem READ taskManagerItem WRITE setTaskManagerItem NOTIFY taskManagerItemChanged)
     Q_PROPERTY(bool highlightWindows READ highlightWindows WRITE setHighlightWindows NOTIFY highlightWindowsChanged)
+    Q_PROPERTY(bool windowViewAvailable READ windowViewAvailable NOTIFY windowViewAvailableChanged)
 
 public:
     enum MiddleClickAction {
@@ -74,6 +76,12 @@ public:
     Q_INVOKABLE static QVariantMap generateMimeData(const QString &mimeType, const QVariant &mimeData, const QUrl &url);
     Q_INVOKABLE void ungrabMouse(QQuickItem *item) const;
 
+    bool windowViewAvailable() const;
+
+    Q_INVOKABLE void activateWindowView(const QVariant &winIds);
+    Q_INVOKABLE void windowsHovered(const QVariant &winIds, bool hovered);
+    Q_INVOKABLE void cancelHighlightWindows();
+
 Q_SIGNALS:
     void addLauncher(const QUrl &url) const;
 
@@ -81,12 +89,14 @@ Q_SIGNALS:
 
     void taskManagerItemChanged();
     void highlightWindowsChanged();
+    void windowViewAvailableChanged();
 
 private Q_SLOTS:
     void handleRecentDocumentAction() const;
 
 private:
     QVariantList systemSettingsActions(QObject *parent) const;
+    QStringList winIdsToStrings(const QVariant &winIds) const;
 
     QActionGroup *m_actionGroup = nullptr;
     KActivities::Consumer *m_activitiesConsumer = nullptr;
@@ -96,4 +106,7 @@ private:
 
     QQuickItem *m_taskManagerItem = nullptr;
     bool m_highlightWindows = false;
+
+    QDBusServiceWatcher *m_windowViewWatcher = nullptr;
+    bool m_windowViewAvailable = false;
 };

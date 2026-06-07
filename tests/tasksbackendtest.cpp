@@ -23,6 +23,7 @@ private Q_SLOTS:
     void jsonArrayToUrlListConverts();
     void generateMimeDataCarriesTaskUrl();
     void highlightWindowsRoundTrips();
+    void windowViewAvailableIsQueryable();
 
 private:
     QString writeFile(const QTemporaryDir &dir, const QString &name, const QString &body);
@@ -91,6 +92,14 @@ void TasksBackendTest::highlightWindowsRoundTrips()
     QCOMPARE(backend.highlightWindows(), false);
     backend.setHighlightWindows(true);
     QCOMPARE(backend.highlightWindows(), true);
+}
+
+void TasksBackendTest::windowViewAvailableIsQueryable()
+{
+    Backend backend;
+    const QVariant v = backend.property("windowViewAvailable");
+    QVERIFY(v.isValid());
+    QVERIFY(v.typeId() == QMetaType::Bool);
 }
 
 QTEST_MAIN(TasksBackendTest)
