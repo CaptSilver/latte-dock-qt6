@@ -5,7 +5,6 @@
 */
 
 import QtQuick 2.0
-import QtQuick.Controls 1.0
 import QtQuick.Layouts 1.0
 import Qt5Compat.GraphicalEffects
 
@@ -41,23 +40,23 @@ Item {
             columns: 3
             property bool panelConfigEnabled: showBarLine.checked && useThemePanel.checked
 
-            Label{}
+            PlasmaComponents.Label{}
 
-            CheckBox {
+            PlasmaComponents.CheckBox {
                 id: showBarLine
                 Layout.columnSpan: 3
                 text: i18n("Show bar line for tasks")
                 enabled: true
             }
 
-            CheckBox {
+            PlasmaComponents.CheckBox {
                 id: useThemePanel
                 Layout.columnSpan: 3
                 text: i18n("Use plasma theme panel")
                 enabled: showBarLine.checked
             }
 
-            CheckBox {
+            PlasmaComponents.CheckBox {
                 id: transparentPanel
                 Layout.columnSpan: 3
                 text: i18n("Use transparency in the panel")
@@ -65,23 +64,22 @@ Item {
             }
 
 
-            Label {
+            PlasmaComponents.Label {
                 id: panelLabel
                 text: i18n("Size: ")
                 enabled: parent.panelConfigEnabled
             }
 
-            Slider {
+            PlasmaComponents.Slider {
                 id: panelSize
                 enabled: parent.panelConfigEnabled
                 Layout.fillWidth: true
-                minimumValue: 0
-                maximumValue: 256
+                from: 0
+                to: 256
                 stepSize: 2
-                tickmarksEnabled: false
             }
 
-            Label {
+            PlasmaComponents.Label {
                 enabled: parent.panelConfigEnabled
                 Layout.minimumWidth: metricsLabel.width
                 Layout.maximumWidth: metricsLabel.width
@@ -90,14 +88,14 @@ Item {
 
                 text: ( panelSize.value + " px." )
 
-                Label{
+                PlasmaComponents.Label{
                     id:metricsLabel
                     visible: false
-                    text: panelSize.maximumValue+" px."
+                    text: panelSize.to+" px."
                 }
             }
 
-            /*    Label{
+            /*    PlasmaComponents.Label{
                 Layout.columnSpan: 3
                 Layout.fillWidth: false
                 Layout.alignment: Qt.AlignRight
@@ -112,9 +110,9 @@ Item {
             /////
             //spacer to set a minimumWidth for sliders
             //Layout.minimumWidth didn't work
-            Label{}
-            Label{Layout.minimumWidth: 280}
-            Label{}
+            PlasmaComponents.Label{}
+            PlasmaComponents.Label{Layout.minimumWidth: 280}
+            PlasmaComponents.Label{}
 
         }
     }
@@ -135,7 +133,7 @@ Item {
     }
 
 
-    Label {
+    PlasmaComponents.Label {
         id:inNowDockLabel
         anchors.horizontalCenter: mainItem.horizontalCenter
         anchors.verticalCenter: mainColumn.verticalCenter

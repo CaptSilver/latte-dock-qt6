@@ -5,8 +5,7 @@
 */
 
 import QtQuick 2.7
-import QtQuick.Controls 1.4
-import QtQuick.Controls 2.12 as QtQuickControls212
+import QtQuick.Controls 2.15 as QQC2
 import QtQuick.Layouts 1.3
 import Qt5Compat.GraphicalEffects
 import QtQuick.Window 2.2
@@ -16,7 +15,6 @@ import org.kde.ksvg 1.0 as KSvg
 import org.kde.plasma.components 3.0 as PlasmaComponents
 import org.kde.plasma.components 3.0 as PlasmaComponents3
 import org.kde.plasma.extras 2.0 as PlasmaExtras
-import QtQuick.Controls.Styles.Plasma 2.0 as Styles
 
 import org.kde.kquickcontrolsaddons 2.0 as KQuickControlAddons
 
@@ -401,7 +399,7 @@ Loader {
 
                     flickableItem.flickableDirection: Flickable.VerticalFlick
 
-                    QtQuickControls212.StackView {
+                    QQC2.StackView {
                         id: pagesStackView
                         width: currentItem.width
                         height: currentItem.height
@@ -622,9 +620,10 @@ Loader {
                     Layout.fillWidth: true
                     enabled: dialog.advancedLevel
                     text: i18n("Remove")
-                    iconSource: "delete"
+                    icon.name: "delete"
                     opacity: enabled ? 1 : 0
-                    tooltip: i18n("Remove current dock")
+                    QQC2.ToolTip.text: i18n("Remove current dock")
+                    QQC2.ToolTip.visible: hovered
 
                     onClicked: latteView.removeView()
                 }
@@ -634,8 +633,9 @@ Loader {
                     Layout.fillWidth: true
 
                     text: i18n("Close")
-                    iconSource: "dialog-close"
-                    tooltip: i18n("Close settings window")
+                    icon.name: "dialog-close"
+                    QQC2.ToolTip.text: i18n("Close settings window")
+                    QQC2.ToolTip.visible: hovered
 
                     onClicked: viewConfig.hideConfigWindow();
                 }

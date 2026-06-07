@@ -5,7 +5,6 @@
 */
 
 import QtQuick 2.0
-import QtQuick.Controls 1.0
 import QtQuick.Layouts 1.0
 
 import org.kde.plasma.core 2.0 as PlasmaCore
@@ -33,27 +32,25 @@ Item {
     ColumnLayout{
         spacing: 15
 
-        GroupBox {
-            title: ""
-            flat: true
+        ColumnLayout {
             Layout.fillWidth: true
 
             ColumnLayout {
                 Layout.fillWidth: true
 
-                CheckBox {
+                PlasmaComponents.CheckBox {
                     id: wheelEnabled
                     text: i18n("Cycle through tasks with mouse wheel")
                     enabled: false
                 }
 
-                CheckBox {
+                PlasmaComponents.CheckBox {
                     id: windowActionsChk
                     Layout.fillWidth: true
                     text: i18n("Show window actions in the context menu")
                 }
 
-                CheckBox {
+                PlasmaComponents.CheckBox {
                     id: showInfoBadgeChk
                     Layout.fillWidth: true
                     text: i18n("Show progress information for tasks")
@@ -62,21 +59,21 @@ Item {
                 GridLayout {
                     columns: 2
 
-                    Label {
+                    PlasmaComponents.Label {
                         text: i18n("Middle Click")
                     }
 
-                    ComboBox {
+                    PlasmaComponents.ComboBox {
                         id: middleClickAction
                         Layout.fillWidth: true
                         model: [i18nc("The click action", "None"), i18n("Close Window or Group"), i18n("New Instance"), i18n("Minimize/Restore Window or Group")]
                     }
 
-                    Label {
+                    PlasmaComponents.Label {
                         text: i18n("Hover")
                     }
 
-                    ComboBox {
+                    PlasmaComponents.ComboBox {
                         id: hoverActionCmb
                         Layout.fillWidth: true
                         model: [
@@ -128,7 +125,7 @@ Item {
             Layout.fillWidth: true
 
 
-            Label {
+            PlasmaComponents.Label {
                 text: i18n("Filters")
                // Layout.fillWidth: true
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -138,17 +135,17 @@ Item {
             }
 
 
-            CheckBox {
+            PlasmaComponents.CheckBox {
                 id: showOnlyCurrentScreen
                 text: i18n("Show only tasks from the current screen")
             }
 
-            CheckBox {
+            PlasmaComponents.CheckBox {
                 id: showOnlyCurrentDesktop
                 text: i18n("Show only tasks from the current desktop")
             }
 
-            CheckBox {
+            PlasmaComponents.CheckBox {
                 id: showOnlyCurrentActivity
                 text: i18n("Show only tasks from the current activity")
             }

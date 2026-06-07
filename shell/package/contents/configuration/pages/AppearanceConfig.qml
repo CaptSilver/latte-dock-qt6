@@ -4,8 +4,8 @@
     SPDX-License-Identifier: GPL-2.0-or-later
 */
 
-import QtQuick 2.0
-import QtQuick.Controls 1.4
+import QtQuick
+import QtQuick.Controls 2.15 as QQC2
 import QtQuick.Layouts 1.3
 import Qt5Compat.GraphicalEffects
 import QtQuick.Dialogs 1.2
@@ -1087,7 +1087,8 @@ PlasmaComponents.Page {
                         text: i18n("Blur")
                         checkable: true
                         enabled: showBackground.checked && LatteCore.WindowSystem.compositingActive
-                        tooltip: i18n("Background is blurred underneath")
+                        QQC2.ToolTip.text: i18n("Background is blurred underneath")
+                        QQC2.ToolTip.visible: hovered
 
                         readonly property int blurEnabled: plasmoid.configuration.blurEnabled
 
@@ -1105,7 +1106,8 @@ PlasmaComponents.Page {
                         text: i18n("Shadows")
                         checkable: true
                         enabled: showBackground.checked && LatteCore.WindowSystem.compositingActive && themeExtended.hasShadow
-                        tooltip: i18n("Background shows its shadows")
+                        QQC2.ToolTip.text: i18n("Background shows its shadows")
+                        QQC2.ToolTip.visible: hovered
 
                         readonly property int panelShadows: plasmoid.configuration.panelShadows
 
@@ -1124,7 +1126,8 @@ PlasmaComponents.Page {
                         checkable: true
                         checked: plasmoid.configuration.panelOutline
                         enabled: showBackground.checked
-                        tooltip: i18n("Background draws a line for its borders. You can set the line size from Latte Preferences")
+                        QQC2.ToolTip.text: i18n("Background draws a line for its borders. You can set the line size from Latte Preferences")
+                        QQC2.ToolTip.visible: hovered
 
                         onClicked: {
                             plasmoid.configuration.panelOutline = checked;
@@ -1143,7 +1146,8 @@ PlasmaComponents.Page {
                                      || (plasmoid.configuration.screenEdgeMargin > -1 /*floating with justify alignment and 100% maxlength*/
                                          && plasmoid.configuration.alignment ===LatteCore.Types.Justify
                                          && plasmoid.configuration.maxLength===100))
-                        tooltip: i18n("Background draws all corners at all cases.")
+                        QQC2.ToolTip.text: i18n("Background draws all corners at all cases.")
+                        QQC2.ToolTip.visible: hovered
 
                         onClicked: {
                             plasmoid.configuration.backgroundAllCorners = checked;

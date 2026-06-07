@@ -4,11 +4,10 @@
 */
 
 import QtQuick 2.7
-import QtQuick.Controls 1.4
 import QtQuick.Layouts 1.3
 import Qt5Compat.GraphicalEffects
 import QtQuick.Dialogs 1.2
-import QtQuick.Controls 2.12 as QtQuickControls212
+import QtQuick.Controls 2.15 as QQC2
 
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.plasma.components 3.0 as PlasmaComponents
@@ -174,10 +173,6 @@ PlasmaComponents.Page {
                         return strC.indexOf("#") === 0 ? strC.substr(1) : strC;
                     }
 
-                    ExclusiveGroup {
-                        id: shadowColorGroup
-                    }
-
                     PlasmaComponents.Button {
                         id: defaultShadowBtn
                         Layout.fillWidth: true
@@ -185,8 +180,8 @@ PlasmaComponents.Page {
                         text: i18nc("default shadow", "Default Color")
                         checked: plasmoid.configuration.shadowColorType === type
                         checkable: false
-                        exclusiveGroup: shadowColorGroup
-                        tooltip: i18n("Default shadow for applets")
+                        QQC2.ToolTip.text: i18n("Default shadow for applets")
+                        QQC2.ToolTip.visible: hovered
 
                         readonly property int type: LatteContainment.Types.DefaultColorShadow
 
@@ -204,8 +199,8 @@ PlasmaComponents.Page {
                         text: i18nc("theme shadow", "Theme Color")
                         checked: plasmoid.configuration.shadowColorType === type
                         checkable: false
-                        exclusiveGroup: shadowColorGroup
-                        tooltip: i18n("Shadow from theme color palette")
+                        QQC2.ToolTip.text: i18n("Shadow from theme color palette")
+                        QQC2.ToolTip.visible: hovered
 
                         readonly property int type: LatteContainment.Types.ThemeColorShadow
 
@@ -226,8 +221,8 @@ PlasmaComponents.Page {
 
                         checkable: false
                         checked: plasmoid.configuration.shadowColorType === type
-                        tooltip: i18n("Use set shadow color")
-                        exclusiveGroup: shadowColorGroup
+                        QQC2.ToolTip.text: i18n("Use set shadow color")
+                        QQC2.ToolTip.visible: hovered
 
                         readonly property int type: LatteContainment.Types.UserColorShadow
 
@@ -256,7 +251,7 @@ PlasmaComponents.Page {
                             MouseArea{
                                 anchors.fill: parent
                                 onClicked: {
-                                    shadowColorGroup.current = userShadowBtn;
+                                    plasmoid.configuration.shadowColorType = userShadowBtn.type;
                                     viewConfig.setSticker(true);
                                     colorDialogLoader.showDialog = true;
                                 }
@@ -335,16 +330,11 @@ PlasmaComponents.Page {
 
                         property int duration: plasmoid.configuration.durationTime
 
-                        ExclusiveGroup {
-                            id: animationsGroup
-                        }
-
                         PlasmaComponents.Button {
                             Layout.fillWidth: true
                             text: i18n("x1")
                             checked: parent.duration === duration
                             checkable: false
-                            exclusiveGroup: animationsGroup
 
                             readonly property int duration: 3
 
@@ -359,7 +349,6 @@ PlasmaComponents.Page {
                             text: i18n("x2")
                             checked: parent.duration === duration
                             checkable: false
-                            exclusiveGroup: animationsGroup
 
                             readonly property int duration: 2
 
@@ -374,7 +363,6 @@ PlasmaComponents.Page {
                             text: i18n("x3")
                             checked: parent.duration === duration
                             checkable: false
-                            exclusiveGroup: animationsGroup
 
                             readonly property int duration: 1
 
@@ -511,7 +499,7 @@ PlasmaComponents.Page {
                 }
 
                 //! BEGIN: Indicator specific sub-options
-                QtQuickControls212.StackView {
+                QQC2.StackView {
                     id: indicatorsStackView
                     Layout.fillWidth: true
                     Layout.maximumHeight: Layout.minimumHeight

@@ -5,7 +5,6 @@
 */
 
 import QtQuick 2.7
-import QtQuick.Controls 1.4
 import Qt5Compat.GraphicalEffects
 
 import org.kde.plasma.plasmoid 2.0

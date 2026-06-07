@@ -5,7 +5,7 @@
 */
 
 import QtQuick 2.0
-import QtQuick.Controls 1.4
+import QtQuick.Controls 2.15 as QQC2
 import QtQuick.Layouts 1.3
 import Qt5Compat.GraphicalEffects
 
@@ -180,19 +180,14 @@ PlasmaComponents.Page {
 
                 readonly property int buttonSize: (dialog.optionsWidth - (spacing * 3)) / 4
 
-                ExclusiveGroup {
-                    id: locationGroup
-                }
-
                 PlasmaComponents.Button {
                     id: bottomEdgeBtn
                     Layout.minimumWidth: parent.buttonSize
                     Layout.maximumWidth: Layout.minimumWidth
                     text: i18nc("bottom location", "Bottom")
-                    iconSource: "arrow-down"
+                    icon.name: "arrow-down"
                     checked: plasmoid.location === edge
                     checkable: false
-                    exclusiveGroup: locationGroup
 
                     readonly property int edge: PlasmaCore.Types.BottomEdge
 
@@ -208,10 +203,9 @@ PlasmaComponents.Page {
                     Layout.minimumWidth: parent.buttonSize
                     Layout.maximumWidth: Layout.minimumWidth
                     text: i18nc("left location", "Left")
-                    iconSource: "arrow-left"
+                    icon.name: "arrow-left"
                     checked: plasmoid.location === edge
                     checkable: false
-                    exclusiveGroup: locationGroup
 
                     readonly property int edge: PlasmaCore.Types.LeftEdge
 
@@ -227,10 +221,9 @@ PlasmaComponents.Page {
                     Layout.minimumWidth: parent.buttonSize
                     Layout.maximumWidth: Layout.minimumWidth
                     text: i18nc("top location", "Top")
-                    iconSource: "arrow-up"
+                    icon.name: "arrow-up"
                     checked: plasmoid.location === edge
                     checkable: false
-                    exclusiveGroup: locationGroup
 
                     readonly property int edge: PlasmaCore.Types.TopEdge
 
@@ -246,10 +239,9 @@ PlasmaComponents.Page {
                     Layout.minimumWidth: parent.buttonSize
                     Layout.maximumWidth: Layout.minimumWidth
                     text: i18nc("right location", "Right")
-                    iconSource: "arrow-right"
+                    icon.name: "arrow-right"
                     checked: plasmoid.location === edge
                     checkable: false
-                    exclusiveGroup: locationGroup
 
                     readonly property int edge: PlasmaCore.Types.RightEdge
 
@@ -284,18 +276,13 @@ PlasmaComponents.Page {
                 readonly property int configAlignment: plasmoid.configuration.alignment
                 readonly property int buttonSize: (dialog.optionsWidth - (spacing * 3)) / 4
 
-                ExclusiveGroup {
-                    id: alignmentGroup
-                }
-
                 PlasmaComponents.Button {
                     Layout.minimumWidth: parent.buttonSize
                     Layout.maximumWidth: Layout.minimumWidth
                     text: panelIsVertical ? i18nc("top alignment", "Top") : i18nc("left alignment", "Left")
-                    iconSource: panelIsVertical ? "format-align-vertical-top" : "format-justify-left"
+                    icon.name: panelIsVertical ? "format-align-vertical-top" : "format-justify-left"
                     checked: parent.configAlignment === alignment
                     checkable: false
-                    exclusiveGroup: alignmentGroup
 
                     property int alignment: panelIsVertical ? LatteCore.Types.Top : LatteCore.Types.Left
 
@@ -309,10 +296,9 @@ PlasmaComponents.Page {
                     Layout.minimumWidth: parent.buttonSize
                     Layout.maximumWidth: Layout.minimumWidth
                     text: i18nc("center alignment", "Center")
-                    iconSource: panelIsVertical ? "format-align-vertical-center" : "format-justify-center"
+                    icon.name: panelIsVertical ? "format-align-vertical-center" : "format-justify-center"
                     checked: parent.configAlignment === alignment
                     checkable: false
-                    exclusiveGroup: alignmentGroup
 
                     property int alignment: LatteCore.Types.Center
 
@@ -326,10 +312,9 @@ PlasmaComponents.Page {
                     Layout.minimumWidth: parent.buttonSize
                     Layout.maximumWidth: Layout.minimumWidth
                     text: panelIsVertical ? i18nc("bottom alignment", "Bottom") : i18nc("right alignment", "Right")
-                    iconSource: panelIsVertical ? "format-align-vertical-bottom" : "format-justify-right"
+                    icon.name: panelIsVertical ? "format-align-vertical-bottom" : "format-justify-right"
                     checked: parent.configAlignment === alignment
                     checkable: false
-                    exclusiveGroup: alignmentGroup
 
                     property int alignment: panelIsVertical ? LatteCore.Types.Bottom : LatteCore.Types.Right
 
@@ -344,10 +329,9 @@ PlasmaComponents.Page {
                     Layout.minimumWidth: parent.buttonSize
                     Layout.maximumWidth: Layout.minimumWidth
                     text: i18nc("justify alignment", "Justify")
-                    iconSource: "format-justify-fill"
+                    icon.name: "format-justify-fill"
                     checked: parent.configAlignment === alignment
                     checkable: false
-                    exclusiveGroup: alignmentGroup
 
                     property int alignment: LatteCore.Types.Justify
 
@@ -382,10 +366,6 @@ PlasmaComponents.Page {
                 property int mode: latteView.visibility.mode
                 readonly property int buttonSize: (dialog.optionsWidth - (columnSpacing)) / 2
 
-                ExclusiveGroup {
-                    id: visibilityGroup
-                }
-
                 PlasmaComponents.Button {
                     id:alwaysVisibleBtn
                     Layout.minimumWidth: parent.buttonSize
@@ -393,7 +373,6 @@ PlasmaComponents.Page {
                     text: i18n("Always Visible")
                     checked: parent.mode === mode
                     checkable: false
-                    exclusiveGroup: visibilityGroup
 
                     property int mode: LatteCore.Types.AlwaysVisible
 
@@ -409,7 +388,6 @@ PlasmaComponents.Page {
                     text: i18n("Auto Hide")
                     checked: parent.mode === mode
                     checkable: false
-                    exclusiveGroup: visibilityGroup
 
                     property int mode: LatteCore.Types.AutoHide
 
@@ -425,7 +403,6 @@ PlasmaComponents.Page {
                     text: i18n("Dodge Active")
                     checked: parent.mode === mode
                     checkable: false
-                    exclusiveGroup: visibilityGroup
 
                     property int mode: LatteCore.Types.DodgeActive
 
@@ -444,7 +421,6 @@ PlasmaComponents.Page {
                     implicitHeight: alwaysVisibleBtn.implicitHeight
 
                     checked: parent.mode === mode
-                    exclusiveGroup:  visibilityGroup
 
                     mode: plasmoid.configuration.lastDodgeVisibilityMode
                     modes: [
@@ -471,7 +447,6 @@ PlasmaComponents.Page {
                     implicitHeight: alwaysVisibleBtn.implicitHeight
 
                     checked: parent.mode === mode
-                    exclusiveGroup:  visibilityGroup
 
                     mode: plasmoid.configuration.lastWindowsVisibilityMode
                     modes: [
@@ -503,7 +478,6 @@ PlasmaComponents.Page {
                     implicitHeight: alwaysVisibleBtn.implicitHeight
 
                     checked: parent.mode === mode
-                    exclusiveGroup:  visibilityGroup
 
                     mode: plasmoid.configuration.lastSidebarVisibilityMode
                     modes: [
@@ -685,8 +659,9 @@ PlasmaComponents.Page {
                             Layout.fillWidth: true
                             text: i18n("Drag Active Window")
                             checkable: true
-                            tooltip: i18n("The user can use left mouse button to drag and maximized/restore last active window from empty areas")
-                            iconName: "transform-move"
+                            QQC2.ToolTip.text: i18n("The user can use left mouse button to drag and maximized/restore last active window from empty areas")
+                            QQC2.ToolTip.visible: hovered
+                            icon.name: "transform-move"
 
                             readonly property int dragActiveWindowEnabled: plasmoid.configuration.dragActiveWindowEnabled
 
@@ -710,8 +685,9 @@ PlasmaComponents.Page {
                             Layout.fillWidth: true
                             text: i18n("Close Active Window")
                             checkable: true
-                            tooltip: i18n("The user can use middle mouse button to close last active window from empty areas")
-                            iconName: "window-close"
+                            QQC2.ToolTip.text: i18n("The user can use middle mouse button to close last active window from empty areas")
+                            QQC2.ToolTip.visible: hovered
+                            icon.name: "window-close"
 
                             readonly property int closeActiveWindowEnabled: plasmoid.configuration.closeActiveWindowEnabled
 
