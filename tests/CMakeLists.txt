@@ -42,4 +42,13 @@ ecm_add_test(panelbackgroundtest.cpp
 target_compile_definitions(panelbackgroundtest PRIVATE
     PANEL_QML_PATH="${CMAKE_SOURCE_DIR}/shell/package/contents/views/Panel.qml")
 
+ecm_add_test(configcontrolstest.cpp
+    TEST_NAME configcontrolstest
+    LINK_LIBRARIES Qt6::Test Qt6::Qml Qt6::Gui
+)
+target_compile_definitions(configcontrolstest PRIVATE
+    CHECKBOX_QML_PATH="${CMAKE_SOURCE_DIR}/declarativeimports/components/CheckBox.qml"
+    TEXTFIELD_QML_PATH="${CMAKE_SOURCE_DIR}/declarativeimports/components/TextField.qml"
+    ITEMDELEGATE_QML_PATH="${CMAKE_SOURCE_DIR}/declarativeimports/components/ItemDelegate.qml")
+
 add_subdirectory(manual)
