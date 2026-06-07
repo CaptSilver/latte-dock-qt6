@@ -4,9 +4,8 @@
 */
 
 import QtQuick 2.7
-import QtQuick.Controls 1.4
+import QtQuick.Controls 2.15 as QQC2
 import QtQuick.Layouts 1.3
-import QtGraphicalEffects 1.0
 
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.plasma.components 3.0 as PlasmaComponents
@@ -39,18 +38,14 @@ ColumnLayout {
         readonly property int buttonsCount: 2
         readonly property int buttonSize: (dialog.optionsWidth - (spacing * buttonsCount-1)) / buttonsCount
 
-        ExclusiveGroup {
-            id: activeIndicatorTypeGroup
-        }
-
         PlasmaComponents.Button {
             Layout.minimumWidth: parent.buttonSize
             Layout.maximumWidth: Layout.minimumWidth
             text: i18nc("line indicator","Line")
             checked: parent.indicatorType === indicatorType
             checkable: false
-            exclusiveGroup: activeIndicatorTypeGroup
-            tooltip: i18n("Show a line indicator for active items")
+            QQC2.ToolTip.text: i18n("Show a line indicator for active items")
+            QQC2.ToolTip.visible: hovered
 
             readonly property int indicatorType: 0 /*Line*/
 
@@ -67,8 +62,8 @@ ColumnLayout {
             text: i18nc("dots indicator", "Dots")
             checked: parent.indicatorType === indicatorType
             checkable: false
-            exclusiveGroup: activeIndicatorTypeGroup
-            tooltip: i18n("Show a dot indicator for active items")
+            QQC2.ToolTip.text: i18n("Show a dot indicator for active items")
+            QQC2.ToolTip.visible: hovered
 
             readonly property int indicatorType: 1 /*Dot*/
 
@@ -252,18 +247,14 @@ ColumnLayout {
         readonly property int buttonsCount: 2
         readonly property int buttonSize: (dialog.optionsWidth - (spacing * buttonsCount-1)) / buttonsCount
 
-        ExclusiveGroup {
-            id: glowGroup
-        }
-
         PlasmaComponents.Button {
             Layout.minimumWidth: parent.buttonSize
             Layout.maximumWidth: Layout.minimumWidth
             text: i18nc("glow only to active task/applet indicators","On Active")
             checked: parent.option === option
             checkable: false
-            exclusiveGroup:  glowGroup
-            tooltip: i18n("Add glow only to active task/applet indicator")
+            QQC2.ToolTip.text: i18n("Add glow only to active task/applet indicator")
+            QQC2.ToolTip.visible: hovered
 
             readonly property int option: 1 /*OnActive*/
 
@@ -280,8 +271,8 @@ ColumnLayout {
             text: i18nc("glow to all task/applet indicators","All")
             checked: parent.option === option
             checkable: false
-            exclusiveGroup: glowGroup
-            tooltip: i18n("Add glow to all task/applet indicators")
+            QQC2.ToolTip.text: i18n("Add glow to all task/applet indicators")
+            QQC2.ToolTip.visible: hovered
 
             readonly property int option: 2 /*All*/
 
