@@ -208,7 +208,13 @@ QEvent *EventsSink::onEvent(QEvent *e)
 
 QPointF EventsSink::positionAdjustedForDestination(const QPointF &point) const
 {
-    QRectF destinationRectToScene = m_destinationItem->mapRectToScene(QRectF(0, 0, m_destinationItem->width() - 1, m_destinationItem->height() - 1));
+    const QRectF destinationRectToScene = m_destinationItem->mapRectToScene(QRectF(0, 0, m_destinationItem->width() - 1, m_destinationItem->height() - 1)).normalized();
+
+    //! when the destination item has no area yet (e.g. collapsed or not laid out) the rect is
+    //! degenerate; qBound() would assert on min>max, so leave the point unchanged in that case
+    if (destinationRectToScene.isEmpty()) {
+        return point;
+    }
 
     return QPointF(qBound(destinationRectToScene.left(), point.x(), destinationRectToScene.right()),
                    qBound(destinationRectToScene.top(), point.y(), destinationRectToScene.bottom()));
