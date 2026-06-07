@@ -49,6 +49,13 @@ function checkAndUpdateAppletRootItem() {
         return;
     }
 
+    //! Plasma 6: itemForApplet() hands us the applet's QML root (PlasmoidItem) directly, so the
+    //! latteBridge property lives on `applet` itself. Plasma 5 wrapped the root one level below.
+    if (applet && applet.hasOwnProperty("latteBridge")) {
+        appletDiscoveredRootItem = applet;
+        return;
+    }
+
     var level0 = applet.children;
 
     for(var i=0; i<level0.length; ++i){
