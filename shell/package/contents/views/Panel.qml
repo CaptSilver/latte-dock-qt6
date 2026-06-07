@@ -13,9 +13,14 @@ import org.kde.ksvg 1.0 as KSvg
 KSvg.FrameSvgItem {
     id: root
 
-    imagePath: containment && containment.backgroundHints === PlasmaCore.Types.NoBackground ? "" : "widgets/panel-background"
-    //imagePath: "widgets/panel-background"
-    //imagePath: ""
+    //! The Latte containment paints its own background (background/MultiLayered.qml) and asks
+    //! for Plasmoid.backgroundHints: NoBackground. On Plasma 6 the containment graphic object
+    //! no longer carries a backgroundHints property, so the old "draw panel-background unless
+    //! NoBackground" check resolved to undefined and fell back to the SVG, painting it across
+    //! the whole oversized view. X11 hid that overflow with the visual shape-mask; Wayland has
+    //! no such mask, so it showed up as a dark band over the parabolic-zoom reserve. Latte never
+    //! wants this wrapper background, so keep it empty and let the containment own all drawing.
+    imagePath: ""
     prefix:""
     // onRepaintNeeded: adjustPrefix();
 

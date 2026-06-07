@@ -35,4 +35,11 @@ ecm_add_test(appletzoomsizetest.cpp
     LINK_LIBRARIES Qt6::Test Qt6::Qml Qt6::Gui
 )
 
+ecm_add_test(panelbackgroundtest.cpp
+    TEST_NAME panelbackgroundtest
+    LINK_LIBRARIES Qt6::Test Qt6::Qml Qt6::Gui
+)
+target_compile_definitions(panelbackgroundtest PRIVATE
+    PANEL_QML_PATH="${CMAKE_SOURCE_DIR}/shell/package/contents/views/Panel.qml")
+
 add_subdirectory(manual)
