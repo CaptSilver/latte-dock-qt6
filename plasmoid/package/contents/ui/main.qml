@@ -924,6 +924,9 @@ PlasmoidItem {
             Binding {
                 target: scrollableList
                 property: "thickness"
+                //! Qt6: hold the last size while relocation hiding deactivates this binding; otherwise
+                //! RestoreBindingOrValue resets it to the declared 0 and the scroll list collapses.
+                restoreMode: Binding.RestoreNone
                 when: !appletAbilities.myView.inRelocationHiding
                 value: {
                     if (appletAbilities.myView.isReady) {
@@ -937,6 +940,8 @@ PlasmoidItem {
             Binding {
                 target: scrollableList
                 property: "length"
+                //! Qt6: keep the last length during relocation hiding (see thickness above).
+                restoreMode: Binding.RestoreNone
                 when: !appletAbilities.myView.inRelocationHiding
                 value: root.vertical ? Math.min(root.height, root.tasksLength) : Math.min(root.width, root.tasksLength)
             }

@@ -27,9 +27,17 @@ private:
     //! expression, and returns the scaledLength after zoomScale is raised above 1.
     qreal scaledLengthAfterZoom(const QString &restoreModeLine);
 
+    //! Loads an Item whose length is captured by a Binding gated on !inRelocationHiding (the same
+    //! pattern the tasks scroll list uses), using the given restoreMode expression, and returns the
+    //! length after relocation hiding turns the guard false. The property declares a default of 0,
+    //! exactly like ScrollableList.qml's "property int length: 0 // through Binding".
+    qreal scrollLengthAfterRelocationHiding(const QString &restoreModeLine);
+
 private Q_SLOTS:
     void restoreNoneKeepsLengthThroughZoom();
     void qt6DefaultResetsLengthThroughZoom();
+    void restoreNoneKeepsScrollLengthDuringRelocationHiding();
+    void qt6DefaultCollapsesScrollLengthDuringRelocationHiding();
 };
 
 qreal AppletZoomSizeTest::scaledLengthAfterZoom(const QString &restoreModeLine)
@@ -85,6 +93,61 @@ void AppletZoomSizeTest::qt6DefaultResetsLengthThroughZoom()
 {
     const qreal scaled = scaledLengthAfterZoom(QString()); // no restoreMode -> Qt6 default
     QCOMPARE(scaled, 0.0);
+}
+
+qreal AppletZoomSizeTest::scrollLengthAfterRelocationHiding(const QString &restoreModeLine)
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+
+    const QString qml = QStringLiteral(R"(
+        import QtQuick 2.15
+        Item {
+            id: root
+            property bool inRelocationHiding: false
+            property int length: 0
+            Binding {
+                target: root
+                property: "length"
+                %1
+                when: !root.inRelocationHiding
+                value: 200
+            }
+        }
+    )").arg(restoreModeLine);
+
+    component.setData(qml.toUtf8(), QUrl());
+    QObject *root = component.create();
+    [&]() { QVERIFY2(root, qPrintable(component.errorString())); }();
+    if (!root) {
+        return -1;
+    }
+
+    //! rest state: the binding is active, capturing the list length
+    [&]() { QCOMPARE(QQmlProperty::read(root, QStringLiteral("length")).toInt(), 200); }();
+
+    //! relocation hiding starts: "when" turns false and the binding deactivates
+    QQmlProperty::write(root, QStringLiteral("inRelocationHiding"), true);
+
+    const qreal length = QQmlProperty::read(root, QStringLiteral("length")).toReal();
+    delete root;
+    return length;
+}
+
+//! With RestoreNone the captured length survives relocation hiding, so the tasks scroll list keeps
+//! its size instead of collapsing to the declared 0 mid-relocation.
+void AppletZoomSizeTest::restoreNoneKeepsScrollLengthDuringRelocationHiding()
+{
+    const qreal length = scrollLengthAfterRelocationHiding(QStringLiteral("restoreMode: Binding.RestoreNone"));
+    QCOMPARE(length, 200.0);
+}
+
+//! The Qt6 default resets length to its declared 0 when the guard turns false -> the scroll list
+//! (whose width/height derive from length) collapses to zero size. Documents the regression.
+void AppletZoomSizeTest::qt6DefaultCollapsesScrollLengthDuringRelocationHiding()
+{
+    const qreal length = scrollLengthAfterRelocationHiding(QString()); // no restoreMode -> Qt6 default
+    QCOMPARE(length, 0.0);
 }
 
 QTEST_MAIN(AppletZoomSizeTest)
