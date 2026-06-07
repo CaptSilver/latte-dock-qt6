@@ -17,7 +17,6 @@ import org.kde.plasma.plasmoid 2.0
 import org.kde.kirigami 2.20 as Kirigami
 
 import org.kde.taskmanager 0.1 as TaskManager
-import org.kde.plasma.private.taskmanager 0.1 as TaskManagerApplet
 
 import org.kde.activities 0.1 as Activities
 
@@ -554,44 +553,13 @@ PlasmoidItem {
         }
     }
 
-    //! TaskManagerBackend required a groupDialog setting otherwise it crashes. This patch
-    //! sets one just in order not to crash TaskManagerBackend
-    PlasmaCore.Dialog {
-        //ghost group Dialog to not crash TaskManagerBackend
-        id: groupDialogGhost
-        visible: false
-
-        type: PlasmaCore.Dialog.PopupMenu
-        flags: Qt.WindowStaysOnTopHint
-        hideOnWindowDeactivate: true
-        location: root.location
-    }
-
-
-    TaskManagerApplet.Backend {
+    LatteTasks.Backend {
         id: backend
         taskManagerItem: root
         highlightWindows: root.highlightWindows
 
-        onAddLauncher: {
+        onAddLauncher: (url) => {
             tasksModel.requestAddLauncher(url);
-        }
-
-        Component.onCompleted: {
-            //! In Plasma 5.9 TaskManagerBackend required a groupDialog setting
-            //! otherwise it crashes.
-            //! frameworks 5.29.0 provide id 335104
-            //! work only after Plasma 5.9 and frameworks 5.29
-            //! + added a check for groupDialog also when it is present
-            //!   in plasma 5.8 (that was introduced after 5.8.5)
-            if (LatteCore.Environment.frameworksVersion >= 335104 || (groupDialog !== undefined)) {
-                groupDialog = groupDialogGhost;
-            }
-
-            //! In Plasma 5.22 toolTipItem was dropped
-            if (!root.plasmaGreaterThan522) {
-                toolTipItem = toolTipDelegate;
-            }
         }
     }
 
