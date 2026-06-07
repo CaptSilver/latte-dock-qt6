@@ -30,4 +30,9 @@ ecm_add_test(coretypesenumtest.cpp ${coretypesenumtest_MOC_SRCS}
 )
 target_include_directories(coretypesenumtest PRIVATE ${CMAKE_BINARY_DIR}/app)
 
+ecm_add_test(appletzoomsizetest.cpp
+    TEST_NAME appletzoomsizetest
+    LINK_LIBRARIES Qt6::Test Qt6::Qml Qt6::Gui
+)
+
 add_subdirectory(manual)
