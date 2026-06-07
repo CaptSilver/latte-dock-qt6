@@ -25,6 +25,8 @@ Item {
         target: latteView
         property:"maxThickness"
         //! prevents updating window geometry during closing window in wayland and such fixes a crash
+        //! Qt6: RestoreNone keeps the last thickness while the guard is false instead of resetting it.
+        restoreMode: Binding.RestoreNone
         when: latteView && !visibilityManager.inRelocationHiding && !visibilityManager.inClientSideScreenEdgeSliding //&& !inStartup
         value: root.behaveAsPlasmaPanel ? visibilityManager.thicknessAsPanel : metrics.maxThicknessForView
     }
@@ -32,6 +34,7 @@ Item {
     Binding{
         target: latteView
         property:"normalThickness"
+        restoreMode: Binding.RestoreNone
         when: latteView && updateIsEnabled
         value: root.behaveAsPlasmaPanel ? visibilityManager.thicknessAsPanel : metrics.mask.screenEdge + metrics.mask.thickness.maxNormalForItemsWithoutScreenEdge
     }
@@ -39,6 +42,7 @@ Item {
     Binding{
         target: latteView
         property:"maxNormalThickness"
+        restoreMode: Binding.RestoreNone
         when: latteView && updateIsEnabled
         value: metrics.mask.thickness.maxNormal
     }
@@ -46,6 +50,7 @@ Item {
     Binding {
         target: latteView
         property: "headThicknessGap"
+        restoreMode: Binding.RestoreNone
         when: latteView && updateIsEnabled && !visibilityManager.inClientSideScreenEdgeSliding
         value: {
             if (root.behaveAsPlasmaPanel || root.viewType === LatteCore.Types.PanelView || (latteView && latteView.byPassWM)) {
@@ -237,6 +242,7 @@ Item {
     Binding{
         target: latteView && latteView.effects ? latteView.effects : null
         property:"appletsLayoutGeometry"
+        restoreMode: Binding.RestoreNone
         when: latteView && latteView.effects && visibilityManager.inNormalState
         value: {
             if (root.behaveAsPlasmaPanel

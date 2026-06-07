@@ -486,6 +486,9 @@ Item{
         Binding {
             target: _wrapperContainer
             property: "_thickness"
+            //! Qt6: hold the last size while relocation hiding deactivates this binding; otherwise
+            //! RestoreBindingOrValue resets it to the declared 0 and the container collapses.
+            restoreMode: Binding.RestoreNone
             when: !visibilityManager.inRelocationHiding
             value: {
                 if (appletItem.isInternalViewSplitter) {
@@ -501,6 +504,8 @@ Item{
         Binding {
             target: _wrapperContainer
             property: "_length"
+            //! Qt6: keep the last length during relocation hiding (see _thickness above).
+            restoreMode: Binding.RestoreNone
             when: !visibilityManager.inRelocationHiding
             value: {
                 if (appletItem.isAutoFillApplet && (appletItem.maxAutoFillLength>-1)){
