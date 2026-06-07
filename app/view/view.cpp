@@ -376,6 +376,16 @@ void View::init(Plasma::Containment *plasma_containment)
 
     connect(m_corona->indicatorFactory(), &Latte::Indicator::Factory::indicatorRemoved, this, &View::indicatorPluginRemoved);
 
+    //! Plasma 6 no longer restores a containment's mouse-action plugins from the layout config (the
+    //! corona config carries no [ActionPlugins] group), so containmentActions() comes up empty and a
+    //! right-click finds no menu. Install Latte's standard context menu as the default RightButton
+    //! action whenever the containment has none, matching the shipped defaults file.
+    if (plasma_containment
+            && !plasma_containment->containmentActions().contains(QStringLiteral("RightButton;NoModifier"))) {
+        plasma_containment->setContainmentActions(QStringLiteral("RightButton;NoModifier"),
+                                                  QStringLiteral("org.kde.latte.contextmenu"));
+    }
+
     //! Assign app interfaces in be accessible through containment graphic item
     QQuickItem *containmentGraphicItem = PlasmaQuick::AppletQuickItem::itemForApplet(plasma_containment);
 

@@ -51,4 +51,13 @@ target_compile_definitions(configcontrolstest PRIVATE
     TEXTFIELD_QML_PATH="${CMAKE_SOURCE_DIR}/declarativeimports/components/TextField.qml"
     ITEMDELEGATE_QML_PATH="${CMAKE_SOURCE_DIR}/declarativeimports/components/ItemDelegate.qml")
 
+ecm_add_test(contextmenudefaulttest.cpp
+    TEST_NAME contextmenudefaulttest
+    LINK_LIBRARIES Qt6::Test Qt6::Gui Plasma::Plasma
+)
+target_compile_definitions(contextmenudefaulttest PRIVATE
+    LATTE_DEFAULTS_PATH="${CMAKE_SOURCE_DIR}/shell/package/contents/defaults"
+    VIEW_CPP_PATH="${CMAKE_SOURCE_DIR}/app/view/view.cpp"
+    LATTE_CONTEXTMENU_PLUGIN="${CMAKE_BINARY_DIR}/bin/org.kde.latte.contextmenu.so")
+
 add_subdirectory(manual)
