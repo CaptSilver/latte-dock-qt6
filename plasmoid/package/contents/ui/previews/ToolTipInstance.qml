@@ -143,7 +143,7 @@ Column {
             id: closeButton
             Layout.alignment: Qt.AlignRight | Qt.AlignTop
             visible: isWin && !hideCloseButtons
-            iconSource: "window-close"
+            icon.name: "window-close"
             onClicked: {
                 if (!isGroup) {
                     //! force windowsPreviewDlg hiding when the last instance is closed
@@ -370,7 +370,7 @@ Column {
                        //! It creates issues with Valgrind and needs to be completely removed in that case
                        id: canGoBackButton
                        enabled: canGoBack
-                       iconSource: LayoutMirroring.enabled ? "media-skip-forward" : "media-skip-backward"
+                       icon.name: LayoutMirroring.enabled ? "media-skip-forward" : "media-skip-backward"
                        onClicked: mpris2Source.goPrevious(mprisSourceName)
                    }
 
@@ -378,7 +378,7 @@ Column {
                        //! It creates issues with Valgrind and needs to be completely removed in that case
                        id: playingButton
                        enabled: playing ? canPause : canPlay
-                       iconSource: playing ? "media-playback-pause" : "media-playback-start"
+                       icon.name: playing ? "media-playback-pause" : "media-playback-start"
                        onClicked: {
                            if (!playing) {
                                mpris2Source.play(mprisSourceName);
@@ -392,7 +392,7 @@ Column {
                        //! It creates issues with Valgrind and needs to be completely removed in that case
                        id: canGoNextButton
                        enabled: canGoNext
-                       iconSource: LayoutMirroring.enabled ? "media-skip-backward" : "media-skip-forward"
+                       icon.name: LayoutMirroring.enabled ? "media-skip-backward" : "media-skip-forward"
                        onClicked: mpris2Source.goNext(mprisSourceName)
                    }
 
