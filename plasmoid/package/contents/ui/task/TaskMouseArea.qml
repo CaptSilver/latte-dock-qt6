@@ -24,8 +24,8 @@ MouseArea {
 
     Connections {
         target: taskMouseArea
-        onPressed: taskItem.mousePressed(mouse.x, mouse.y, mouse.button)
-        onReleased: taskItem.mouseReleased(mouse.x, mouse.y, mouse.button)
+        function onPressed(mouse) { taskItem.mousePressed(mouse.x, mouse.y, mouse.button); }
+        function onReleased(mouse) { taskItem.mouseReleased(mouse.x, mouse.y, mouse.button); }
     }
 
     onEntered: {
@@ -72,7 +72,7 @@ MouseArea {
     }
 
     // IMPORTANT: This must be improved ! even for small milliseconds  it reduces performance
-    onPositionChanged: {
+    onPositionChanged: (mouse) => {
         if (taskItem.abilities.myView.isReady && !taskItem.abilities.myView.isShownFully) {
             return;
         }
@@ -105,7 +105,7 @@ MouseArea {
         }
     }
 
-    onPressed: {
+    onPressed: (mouse) => {
         //console.log("Pressed Task Delegate..");
         if (LatteCore.WindowSystem.compositingActive && !LatteCore.WindowSystem.isPlatformWayland) {
             if(root.leftClickAction !== LatteTasks.Types.PreviewWindows) {
@@ -139,7 +139,7 @@ MouseArea {
         }
     }
 
-    onReleased: {
+    onReleased: (mouse) => {
         //console.log("Released Task Delegate...");
         _resistanerTimer.stop();
 
@@ -228,7 +228,7 @@ MouseArea {
         pressed = false;
     }
 
-    onWheel: {
+    onWheel: (wheel) => {
         var wheelActionsEnabled = (root.taskScrollAction !== LatteTasks.Types.ScrollNone || root.manualScrollTasksEnabled);
 
         if (isSeparator

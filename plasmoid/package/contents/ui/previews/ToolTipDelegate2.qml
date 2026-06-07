@@ -93,7 +93,7 @@ PlasmaExtras.ScrollArea {
                 windowsPreviewDlg.hide(9.9);
             }
 
-            onDragMove: {
+            onDragMove: (event) => {
                 var current = mainToolTip.instanceAtPos(event.x, event.y);
 
                 if (current && currentWindow !== current && current.submodelIndex) {

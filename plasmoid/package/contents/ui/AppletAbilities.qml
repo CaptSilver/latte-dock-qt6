@@ -47,7 +47,7 @@ AbilityClient.AppletAbilities {
 
     Connections {
         target: _abilityContainer.userRequests
-        onSglViewType: {
+        function onSglViewType(viewType) {
             if (viewType === LatteCore.Types.DockView) {
                 Plasmoid.configuration.animationLauncherBouncing = true;
                 Plasmoid.configuration.animationWindowInAttention = true;

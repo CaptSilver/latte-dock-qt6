@@ -336,9 +336,9 @@ Item {
     //! Connections
     Connections {
         target: appletAbilities.launchers
-        onLauncherInRemoving: tasksExtManager.addToBeRemovedLauncher(launcherUrl);
-        onLauncherInAdding: tasksExtManager.addToBeAddedLauncher(launcherUrl);
-        onLauncherInMoving: tasksExtManager.addLauncherToBeMoved(launcherUrl, pos);
+        function onLauncherInRemoving(launcherUrl) { tasksExtManager.addToBeRemovedLauncher(launcherUrl); }
+        function onLauncherInAdding(launcherUrl) { tasksExtManager.addToBeAddedLauncher(launcherUrl); }
+        function onLauncherInMoving(launcherUrl, pos) { tasksExtManager.addLauncherToBeMoved(launcherUrl, pos); }
     }
 
 

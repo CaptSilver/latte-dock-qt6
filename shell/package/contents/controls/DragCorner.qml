@@ -39,7 +39,7 @@ Rectangle {
         property int curGlobalX: 0
         property int curGlobalY: 0
 
-        onPressed: {
+        onPressed: (mouse) => {
             if (pressed) {
                 var scenePos = mapToGlobal(mouse.x, mouse.y);
 
@@ -59,7 +59,7 @@ Rectangle {
             }
         }
 
-        onPositionChanged: {
+        onPositionChanged: (mouse) => {
             if (pressed && initialized) {
                 var scenePos = mapToGlobal(mouse.x, mouse.y);
                 if (plasmoid.location !== PlasmaCore.Types.LeftEdge) {

@@ -116,7 +116,7 @@ T.ComboBox {
         acceptedButtons: Qt.LeftButton
         preventStealing: true
         property int indexUnderMouse: -1
-        onWheel: {
+        onWheel: (wheel) => {
             if (!control.wheelEnabled) {
                 return;
             }
@@ -134,7 +134,7 @@ T.ComboBox {
             control.down = false;
             control.pressed = false;
         }
-        onPositionChanged: {
+        onPositionChanged: (mouse) => {
             var pos = listView.mapFromItem(this, mouse.x, mouse.y);
             indexUnderMouse = listView.indexAt(pos.x, pos.y);
             listView.currentIndex = indexUnderMouse;
@@ -363,7 +363,7 @@ T.ComboBox {
                 rightMargin: control.rightPadding
             }
             acceptedButtons: Qt.NoButton
-            onWheel: {
+            onWheel: (wheel) => {
                 if (!control.wheelEnabled) {
                     return;
                 }
@@ -432,7 +432,7 @@ T.ComboBox {
 
             signal iconClicked(int index);
 
-            onIconClicked: control.iconClicked(index);
+            onIconClicked: (index) => control.iconClicked(index);
         }
         background: Rectangle {
             anchors {

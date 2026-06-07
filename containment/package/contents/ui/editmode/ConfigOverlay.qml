@@ -97,7 +97,7 @@ MouseArea {
     }
 
 
-    onPositionChanged: {
+    onPositionChanged: (mouse) => {
         if (pressed) {
             if(currentApplet){
                 if (Plasmoid.formFactor === PlasmaCore.Types.Vertical) {
@@ -171,7 +171,7 @@ MouseArea {
         colorizingButton.checked = !currentApplet.userBlocksColorizing;
     }
 
-    onPressed: {
+    onPressed: (mouse) => {
         if (!root.dragOverlay.currentApplet) {
             return;
         }
@@ -223,7 +223,7 @@ MouseArea {
         layouter.updateSizeForAppletsInFill();
     }
 
-    onWheel: {
+    onWheel: (wheel) => {
         if (!currentApplet || !currentApplet.latteStyleApplet) {
             return;
         }

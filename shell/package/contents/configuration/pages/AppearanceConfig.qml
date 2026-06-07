@@ -336,14 +336,14 @@ PlasmaComponents.Page {
 
                             readonly property real smallStep: 0.1
 
-                            onScrolledUp:  {
+                            onScrolledUp: (wheel) => {
                                 var ctrlModifier = (wheel.modifiers & Qt.ControlModifier);
                                 if (ctrlModifier) {
                                     plasmoid.configuration.maxLength = plasmoid.configuration.maxLength + smallStep;
                                 }
                             }
 
-                            onScrolledDown: {
+                            onScrolledDown: (wheel) => {
                                 var ctrlModifier = (wheel.modifiers & Qt.ControlModifier);
                                 if (ctrlModifier) {
                                     plasmoid.configuration.maxLength = plasmoid.configuration.maxLength - smallStep;
@@ -419,14 +419,14 @@ PlasmaComponents.Page {
 
                             readonly property real smallStep: 0.1
 
-                            onScrolledUp:  {
+                            onScrolledUp: (wheel) => {
                                 var ctrlModifier = (wheel.modifiers & Qt.ControlModifier);
                                 if (ctrlModifier) {
                                     plasmoid.configuration.minLength = plasmoid.configuration.minLength + smallStep;
                                 }
                             }
 
-                            onScrolledDown: {
+                            onScrolledDown: (wheel) => {
                                 var ctrlModifier = (wheel.modifiers & Qt.ControlModifier);
                                 if (ctrlModifier) {
                                     plasmoid.configuration.minLength = plasmoid.configuration.minLength - smallStep;
@@ -549,14 +549,14 @@ PlasmaComponents.Page {
 
                             readonly property real smallStep: 0.1
 
-                            onScrolledUp:  {
+                            onScrolledUp: (wheel) => {
                                 var ctrlModifier = (wheel.modifiers & Qt.ControlModifier);
                                 if (ctrlModifier) {
                                     plasmoid.configuration.offset= plasmoid.configuration.offset + smallStep;
                                 }
                             }
 
-                            onScrolledDown: {
+                            onScrolledDown: (wheel) => {
                                 var ctrlModifier = (wheel.modifiers & Qt.ControlModifier);
                                 if (ctrlModifier) {
                                     plasmoid.configuration.offset = plasmoid.configuration.offset - smallStep;

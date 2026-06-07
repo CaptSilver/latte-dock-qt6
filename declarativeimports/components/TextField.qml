@@ -116,7 +116,7 @@ PlasmaComponents.TextField {
         anchors.fill: parent
         acceptedButtons: Qt.MiddleButton
 
-        onWheel: {
+        onWheel: (wheel) => {
             var angle = wheel.angleDelta.y / 8
 
             if (angle > 0) {

@@ -92,7 +92,7 @@ Item {
                         taskItem.toggleMuted();
                     }
 
-                    onWheel: {
+                    onWheel: (wheel) => {
                         if (wheelIsBlocked) {
                             return;
                         }

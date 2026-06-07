@@ -627,7 +627,7 @@ Item {
     Connections{
         target: appletItem.shortcuts
 
-        onSglActivateEntryAtIndex: {
+        function onSglActivateEntryAtIndex(entryIndex) {
             if (!appletItem.shortcuts.unifiedGlobalShortcuts) {
                 return;
             }
@@ -639,7 +639,7 @@ Item {
             }
         }
 
-        onSglNewInstanceForEntryAtIndex: {
+        function onSglNewInstanceForEntryAtIndex(entryIndex) {
             if (!appletItem.shortcuts.unifiedGlobalShortcuts) {
                 return;
             }
@@ -660,7 +660,7 @@ Item {
         property bool pressed: false
         property bool blockWheel: false
 
-        onMousePressed: {
+        function onMousePressed(pos, button) {
             if (appletItem.containsPos(pos)) {
                 viewSignalsConnector.pressed = true;
                 var local = appletItem.mapFromItem(root, pos.x, pos.y);
@@ -669,7 +669,7 @@ Item {
             }
         }
 
-        onMouseReleased: {
+        function onMouseReleased(pos, button) {
             if (appletItem.containsPos(pos)) {
                 viewSignalsConnector.pressed = false;
                 var local = appletItem.mapFromItem(root, pos.x, pos.y);
@@ -677,7 +677,7 @@ Item {
             }
         }
 
-        onWheelScrolled: {
+        function onWheelScrolled(pos, angleDelta, buttons) {
             if (!appletItem.applet || !root.mouseWheelActions || viewSignalsConnector.blockWheel || !appletItem.myView.isShownFully) {
                 return;
             }

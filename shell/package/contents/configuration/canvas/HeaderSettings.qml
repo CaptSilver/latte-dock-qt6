@@ -71,7 +71,7 @@ Item {
 
         icon: SettingsControls.StickIcon{}
 
-        onPressedChanged: {
+        onPressedChanged: (pressed) => {
             if (pressed) {
                 plasmoid.configuration.isStickedOnTopEdge = !plasmoid.configuration.isStickedOnTopEdge;
             }
@@ -112,7 +112,7 @@ Item {
 
         icon: SettingsControls.RearrangeIcon{}
 
-        onPressedChanged: {
+        onPressedChanged: (pressed) => {
             if (pressed) {
                 universalSettings.inConfigureAppletsMode = !universalSettings.inConfigureAppletsMode;
             }
@@ -130,7 +130,7 @@ Item {
 
         icon: SettingsControls.StickIcon{}
 
-        onPressedChanged: {
+        onPressedChanged: (pressed) => {
             if (pressed) {
                 plasmoid.configuration.isStickedOnBottomEdge = !plasmoid.configuration.isStickedOnBottomEdge;
             }

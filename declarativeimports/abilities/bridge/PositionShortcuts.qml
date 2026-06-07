@@ -37,7 +37,7 @@ BridgeItem {
 
     Connections {
         target: host
-        onCurrentAppletStealingPositionShortcuts: {
+        function onCurrentAppletStealingPositionShortcuts(id) {
             if (appletIndex !== id && client) {
                 client.disabledIsStealingGlobalPositionShortcuts();
             }

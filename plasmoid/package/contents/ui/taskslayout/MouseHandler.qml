@@ -103,7 +103,7 @@ Item {
             }
         }
 
-        onDragEnter:{          
+        onDragEnter: (event) => {
             inMovingTask = isMovingTask(event);
             inDroppingOnlyLaunchers = !inMovingTask && isDroppingOnlyLaunchers(event);
             inDroppingSeparator = !inMovingTask && isDroppingSeparator(event);
@@ -124,7 +124,7 @@ Item {
             dArea.containsDrag = true;
         }
 
-        onDragMove: {
+        onDragMove: (event) => {
             if (!eventIsAccepted) {
                 clearDroppingFlags();
                 event.ignore();
@@ -202,7 +202,7 @@ Item {
             activationTimer.stop();
         }
 
-        onDrop: {
+        onDrop: (event) => {
             if (!eventIsAccepted) {
                 clearDroppingFlags();
                 event.ignore();

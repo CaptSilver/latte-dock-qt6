@@ -67,7 +67,7 @@ LatteComponents.ComboBoxButton{
     Connections{
         target: custom.comboBox
 
-        onActivated: {
+        function onActivated(index) {
             if (index>=0) {
                 var item = actionsModel.get(index);
                 if (item.pluginId === "add:") {
@@ -82,7 +82,7 @@ LatteComponents.ComboBoxButton{
             custom.updateButtonInformation();
         }
 
-        onIconClicked: {
+        function onIconClicked(index) {
             if (index>=0) {
                 var item = actionsModel.get(index);
                 var pluginId = item.pluginId;

@@ -22,7 +22,7 @@ MouseArea{
         }
     }
 
-    onWheel: {
+    onWheel: (wheel) => {
         var angle = wheel.angleDelta.y / 8;
 
         if (angle > 12) {

@@ -54,7 +54,7 @@ Loader {
 
             Component.onCompleted: forceActiveFocus();
 
-            Keys.onPressed: {
+            Keys.onPressed: (event) => {
                 if (event.key === Qt.Key_Escape) {
                     primaryConfigView.hideConfigWindow();
                 }

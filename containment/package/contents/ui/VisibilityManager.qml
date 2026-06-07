@@ -97,7 +97,7 @@ Item{
 
     Connections{
         target: layoutsManager
-        onCurrentLayoutIsSwitching: {
+        function onCurrentLayoutIsSwitching(layoutName) {
             if (LatteCore.WindowSystem.compositingActive && latteView && latteView.layout && latteView.layout.name === layoutName) {
                 parabolic.sglClearZoom();
             }

@@ -137,7 +137,7 @@ Rectangle {
 
         minimumPopUpWidth: Math.max(comboBoxMinimumPopUpWidth, root.width)
 
-        onIconClicked: root.iconClicked(index);
+        onIconClicked: (index) => root.iconClicked(index);
     }
 
     Label{

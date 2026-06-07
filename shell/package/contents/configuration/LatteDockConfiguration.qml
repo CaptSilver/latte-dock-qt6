@@ -165,7 +165,7 @@ Loader {
 
             property int calculatedHeight: header.height + headerSpacer.height+ tabBar.height + pagesBackground.height + actionButtons.height + spacing * 3
 
-            Keys.onPressed: {
+            Keys.onPressed: (event) => {
                 if (event.key === Qt.Key_Escape) {
                     viewConfig.hideConfigWindow();
                 }
@@ -531,7 +531,7 @@ Loader {
 
                         Component.onCompleted:actionsComboBtn.updateModel();
 
-                        onActivated: {
+                        function onActivated(index) {
                             var item = actionsModel.get(index);
 
                             if (item && item.actionId === "add:") {

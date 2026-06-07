@@ -150,7 +150,7 @@ Item{
 
     Connections {
         target: abilityItem.abilities.shortcuts
-        onSglActivateEntryAtIndex: {
+        function onSglActivateEntryAtIndex(entryIndex) {
             if (!abilityItem.abilities.shortcuts.isEnabled) {
                 return;
             }
@@ -162,7 +162,7 @@ Item{
             }
         }
 
-        onSglNewInstanceForEntryAtIndex: {
+        function onSglNewInstanceForEntryAtIndex(entryIndex) {
             if (!abilityItem.abilities.shortcuts.isEnabled) {
                 return;
             }

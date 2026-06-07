@@ -28,7 +28,7 @@ BridgeItem {
 
     Connections {
         target: host
-        onCurrentAppletStealingDroppedLaunchers: {
+        function onCurrentAppletStealingDroppedLaunchers(id) {
             if (appletIndex !== id && client) {
                 client.disabledIsStealingDroppedLaunchers();
             }

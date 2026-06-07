@@ -89,7 +89,7 @@ DragDrop.DropArea {
         }
     }
 
-    onDragEnter: {
+    onDragEnter: (event) => {
         containsDrag = true;
         clearInfoTimer.stop();
         var isTask = event !== undefined
@@ -140,7 +140,7 @@ DragDrop.DropArea {
         dndSpacer.opacity = 1;
     }
 
-    onDragMove: {
+    onDragMove: (event) => {
         containsDrag = true;
         clearInfoTimer.stop();
         if (dragInfo.isTask) {
@@ -170,7 +170,7 @@ DragDrop.DropArea {
         dndSpacer.parent = root;
     }
 
-    onDrop: {
+    onDrop: (event) => {
         containsDrag = false;
         animations.needLength.removeEvent(dragArea);
 
