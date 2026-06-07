@@ -277,6 +277,9 @@ Item{
     Binding {
         target: wrapper
         property: "layoutThickness"
+        //! Qt6 defaults Binding.restoreMode to RestoreBindingOrValue, which resets the property to
+        //! its declared default (0) once "when" turns false during zoom; keep the captured value instead.
+        restoreMode: Binding.RestoreNone
         when: latteView && (wrapper.zoomScale === 1 || communicator.parabolicEffectIsSupported)
         value: {
             if (appletItem.isInternalViewSplitter){
@@ -295,6 +298,8 @@ Item{
     Binding {
         target: wrapper
         property: "layoutLength"
+        //! Qt6: keep the captured rest-length when "when" turns false during zoom (see layoutThickness)
+        restoreMode: Binding.RestoreNone
         when: latteView && !appletItem.isAutoFillApplet && (wrapper.zoomScale === 1)
         value: {
             if (applet && ( appletMaximumLength < appletItem.metrics.iconSize
