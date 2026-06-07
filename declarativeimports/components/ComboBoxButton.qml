@@ -3,9 +3,9 @@
     SPDX-License-Identifier: GPL-2.0-or-later
 */
 
-import QtQuick.Controls 1.4
 import QtQuick 2.2
 import QtQuick.Layouts 1.3
+import QtQuick.Controls 2.15 as QQC2
 
 import org.kde.plasma.components 3.0 as PlasmaComponents
 import org.kde.plasma.components 3.0 as PlasmaComponents3
@@ -20,7 +20,6 @@ Rectangle {
     implicitWidth: buttonMetrics.implicitWidth
     implicitHeight: buttonMetrics.implicitHeight
 
-    property ExclusiveGroup exclusiveGroup: null
     property bool checked: false
     property bool checkable: false
 
@@ -53,16 +52,6 @@ Rectangle {
 
     signal iconClicked(int index);
 
-    onExclusiveGroupChanged: {
-        if (exclusiveGroup) {
-            exclusiveGroup.bindCheckable(root);
-        }
-    }
-
-    ExclusiveGroup {
-        id: hiddenExclusiveGroup
-    }
-
     PlasmaComponents.Button {
         id: mainButton
         anchors.left: Qt.application.layoutDirection === Qt.RightToLeft ? undefined : parent.left
@@ -72,17 +61,15 @@ Rectangle {
         checked: root.checked || (buttonIsTriggeringMenu && mainComboBox.popup.visible)
         opacity: buttonIsTransparent && !isButtonIndicatingMenuPopup ? 0 : 1
 
-        /*workaround in order to replicate the proper Buttons Exclusive Group Behavior*/
-        checkable: root.checkable && !parent.exclusiveGroup
-        /*workaround in order to replicate the proper Buttons Exclusive Group Behavior*/
-        exclusiveGroup: parent.exclusiveGroup ? hiddenExclusiveGroup : null
+        checkable: root.checkable
 
         width: parent.width
         height: mainComboBox.height
 
         text: root.checkable ?  " " : buttonText
-        iconSource: buttonIconSource
-        tooltip: buttonToolTip
+        icon.name: buttonIconSource
+        QQC2.ToolTip.text: buttonToolTip
+        QQC2.ToolTip.visible: hovered && buttonToolTip !== ""
 
         onClicked: {
             if (buttonIsTriggeringMenu) {
@@ -140,7 +127,7 @@ Rectangle {
         onIconClicked: (index) => root.iconClicked(index);
     }
 
-    Label{
+    PlasmaComponents.Label{
         width: labelMetrics.exceeds ? parent.width-mainComboBox.width :  parent.width
         height: parent.height
         text: buttonText
@@ -157,7 +144,7 @@ Rectangle {
         verticalAlignment: Text.AlignVCenter
     }
 
-    Label{
+    PlasmaComponents.Label{
         id: labelMetrics
         text: root.buttonText
         opacity: 0

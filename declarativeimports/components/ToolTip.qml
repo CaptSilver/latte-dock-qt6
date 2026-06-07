@@ -4,7 +4,7 @@
 */
 
 import QtQuick 2.6
-import QtQuick.Controls 1.4
+import QtQuick.Controls 2.15 as QQC2
 import QtQuick.Templates 2.2 as T
 import org.kde.ksvg 1.0 as KSvg
 import org.kde.kirigami 2.20 as Kirigami
@@ -26,7 +26,7 @@ T.ToolTip {
 
     closePolicy: T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutsideParent | T.Popup.CloseOnReleaseOutsideParent
 
-    contentItem: Label {
+    contentItem: QQC2.Label {
         text: control.text
         font: control.font
         color: Kirigami.Theme.textColor

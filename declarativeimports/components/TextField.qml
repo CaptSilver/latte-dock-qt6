@@ -2,9 +2,8 @@
     SPDX-FileCopyrightText: 2019 Michail Vourlakos <mvourlakos@gmail.com>
     SPDX-License-Identifier: GPL-2.0-or-later
 */
-import QtQuick 2.0
+import QtQuick
 import QtQuick.Layouts 1.3
-import QtQuick.Controls 1.4
 
 import org.kde.plasma.components 3.0 as PlasmaComponents
 import org.kde.kirigami 2.20 as Kirigami
