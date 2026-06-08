@@ -83,7 +83,13 @@ GEN=/tmp/qml_compile_check.qml
 } > "$GEN"
 
 echo "compiling ${#FILES[@]} QML files (offscreen)..."
+# Import order matters: qmltestrunner gives the LAST -import the highest priority,
+# and a module URI resolves entirely from the first import path that provides it
+# (no merging across paths). The system path holds the RPM-installed org.kde.latte.*
+# modules, so it must come BEFORE the staged tree — otherwise the stale installed
+# copies shadow the working tree and any type added to a Latte module this session
+# (e.g. a new component) is invisible to the gate.
 QT_QPA_PLATFORM=offscreen "$QMLTESTRUNNER" \
-    -import "$STAGE/usr/lib64/qt6/qml" \
     -import /usr/lib64/qt6/qml \
+    -import "$STAGE/usr/lib64/qt6/qml" \
     -input "$GEN"
