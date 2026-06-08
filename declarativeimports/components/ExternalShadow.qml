@@ -4,9 +4,9 @@
 */
 
 import QtQuick 2.1
+import QtQuick.Effects
 
 import org.kde.plasma.core 2.0 as PlasmaCore
-import Qt5Compat.GraphicalEffects
 
 Item{
     id: shadowRoot
@@ -35,11 +35,13 @@ Item{
             height: shadowRoot.height
             color: "white"
 
-            layer.enabled: true
-            layer.effect: DropShadow {
-                radius: shadowSize
-                fast: true
-                samples: 2 * radius
+            // The visible halo is the shadow; the white fill is clipped off-edge
+            // by the parent's per-direction margins (was a layer effect source on Qt5).
+            RectangularShadow {
+                anchors.fill: parent
+                z: -1
+                blur: shadowRoot.shadowSize
+                spread: 0
                 color: shadowRoot.shadowColor
             }
         }
