@@ -315,17 +315,16 @@ QString Manager::uniqueViewTemplateName(QString name) const
 QString Manager::templateName(const QString &filePath)
 {
     int lastSlash = filePath.lastIndexOf(QLatin1Char('/'));
-    QString tempFilePath = filePath;
-    QString templatename = tempFilePath.remove(0, lastSlash + 1);
+    QString templatename = filePath.mid(lastSlash + 1);
 
-    QString extension(QStringLiteral(".layout.latte"));
-    int ext = templatename.lastIndexOf(extension);
-    if (ext>0) {
-        templatename = templatename.remove(ext, extension.size());
-    } else {
-        extension = QStringLiteral(".view.latte");
-        ext = templatename.lastIndexOf(extension);
-        templatename = templatename.remove(ext,extension.size());
+    //! strip a recognised template extension; a name ending in neither is left
+    //! untouched (remove() with a not-found -1 index would chop the last char).
+    const QString extensions[] = {QStringLiteral(".layout.latte"), QStringLiteral(".view.latte")};
+    for (const QString &extension : extensions) {
+        if (templatename.endsWith(extension)) {
+            templatename.chop(extension.size());
+            break;
+        }
     }
 
     return templatename;

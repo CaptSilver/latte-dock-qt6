@@ -9,6 +9,11 @@ ecm_add_test(indicatorsknsrctest.cpp
     TEST_NAME indicatorsknsrctest
     LINK_LIBRARIES Qt6::Test Qt6::Core KF6::ConfigCore
 )
+
+ecm_add_test(templatesnametest.cpp
+    TEST_NAME templatesnametest
+    LINK_LIBRARIES Qt6::Test Qt6::Core
+)
 target_compile_definitions(indicatorsknsrctest PRIVATE
     INDICATORS_KNSRC_PATH="${CMAKE_SOURCE_DIR}/app/latte-indicators.knsrc")
 
