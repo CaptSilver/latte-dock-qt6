@@ -26,7 +26,7 @@ AbilityDefinition.PositionShortcuts {
         target: _shortcutsprivate
         property: "badges"
         when: !updateIsBlocked && shortcutsEngine
-        value: shortcutsEngine.badgesForActivate
+        value: shortcutsEngine ? shortcutsEngine.badgesForActivate : []
     }
 
     Binding {

@@ -23,11 +23,15 @@ Ability.LaunchersPrivate {
     readonly property var universalLaunchers: latteView && universalSettings ? universalSettings.launchers : []
 
     function addAbilityClient(client) {
-        layoutsManager.syncedLaunchers.addAbilityClient(client);
+        if (layoutsManager && layoutsManager.syncedLaunchers) {
+            layoutsManager.syncedLaunchers.addAbilityClient(client);
+        }
     }
 
     function removeAbilityClient(client) {
-        layoutsManager.syncedLaunchers.removeAbilityClient(client);
+        if (layoutsManager && layoutsManager.syncedLaunchers) {
+            layoutsManager.syncedLaunchers.removeAbilityClient(client);
+        }
     }
 
     function addSyncedLauncher(senderId, group, groupId, launcherUrl) {

@@ -21,6 +21,7 @@ Item {
                                      && layouter.fillApplets<=0
                                      && !(root.inConfigureAppletsMode && Plasmoid.configuration.alignment === LatteCore.Types.Justify) /*block shrinking for justify splitters*/
                                      && latteView
+                                     && latteView.visibility
                                      && latteView.visibility.mode !== LatteCore.Types.SidebarOnDemand
                                      && latteView.visibility.mode !== LatteCore.Types.SidebarAutoHide
 

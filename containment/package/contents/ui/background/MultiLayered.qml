@@ -306,6 +306,9 @@ BackgroundProperties{
         property: "themeExtendedBackground"
         when: themeExtended
         value: {
+            if (!themeExtended) {
+                return null;
+            }
             switch(Plasmoid.location) {
             case PlasmaCore.Types.BottomEdge: return themeExtended.backgroundBottomEdge;
             case PlasmaCore.Types.LeftEdge: return themeExtended.backgroundLeftEdge;

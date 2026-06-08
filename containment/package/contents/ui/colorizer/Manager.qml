@@ -139,7 +139,7 @@ Loader{
 
     property color applyColor: textColor
 
-    readonly property color backgroundColor:applyTheme.backgroundColor
+    readonly property color backgroundColor: applyTheme ? applyTheme.backgroundColor : Kirigami.Theme.backgroundColor
     readonly property color textColor: {
         if (latteView && latteView.layout
                 && root.inConfigureAppletsMode
@@ -149,22 +149,22 @@ Loader{
             return latteView.layout.textColor;
         }
 
-        return applyTheme.textColor;
+        return applyTheme ? applyTheme.textColor : Kirigami.Theme.textColor;
     }
 
     readonly property color inactiveBackgroundColor: applyTheme === plasmaTheme ? (plasmaTheme ? plasmaTheme.backgroundColor : Kirigami.Theme.backgroundColor) : applyTheme.inactiveBackgroundColor
     readonly property color inactiveTextColor: applyTheme === plasmaTheme ? (plasmaTheme ? plasmaTheme.textColor : Kirigami.Theme.textColor) : applyTheme.inactiveTextColor
 
-    readonly property color highlightColor: applyTheme.highlightColor
-    readonly property color highlightedTextColor: applyTheme.highlightedTextColor
-    readonly property color positiveTextColor: applyTheme.positiveTextColor
-    readonly property color neutralTextColor: applyTheme.neutralTextColor
-    readonly property color negativeTextColor: applyTheme.negativeTextColor
+    readonly property color highlightColor: applyTheme ? applyTheme.highlightColor : Kirigami.Theme.highlightColor
+    readonly property color highlightedTextColor: applyTheme ? applyTheme.highlightedTextColor : Kirigami.Theme.highlightedTextColor
+    readonly property color positiveTextColor: applyTheme ? applyTheme.positiveTextColor : Kirigami.Theme.positiveTextColor
+    readonly property color neutralTextColor: applyTheme ? applyTheme.neutralTextColor : Kirigami.Theme.neutralTextColor
+    readonly property color negativeTextColor: applyTheme ? applyTheme.negativeTextColor : Kirigami.Theme.negativeTextColor
 
-    readonly property color buttonTextColor: applyTheme.buttonTextColor
-    readonly property color buttonBackgroundColor: applyTheme.buttonBackgroundColor
-    readonly property color buttonHoverColor: applyTheme.buttonHoverColor
-    readonly property color buttonFocusColor: applyTheme.buttonFocusColor
+    readonly property color buttonTextColor: applyTheme ? applyTheme.buttonTextColor : Kirigami.Theme.textColor
+    readonly property color buttonBackgroundColor: applyTheme ? applyTheme.buttonBackgroundColor : Kirigami.Theme.backgroundColor
+    readonly property color buttonHoverColor: applyTheme ? applyTheme.buttonHoverColor : Kirigami.Theme.hoverColor
+    readonly property color buttonFocusColor: applyTheme ? applyTheme.buttonFocusColor : Kirigami.Theme.focusColor
 
     readonly property string scheme: {
         if (root.inConfigureAppletsMode && (root.themeColors === LatteContainment.Types.SmartThemeColors)) {
