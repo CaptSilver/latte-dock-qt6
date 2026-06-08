@@ -10,6 +10,7 @@
 #include <coretypes.h>   // Latte::Types::{Visibility,Alignment}
 
 // Qt
+#include <QMargins>
 #include <QRect>
 #include <QSize>
 
@@ -67,6 +68,15 @@ void setFocusPolicy(QWindow *window, bool takesFocus);
 
 //! Reserve/release struts on a layer-shell window (0 releases).
 void setExclusiveZone(QWindow *window, int zone);
+
+//! The QMargins that offsets a layer surface off its anchored @p location edge by
+//! @p margin (the margin sits on the anchored edge). Pure mapping, unit-tested.
+QMargins marginsForEdge(Plasma::Types::Location location, int margin);
+
+//! Offset a layer-shell window off its anchored @p location edge by @p margin.
+//! Wayland places layer surfaces by anchors+margins, not setPosition(), so this is
+//! how a config view is pushed clear of the dock it is anchored alongside.
+void setEdgeMargin(QWindow *window, Plasma::Types::Location location, int margin);
 
 } // namespace LayerShell
 } // namespace WindowSystem

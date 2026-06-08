@@ -18,6 +18,7 @@ private Q_SLOTS:
     void layer_byMode();
     void exclusiveZone_byLocation();
     void seededSize_singleEdgeNeedsValidSize();
+    void margins_byEdge();
 };
 
 void LayerShellMappingTest::anchors_bottom_alignments()
@@ -88,6 +89,16 @@ void LayerShellMappingTest::seededSize_singleEdgeNeedsValidSize()
     const auto leftCenter = LayerShell::anchorsFor(Plasma::Types::LeftEdge, Latte::Types::Center);
     QCOMPARE(LayerShell::seededLayerSize(leftCenter, Plasma::Types::LeftEdge, QSize(0, 0), screen),
              QSize(1, 1080));
+}
+
+void LayerShellMappingTest::margins_byEdge()
+{
+    //! The margin lands on the anchored edge (QMargins is left, top, right, bottom),
+    //! so it offsets a config view off the dock it sits alongside.
+    QCOMPARE(LayerShell::marginsForEdge(Plasma::Types::BottomEdge, 40), QMargins(0, 0, 0, 40));
+    QCOMPARE(LayerShell::marginsForEdge(Plasma::Types::TopEdge, 40), QMargins(0, 40, 0, 0));
+    QCOMPARE(LayerShell::marginsForEdge(Plasma::Types::LeftEdge, 48), QMargins(48, 0, 0, 0));
+    QCOMPARE(LayerShell::marginsForEdge(Plasma::Types::RightEdge, 48), QMargins(0, 0, 48, 0));
 }
 
 QTEST_MAIN(LayerShellMappingTest)

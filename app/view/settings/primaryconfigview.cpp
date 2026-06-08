@@ -20,6 +20,7 @@
 #include "../../layout/genericlayout.h"
 #include "../../settings/universalsettings.h"
 #include "../../wm/abstractwindowinterface.h"
+#include "../../wm/waylandlayershell.h"
 
 // Qt
 #include <QQuickItem>
@@ -400,7 +401,14 @@ void PrimaryConfigView::syncGeometry()
 
     m_geometryWhenVisible = geometry;
 
-    setPosition(position);
+    if (KWindowSystem::isPlatformWayland()) {
+        //! layer-shell ignores setPosition(); offset the view off the dock's edge
+        //! by the canvas thickness via the layer-shell margin instead, so it sits
+        //! beside the dock rather than on top of it.
+        Latte::WindowSystem::LayerShell::setEdgeMargin(this, location, canvasThickness);
+    } else {
+        setPosition(position);
+    }
 
     setMaximumSize(size);
     setMinimumSize(size);

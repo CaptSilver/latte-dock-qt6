@@ -5,6 +5,7 @@
 
 #include "waylandlayershell.h"
 
+#include <QMargins>
 #include <QScreen>
 #include <QWindow>
 
@@ -163,6 +164,30 @@ void setExclusiveZone(QWindow *window, int zone)
 {
     if (LSW *ls = LSW::get(window)) {
         ls->setExclusiveZone(zone);
+    }
+}
+
+QMargins marginsForEdge(Plasma::Types::Location location, int margin)
+{
+    //! The margin sits on the anchored edge, so it offsets the surface away from
+    //! that edge — e.g. a bottom margin lifts a bottom-anchored config view up off
+    //! the dock by the dock's thickness.
+    QMargins margins;
+    switch (location) {
+    case Plasma::Types::TopEdge:    margins.setTop(margin);    break;
+    case Plasma::Types::BottomEdge: margins.setBottom(margin); break;
+    case Plasma::Types::LeftEdge:   margins.setLeft(margin);   break;
+    case Plasma::Types::RightEdge:  margins.setRight(margin);  break;
+    default:                        margins.setBottom(margin); break;
+    }
+
+    return margins;
+}
+
+void setEdgeMargin(QWindow *window, Plasma::Types::Location location, int margin)
+{
+    if (LSW *ls = LSW::get(window)) {
+        ls->setMargins(marginsForEdge(location, margin));
     }
 }
 
