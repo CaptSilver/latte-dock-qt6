@@ -8,6 +8,8 @@
 
 #include <QFile>
 #include <QJsonArray>
+#include <QQuickItem>
+#include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTextStream>
 
@@ -21,8 +23,12 @@ private Q_SLOTS:
     void isApplicationRejectsPlainFiles();
     void applicationCategoriesReadsCategories();
     void jsonArrayToUrlListConverts();
+    void jsonArrayToUrlListEmptyGivesEmpty();
     void generateMimeDataCarriesTaskUrl();
     void highlightWindowsRoundTrips();
+    void highlightWindowsEmitsOnlyOnChange();
+    void taskManagerItemRoundTrips();
+    void tryDecodeApplicationsUrlPassesThroughUnknown();
     void windowViewAvailableIsQueryable();
 
 private:
@@ -78,6 +84,12 @@ void TasksBackendTest::jsonArrayToUrlListConverts()
     QCOMPARE(urls.at(1), QUrl(QStringLiteral("file:///tmp/b")));
 }
 
+void TasksBackendTest::jsonArrayToUrlListEmptyGivesEmpty()
+{
+    Backend backend;
+    QVERIFY(backend.jsonArrayToUrlList(QJsonArray()).isEmpty());
+}
+
 void TasksBackendTest::generateMimeDataCarriesTaskUrl()
 {
     const QUrl url(QStringLiteral("file:///tmp/a"));
@@ -92,6 +104,45 @@ void TasksBackendTest::highlightWindowsRoundTrips()
     QCOMPARE(backend.highlightWindows(), false);
     backend.setHighlightWindows(true);
     QCOMPARE(backend.highlightWindows(), true);
+}
+
+void TasksBackendTest::highlightWindowsEmitsOnlyOnChange()
+{
+    Backend backend;
+    QSignalSpy spy(&backend, &Backend::highlightWindowsChanged);
+    backend.setHighlightWindows(true);
+    QCOMPARE(spy.count(), 1);
+    backend.setHighlightWindows(true); // same value -> no extra signal
+    QCOMPARE(spy.count(), 1);
+}
+
+void TasksBackendTest::taskManagerItemRoundTrips()
+{
+    Backend backend;
+    QCOMPARE(backend.taskManagerItem(), nullptr);
+
+    QSignalSpy spy(&backend, &Backend::taskManagerItemChanged);
+    QQuickItem item;
+    backend.setTaskManagerItem(&item);
+    QCOMPARE(backend.taskManagerItem(), &item);
+    QCOMPARE(spy.count(), 1);
+
+    backend.setTaskManagerItem(&item); // same item -> no extra signal
+    QCOMPARE(spy.count(), 1);
+
+    backend.setTaskManagerItem(nullptr);
+    QCOMPARE(backend.taskManagerItem(), nullptr);
+}
+
+void TasksBackendTest::tryDecodeApplicationsUrlPassesThroughUnknown()
+{
+    // A non-"applications" URL is returned untouched.
+    const QUrl file(QStringLiteral("file:///tmp/a"));
+    QCOMPARE(Backend::tryDecodeApplicationsUrl(file), file);
+
+    // An "applications:" URL with no matching service is returned untouched.
+    const QUrl missing(QStringLiteral("applications:does.not.exist.latte.desktop"));
+    QCOMPARE(Backend::tryDecodeApplicationsUrl(missing), missing);
 }
 
 void TasksBackendTest::windowViewAvailableIsQueryable()
