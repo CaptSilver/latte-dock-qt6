@@ -9,7 +9,7 @@ import QtQuick.Window 2.2
 import QtQuick.Templates 2.2 as T
 import QtQuick.Controls 2.2 as Controls
 import QtQuick.Layouts 1.3
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.ksvg 1.0 as KSvg
 import org.kde.plasma.components 3.0 as PlasmaComponents
@@ -437,6 +437,7 @@ T.ComboBox {
             onIconClicked: (index) => control.iconClicked(index);
         }
         background: Rectangle {
+            id: popupBackground
             anchors {
                 fill: parent
                 margins: -1
@@ -448,14 +449,16 @@ T.ComboBox {
 
             color: Kirigami.Theme.backgroundColor
             border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.3)
-            layer.enabled: true
 
-            layer.effect: DropShadow {
-                transparentBorder: true
-                radius: 4
-                samples: 8
-                horizontalOffset: 2
-                verticalOffset: 2
+            // RectangularShadow draws the halo itself, so it sits behind the card
+            // as a sibling rather than as a layer effect applied over it.
+            RectangularShadow {
+                anchors.fill: popupBackground
+                z: -1
+                radius: popupBackground.radius
+                blur: 4
+                spread: 0
+                offset: Qt.point(2, 2)
                 color: Qt.rgba(0, 0, 0, 0.3)
             }
         }
