@@ -90,4 +90,10 @@ set_tests_properties(qmlloadcompile PROPERTIES
     ENVIRONMENT "BUILD=${CMAKE_BINARY_DIR}"
     TIMEOUT 300)
 
+# Headless interaction tests (Qt Quick Test): instantiate self-contained Latte
+# controls offscreen and synthesize real clicks to assert behavior. New cases go
+# in tests/qml/tst_*.qml.
+add_test(NAME qmlinteraction COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/manual/qml_interaction_test.sh)
+set_tests_properties(qmlinteraction PROPERTIES TIMEOUT 120)
+
 add_subdirectory(manual)
