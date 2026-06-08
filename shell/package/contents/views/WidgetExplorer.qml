@@ -8,7 +8,6 @@
 import QtQuick 2.7
 import QtQuick.Controls 2.5 as QQC2
 
-import org.kde.plasma.components 3.0 as PC2 // for DialogStatus, ModelCOntextMenu, and Highlight
 import org.kde.plasma.components 3.0 as PC3
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.ksvg 1.0 as KSvg
@@ -39,8 +38,8 @@ PC3.Page {
     //therefore get deleted whilst we are still in a drag exec()
     //this is a clue to the owning dialog that hideOnWindowDeactivate should be deleted
     //See https://bugs.kde.org/show_bug.cgi?id=332733
-    property bool preventWindowHide: draggingWidget || categoriesDialog.status !== PC2.DialogStatus.Closed // FIXME(stage4): PC2 type removed in PC3
-                                  || getWidgetsDialog.status !== PC2.DialogStatus.Closed // FIXME(stage4): PC2 type removed in PC3
+    property bool preventWindowHide: draggingWidget || categoriesDialog.status !== PlasmaExtras.Menu.Closed
+                                  || getWidgetsDialog.status !== PlasmaExtras.Menu.Closed
 
     property bool outputOnly: draggingWidget
 
@@ -139,7 +138,7 @@ PC3.Page {
         }
     }
 
-    PC2.ModelContextMenu { // FIXME(stage4): PC2 type removed in PC3
+    PlasmaExtras.ModelContextMenu {
         id: categoriesDialog
         visualParent: categoryButton
         // model set on first invocation
@@ -153,7 +152,7 @@ PC3.Page {
         }
     }
 
-    PC2.ModelContextMenu { // FIXME(stage4): PC2 type removed in PC3
+    PlasmaExtras.ModelContextMenu {
         id: getWidgetsDialog
         visualParent: getWidgetsButton
         placement: LatteCore.Types.TopPosedLeftAlignedPopup
