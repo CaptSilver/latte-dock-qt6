@@ -4,7 +4,7 @@
 */
 
 import QtQuick 2.0
-import Qt5Compat.GraphicalEffects
+import QtQuick.Shapes
 
 import org.kde.plasma.components 3.0 as Components
 import org.kde.plasma.core 2.0 as PlasmaCore
@@ -63,14 +63,29 @@ Item{
                 width: mainGlow.fullCorner
                 height: mainGlow.fullCorner
 
-                RadialGradient {
+                Shape {
                     anchors.fill: parent
-                    gradient: Gradient {
-                        GradientStop { position: 0.0; color: "transparent" }
-                        GradientStop { position: 0.07; color: glowItem.contrastColorAlpha }
-                        GradientStop { position: 0.125; color: glowItem.currentColor }
-                        GradientStop { position: 0.4; color:  "transparent" }
-                        GradientStop { position: 1; color: "transparent" }
+                    preferredRendererType: Shape.CurveRenderer
+                    ShapePath {
+                        strokeWidth: 0
+                        strokeColor: "transparent"
+                        //! QtQuick.Shapes radial fill centred on the fullCorner box, matching the old RadialGradient
+                        fillGradient: RadialGradient {
+                            centerX: mainGlow.fullCorner / 2
+                            centerY: mainGlow.fullCorner / 2
+                            centerRadius: mainGlow.fullCorner / 2
+                            focalX: centerX
+                            focalY: centerY
+                            GradientStop { position: 0.0; color: "transparent" }
+                            GradientStop { position: 0.07; color: glowItem.contrastColorAlpha }
+                            GradientStop { position: 0.125; color: glowItem.currentColor }
+                            GradientStop { position: 0.4; color:  "transparent" }
+                            GradientStop { position: 1; color: "transparent" }
+                        }
+                        startX: 0; startY: 0
+                        PathLine { x: mainGlow.fullCorner; y: 0 }
+                        PathLine { x: mainGlow.fullCorner; y: mainGlow.fullCorner }
+                        PathLine { x: 0; y: mainGlow.fullCorner }
                     }
                 }
 
@@ -102,42 +117,59 @@ Item{
             width: isHorizontal ? glowItem.width - glowItem.size : mainGlow.fullCorner
             height: isHorizontal ? mainGlow.fullCorner : glowItem.height - glowItem.size
 
-            LinearGradient {
+            Shape {
                 anchors.fill: parent
-                start: {
-                    if (location === PlasmaCore.Types.BottomEdge || location === PlasmaCore.Types.Floating)
-                        return Qt.point(0, 0);
-                    else if (location === PlasmaCore.Types.TopEdge)
-                        return Qt.point(0, mainGlow.fullCorner);
-                    else if (location === PlasmaCore.Types.LeftEdge)
-                        return Qt.point(mainGlow.fullCorner, 0);
-                    else if (location === PlasmaCore.Types.RightEdge)
-                        return Qt.point(0, 0);
+                preferredRendererType: Shape.CurveRenderer
+                ShapePath {
+                    strokeWidth: 0
+                    strokeColor: "transparent"
+                    //! Diagonal direction depends on the screen edge: x1/y1->x2/y2 reproduce the
+                    //! old start/end Qt.point branches over the fullCorner box. The fall-through
+                    //! keeps the original default (LeftEdge-like fullCorner,0 -> 0,0).
+                    fillGradient: LinearGradient {
+                        x1: {
+                            if (location === PlasmaCore.Types.BottomEdge || location === PlasmaCore.Types.Floating)
+                                return 0;
+                            else if (location === PlasmaCore.Types.TopEdge)
+                                return 0;
+                            else if (location === PlasmaCore.Types.LeftEdge)
+                                return mainGlow.fullCorner;
+                            else if (location === PlasmaCore.Types.RightEdge)
+                                return 0;
 
-                    return Qt.point(mainGlow.fullCorner, 0);
-                }
-                end: {
-                    if (location === PlasmaCore.Types.BottomEdge || location === PlasmaCore.Types.Floating)
-                        return Qt.point(0, mainGlow.fullCorner);
-                    else if (location === PlasmaCore.Types.TopEdge)
-                        return Qt.point(0, 0);
-                    else if (location === PlasmaCore.Types.LeftEdge)
-                        return Qt.point(0,0);
-                    else if (location === PlasmaCore.Types.RightEdge)
-                        return Qt.point(mainGlow.fullCorner, 0);
+                            return mainGlow.fullCorner;
+                        }
+                        y1: {
+                            if (location === PlasmaCore.Types.TopEdge)
+                                return mainGlow.fullCorner;
 
-                    return Qt.point(0,0);
-                }
+                            return 0;
+                        }
+                        x2: {
+                            if (location === PlasmaCore.Types.RightEdge)
+                                return mainGlow.fullCorner;
 
-                gradient: Gradient {
-                    GradientStop { position: 0.0; color: "transparent" }
-                    GradientStop { position: 0.08; color: "transparent" }
-                    GradientStop { position: 0.37; color: glowItem.currentColor }
-                    GradientStop { position: 0.43; color: glowItem.contrastColorAlpha }
-                    GradientStop { position: 0.57; color: glowItem.contrastColorAlpha }
-                    GradientStop { position: 0.63; color: glowItem.currentColor }
-                    GradientStop { position: 0.92; color: "transparent" }
-                    GradientStop { position: 1; color: "transparent" }
+                            return 0;
+                        }
+                        y2: {
+                            if (location === PlasmaCore.Types.BottomEdge || location === PlasmaCore.Types.Floating)
+                                return mainGlow.fullCorner;
+
+                            return 0;
+                        }
+                        GradientStop { position: 0.0; color: "transparent" }
+                        GradientStop { position: 0.08; color: "transparent" }
+                        GradientStop { position: 0.37; color: glowItem.currentColor }
+                        GradientStop { position: 0.43; color: glowItem.contrastColorAlpha }
+                        GradientStop { position: 0.57; color: glowItem.contrastColorAlpha }
+                        GradientStop { position: 0.63; color: glowItem.currentColor }
+                        GradientStop { position: 0.92; color: "transparent" }
+                        GradientStop { position: 1; color: "transparent" }
+                    }
+                    startX: 0; startY: 0
+                    PathLine { x: mainGlowPart.width; y: 0 }
+                    PathLine { x: mainGlowPart.width; y: mainGlowPart.height }
+                    PathLine { x: 0; y: mainGlowPart.height }
                 }
             }
         }
@@ -153,14 +185,28 @@ Item{
                 width: mainGlow.fullCorner
                 height: mainGlow.fullCorner
 
-                RadialGradient {
+                Shape {
                     anchors.fill: parent
-                    gradient: Gradient {
-                        GradientStop { position: 0.0; color: "transparent" }
-                        GradientStop { position: 0.07; color: glowItem.contrastColorAlpha }
-                        GradientStop { position: 0.125; color: glowItem.currentColor }
-                        GradientStop { position: 0.4; color:  "transparent"}
-                        GradientStop { position: 1; color: "transparent" }
+                    preferredRendererType: Shape.CurveRenderer
+                    ShapePath {
+                        strokeWidth: 0
+                        strokeColor: "transparent"
+                        fillGradient: RadialGradient {
+                            centerX: mainGlow.fullCorner / 2
+                            centerY: mainGlow.fullCorner / 2
+                            centerRadius: mainGlow.fullCorner / 2
+                            focalX: centerX
+                            focalY: centerY
+                            GradientStop { position: 0.0; color: "transparent" }
+                            GradientStop { position: 0.07; color: glowItem.contrastColorAlpha }
+                            GradientStop { position: 0.125; color: glowItem.currentColor }
+                            GradientStop { position: 0.4; color:  "transparent"}
+                            GradientStop { position: 1; color: "transparent" }
+                        }
+                        startX: 0; startY: 0
+                        PathLine { x: mainGlow.fullCorner; y: 0 }
+                        PathLine { x: mainGlow.fullCorner; y: mainGlow.fullCorner }
+                        PathLine { x: 0; y: mainGlow.fullCorner }
                     }
                 }
 
