@@ -14,6 +14,13 @@ ecm_add_test(templatesnametest.cpp
     TEST_NAME templatesnametest
     LINK_LIBRARIES Qt6::Test Qt6::Core
 )
+
+ecm_add_test(storageroundtriptest.cpp
+    TEST_NAME storageroundtriptest
+    LINK_LIBRARIES Qt6::Test Qt6::Core KF6::ConfigCore
+)
+target_compile_definitions(storageroundtriptest PRIVATE
+    DOCK_TEMPLATE_PATH="${CMAKE_SOURCE_DIR}/shell/package/contents/templates/Default Dock.view.latte")
 target_compile_definitions(indicatorsknsrctest PRIVATE
     INDICATORS_KNSRC_PATH="${CMAKE_SOURCE_DIR}/app/latte-indicators.knsrc")
 

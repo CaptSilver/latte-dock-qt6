@@ -1625,7 +1625,7 @@ void Storage::updateView(KConfigGroup viewGroup, const Data::View &viewData)
     viewGroup.writeEntry(QStringLiteral("lastScreen"), viewData.screen);
     viewGroup.group(QStringLiteral("General")).writeEntry(QStringLiteral("screenEdgeMargin"), viewData.screenEdgeMargin);
     viewGroup.writeEntry(QStringLiteral("location"), (int)viewData.edge);
-    viewGroup.writeEntry(QStringLiteral("maxLength"), viewData.maxLength);
+    viewGroup.group(QStringLiteral("General")).writeEntry(QStringLiteral("maxLength"), viewData.maxLength);
     viewGroup.group(QStringLiteral("General")).writeEntry(QStringLiteral("alignment"), (int)viewData.alignment);
     viewGroup.sync();
 }
