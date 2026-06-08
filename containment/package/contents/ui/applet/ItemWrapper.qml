@@ -438,14 +438,12 @@ Item{
                 && !appletColorizer.mustBeShown
                 && (appletItem.myView.itemShadow.isEnabled && !appletItem.communicator.indexerIsSupported)
 
-        sourceComponent: DropShadow{
+        sourceComponent: LatteComponents.ShadowedItem{
             anchors.fill: parent
-            color: appletItem.myView.itemShadow.shadowColor
-            fast: true
-            samples: 2 * radius
+            shadowColor: appletItem.myView.itemShadow.shadowColor
             source: _wrapperContainer
-            radius: appletItem.myView.itemShadow.size
-            verticalOffset: root.forceTransparentPanel || root.forcePanelForBusyBackground ? 0 : 2
+            shadowSizePx: appletItem.myView.itemShadow.size
+            shadowVerticalOffset: root.forceTransparentPanel || root.forcePanelForBusyBackground ? 0 : 2
         }
     }
 

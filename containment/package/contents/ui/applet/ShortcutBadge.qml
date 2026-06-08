@@ -69,13 +69,12 @@ Loader{
             active: appletItem.myView.itemShadow.isEnabled
                     && appletItem.environment.isGraphicsSystemAccelerated
 
-            sourceComponent: DropShadow{
-                color: appletItem.myView.itemShadow.shadowColor
-                fast: true
-                samples: 2 * radius
+            sourceComponent: LatteComponents.ShadowedItem{
+                anchors.fill: parent
+                shadowColor: appletItem.myView.itemShadow.shadowColor
                 source: appletNumber
-                radius: appletItem.myView.itemShadow.size/2
-                verticalOffset: 2
+                shadowSizePx: appletItem.myView.itemShadow.size/2
+                shadowVerticalOffset: 2
             }
         }
 

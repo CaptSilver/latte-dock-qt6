@@ -16,6 +16,7 @@ import org.kde.plasma.components 3.0 as PlasmaComponents
 import org.kde.kquickcontrolsaddons 2.0
 
 import org.kde.latte.core 0.2 as LatteCore
+import org.kde.latte.components 1.0 as LatteComponents
 
 MouseArea {
     id: configurationArea
@@ -312,13 +313,10 @@ MouseArea {
                 anchors.centerIn: parent
                 opacity: 0.9
                 layer.enabled: root.environment.isGraphicsSystemAccelerated
-                layer.effect: DropShadow {
-                    radius: root.myView.itemShadow.size
-                    fast: true
-                    samples: 2 * radius
-                    color: root.myView.itemShadow.shadowColor
-
-                    verticalOffset: 2
+                layer.effect: LatteComponents.ShadowedItem {
+                    shadowSizePx: root.myView.itemShadow.size
+                    shadowColor: root.myView.itemShadow.shadowColor
+                    shadowVerticalOffset: 2
                 }
             }
 
