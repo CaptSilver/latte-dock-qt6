@@ -10,9 +10,13 @@
 // QRegularExpression does not auto-anchor (unlike a fully-specified QRegExp),
 // so this guards the exact construct against a silent matching/position change.
 
+#include <KConfig>
+#include <KConfigGroup>
+#include <QFile>
 #include <QObject>
 #include <QRegularExpression>
 #include <QString>
+#include <QTemporaryDir>
 #include <QtTest>
 
 class ImporterNameTest : public QObject
@@ -51,6 +55,25 @@ private:
         return layoutName;
     }
 
+    // Mirrors the headless-testable branches of Importer::fileVersion
+    // (importer.cpp:429): the .layout.latte version check and the extension/exists
+    // guards. The .latterc/KTar archive branch needs a real tar and is not covered.
+    // Returns Importer::LatteFileVersion ints (importer.h:34).
+    enum LatteFileVersion { UnknownFileType = -1, LayoutVersion2 = 2 };
+    static int fileVersion(const QString &file)
+    {
+        if (!QFile::exists(file)) {
+            return UnknownFileType;
+        }
+        if (file.endsWith(QLatin1String(".layout.latte"))) {
+            KConfig config(file);
+            const int version = config.group(QStringLiteral("LayoutSettings")).readEntry(QStringLiteral("version"), 1);
+            return version == 2 ? LayoutVersion2 : UnknownFileType;
+        }
+        // Anything that is not a .latterc archive is unrecognised.
+        return UnknownFileType;
+    }
+
 private Q_SLOTS:
     void suffixPosition_data();
     void suffixPosition();
@@ -58,6 +81,7 @@ private Q_SLOTS:
     void stripCopySuffix();
     void configFileName_data();
     void configFileName();
+    void fileVersionClassifies();
 };
 
 void ImporterNameTest::suffixPosition_data()
@@ -117,6 +141,36 @@ void ImporterNameTest::configFileName()
     QFETCH(QString, path);
     QFETCH(QString, expected);
     QCOMPARE(nameOfConfigFile(path), expected);
+}
+
+void ImporterNameTest::fileVersionClassifies()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+
+    auto writeLayout = [&dir](const QString &name, int version) {
+        const QString path = dir.filePath(name);
+        KConfig c(path);
+        if (version >= 0) {
+            c.group(QStringLiteral("LayoutSettings")).writeEntry(QStringLiteral("version"), version);
+        } else {
+            c.group(QStringLiteral("LayoutSettings")).writeEntry(QStringLiteral("dummy"), 1);
+        }
+        c.sync();
+        return path;
+    };
+
+    QCOMPARE(fileVersion(dir.filePath(QStringLiteral("missing.layout.latte"))), int(UnknownFileType));
+    QCOMPARE(fileVersion(writeLayout(QStringLiteral("v2.layout.latte"), 2)), int(LayoutVersion2));
+    QCOMPARE(fileVersion(writeLayout(QStringLiteral("v1.layout.latte"), 1)), int(UnknownFileType));
+    QCOMPARE(fileVersion(writeLayout(QStringLiteral("nover.layout.latte"), -1)), int(UnknownFileType));
+
+    const QString txt = dir.filePath(QStringLiteral("file.txt"));
+    QFile f(txt);
+    QVERIFY(f.open(QIODevice::WriteOnly));
+    f.write("x");
+    f.close();
+    QCOMPARE(fileVersion(txt), int(UnknownFileType));
 }
 
 QTEST_GUILESS_MAIN(ImporterNameTest)

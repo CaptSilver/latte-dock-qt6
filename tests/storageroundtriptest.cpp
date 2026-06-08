@@ -18,10 +18,12 @@
 #include <QTemporaryDir>
 #include <QtTest>
 
-// Storage constants (storage.cpp:41-42, viewdata.cpp:11).
+// Storage constants (storage.cpp:41-42, viewdata.cpp:11, screenpool.h:33-34).
 static const int IDNULL = -1;
 static const int IDBASE = 0;
 static const int ISCLONEDNULL = -1;
+static const int FIRSTSCREENID = 10;
+static const int NOSCREENID = -1;
 
 class StorageRoundTripTest : public QObject
 {
@@ -57,11 +59,97 @@ private:
 
     static bool isValid(int id) { return id >= IDBASE; }
 
+    // Mirror of Storage::isLatteContainment (storage.cpp:97-101).
+    static bool isLatteContainment(const KConfigGroup &group)
+    {
+        return group.readEntry(QStringLiteral("plugin"), QString()) == QStringLiteral("org.kde.latte.containment");
+    }
+
+    // Mirror of Storage::isSubContainment(KConfigGroup) (storage.cpp:120).
+    static bool isSubContainment(const KConfigGroup &appletGroup)
+    {
+        return isValid(subContainmentId(appletGroup));
+    }
+
+    // Mirror of Storage::exportTemplate's sanitization pass (storage.cpp:734-773):
+    // clear layoutId + the shortcuts flag per containment, strip the config of
+    // unapproved non-subcontainment applets, reset rejected subcontainments'
+    // General group, then clear the export-sensitive LayoutSettings.
+    static void sanitizeForTemplate(KConfig &config, const QStringList &approved)
+    {
+        KConfigGroup containments = config.group(QStringLiteral("Containments"));
+        QStringList rejectedSubs;
+
+        const QStringList cIds = containments.groupList();
+        for (const QString &cId : cIds) {
+            KConfigGroup c = containments.group(cId);
+            c.writeEntry(QStringLiteral("layoutId"), QString());
+            if (isLatteContainment(c)) {
+                c.writeEntry(QStringLiteral("isPreferredForShortcuts"), false);
+            }
+
+            KConfigGroup applets = c.group(QStringLiteral("Applets"));
+            const QStringList aIds = applets.groupList();
+            for (const QString &aId : aIds) {
+                KConfigGroup a = applets.group(aId);
+                if (approved.contains(a.readEntry(QStringLiteral("plugin"), QString()))) {
+                    continue;
+                }
+                if (!isSubContainment(a)) {
+                    const QStringList cfgIds = a.groupList();
+                    for (const QString &cfgId : cfgIds) {
+                        a.group(cfgId).deleteGroup();
+                    }
+                } else {
+                    rejectedSubs << QString::number(subContainmentId(a));
+                }
+            }
+        }
+
+        for (const QString &cId : cIds) {
+            if (rejectedSubs.contains(cId)) {
+                containments.group(cId).group(QStringLiteral("General")).deleteGroup();
+            }
+        }
+
+        KConfigGroup ls = config.group(QStringLiteral("LayoutSettings"));
+        ls.writeEntry(QStringLiteral("preferredForShortcutsTouched"), false);
+        ls.writeEntry(QStringLiteral("lastUsedActivity"), QString());
+        ls.writeEntry(QStringLiteral("activities"), QStringList());
+        config.sync();
+    }
+
+    // Mirror of Storage::expectedViewScreenId (storage.cpp:1812-1825).
+    enum ScreensGroup { SingleScreenGroup, AllScreensGroup, AllSecondaryScreensGroup };
+    struct ViewScreen {
+        ScreensGroup screensGroup{SingleScreenGroup};
+        bool onPrimary{true};
+        int screen{FIRSTSCREENID};
+        bool cloned{false};
+        bool valid{true};
+    };
+    static int expectedViewScreenId(const ViewScreen &v, int primaryId, const QList<int> &secondaries)
+    {
+        if (!v.valid) {
+            return NOSCREENID;
+        }
+        if (v.screensGroup == SingleScreenGroup || v.cloned) {
+            return v.onPrimary ? primaryId : v.screen;
+        } else if (v.screensGroup == AllScreensGroup) {
+            return primaryId;
+        } else if (v.screensGroup == AllSecondaryScreensGroup) {
+            return (secondaries.contains(v.screen) || secondaries.isEmpty()) ? v.screen : secondaries.first();
+        }
+        return NOSCREENID;
+    }
+
 private Q_SLOTS:
     void viewFieldsRoundTripThroughKConfig();
     void deserializesShippedDockTemplate();
     void appletGroupIsValidRejectsPreloadOnlyShell();
     void subContainmentIdResolvesIdentities();
+    void exportTemplateSanitizesLayout();
+    void expectedViewScreenIdMath();
 };
 
 void StorageRoundTripTest::viewFieldsRoundTripThroughKConfig()
@@ -172,6 +260,94 @@ void StorageRoundTripTest::subContainmentIdResolvesIdentities()
     applet.group(QStringLiteral("Configuration")).writeEntry(QStringLiteral("PreloadWeight"), 42);
     QCOMPARE(subContainmentId(applet), IDNULL);
     QVERIFY(!isValid(subContainmentId(applet)));
+}
+
+void StorageRoundTripTest::exportTemplateSanitizesLayout()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString path = dir.filePath(QStringLiteral("export.layout.latte"));
+
+    {
+        KConfig c(path);
+        KConfigGroup cs = c.group(QStringLiteral("Containments"));
+
+        KConfigGroup c1 = cs.group(QStringLiteral("1"));
+        c1.writeEntry(QStringLiteral("plugin"), QStringLiteral("org.kde.latte.containment"));
+        c1.writeEntry(QStringLiteral("layoutId"), QStringLiteral("MyLayout"));
+        c1.writeEntry(QStringLiteral("isPreferredForShortcuts"), true);
+
+        KConfigGroup applets = c1.group(QStringLiteral("Applets"));
+        //! approved applet, keeps its config
+        KConfigGroup a2 = applets.group(QStringLiteral("2"));
+        a2.writeEntry(QStringLiteral("plugin"), QStringLiteral("org.kde.latte.plasmoid"));
+        a2.group(QStringLiteral("Configuration")).group(QStringLiteral("General")).writeEntry(QStringLiteral("foo"), QStringLiteral("bar"));
+        //! unapproved plain applet, config must be stripped
+        KConfigGroup a3 = applets.group(QStringLiteral("3"));
+        a3.writeEntry(QStringLiteral("plugin"), QStringLiteral("org.kde.plasma.analogclock"));
+        a3.group(QStringLiteral("Configuration")).writeEntry(QStringLiteral("PreloadWeight"), 42);
+        //! unapproved subcontainment, registered for reset (config left in place)
+        KConfigGroup a4 = applets.group(QStringLiteral("4"));
+        a4.writeEntry(QStringLiteral("plugin"), QStringLiteral("org.kde.plasma.private.systemtray"));
+        a4.group(QStringLiteral("Configuration")).writeEntry(QStringLiteral("SystrayContainmentId"), 99);
+
+        KConfigGroup c99 = cs.group(QStringLiteral("99"));
+        c99.writeEntry(QStringLiteral("plugin"), QStringLiteral("org.kde.plasma.private.systemtray"));
+        c99.group(QStringLiteral("General")).writeEntry(QStringLiteral("someKey"), QStringLiteral("v"));
+
+        KConfigGroup ls = c.group(QStringLiteral("LayoutSettings"));
+        ls.writeEntry(QStringLiteral("lastUsedActivity"), QStringLiteral("abc"));
+        ls.writeEntry(QStringLiteral("activities"), QStringList({QStringLiteral("x")}));
+        ls.writeEntry(QStringLiteral("preferredForShortcutsTouched"), true);
+        c.sync();
+    }
+
+    {
+        KConfig c(path);
+        sanitizeForTemplate(c, {QStringLiteral("org.kde.latte.plasmoid")});
+    }
+
+    KConfig c(path);
+    KConfigGroup cs = c.group(QStringLiteral("Containments"));
+    KConfigGroup c1 = cs.group(QStringLiteral("1"));
+
+    QCOMPARE(c1.readEntry(QStringLiteral("layoutId"), QStringLiteral("untouched")), QString());
+    QCOMPARE(c1.readEntry(QStringLiteral("isPreferredForShortcuts"), true), false);
+
+    KConfigGroup applets = c1.group(QStringLiteral("Applets"));
+    QVERIFY2(applets.group(QStringLiteral("2")).hasGroup(QStringLiteral("Configuration")), "approved applet config was stripped");
+    QCOMPARE(applets.group(QStringLiteral("2")).group(QStringLiteral("Configuration")).group(QStringLiteral("General")).readEntry(QStringLiteral("foo"), QString()),
+             QStringLiteral("bar"));
+    QVERIFY2(applets.group(QStringLiteral("3")).groupList().isEmpty(), "unapproved applet config survived");
+    QVERIFY2(!cs.group(QStringLiteral("99")).hasGroup(QStringLiteral("General")), "rejected subcontainment General survived");
+
+    KConfigGroup ls = c.group(QStringLiteral("LayoutSettings"));
+    QCOMPARE(ls.readEntry(QStringLiteral("lastUsedActivity"), QStringLiteral("untouched")), QString());
+    QCOMPARE(ls.readEntry(QStringLiteral("activities"), QStringList({QStringLiteral("z")})), QStringList());
+    QCOMPARE(ls.readEntry(QStringLiteral("preferredForShortcutsTouched"), true), false);
+}
+
+void StorageRoundTripTest::expectedViewScreenIdMath()
+{
+    const int primary = 10;
+    const QList<int> secondaries = {11, 12};
+
+    //! SingleScreenGroup on primary -> primary id
+    QCOMPARE(expectedViewScreenId({SingleScreenGroup, true, 99, false, true}, primary, secondaries), primary);
+    //! SingleScreenGroup off primary -> the view's own screen
+    QCOMPARE(expectedViewScreenId({SingleScreenGroup, false, 12, false, true}, primary, secondaries), 12);
+    //! a cloned view follows the single-screen rule regardless of group
+    QCOMPARE(expectedViewScreenId({AllScreensGroup, false, 12, true, true}, primary, secondaries), 12);
+    //! AllScreensGroup -> always primary
+    QCOMPARE(expectedViewScreenId({AllScreensGroup, false, 12, false, true}, primary, secondaries), primary);
+    //! AllSecondaryScreens, view.screen is a secondary -> keep it
+    QCOMPARE(expectedViewScreenId({AllSecondaryScreensGroup, false, 12, false, true}, primary, secondaries), 12);
+    //! AllSecondaryScreens, view.screen is not a secondary -> first secondary
+    QCOMPARE(expectedViewScreenId({AllSecondaryScreensGroup, false, 99, false, true}, primary, secondaries), 11);
+    //! AllSecondaryScreens with no secondaries -> keep view.screen
+    QCOMPARE(expectedViewScreenId({AllSecondaryScreensGroup, false, 99, false, true}, primary, QList<int>()), 99);
+    //! an invalid view -> no screen
+    QCOMPARE(expectedViewScreenId({SingleScreenGroup, true, 10, false, false}, primary, secondaries), NOSCREENID);
 }
 
 QTEST_GUILESS_MAIN(StorageRoundTripTest)
