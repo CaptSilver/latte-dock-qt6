@@ -4,9 +4,9 @@
 */
 
 // Verifies the rounded-rect shadow ports off Qt5Compat DropShadow onto Qt6's
-// QtQuick.Effects.RectangularShadow: the ComboBox popup card (WS3.1) and the
-// reusable ExternalShadow edge component (WS3.2) must both still compile, and a
-// bare RectangularShadow must accept the contract properties we drive it with.
+// QtQuick.Effects.RectangularShadow: the ComboBox popup card and the reusable
+// ExternalShadow edge component must both still compile, and a bare
+// RectangularShadow must accept the contract properties we drive it with.
 
 import QtQuick
 import QtQuick.Effects
