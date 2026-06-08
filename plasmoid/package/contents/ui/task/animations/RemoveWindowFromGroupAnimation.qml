@@ -5,7 +5,7 @@
 */
 
 import QtQuick 2.0
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import org.kde.plasma.plasmoid 2.0
 import org.kde.plasma.core 2.0 as PlasmaCore
@@ -95,13 +95,11 @@ Item{
 
 
 
-            Colorize{
+            MultiEffect{
                 source: tempRemoveIcon
                 anchors.fill: tempRemoveIcon
 
-                hue: 0
-                saturation: 0
-                lightness: 0
+                saturation: -1
             }
 
             ParallelAnimation{

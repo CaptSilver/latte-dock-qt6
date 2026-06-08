@@ -328,35 +328,27 @@ Item {
         anchors.fill: parent
         active: badgeVisualsLoader.active
                 && taskItem.abilities.environment.isGraphicsSystemAccelerated
-        sourceComponent: Colorize{
+        sourceComponent: MultiEffect{
             source: badgeVisualsLoader.item
-
-            //! HACK TO AVOID PIXELIZATION
-            //! WORKAROUND: When Effects are enabled e.g. BrightnessContrast, Colorize etc.
-            //! the icon appears pixelated. It is even most notable when parabolic.factor.zoom === 1
-            //! I don't know enabling cached=true helps, but it does.
-            //! In Question?
-            //cached: true
-
             opacity: stateColorizer.opacity
-            hue: stateColorizer.hue
-            saturation: stateColorizer.saturation
-            lightness: stateColorizer.lightness
+            saturation: -1
         }
     }
     //! END: Badges Visuals
 
     //! Effects
-    Colorize{
+    MultiEffect{
         id: stateColorizer
         anchors.fill: parent
         source: badgesLoader.active ? badgesLoader : taskIconItem
 
         opacity:0
 
-        hue:0
-        saturation:0
-        lightness:0
+        //! the badge mirror Loader reads hue/saturation/lightness off this id;
+        //! MultiEffect lacks hue/lightness so re-expose them as constant aliases
+        readonly property real hue: 0
+        readonly property real lightness: 0
+        saturation: -1
     }
 
     MultiEffect{

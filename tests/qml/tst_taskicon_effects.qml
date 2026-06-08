@@ -78,4 +78,29 @@ TestCase {
         compare(fx.colorization, 1.0);
         compare(fx.colorizationColor, Qt.rgba(1, 0, 0, 1));
     }
+
+    // Colorize -> grayscale: saturation -1, with hue/lightness re-exposed as
+    // readonly aliases so the badge mirror's bindings still resolve.
+    Component {
+        id: grayscaleEffectComponent
+        MultiEffect {
+            source: stubSource
+            anchors.fill: stubSource
+            readonly property real hue: 0
+            readonly property real lightness: 0
+            saturation: -1
+        }
+    }
+
+    function test_grayscaleSaturation() {
+        const fx = make(grayscaleEffectComponent);
+        compare(fx.saturation, -1);
+    }
+
+    function test_grayscaleExposesHueLightnessAliases() {
+        const fx = make(grayscaleEffectComponent);
+        compare(fx.hue, 0);
+        compare(fx.lightness, 0);
+        compare(fx.saturation, -1); // the mirror reads all three off stateColorizer
+    }
 }
