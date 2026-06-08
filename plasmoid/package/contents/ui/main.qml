@@ -7,7 +7,7 @@
 import QtQuick 2.8
 import QtQuick.Layouts 1.1
 
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.ksvg 1.0 as KSvg
@@ -914,11 +914,22 @@ PlasmoidItem {
             //onCurrentPosChanged: console.log("CP :: "+ currentPos + " icW:"+icList.width + " rw: "+root.width + " w:" +width);
 
             layer.enabled: contentsExceed && root.scrollingEnabled
-            layer.effect: OpacityMask {
-                maskSource: TasksLayout.ScrollOpacityMask{
-                    width: scrollableList.width
-                    height: scrollableList.height
-                }
+            layer.effect: MultiEffect {
+                maskEnabled: true
+                maskSource: scrollMask
+                maskThresholdMin: 0.0
+                maskSpreadAtMin: 1.0
+                autoPaddingEnabled: false
+            }
+
+            //! MultiEffect needs the mask as a live layered source it can sample;
+            //! kept invisible and out of layout, only its texture feeds the mask.
+            TasksLayout.ScrollOpacityMask {
+                id: scrollMask
+                width: scrollableList.width
+                height: scrollableList.height
+                visible: false
+                layer.enabled: true
             }
 
             Binding {
