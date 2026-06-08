@@ -349,10 +349,12 @@ bool Importer::importOldConfiguration(QString oldConfigPath, QString newName)
 
     if (newName.isEmpty()) {
         int lastSlash = oldConfigPath.lastIndexOf(QLatin1String("/"));
-        newName = oldConfigPath.remove(0, lastSlash + 1);
+        newName = oldConfigPath.mid(lastSlash + 1);
 
-        int ext = newName.lastIndexOf(QLatin1String(".latterc"));
-        newName = newName.remove(ext, 8);
+        const QString extension(QStringLiteral(".latterc"));
+        if (newName.endsWith(extension)) {
+            newName.chop(extension.size());
+        }
     }
 
     if (!importOldLayout(appletsPath, newName)) {
@@ -702,11 +704,14 @@ QStringList Importer::availableLayoutTemplates()
 QString Importer::nameOfConfigFile(const QString &fileName)
 {
     int lastSlash = fileName.lastIndexOf(QLatin1String("/"));
-    QString tempLayoutFile = fileName;
-    QString layoutName = tempLayoutFile.remove(0, lastSlash + 1);
+    QString layoutName = fileName.mid(lastSlash + 1);
 
-    int ext = layoutName.lastIndexOf(QLatin1String(".latterc"));
-    layoutName = layoutName.remove(ext, 8);
+    //! strip the extension only when present; a not-found -1 index passed to
+    //! remove() would chop the last character of an unrelated name.
+    const QString extension(QStringLiteral(".latterc"));
+    if (layoutName.endsWith(extension)) {
+        layoutName.chop(extension.size());
+    }
 
     return layoutName;
 }

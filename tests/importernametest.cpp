@@ -36,11 +36,28 @@ private:
         return name;
     }
 
+    // Mirrors Importer::nameOfConfigFile() (importer.cpp:702): drop the directory
+    // and a trailing .latterc. A name ending in neither must survive intact — the
+    // original remove(lastIndexOf, 8) chopped the last character on a -1 miss.
+    static QString nameOfConfigFile(const QString &fileName)
+    {
+        int lastSlash = fileName.lastIndexOf(QLatin1String("/"));
+        QString layoutName = fileName.mid(lastSlash + 1);
+
+        const QString extension(QStringLiteral(".latterc"));
+        if (layoutName.endsWith(extension)) {
+            layoutName.chop(extension.size());
+        }
+        return layoutName;
+    }
+
 private Q_SLOTS:
     void suffixPosition_data();
     void suffixPosition();
     void stripCopySuffix_data();
     void stripCopySuffix();
+    void configFileName_data();
+    void configFileName();
 };
 
 void ImporterNameTest::suffixPosition_data()
@@ -82,6 +99,24 @@ void ImporterNameTest::stripCopySuffix()
     QFETCH(QString, name);
     QFETCH(QString, expected);
     QCOMPARE(stripCopySuffix(name), expected);
+}
+
+void ImporterNameTest::configFileName_data()
+{
+    QTest::addColumn<QString>("path");
+    QTest::addColumn<QString>("expected");
+
+    QTest::newRow("strips latterc")    << QStringLiteral("/home/u/My Config.latterc") << QStringLiteral("My Config");
+    QTest::newRow("bare latterc")      << QStringLiteral("foo.latterc")                << QStringLiteral("foo");
+    QTest::newRow("non-latterc kept")  << QStringLiteral("/p/lattedockrc")             << QStringLiteral("lattedockrc");
+    QTest::newRow("no extension kept") << QStringLiteral("/p/Plasma")                  << QStringLiteral("Plasma");
+}
+
+void ImporterNameTest::configFileName()
+{
+    QFETCH(QString, path);
+    QFETCH(QString, expected);
+    QCOMPARE(nameOfConfigFile(path), expected);
 }
 
 QTEST_GUILESS_MAIN(ImporterNameTest)
