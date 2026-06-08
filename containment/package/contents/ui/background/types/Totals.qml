@@ -46,5 +46,6 @@ Item{
         property: "minThickness"
         when: !(hideThickScreenGap || hideLengthScreenGaps)
         value: (paddings.headThickness + paddings.tailThickness)
+        restoreMode: Binding.RestoreNone
     }
 }

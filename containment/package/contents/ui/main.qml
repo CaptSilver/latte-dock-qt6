@@ -395,6 +395,7 @@ ContainmentItem {
                && Plasmoid.configuration.hideFloatingGapForMaximized
                && latteView && latteView.windowsTracker
                && latteView.windowsTracker.currentScreen.existsWindowMaximized
+        restoreMode: Binding.RestoreNone
     }
 
     //! Binding is needed in order for hideLengthScreenGaps to be activated or not only after
@@ -411,6 +412,7 @@ ContainmentItem {
                     || latteView.visibility.mode === LatteCore.Types.WindowsGoBelow)
                 && (Plasmoid.configuration.alignment === LatteCore.Types.Justify)
                 && Plasmoid.configuration.maxLength>85)
+        restoreMode: Binding.RestoreNone
     }
 
     //////////////END OF BINDINGS
