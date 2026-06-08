@@ -79,4 +79,15 @@ ecm_add_test(${tasksbackendtest_SRCS}
 )
 target_include_directories(tasksbackendtest PRIVATE ${CMAKE_SOURCE_DIR}/plasmoid/plugin ${CMAKE_CURRENT_BINARY_DIR})
 
+# Headless QML compile gate: compiles every shell/containment/plasmoid QML in the
+# real engine (offscreen) so removed-type / removed-property errors in lazy,
+# interaction-only components are caught without a live session. The script
+# self-stages the packages, so it needs no prior install. It assumes the in-tree
+# build environment (qmltestrunner + a writable stage dir), matching how the rest
+# of the suite is built and run.
+add_test(NAME qmlloadcompile COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/manual/qml_load_compile.sh)
+set_tests_properties(qmlloadcompile PROPERTIES
+    ENVIRONMENT "BUILD=${CMAKE_BINARY_DIR}"
+    TIMEOUT 300)
+
 add_subdirectory(manual)
