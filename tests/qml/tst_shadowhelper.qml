@@ -49,4 +49,11 @@ TestCase {
         const e = make(0);
         compare(e.shadowBlur, 0.0);
     }
+    // The default blurMaxPx (256) sits above the 0.5*512 icon-size shadow cap, so a
+    // mid-range size scales proportionally instead of clamping early (a 64 ceiling
+    // would wrongly report 1.0 at 128px).
+    function test_blurScalesToDefaultCeiling() {
+        compare(make(128).shadowBlur, 0.5);
+        compare(make(256).shadowBlur, 1.0);
+    }
 }

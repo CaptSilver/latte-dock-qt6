@@ -14,8 +14,9 @@ MultiEffect {
     id: root
     property real shadowSizePx: 0      // == old DropShadow.radius in px
     // Pixel radius at which shadowBlur saturates to 1.0 (shadowSizePx == blurMaxPx
-    // -> full blur). Raise it if a call site needs a larger shadow than ~64px.
-    property int  blurMaxPx: 64
+    // -> full blur). Sits above the largest itemShadow.size (0.5 * the 512px
+    // icon-size cap = 256), so big-icon shadows scale instead of clamping early.
+    property int  blurMaxPx: 256
     autoPaddingEnabled: true
     shadowEnabled: true
     shadowOpacity: 1.0
