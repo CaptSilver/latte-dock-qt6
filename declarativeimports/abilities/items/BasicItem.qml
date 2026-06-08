@@ -166,7 +166,7 @@ Item{
                 return;
             }
 
-            var shortcutIndex = abilityItem.abilities.shortcuts.shortcutIndex(taskItem.itemIndex);
+            var shortcutIndex = abilityItem.abilities.shortcuts.shortcutIndex(abilityItem.itemIndex);
 
             if (shortcutIndex === entryIndex) {
                 abilityItem.shortcutRequestedNewInstance();
