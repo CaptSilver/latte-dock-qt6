@@ -4,7 +4,6 @@
 */
 
 import QtQuick 2.7
-import Qt5Compat.GraphicalEffects
 
 import org.kde.plasma.plasmoid 2.0
 import org.kde.kirigami 2.20 as Kirigami
