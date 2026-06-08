@@ -19,6 +19,7 @@ import org.kde.plasma.extras 2.0 as PlasmaExtras
 import org.kde.kquickcontrolsaddons 2.0 as KQuickControlsAddons
 
 import org.kde.latte.core 0.2 as LatteCore
+import org.kde.latte.components 1.0 as LatteComponents
 
 import org.kde.draganddrop 2.0
 
@@ -209,20 +210,15 @@ Column {
                     return "PlasmaCoreThumbnail.qml";
                 }
 
-                MultiEffect {
-                    id: previewShadow
+                LatteComponents.ShadowedItem {
                     anchors.fill: previewThumbLoader.item
                     visible: previewThumbLoader.item.visible
                     source: previewThumbLoader.item
-                    shadowEnabled: true
                     shadowColor: "Black"
-                    shadowHorizontalOffset: 0
+                    //! Same shadowPx that insets the loader margin above, so the halo
+                    //! width tracks the layout inset.
+                    shadowSizePx: thumbnailSourceItem.shadowPx
                     shadowVerticalOffset: Math.round(3 * Kirigami.Units.devicePixelRatio)
-                    //! Same shadowPx that insets the loader above, normalized to MultiEffect's
-                    //! 0..1 blur scale so the halo width tracks the layout margin.
-                    blurMax: 64
-                    shadowBlur: Math.min(1.0, thumbnailSourceItem.shadowPx / blurMax)
-                    autoPaddingEnabled: true
                 }
             }
 
