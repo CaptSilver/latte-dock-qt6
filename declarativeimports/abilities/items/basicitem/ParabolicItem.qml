@@ -6,12 +6,12 @@
 
 import QtQuick 2.0
 import QtQuick.Effects
-import Qt5Compat.GraphicalEffects
 
 import org.kde.plasma.plasmoid 2.0
 import org.kde.plasma.core 2.0 as PlasmaCore
 
 import org.kde.latte.core 0.2 as LatteCore
+import org.kde.latte.components 1.0 as LatteComponents
 
 Item{
     id: parabolicItem
@@ -125,18 +125,16 @@ Item{
                     && !abilityItem.isSeparator
                     && abilityItem.abilities.environment.isGraphicsSystemAccelerated
 
-            sourceComponent: DropShadow{
+            sourceComponent: LatteComponents.ShadowedItem{
                 anchors.fill: parent
                 transformOrigin: abilityItem.iconTransformOrigin
                 opacity: abilityItem.iconOpacity
                 rotation: abilityItem.iconRotation
                 scale: abilityItem.iconScale
-                color: abilityItem.abilities.myView.itemShadow.shadowColor
-                fast: true
-                samples: 2 * radius
+                shadowColor: abilityItem.abilities.myView.itemShadow.shadowColor
                 source: _contentItemContainer
-                radius: abilityItem.abilities.myView.itemShadow.size
-                verticalOffset: 2
+                shadowSizePx: abilityItem.abilities.myView.itemShadow.size
+                shadowVerticalOffset: 2
             }
         }
 
