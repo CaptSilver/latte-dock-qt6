@@ -11,6 +11,7 @@ import Qt5Compat.GraphicalEffects
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.plasma.components 3.0 as PlasmaComponents
 import org.kde.kirigami 2.20 as Kirigami
+import org.kde.latte.components 1.0 as LatteComponents
 
 Item {
     id: mainItem
@@ -117,18 +118,16 @@ Item {
         }
     }
 
-    DropShadow {
+    LatteComponents.ShadowedItem {
         id:shadowText
         anchors.fill: inNowDockLabel
         enabled: isInNowDockPanel
-        fast: true
-        radius: 3
-        samples: 5
-        color: "#cc080808"
+        shadowSizePx: 3
+        shadowColor: "#cc080808"
         source: inNowDockLabel
 
-        verticalOffset: 2
-        horizontalOffset: -1
+        shadowVerticalOffset: 2
+        shadowHorizontalOffset: -1
         visible: isInNowDockPanel
     }
 

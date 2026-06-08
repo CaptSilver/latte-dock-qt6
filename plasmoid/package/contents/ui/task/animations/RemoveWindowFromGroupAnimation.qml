@@ -13,6 +13,7 @@ import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.kirigami 2.0 as Kirigami
 
 import org.kde.latte.core 0.2 as LatteCore
+import org.kde.latte.components 1.0 as LatteComponents
 
 /////Removing a Window from a group////
 Item{
@@ -63,14 +64,12 @@ Item{
                 active: taskItem.abilities.myView.itemShadow.isEnabled
                         && taskItem.abilities.environment.isGraphicsSystemAccelerated
 
-                sourceComponent: DropShadow{
+                sourceComponent: LatteComponents.ShadowedItem{
                     anchors.fill: parent
-                    color: "#ff080808"
-                    fast: true
-                    samples: 2 * radius
+                    shadowColor: "#ff080808"
                     source: tempRemoveIcon
-                    radius: taskItem.abilities.myView.itemShadow.size
-                    verticalOffset: 2
+                    shadowSizePx: taskItem.abilities.myView.itemShadow.size
+                    shadowVerticalOffset: 2
                 }
             }
 
