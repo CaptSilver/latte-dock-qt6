@@ -26,6 +26,12 @@ ecm_add_test(alternativescreateapplettest.cpp
     LINK_LIBRARIES Qt6::Test Qt6::Core
 )
 
+ecm_add_test(activitiesinfotest.cpp ../app/data/activitiesinfo.cpp
+    TEST_NAME activitiesinfotest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::DBus
+)
+target_include_directories(activitiesinfotest PRIVATE ${CMAKE_SOURCE_DIR}/app/data)
+
 ecm_add_test(layershellmappingtest.cpp ../app/wm/waylandlayershell.cpp
     TEST_NAME layershellmappingtest
     LINK_LIBRARIES Qt6::Test Qt6::Gui LayerShellQt::Interface Plasma::Plasma

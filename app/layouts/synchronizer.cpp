@@ -11,6 +11,7 @@
 #include "manager.h"
 #include "../apptypes.h"
 #include "../screenpool.h"
+#include "../data/activitiesinfo.h"
 #include "../data/layoutdata.h"
 #include "../lattecorona.h"
 #include "../layout/centrallayout.h"
@@ -158,8 +159,9 @@ QStringList Synchronizer::freeActivities()
 
 QStringList Synchronizer::runningActivities()
 {
-    // KActivities 6: runningActivities() removed; fall back to all activities
-    return m_manager->corona()->activitiesConsumer()->activities();
+    // KActivities 6 dropped Consumer::runningActivities(); read the running set
+    // from the activity manager instead of returning every activity.
+    return ActivitiesInfo::runningActivities();
 }
 
 QStringList Synchronizer::freeRunningActivities()

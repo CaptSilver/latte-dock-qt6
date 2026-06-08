@@ -6,6 +6,7 @@
 #include "layoutsmodel.h"
 
 // local
+#include "../../data/activitiesinfo.h"
 #include "../../data/layoutdata.h"
 #include "../../layouts/manager.h"
 #include "../../layouts/synchronizer.h"
@@ -947,7 +948,7 @@ void Layouts::onActivityAdded(const QString &id)
     activity.id = m_activitiesInfo[id]->id();
     activity.name = m_activitiesInfo[id]->name();
     activity.icon = m_activitiesInfo[id]->icon();
-    //! TODO KActivities 6: Info::State removed; state tracking needs redesign
+    activity.state = ActivitiesInfo::states().value(id, Latte::Data::Activity::Invalid);
     activity.isCurrent = m_activitiesInfo[id]->isCurrent();
 
     if (!m_activitiesTable.containsId(id)) {
@@ -988,7 +989,7 @@ void Layouts::onActivityChanged(const QString &id)
     if (m_activitiesTable.containsId(id) && m_activitiesInfo.contains(id)) {
         m_activitiesTable[id].name = m_activitiesInfo[id]->name();
         m_activitiesTable[id].icon = m_activitiesInfo[id]->icon();
-        //! TODO KActivities 6: Info::State removed; state tracking needs redesign
+        m_activitiesTable[id].state = ActivitiesInfo::states().value(id, Latte::Data::Activity::Invalid);
         m_activitiesTable[id].isCurrent = m_activitiesInfo[id]->isCurrent();
 
         Q_EMIT activitiesStatesChanged();
@@ -997,9 +998,19 @@ void Layouts::onActivityChanged(const QString &id)
 
 void Layouts::onRunningActivitiesChanged(const QStringList &runningIds)
 {
-    //! TODO KActivities 6: Info::State enum removed; state tracking via state field
-    //! needs to be redesigned after activitydata.h is updated
     Q_UNUSED(runningIds)
+
+    //! KActivities 6 signals that activities changed but not their per-activity
+    //! state; refresh every tracked activity from the activity manager so running
+    //! ones render bold.
+    const QHash<QString, Latte::Data::Activity::State> activityStates = ActivitiesInfo::states();
+
+    const QList<QString> trackedIds = m_activitiesInfo.keys();
+    for (const QString &id : trackedIds) {
+        if (m_activitiesTable.containsId(id)) {
+            m_activitiesTable[id].state = activityStates.value(id, Latte::Data::Activity::Invalid);
+        }
+    }
 
     Q_EMIT activitiesStatesChanged();
 }

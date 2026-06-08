@@ -11,6 +11,7 @@
 #include "tracker/schemes.h"
 #include "tracker/windowstracker.h"
 #include "../lattecorona.h"
+#include "../data/activitiesinfo.h"
 
 // Qt
 #include <QDebug>
@@ -365,15 +366,19 @@ void AbstractWindowInterface::windowRemovedSlot(WindowId wid)
 //! Activities switching
 void AbstractWindowInterface::switchToNextActivity()
 {
-    QStringList runningActivities = m_activities->activities();
+    // Cycle only running activities; a stopped one is not a valid switch target.
+    QStringList runningActivities = ActivitiesInfo::runningActivities();
     if (runningActivities.count() <= 1) {
         return;
     }
 
     int curPos = runningActivities.indexOf(m_currentActivity);
-    int nextPos = curPos + 1;
+    if (curPos < 0) {
+        return;
+    }
 
-    if (curPos == runningActivities.count() -1) {
+    int nextPos = curPos + 1;
+    if (curPos == runningActivities.count() - 1) {
         nextPos = 0;
     }
 
@@ -383,14 +388,17 @@ void AbstractWindowInterface::switchToNextActivity()
 
 void AbstractWindowInterface::switchToPreviousActivity()
 {
-    QStringList runningActivities = m_activities->activities();
+    QStringList runningActivities = ActivitiesInfo::runningActivities();
     if (runningActivities.count() <= 1) {
         return;
     }
 
     int curPos = runningActivities.indexOf(m_currentActivity);
-    int nextPos = curPos - 1;
+    if (curPos < 0) {
+        return;
+    }
 
+    int nextPos = curPos - 1;
     if (curPos == 0) {
         nextPos = runningActivities.count() - 1;
     }
