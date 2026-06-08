@@ -53,6 +53,7 @@ AbilityHost.MyView {
         target: _myView
         property: "isHidingBlockedFromApplet"
         when: isBindingUpdateEnabled
+        restoreMode: Binding.RestoreNone
         value: {
             var grid;
 

@@ -270,6 +270,7 @@ PlasmoidItem {
         target: root
         property: "hasTaskDemandingAttention"
         when: appletAbilities.indexer.isReady
+        restoreMode: Binding.RestoreNone
         value: {
             for (var i=0; i<appletAbilities.indexer.layout.children.length; ++i){
                 var item = appletAbilities.indexer.layout.children[i];

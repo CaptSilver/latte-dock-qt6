@@ -37,6 +37,7 @@ Item {
         target: appletsContainer
         property:"sizeWithNoFillApplets"
         when: appletsContainer && grid && !updateIsBlocked && inNormalFillCalculationsState
+        restoreMode: Binding.RestoreNone
         value: {
             var space = 0;
             for (var i=0; i<grid.children.length; ++i){
@@ -59,6 +60,7 @@ Item {
         property:"lengthWithoutSplitters"
         when: appletsContainer && grid && !updateIsBlocked && inNormalFillCalculationsState
               && !(dragOverlay && dragOverlay.currentApplet && dragOverlay.currentApplet.isInternalViewSplitter /*avoid binding loop when dragging splitters around*/)
+        restoreMode: Binding.RestoreNone
         value: {
             var space = 0;
             for (var i=0; i<grid.children.length; ++i){
@@ -76,6 +78,7 @@ Item {
         target: appletsContainer
         property:"shownApplets"
         when: appletsContainer && grid && !updateIsBlocked
+        restoreMode: Binding.RestoreNone
         value: {
             var res = 0;
 
@@ -96,6 +99,7 @@ Item {
         target: appletsContainer
         property:"fillApplets"
         when: appletsContainer && grid && !updateIsBlocked
+        restoreMode: Binding.RestoreNone
         value: {
             var no = 0;
             for (var i=0; i<grid.children.length; ++i){
@@ -117,6 +121,7 @@ Item {
         target: appletsContainer
         property:"fillRealApplets"
         when: appletsContainer && grid && !updateIsBlocked
+        restoreMode: Binding.RestoreNone
         value: {
             var no = 0;
             for (var i=0; i<grid.children.length; ++i){
@@ -139,6 +144,7 @@ Item {
         target: appletsContainer
         property:"firstVisibleIndex"
         when: appletsContainer && grid && !updateIsBlocked
+        restoreMode: Binding.RestoreNone
         value: {
             var ind = maxIndex;
             for(var i=0; i<grid.children.length; ++i) {
@@ -159,6 +165,7 @@ Item {
         target: appletsContainer
         property:"lastVisibleIndex"
         when: appletsContainer && grid && !updateIsBlocked
+        restoreMode: Binding.RestoreNone
         value: {
             var ind = -1;
             for(var i=0; i<grid.children.length; ++i) {
@@ -179,6 +186,7 @@ Item {
         target: appletsContainer
         property:"onlyInternalSplitters"
         when: appletsContainer && grid && !updateIsBlocked && inNormalFillCalculationsState
+        restoreMode: Binding.RestoreNone
         value: {
             var intsSplits = 0;
 

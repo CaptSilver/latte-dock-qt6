@@ -17,9 +17,7 @@ ecm_add_test(bindingrestoremodetest.cpp
     LINK_LIBRARIES Qt6::Test Qt6::Core
 )
 target_compile_definitions(bindingrestoremodetest PRIVATE
-    INDEXER_QML_PATH="${CMAKE_SOURCE_DIR}/declarativeimports/abilities/client/Indexer.qml"
-    POSITIONSHORTCUTS_QML_PATH="${CMAKE_SOURCE_DIR}/containment/package/contents/ui/abilities/privates/PositionShortcutsPrivate.qml"
-    LAYOUTSCONTAINER_QML_PATH="${CMAKE_SOURCE_DIR}/containment/package/contents/ui/layouts/LayoutsContainer.qml")
+    REPO_ROOT="${CMAKE_SOURCE_DIR}")
 
 ecm_add_test(alternativescreateapplettest.cpp
     TEST_NAME alternativescreateapplettest

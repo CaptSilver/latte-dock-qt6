@@ -21,6 +21,7 @@ AbilityHost.ThinTooltip {
         target: _tooltip
         property: "showIsBlockedFromApplet"
         when: isBindingUpdateEnabled
+        restoreMode: Binding.RestoreNone
         value: {
             var grid;
 

@@ -21,6 +21,7 @@ Item {
         target: _launchersprivate
         property: "appletIdStealingDroppedLaunchers"
         when: !updateIsBlocked
+        restoreMode: Binding.RestoreNone
         value: {
             var sLayout = layouts.startLayout;
             for (var i=0; i<sLayout.children.length; ++i){
@@ -68,6 +69,7 @@ Item {
         target: _launchersprivate
         property: "appletStealingDroppedLaunchers"
         when: !updateIsBlocked
+        restoreMode: Binding.RestoreNone
         value: {
             var sLayout = layouts.startLayout;
             for (var i=0; i<sLayout.children.length; ++i){

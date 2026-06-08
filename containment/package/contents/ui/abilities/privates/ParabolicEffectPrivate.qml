@@ -72,6 +72,7 @@ AbilityHost.ParabolicEffect {
         target: parabolic
         property: "restoreZoomIsBlockedFromApplet"
         when: isBindingUpdateEnabled
+        restoreMode: Binding.RestoreNone
         value: {
             var grid;
 

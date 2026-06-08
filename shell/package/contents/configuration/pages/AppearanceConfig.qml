@@ -476,6 +476,7 @@ PlasmaComponents.Page {
                             target: offsetSlider
                             property: "from"
                             when: viewConfig.isReady
+                            restoreMode: Binding.RestoreNone
                             value: offsetSlider.fromValue
                         }
 
@@ -483,6 +484,7 @@ PlasmaComponents.Page {
                             target: offsetSlider
                             property: "to"
                             when: viewConfig.isReady
+                            restoreMode: Binding.RestoreNone
                             value: offsetSlider.toValue
                         }
 

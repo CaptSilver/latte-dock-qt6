@@ -24,6 +24,7 @@ AbilityDefinition.Indexer {
         target: indxr
         property: "separators"
         when: !updateIsBlocked
+        restoreMode: Binding.RestoreNone
         value: {
             var seps = [];
 
@@ -59,6 +60,7 @@ AbilityDefinition.Indexer {
         target: indxr
         property: "hidden"
         when: !updateIsBlocked
+        restoreMode: Binding.RestoreNone
         value: {
             var hdn = [];
 
@@ -94,6 +96,7 @@ AbilityDefinition.Indexer {
         target: indxr
         property: "marginsAreaSeparators"
         when: !updateIsBlocked
+        restoreMode: Binding.RestoreNone
         value: {
             var seps = [];
             var grid;
@@ -125,6 +128,7 @@ AbilityDefinition.Indexer {
         target: indxr
         property: "clients"
         when: !updateIsBlocked
+        restoreMode: Binding.RestoreNone
         value: {
             var clns = [];
 
@@ -169,6 +173,7 @@ AbilityDefinition.Indexer {
         target: indxr
         property: "clientsBridges"
         when: !updateIsBlocked
+        restoreMode: Binding.RestoreNone
         value: {
             var bdgs = [];
 
@@ -219,6 +224,7 @@ AbilityDefinition.Indexer {
         target: indxr
         property: "clientsTrackingWindowsCount"
         when: !(root.appletIsDragged || updateIsBlocked)
+        restoreMode: Binding.RestoreNone
         value: {
             var cnts = 0;
             var grid;

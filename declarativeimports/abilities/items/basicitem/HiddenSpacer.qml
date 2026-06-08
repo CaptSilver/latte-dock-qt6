@@ -35,6 +35,7 @@ Item{
         target: hiddenSpacer
         property: "nHiddenSize"
         when: !hiddenSizeDelayer.running && itemIndex > -1 //! helps to solve BUGLOCALREF: #1
+        restoreMode: Binding.RestoreNone
         value: {
             if (abilityItem.isHidden) {
                 return 0;

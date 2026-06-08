@@ -20,6 +20,7 @@ AbilityHost.Animations {
         target: animationsPrivate.requirements
         property: "zoomFactor"
         when: !updateIsBlocked
+        restoreMode: Binding.RestoreNone
         value: {
             var zoom = 1.0;
 
