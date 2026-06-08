@@ -4,7 +4,7 @@
 */
 
 import QtQuick 2.7
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import org.kde.latte.components 1.0 as LatteComponents
 
@@ -12,11 +12,12 @@ import org.kde.plasma.plasmoid 2.0
 import org.kde.plasma.core 2.0 as PlasmaCore
 
 Item {
-    ColorOverlay {
+    MultiEffect {
         id: colorizer
         anchors.fill: parent
-        color: colorizerManager.applyColor
         source: wrapper
+        colorizationColor: colorizerManager.applyColor
+        colorization: colorizerManager.applyColor.a
     }
 
     ///Shadow in applets

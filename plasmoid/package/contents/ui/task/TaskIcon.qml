@@ -170,10 +170,11 @@ Item {
                             anchors.fill: parent
                             active: Plasmoid.configuration.forceMonochromaticIcons
 
-                            sourceComponent: ColorOverlay {
+                            sourceComponent: MultiEffect {
                                 anchors.fill: parent
-                                color: latteBridge ? latteBridge.colorPalette.textColor : "transparent"
                                 source: taskIconItem
+                                colorizationColor: latteBridge ? latteBridge.colorPalette.textColor : "transparent"
+                                colorization: latteBridge ? latteBridge.colorPalette.textColor.a : 0
                             }
                         }
                     }

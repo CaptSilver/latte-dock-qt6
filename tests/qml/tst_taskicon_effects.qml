@@ -53,4 +53,29 @@ TestCase {
         fx.brightness = -0.5; // ClickedAnimation drives this externally
         compare(fx.brightness, -0.5);
     }
+
+    // ColorOverlay replacement: colorizationColor carries the tint, colorization
+    // its alpha so a "transparent" fallback paints nothing.
+    Component {
+        id: tintEffectComponent
+        MultiEffect {
+            source: stubSource
+            anchors.fill: stubSource
+            property color tint: "transparent"
+            colorizationColor: tint
+            colorization: tint.a
+        }
+    }
+
+    function test_transparentTintPaintsNothing() {
+        const fx = make(tintEffectComponent);
+        compare(fx.colorization, 0.0); // "transparent" has alpha 0 -> no tint
+    }
+
+    function test_opaqueTintFullColorization() {
+        const fx = make(tintEffectComponent);
+        fx.tint = Qt.rgba(1, 0, 0, 1); // opaque -> full overlay
+        compare(fx.colorization, 1.0);
+        compare(fx.colorizationColor, Qt.rgba(1, 0, 0, 1));
+    }
 }

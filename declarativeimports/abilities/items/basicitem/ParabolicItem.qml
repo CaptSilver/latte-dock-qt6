@@ -5,6 +5,7 @@
 */
 
 import QtQuick 2.0
+import QtQuick.Effects
 import Qt5Compat.GraphicalEffects
 
 import org.kde.plasma.plasmoid 2.0
@@ -212,10 +213,11 @@ Item{
             anchors.fill: _contentItemContainer
             active: abilityItem.isMonochromaticForcedContentItem && abilityItem.monochromizedItem
 
-            sourceComponent: ColorOverlay {
+            sourceComponent: MultiEffect {
                 anchors.fill: parent
-                color: latteBridge ? latteBridge.colorPalette.textColor : "transparent"
                 source: abilityItem.monochromizedItem
+                colorizationColor: latteBridge ? latteBridge.colorPalette.textColor : "transparent"
+                colorization: latteBridge ? latteBridge.colorPalette.textColor.a : 0
             }
         }
         //! Latte Side Painting-style if the user chose it
