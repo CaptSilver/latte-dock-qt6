@@ -69,7 +69,6 @@ Item{
                     shadowColor: "#ff080808"
                     source: tempRemoveIcon
                     shadowSizePx: taskItem.abilities.myView.itemShadow.size
-                    shadowVerticalOffset: 2
                 }
             }
 

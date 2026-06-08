@@ -56,7 +56,6 @@ Loader {
                 shadowColor: abilityItem.abilities.myView.itemShadow.shadowColor
                 source: separatorItem
                 shadowSizePx: abilityItem.abilities.myView.itemShadow.size
-                shadowVerticalOffset: 2
             }
         }
 

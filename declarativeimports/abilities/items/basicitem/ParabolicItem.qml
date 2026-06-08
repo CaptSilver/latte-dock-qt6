@@ -134,7 +134,6 @@ Item{
                 shadowColor: abilityItem.abilities.myView.itemShadow.shadowColor
                 source: _contentItemContainer
                 shadowSizePx: abilityItem.abilities.myView.itemShadow.size
-                shadowVerticalOffset: 2
             }
         }
 

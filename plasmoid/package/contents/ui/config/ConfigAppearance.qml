@@ -271,7 +271,6 @@ Item {
         shadowColor: "#cc080808"
         source: inLatteDockLabel
 
-        shadowVerticalOffset: 2
         shadowHorizontalOffset: -1
         visible: isInLatteDock
     }

@@ -315,7 +315,6 @@ MouseArea {
                 layer.effect: LatteComponents.ShadowedItem {
                     shadowSizePx: root.myView.itemShadow.size
                     shadowColor: root.myView.itemShadow.shadowColor
-                    shadowVerticalOffset: 2
                 }
             }
 

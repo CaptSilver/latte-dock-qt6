@@ -343,10 +343,6 @@ Item {
 
         opacity:0
 
-        //! the badge mirror Loader reads hue/saturation/lightness off this id;
-        //! MultiEffect lacks hue/lightness so re-expose them as constant aliases
-        readonly property real hue: 0
-        readonly property real lightness: 0
         saturation: -1
     }
 

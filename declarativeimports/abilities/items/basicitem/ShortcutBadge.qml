@@ -59,7 +59,6 @@ Loader{
                 shadowColor: abilityItem.abilities.myView.itemShadow.shadowColor
                 source: taskNumber
                 shadowSizePx: abilityItem.abilities.myView.itemShadow.size/2
-                shadowVerticalOffset: 2
             }
         }
 

@@ -125,7 +125,6 @@ Item {
         shadowColor: "#cc080808"
         source: inNowDockLabel
 
-        shadowVerticalOffset: 2
         shadowHorizontalOffset: -1
         visible: isInNowDockPanel
     }

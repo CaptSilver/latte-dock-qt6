@@ -73,7 +73,6 @@ Loader{
                 shadowColor: appletItem.myView.itemShadow.shadowColor
                 source: appletNumber
                 shadowSizePx: appletItem.myView.itemShadow.size/2
-                shadowVerticalOffset: 2
             }
         }
 
