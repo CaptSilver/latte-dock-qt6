@@ -214,8 +214,10 @@ void Factory::removeIndicatorRecords(const QString &path)
 
         int pos = m_customPluginIds.indexOf(pluginId);
 
-        m_customPluginIds.removeAt(pos);
-        m_customPluginNames.removeAt(pos);
+        if (pos >= 0) {
+            m_customPluginIds.removeAt(pos);
+            m_customPluginNames.removeAt(pos);
+        }
         m_customLocalPluginIds.removeAll(pluginId);
 
         m_indicatorsPaths.removeAll(path);
@@ -350,9 +352,13 @@ Latte::ImportExport::State Factory::importIndicatorFile(QString compressedFile)
         }
 
         QProcess process;
-        process.start(QStringLiteral("mv ") + packagePath + QLatin1Char(' ') + installPath);
+        process.start(QStringLiteral("mv"), {packagePath, installPath});
         process.waitForFinished();
-        QString output = QString::fromLocal8Bit(process.readAllStandardOutput());
+
+        if (process.exitCode() != 0) {
+            showNotificationError();
+            return Latte::ImportExport::FailedState;
+        }
 
         showNotificationSucceed(metadata.name(), updated);
         return Latte::ImportExport::InstalledState;
@@ -393,9 +399,12 @@ void Factory::removeIndicator(QString id)
 
             qDebug() << "Trying to remove indicator :: " << id;
             QProcess process;
-            process.start(QStringLiteral("kpackagetool5 -r ") + id + QStringLiteral(" -t Latte/Indicator"));
+            process.start(QStringLiteral("kpackagetool6"), {QStringLiteral("-r"), id, QStringLiteral("-t"), QStringLiteral("Latte/Indicator")});
             process.waitForFinished();
-            showRemovedSucceed(pluginName);
+
+            if (process.exitCode() == 0) {
+                showRemovedSucceed(pluginName);
+            }
         });
 
         dialog->show();

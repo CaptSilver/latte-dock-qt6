@@ -182,10 +182,9 @@ Corona::~Corona()
 
     if (!m_importFullConfigurationFile.isEmpty()) {
         //!NOTE: Restart latte to import the new configuration
-        QString importCommand = QStringLiteral("latte-dock --import-full \"") + m_importFullConfigurationFile + QLatin1Char('"');
-        qDebug() << "Executing Import Full Configuration command : " << importCommand;
+        qDebug() << "Executing Import Full Configuration command : latte-dock --import-full" << m_importFullConfigurationFile;
 
-        QProcess::startDetached(importCommand);
+        QProcess::startDetached(QStringLiteral("latte-dock"), {QStringLiteral("--import-full"), m_importFullConfigurationFile});
     }
 }
 
