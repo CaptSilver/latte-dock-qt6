@@ -6,7 +6,7 @@
     SPDX-License-Identifier: LGPL-2.0-or-later
 */
 
-import QtQuick 2.4
+import QtQuick
 import QtQuick.Layouts 1.1
 import QtQuick.Controls 2.5 as QQC2
 
@@ -15,12 +15,14 @@ import org.kde.plasma.extras 2.0 as PlasmaExtras
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.kirigami 2.20 as Kirigami
 import org.kde.draganddrop 2.0
+import org.kde.graphicaleffects as KGraphicalEffects
 
 Item {
     id: delegate
 
     readonly property string pluginName: model.pluginName
     readonly property bool pendingUninstall: pendingUninstallTimer.applets.indexOf(pluginName) > -1
+    readonly property bool softwareRendering: GraphicsInfo.api === GraphicsInfo.Software
 
     width: list.cellWidth
     height: list.cellHeight
@@ -138,31 +140,19 @@ Item {
                     }
                 }
 
-                ShaderEffect {
+                KGraphicalEffects.BadgeEffect {
                     anchors.fill: parent
-                    property var source: ShaderEffectSource {
+                    source: ShaderEffectSource {
                         sourceItem: iconWidget
-                        hideSource: true
+                        hideSource: !delegate.softwareRendering
                         live: false
                     }
-                    property var mask: ShaderEffectSource {
+                    mask: ShaderEffectSource {
                         id: maskShaderSource
                         sourceItem: badgeMask
                         hideSource: true
                         live: false
                     }
-
-                    supportsAtlasTextures: true
-
-                    fragmentShader: "
-                        varying highp vec2 qt_TexCoord0;
-                        uniform highp float qt_Opacity;
-                        uniform lowp sampler2D source;
-                        uniform lowp sampler2D mask;
-                        void main() {
-                            gl_FragColor = texture2D(source, qt_TexCoord0.st) * (1.0 - (texture2D(mask, qt_TexCoord0.st).a)) * qt_Opacity;
-                        }
-                    "
                 }
 
                 PlasmaComponents.ToolButton {
