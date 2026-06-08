@@ -40,6 +40,7 @@ Item{
         target: layoutsContainer
         property: "x"
         when: !visibilityManager.inRelocationAnimation
+        restoreMode: Binding.RestoreNone
         value: {
             if (root.behaveAsPlasmaPanel) {
                 return 0;
@@ -73,6 +74,7 @@ Item{
         target: layoutsContainer
         property: "y"
         when: !visibilityManager.inRelocationAnimation
+        restoreMode: Binding.RestoreNone
         value: {
             if (root.behaveAsPlasmaPanel) {
                 return 0;
@@ -376,6 +378,7 @@ Item{
             target: _mainLayout
             property:"inJustifyCenterOffset"
             when: !layouter.appletsInParentChange && layouter.inNormalFillCalculationsState
+            restoreMode: Binding.RestoreNone
             value: {
                 if (root.myView.alignment !== LatteCore.Types.Justify) {
                     return 0;

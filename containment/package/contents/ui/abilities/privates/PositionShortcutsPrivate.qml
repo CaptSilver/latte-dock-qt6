@@ -26,6 +26,7 @@ AbilityDefinition.PositionShortcuts {
         target: _shortcutsprivate
         property: "badges"
         when: !updateIsBlocked && shortcutsEngine
+        restoreMode: Binding.RestoreNone
         value: shortcutsEngine ? shortcutsEngine.badgesForActivate : []
     }
 
@@ -33,6 +34,7 @@ AbilityDefinition.PositionShortcuts {
         target: _shortcutsprivate
         property: "appletIdStealingPositionShortcuts"
         when: !updateIsBlocked
+        restoreMode: Binding.RestoreNone
         value: {
             var sLayout = layouts.startLayout;
             for (var i=0; i<sLayout.children.length; ++i){

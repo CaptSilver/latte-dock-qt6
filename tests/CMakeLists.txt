@@ -12,6 +12,15 @@ ecm_add_test(indicatorsknsrctest.cpp
 target_compile_definitions(indicatorsknsrctest PRIVATE
     INDICATORS_KNSRC_PATH="${CMAKE_SOURCE_DIR}/app/latte-indicators.knsrc")
 
+ecm_add_test(bindingrestoremodetest.cpp
+    TEST_NAME bindingrestoremodetest
+    LINK_LIBRARIES Qt6::Test Qt6::Core
+)
+target_compile_definitions(bindingrestoremodetest PRIVATE
+    INDEXER_QML_PATH="${CMAKE_SOURCE_DIR}/declarativeimports/abilities/client/Indexer.qml"
+    POSITIONSHORTCUTS_QML_PATH="${CMAKE_SOURCE_DIR}/containment/package/contents/ui/abilities/privates/PositionShortcutsPrivate.qml"
+    LAYOUTSCONTAINER_QML_PATH="${CMAKE_SOURCE_DIR}/containment/package/contents/ui/layouts/LayoutsContainer.qml")
+
 ecm_add_test(layershellmappingtest.cpp ../app/wm/waylandlayershell.cpp
     TEST_NAME layershellmappingtest
     LINK_LIBRARIES Qt6::Test Qt6::Gui LayerShellQt::Interface Plasma::Plasma

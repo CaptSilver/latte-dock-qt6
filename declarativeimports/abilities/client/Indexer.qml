@@ -59,6 +59,7 @@ AbilityDefinition.Indexer {
         target: _privates
         property: "firstTailItemIsSeparator"
         when: isReady
+        restoreMode: Binding.RestoreNone
         value: {
             if (_indexer.visibleItemsCount === _indexer.layout.children.length) {
                 return false;
@@ -78,6 +79,7 @@ AbilityDefinition.Indexer {
         target: _privates
         property: "lastHeadItemIsSeparator"
         when: isReady
+        restoreMode: Binding.RestoreNone
         value: {
             if (_indexer.visibleItemsCount === _indexer.layout.children.length) {
                 return false;
@@ -99,6 +101,7 @@ AbilityDefinition.Indexer {
         target: _privates
         property: "firstVisibleItemIndex"
         when: isReady
+        restoreMode: Binding.RestoreNone
         value: {
             var ind = maxIndex;
             for(var i=0; i<layout.children.length; ++i) {
@@ -119,6 +122,7 @@ AbilityDefinition.Indexer {
         target: _privates
         property: "lastVisibleItemIndex"
         when: isReady
+        restoreMode: Binding.RestoreNone
         value: {
             var ind = -1;
 
@@ -176,6 +180,7 @@ AbilityDefinition.Indexer {
         target: _indexer
         property: "hidden"
         when: isReady
+        restoreMode: Binding.RestoreNone
         value: {
             var hdns = [];
 
@@ -194,6 +199,7 @@ AbilityDefinition.Indexer {
         target: _indexer
         property: "separators"
         when: isReady
+        restoreMode: Binding.RestoreNone
         value: {
             var seps = [];
 
