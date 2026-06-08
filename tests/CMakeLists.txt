@@ -21,6 +21,13 @@ ecm_add_test(storageroundtriptest.cpp
 )
 target_compile_definitions(storageroundtriptest PRIVATE
     DOCK_TEMPLATE_PATH="${CMAKE_SOURCE_DIR}/shell/package/contents/templates/Default Dock.view.latte")
+
+ecm_add_test(abstractlayouttest.cpp ${CMAKE_SOURCE_DIR}/app/layout/abstractlayout.cpp
+    TEST_NAME abstractlayouttest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui KF6::ConfigCore Plasma::Plasma
+)
+target_include_directories(abstractlayouttest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/layout ${CMAKE_BINARY_DIR}/app)
 target_compile_definitions(indicatorsknsrctest PRIVATE
     INDICATORS_KNSRC_PATH="${CMAKE_SOURCE_DIR}/app/latte-indicators.knsrc")
 

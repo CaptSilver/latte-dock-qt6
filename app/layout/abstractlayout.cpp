@@ -355,11 +355,14 @@ QList<Plasma::Types::Location> combinedFreeEdges(const QList<Plasma::Types::Loca
 QString AbstractLayout::layoutName(const QString &fileName)
 {
     int lastSlash = fileName.lastIndexOf(QLatin1String("/"));
-    QString tempLayoutFile = fileName;
-    QString layoutName = tempLayoutFile.remove(0, lastSlash + 1);
+    QString layoutName = fileName.mid(lastSlash + 1);
 
-    int ext = layoutName.lastIndexOf(QLatin1String(".layout.latte"));
-    layoutName = layoutName.remove(ext, 13);
+    //! strip the extension only when present; a not-found -1 index passed to
+    //! remove() would chop the last character of an unrelated name.
+    const QString extension(QStringLiteral(".layout.latte"));
+    if (layoutName.endsWith(extension)) {
+        layoutName.chop(extension.size());
+    }
 
     return layoutName;
 }
