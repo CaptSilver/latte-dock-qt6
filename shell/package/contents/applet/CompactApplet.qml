@@ -6,7 +6,7 @@
 import QtQuick
 import QtQuick.Layouts 1.1
 import QtQuick.Window 2.0
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.ksvg 1.0 as KSvg
@@ -280,7 +280,7 @@ PlasmaCore.ToolTipArea {
     }
 
     ////Clicked Effect ////
-    BrightnessContrast {
+    MultiEffect {
         id: _clickedEffect
         anchors.centerIn: parent
         anchors.horizontalCenterOffset: compactRepresentation ? compactRepresentation.anchors.horizontalCenterOffset : 0

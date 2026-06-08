@@ -4,6 +4,7 @@
 */
 
 import QtQuick 2.7
+import QtQuick.Effects
 import Qt5Compat.GraphicalEffects
 import org.kde.graphicaleffects as KGraphicalEffects
 
@@ -357,16 +358,9 @@ Item {
         lightness:0
     }
 
-    BrightnessContrast{
+    MultiEffect{
         id:hoveredImage
         anchors.fill: parent
-
-        //! HACK TO AVOID PIXELIZATION
-        //! WORKAROUND: When Effects are enabled e.g. BrightnessContrast, Colorize etc.
-        //! the icon appears pixelated. It is even most notable when parabolic.factor.zoom === 1
-        //! I don't know enabling cached=true helps, but it does.
-        //! In Question?
-        //cached: true
 
         source: badgesLoader.active ? badgesLoader : taskIconItem
 
@@ -379,16 +373,9 @@ Item {
         }
     }
 
-    BrightnessContrast {
+    MultiEffect {
         id: brightnessTaskEffect
         anchors.fill: parent
-
-        //! HACK TO AVOID PIXELIZATION
-        //! WORKAROUND: When Effects are enabled e.g. BrightnessContrast, Colorize etc.
-        //! the icon appears pixelated. It is even most notable when parabolic.factor.zoom === 1
-        //! I don't know enabling cached=true helps, but it does.
-        //! In Question?
-        //cached: true
 
         source: badgesLoader.active ? badgesLoader : taskIconItem
 
