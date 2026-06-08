@@ -10,7 +10,6 @@
 import QtQuick 2.6
 import QtQuick.Layouts 1.1
 import QtQuick.Controls 2.15 as QQC2
-import Qt5Compat.GraphicalEffects
 import QtQml.Models 2.2
 
 import org.kde.draganddrop 2.0

@@ -5,7 +5,6 @@
 */
 
 import QtQuick 2.7
-import Qt5Compat.GraphicalEffects
 import QtQuick.Controls 2.15 as QQC2
 import QtQuick.Layouts 1.3
 
