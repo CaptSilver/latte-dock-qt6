@@ -70,11 +70,10 @@ Rectangle{
         readonly property int lengthEdge: addingArea.radius + Kirigami.Units.smallSpacing
 
         layer.enabled: true
-        layer.effect: DropShadow {
-            radius: 4
-            fast: true
-            samples: 2 * radius
-            color: "#020202"
+        layer.effect: ShadowedItem {
+            shadowSizePx: 4
+            shadowColor: "#020202"
+            shadowVerticalOffset: 0
         }
 
         states: [

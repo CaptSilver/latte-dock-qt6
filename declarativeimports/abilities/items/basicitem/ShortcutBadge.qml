@@ -55,13 +55,12 @@ Loader{
             active: abilityItem.abilities.myView.itemShadow.isEnabled
                     && abilityItem.abilities.environment.isGraphicsSystemAccelerated
 
-            sourceComponent: DropShadow{
-                color: abilityItem.abilities.myView.itemShadow.shadowColor
-                fast: true
-                samples: 2 * radius
+            sourceComponent: LatteComponents.ShadowedItem{
+                anchors.fill: parent
+                shadowColor: abilityItem.abilities.myView.itemShadow.shadowColor
                 source: taskNumber
-                radius: abilityItem.abilities.myView.itemShadow.size/2
-                verticalOffset: 2
+                shadowSizePx: abilityItem.abilities.myView.itemShadow.size/2
+                shadowVerticalOffset: 2
             }
         }
 
