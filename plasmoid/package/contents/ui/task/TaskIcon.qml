@@ -5,6 +5,7 @@
 
 import QtQuick 2.7
 import Qt5Compat.GraphicalEffects
+import org.kde.graphicaleffects as KGraphicalEffects
 
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.plasma.components 3.0 as PlasmaComponents
@@ -152,11 +153,10 @@ Item {
         }
 
         sourceComponent: Item{
-            ShaderEffect {
+            KGraphicalEffects.BadgeEffect {
                 id: iconOverlay
-                enabled: false
                 anchors.fill: parent
-                property var source: ShaderEffectSource {
+                source: ShaderEffectSource {
                     sourceItem: Kirigami.Icon{
                         width: taskIconItem.width
                         height: taskIconItem.height
@@ -177,7 +177,7 @@ Item {
                         }
                     }
                 }
-                property var mask: ShaderEffectSource {
+                mask: ShaderEffectSource {
                     sourceItem: Item{
                         LayoutMirroring.enabled: Qt.application.layoutDirection === Qt.RightToLeft && !root.vertical
                         LayoutMirroring.childrenInherit: true
@@ -276,17 +276,6 @@ Item {
                     live: true
                 } //end of mask
 
-                supportsAtlasTextures: true
-
-                fragmentShader: "
-        varying highp vec2 qt_TexCoord0;
-        uniform highp float qt_Opacity;
-        uniform lowp sampler2D source;
-        uniform lowp sampler2D mask;
-        void main() {
-            gl_FragColor = texture2D(source, qt_TexCoord0.st) * (1.0 - (texture2D(mask, qt_TexCoord0.st).a)) * qt_Opacity;
-        }
-    "
             } //end of sourceComponent
         }
     }
