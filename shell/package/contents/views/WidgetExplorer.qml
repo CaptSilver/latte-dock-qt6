@@ -61,7 +61,7 @@ PC3.Page {
 
     onVisibleChanged: {
         if (!visible) {
-            kwindowsystem.showingDesktop = false;
+            KWindowSystem.showingDesktop = false;
         }
     }
 
@@ -86,10 +86,6 @@ PC3.Page {
             widgetExplorer.addApplet(pluginName);
             latteView.extendedInterface.appletCreated(pluginName);
         }
-    }
-
-    KWindowSystem {
-        id: kwindowsystem
     }
 
     QQC2.Action {
