@@ -9,7 +9,7 @@
 
 import QtQuick 2.6
 import QtQuick.Layouts 1.1
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import QtQml.Models 2.2
 
 import org.kde.plasma.core 2.0 as PlasmaCore
@@ -179,6 +179,10 @@ Column {
             // TODO: this causes XCB error message when being visible the first time
             readonly property var winId: isWin && windows[flatIndex] !== undefined ? windows[flatIndex] : 0
 
+            //! Shadow size in px; drives both the preview-loader inset (so the
+            //! halo isn't clipped) and the MultiEffect shadowBlur below.
+            readonly property int shadowPx: Math.round(8.0 * Kirigami.Units.devicePixelRatio)
+
             PlasmaExtras.Highlight {
                 anchors.fill: hoverHandler
                 visible: hoverHandler.containsMouse
@@ -188,7 +192,7 @@ Column {
             Loader{
                 id:previewThumbLoader
                 anchors.fill: parent
-                anchors.margins: Math.max(2, previewShadow.radius)
+                anchors.margins: Math.max(2, thumbnailSourceItem.shadowPx)
                 active: LatteCore.WindowSystem.isPlatformX11 || (root.plasma520 && LatteCore.WindowSystem.isPlatformWayland)
                 visible: !albumArtImage.visible && !thumbnailSourceItem.isMinimized
                 source:  {
@@ -205,16 +209,20 @@ Column {
                     return "PlasmaCoreThumbnail.qml";
                 }
 
-                DropShadow {
+                MultiEffect {
                     id: previewShadow
-                    anchors.fill:  previewThumbLoader.item
+                    anchors.fill: previewThumbLoader.item
                     visible: previewThumbLoader.item.visible
-                    horizontalOffset: 0
-                    verticalOffset: Math.round(3 * Kirigami.Units.devicePixelRatio)
-                    radius: Math.round(8.0 * Kirigami.Units.devicePixelRatio)
-                    samples: Math.round(radius * 1.5)
-                    color: "Black"
                     source: previewThumbLoader.item
+                    shadowEnabled: true
+                    shadowColor: "Black"
+                    shadowHorizontalOffset: 0
+                    shadowVerticalOffset: Math.round(3 * Kirigami.Units.devicePixelRatio)
+                    //! Same shadowPx that insets the loader above, normalized to MultiEffect's
+                    //! 0..1 blur scale so the halo width tracks the layout margin.
+                    blurMax: 64
+                    shadowBlur: Math.min(1.0, thumbnailSourceItem.shadowPx / blurMax)
+                    autoPaddingEnabled: true
                 }
             }
 
@@ -232,14 +240,19 @@ Column {
                 source: albumArt
                 anchors.fill: parent
                 fillMode: Image.PreserveAspectCrop
+                //! source is sampled by the sibling blur below; never drawn directly.
+                visible: false
+            }
+
+            MultiEffect {
+                source: albumArtBackground
+                anchors.fill: albumArtBackground
                 visible: albumArtImage.available
-                layer.enabled: true
                 opacity: 0.25
-                layer.effect: FastBlur {
-                    source: albumArtBackground
-                    anchors.fill: parent
-                    radius: 30
-                }
+                blurEnabled: true
+                blur: 1.0
+                blurMax: 32
+                autoPaddingEnabled: false
             }
 
             Image {
@@ -300,7 +313,7 @@ Column {
                 Item {
                     id: playerControlsFrostedGlass
                     anchors.fill: parent
-                    visible: false // OpacityMask would render it
+                    visible: false // MultiEffect renders it as a source; not drawn directly
 
                     Rectangle {
                         width: parent.width
@@ -317,11 +330,14 @@ Column {
                     }
                 }
 
-                OpacityMask {
+                MultiEffect {
                     id: playerControlsOpacityMask
                     anchors.fill: parent
                     source: playerControlsFrostedGlass
+                    maskEnabled: true
                     maskSource: thumbnailSourceItem
+                    maskThresholdMin: 0.0
+                    maskSpreadAtMin: 1.0
                 }
 
                 // prevent accidental click-through when a control is disabled
