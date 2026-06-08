@@ -5,7 +5,7 @@
 */
 
 import QtQuick 2.7
-import Qt5Compat.GraphicalEffects
+import QtQuick.Shapes
 
 import org.kde.plasma.plasmoid 2.0
 import org.kde.plasma.core 2.0 as PlasmaCore
@@ -14,17 +14,27 @@ Item {
 
     readonly property int gradientLength: appletAbilities.metrics.iconSize / 3
 
-    LinearGradient {
+    Shape {
         id: firstGradient
         width: !root.vertical ? gradientLength : scrollableList.thickness
         height: !root.vertical ? scrollableList.thickness : gradientLength
+        preferredRendererType: Shape.CurveRenderer
 
-        start: Qt.point(0, 0)
-        end: !root.vertical ? Qt.point(gradientLength, 0) : Qt.point(0, gradientLength)
-
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: scrollableList.currentPos <= scrollableList.scrollFirstPos ? "white" : "transparent" }
-            GradientStop { position: 1.0; color: "white" }
+        ShapePath {
+            strokeWidth: 0
+            strokeColor: "transparent"
+            //! White-where-opaque mask edge; direction flips with the dock orientation.
+            fillGradient: LinearGradient {
+                x1: 0; y1: 0
+                x2: !root.vertical ? gradientLength : 0
+                y2: !root.vertical ? 0 : gradientLength
+                GradientStop { position: 0.0; color: scrollableList.currentPos <= scrollableList.scrollFirstPos ? "white" : "transparent" }
+                GradientStop { position: 1.0; color: "white" }
+            }
+            startX: 0; startY: 0
+            PathLine { x: firstGradient.width; y: 0 }
+            PathLine { x: firstGradient.width; y: firstGradient.height }
+            PathLine { x: 0; y: firstGradient.height }
         }
     }
 
@@ -39,19 +49,28 @@ Item {
         property int length: !root.vertical ? parent.width - 2*gradientLength : parent.height - 2*gradientLength
     }
 
-    LinearGradient {
+    Shape {
         id: lastGradient
         anchors.top: parent.top
         anchors.right: parent.right
         width: firstGradient.width
         height: firstGradient.height
+        preferredRendererType: Shape.CurveRenderer
 
-        start: firstGradient.start
-        end: firstGradient.end
-
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: "white" }
-            GradientStop { position: 1.0; color: (scrollableList.currentPos >= scrollableList.scrollLastPos ? "white" : "transparent") }
+        ShapePath {
+            strokeWidth: 0
+            strokeColor: "transparent"
+            fillGradient: LinearGradient {
+                x1: 0; y1: 0
+                x2: !root.vertical ? lastGradient.width : 0
+                y2: !root.vertical ? 0 : lastGradient.height
+                GradientStop { position: 0.0; color: "white" }
+                GradientStop { position: 1.0; color: (scrollableList.currentPos >= scrollableList.scrollLastPos ? "white" : "transparent") }
+            }
+            startX: 0; startY: 0
+            PathLine { x: lastGradient.width; y: 0 }
+            PathLine { x: lastGradient.width; y: lastGradient.height }
+            PathLine { x: 0; y: lastGradient.height }
         }
     }
 
