@@ -5,6 +5,13 @@ ecm_add_test(importernametest.cpp
     LINK_LIBRARIES Qt6::Test Qt6::Core
 )
 
+ecm_add_test(indicatorsknsrctest.cpp
+    TEST_NAME indicatorsknsrctest
+    LINK_LIBRARIES Qt6::Test Qt6::Core KF6::ConfigCore
+)
+target_compile_definitions(indicatorsknsrctest PRIVATE
+    INDICATORS_KNSRC_PATH="${CMAKE_SOURCE_DIR}/app/latte-indicators.knsrc")
+
 ecm_add_test(layershellmappingtest.cpp ../app/wm/waylandlayershell.cpp
     TEST_NAME layershellmappingtest
     LINK_LIBRARIES Qt6::Test Qt6::Gui LayerShellQt::Interface Plasma::Plasma

@@ -40,4 +40,4 @@ ProvidersUrl=https://autoconfig.kde.org/ocs/providers.xml
 Categories=Latte Indicators
 StandardResource=tmp
 Uncompress=kpackage
-KPackageType=Latte/Indicator
+KPackageStructure=Latte/Indicator
