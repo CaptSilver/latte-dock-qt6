@@ -21,6 +21,11 @@ target_compile_definitions(bindingrestoremodetest PRIVATE
     POSITIONSHORTCUTS_QML_PATH="${CMAKE_SOURCE_DIR}/containment/package/contents/ui/abilities/privates/PositionShortcutsPrivate.qml"
     LAYOUTSCONTAINER_QML_PATH="${CMAKE_SOURCE_DIR}/containment/package/contents/ui/layouts/LayoutsContainer.qml")
 
+ecm_add_test(alternativescreateapplettest.cpp
+    TEST_NAME alternativescreateapplettest
+    LINK_LIBRARIES Qt6::Test Qt6::Core
+)
+
 ecm_add_test(layershellmappingtest.cpp ../app/wm/waylandlayershell.cpp
     TEST_NAME layershellmappingtest
     LINK_LIBRARIES Qt6::Test Qt6::Gui LayerShellQt::Interface Plasma::Plasma

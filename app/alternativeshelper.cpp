@@ -7,8 +7,10 @@
 #include "alternativeshelper.h"
 
 // Qt
+#include <QDebug>
 #include <QQmlEngine>
 #include <QQmlContext>
+#include <QRectF>
 
 // KDE
 #include <KPackage/Package>
@@ -66,17 +68,28 @@ void AlternativesHelper::loadAlternative(const QString &plugin)
     const QKeySequence &shortcut = m_applet->globalShortcut();
     m_applet->setGlobalShortcut(QKeySequence()); // need to unmap the old one first
 
-    const QPoint newPos = appletItem->mapToItem(contItem, QPointF(0, 0)).toPoint();
+    const QPointF newPos = appletItem->mapToItem(contItem, QPointF(0, 0));
 
     m_applet->destroy();
 
     connect(m_applet, &QObject::destroyed, [ = ]() {
-        Plasma::Applet *newApplet = Q_NULLPTR;
-        QMetaObject::invokeMethod(contItem, "createApplet", Q_RETURN_ARG(Plasma::Applet *, newApplet), Q_ARG(QString, plugin), Q_ARG(QVariantList, QVariantList()), Q_ARG(QPoint, newPos));
+        Plasma::Applet *newApplet = nullptr;
+        // Plasma 6's createApplet takes a QRectF geometry hint, not a QPoint. A
+        // mismatched arg type makes invokeMethod fail to resolve the method, so
+        // the swap would silently no-op; pass a positioned rect and report any
+        // failure instead of dropping it.
+        const bool invoked = QMetaObject::invokeMethod(contItem, "createApplet",
+                                                       Q_RETURN_ARG(Plasma::Applet *, newApplet),
+                                                       Q_ARG(QString, plugin),
+                                                       Q_ARG(QVariantList, QVariantList()),
+                                                       Q_ARG(QRectF, QRectF(newPos, QSizeF(0, 0))));
 
-        if (newApplet) {
-            newApplet->setGlobalShortcut(shortcut);
+        if (!invoked || !newApplet) {
+            qWarning() << "Latte: could not swap applet for alternative" << plugin;
+            return;
         }
+
+        newApplet->setGlobalShortcut(shortcut);
     });
 }
 
