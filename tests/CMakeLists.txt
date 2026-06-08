@@ -49,6 +49,12 @@ ecm_add_test(activitiesinfotest.cpp ../app/data/activitiesinfo.cpp
 )
 target_include_directories(activitiesinfotest PRIVATE ${CMAKE_SOURCE_DIR}/app/data)
 
+ecm_add_test(syncedlaunchersclienttest.cpp
+    TEST_NAME syncedlaunchersclienttest
+    LINK_LIBRARIES Qt6::Test Qt6::Gui Qt6::Quick
+)
+set_tests_properties(syncedlaunchersclienttest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 ecm_add_test(layershellmappingtest.cpp ../app/wm/waylandlayershell.cpp
     TEST_NAME layershellmappingtest
     LINK_LIBRARIES Qt6::Test Qt6::Gui LayerShellQt::Interface Plasma::Plasma
