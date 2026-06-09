@@ -114,8 +114,8 @@ QSize seededLayerSize(LSW::Anchors anchors, Plasma::Types::Location location,
     return QSize(w, h);
 }
 
-void configureView(QWindow *window, QScreen *screen,
-                   Plasma::Types::Location location, Latte::Types::Alignment alignment)
+void updateAnchoring(QWindow *window, QScreen *screen,
+                     Plasma::Types::Location location, Latte::Types::Alignment alignment)
 {
     LSW *ls = LSW::get(window);
     if (!ls) {
@@ -127,20 +127,33 @@ void configureView(QWindow *window, QScreen *screen,
     //! wlr-layer-shell rejects a surface whose size is 0 on an axis its anchors do not span
     //! (e.g. a single-edge-anchored Center dock, or an as-yet-unsized edge helper). Seed a legal
     //! initial size so the first commit succeeds; the window's own geometry management resizes it
-    //! immediately after.
+    //! immediately after. seededLayerSize leaves an already-sized window untouched, so this is safe
+    //! to re-run when re-anchoring at runtime.
     if (screen) {
         const QSize seeded = seededLayerSize(anchors, location, window->size(), screen->geometry().size());
         if (seeded != window->size()) {
             window->resize(seeded);
         }
+        ls->setScreen(screen);
+    }
+
+    //! The exclusive edge is one of the anchors by construction (edgeFor(location) is always in
+    //! anchorsFor(location, ...)), so setting it right after the anchors keeps the committed state
+    //! consistent — the compositor rejects a surface whose exclusive edge is not among its anchors.
+    ls->setAnchors(anchors);
+    ls->setExclusiveEdge(edgeFor(location));
+}
+
+void configureView(QWindow *window, QScreen *screen,
+                   Plasma::Types::Location location, Latte::Types::Alignment alignment)
+{
+    LSW *ls = LSW::get(window);
+    if (!ls) {
+        return;
     }
 
     ls->setScope(QStringLiteral("dock"));
-    if (screen) {
-        ls->setScreen(screen);
-    }
-    ls->setAnchors(anchors);
-    ls->setExclusiveEdge(edgeFor(location));
+    updateAnchoring(window, screen, location, alignment);
     ls->setLayer(LSW::LayerTop);
     ls->setKeyboardInteractivity(LSW::KeyboardInteractivityNone);
 }
@@ -167,27 +180,55 @@ void setExclusiveZone(QWindow *window, int zone)
     }
 }
 
-QMargins marginsForEdge(Plasma::Types::Location location, int margin)
-{
-    //! The margin sits on the anchored edge, so it offsets the surface away from
-    //! that edge — e.g. a bottom margin lifts a bottom-anchored config view up off
-    //! the dock by the dock's thickness.
-    QMargins margins;
-    switch (location) {
-    case Plasma::Types::TopEdge:    margins.setTop(margin);    break;
-    case Plasma::Types::BottomEdge: margins.setBottom(margin); break;
-    case Plasma::Types::LeftEdge:   margins.setLeft(margin);   break;
-    case Plasma::Types::RightEdge:  margins.setRight(margin);  break;
-    default:                        margins.setBottom(margin); break;
-    }
-
-    return margins;
-}
-
-void setEdgeMargin(QWindow *window, Plasma::Types::Location location, int margin)
+void setUnanchored(QWindow *window)
 {
     if (LSW *ls = LSW::get(window)) {
-        ls->setMargins(marginsForEdge(location, margin));
+        ls->setExclusiveEdge(LSW::AnchorNone);
+        ls->setAnchors(LSW::Anchors());
+        ls->setMargins(QMargins());
+    }
+}
+
+CanvasPlacement canvasPlacement(Plasma::Types::Location location,
+                                const QRect &canvasGeometry, const QRect &screenGeometry)
+{
+    CanvasPlacement placement;
+
+    switch (location) {
+    case Plasma::Types::TopEdge:
+        placement.anchors = LSW::Anchors(LSW::AnchorTop) | LSW::AnchorLeft | LSW::AnchorRight;
+        break;
+    case Plasma::Types::BottomEdge:
+        placement.anchors = LSW::Anchors(LSW::AnchorBottom) | LSW::AnchorLeft | LSW::AnchorRight;
+        break;
+    case Plasma::Types::LeftEdge:
+        placement.anchors = LSW::Anchors(LSW::AnchorLeft) | LSW::AnchorTop;
+        placement.margins.setTop(canvasGeometry.y() - screenGeometry.y());
+        break;
+    case Plasma::Types::RightEdge:
+        placement.anchors = LSW::Anchors(LSW::AnchorRight) | LSW::AnchorTop;
+        placement.margins.setTop(canvasGeometry.y() - screenGeometry.y());
+        break;
+    default:
+        placement.anchors = LSW::Anchors(LSW::AnchorBottom) | LSW::AnchorLeft | LSW::AnchorRight;
+        break;
+    }
+
+    return placement;
+}
+
+void applyCanvasPlacement(QWindow *window, Plasma::Types::Location location,
+                          const QRect &canvasGeometry, const QRect &screenGeometry)
+{
+    if (LSW *ls = LSW::get(window)) {
+        const CanvasPlacement placement = canvasPlacement(location, canvasGeometry, screenGeometry);
+        //! The canvas is an edit-mode overlay, not a strut-reserving panel: it must NOT carry an
+        //! exclusive edge. configureView() set one to the dock's location edge, which on a multi-edge
+        //! (or transition-stale) canvas is no longer among these anchors — the compositor then kills
+        //! the surface with "exclusive edge is not of the anchors". Clear it; AnchorNone is always legal.
+        ls->setExclusiveEdge(LSW::AnchorNone);
+        ls->setAnchors(placement.anchors);
+        ls->setMargins(placement.margins);
     }
 }
 

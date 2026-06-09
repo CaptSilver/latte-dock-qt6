@@ -60,6 +60,15 @@ QSize seededLayerSize(LayerShellQt::Window::Anchors anchors, Plasma::Types::Loca
 void configureView(QWindow *window, QScreen *screen,
                    Plasma::Types::Location location, Latte::Types::Alignment alignment);
 
+//! Re-apply ONLY the anchors, exclusive edge, screen and seeded size of an already-configured
+//! layer surface for a new @p location/@p alignment — without touching its stacking layer or
+//! keyboard policy. The compositor places layer surfaces by anchors, not setPosition(), so this is
+//! what actually moves the dock when the user changes its edge or alignment at runtime. Re-running
+//! the full configureView() would reset the layer (cover modes use LayerBottom) and focus policy,
+//! so this narrower path is used for live re-anchoring; configureView() is built on top of it.
+void updateAnchoring(QWindow *window, QScreen *screen,
+                     Plasma::Types::Location location, Latte::Types::Alignment alignment);
+
 //! Update the stacking layer of an (already layer-shell) window from its visibility mode.
 void applyLayer(QWindow *window, Latte::Types::Visibility mode);
 
@@ -69,14 +78,32 @@ void setFocusPolicy(QWindow *window, bool takesFocus);
 //! Reserve/release struts on a layer-shell window (0 releases).
 void setExclusiveZone(QWindow *window, int zone);
 
-//! The QMargins that offsets a layer surface off its anchored @p location edge by
-//! @p margin (the margin sits on the anchored edge). Pure mapping, unit-tested.
-QMargins marginsForEdge(Plasma::Types::Location location, int margin);
+//! Drop all anchors (and the exclusive edge/margins) on a layer surface so the compositor centres
+//! it on its output. Used for the settings windows: anchoring them to the dock's edge welds them to
+//! whichever edge the dock had when they opened, so they get stuck there when the dock is moved.
+void setUnanchored(QWindow *window);
 
-//! Offset a layer-shell window off its anchored @p location edge by @p margin.
-//! Wayland places layer surfaces by anchors+margins, not setPosition(), so this is
-//! how a config view is pushed clear of the dock it is anchored alongside.
-void setEdgeMargin(QWindow *window, Plasma::Types::Location location, int margin);
+//! The anchors + margins that make a layer surface overlay the edit-mode canvas exactly.
+struct CanvasPlacement {
+    LayerShellQt::Window::Anchors anchors;
+    QMargins margins;
+};
+
+//! Map a dock's canvasGeometry (from Positioner::updateCanvasGeometry) to the layer-shell anchors and
+//! margins that reproduce it EXACTLY, so the edit-mode grid overlays the dock instead of landing at
+//! the compositor's default centred spot. Unlike a config view, the canvas sits ON the edge (no
+//! offset). Horizontal docks span the full screen width -> anchor the edge + both length edges, zero
+//! margin. Vertical docks start at the available area's top (e.g. below a top panel), not the screen
+//! top -> anchor the edge + top and push down with a top margin = canvasGeometry.y() - screen.y();
+//! the surface's explicit height carries the rest. A margin only bites on an anchored edge, so the
+//! top anchor is required for the vertical offset. Pure mapping, unit-tested.
+CanvasPlacement canvasPlacement(Plasma::Types::Location location,
+                                const QRect &canvasGeometry, const QRect &screenGeometry);
+
+//! Anchor @p window to overlay @p canvasGeometry exactly (see canvasPlacement()). Replaces the
+//! setPosition() the compositor ignores for the edit-mode canvas view on Wayland.
+void applyCanvasPlacement(QWindow *window, Plasma::Types::Location location,
+                          const QRect &canvasGeometry, const QRect &screenGeometry);
 
 } // namespace LayerShell
 } // namespace WindowSystem

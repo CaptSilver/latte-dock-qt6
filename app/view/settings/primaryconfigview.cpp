@@ -402,10 +402,11 @@ void PrimaryConfigView::syncGeometry()
     m_geometryWhenVisible = geometry;
 
     if (KWindowSystem::isPlatformWayland()) {
-        //! layer-shell ignores setPosition(); offset the view off the dock's edge
-        //! by the canvas thickness via the layer-shell margin instead, so it sits
-        //! beside the dock rather than on top of it.
-        Latte::WindowSystem::LayerShell::setEdgeMargin(this, location, canvasThickness);
+        //! layer-shell ignores setPosition(). Anchoring the settings window to the dock's edge
+        //! welds it there: it then stays stuck on whatever edge the dock had when it opened, even
+        //! after the dock is moved. Drop the anchors so the compositor centres it on the screen
+        //! instead — clear of the dock wherever the dock sits.
+        Latte::WindowSystem::LayerShell::setUnanchored(this);
     } else {
         setPosition(position);
     }

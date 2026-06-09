@@ -11,6 +11,7 @@
 #include "../view.h"
 #include "../../lattecorona.h"
 #include "../../wm/abstractwindowinterface.h"
+#include "../../wm/waylandlayershell.h"
 
 // Qt
 #include <QQuickItem>
@@ -84,7 +85,15 @@ void CanvasConfigView::syncGeometry()
 
     m_geometryWhenVisible = geometry;
 
-    setPosition(geometry.topLeft());
+    if (KWindowSystem::isPlatformWayland()) {
+        //! layer-shell ignores setPosition(); the canvas is configured Center-anchored by
+        //! SubConfigView so it would land centred on top of the dock. Anchor it to overlay the
+        //! dock's canvasGeometry exactly instead, so the edit grid sits on the dock and lets wheel
+        //! events through to it.
+        Latte::WindowSystem::LayerShell::applyCanvasPlacement(this, m_latteView->location(), geometry, m_latteView->screenGeometry());
+    } else {
+        setPosition(geometry.topLeft());
+    }
 
     setMaximumSize(geometry.size());
     setMinimumSize(geometry.size());

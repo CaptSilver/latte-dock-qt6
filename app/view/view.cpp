@@ -301,6 +301,11 @@ void View::init(Plasma::Containment *plasma_containment)
     connect(this, &View::activitiesChanged, this, &View::applyActivitiesToWindows);
     connect(m_positioner, &ViewPart::Positioner::winIdChanged, this, &View::applyActivitiesToWindows);
 
+    //! On Wayland the layer surface is placed by its anchors, not setPosition(), so the dock must be
+    //! re-anchored when its edge or alignment changes — otherwise it stays welded to its startup edge.
+    connect(this, &View::locationChanged, this, &View::reanchorLayerShell);
+    connect(this, &View::alignmentChanged, this, &View::reanchorLayerShell);
+
     connect(this, &View::alignmentChanged, this, [&](){
         // inform neighbour vertical docks/panels to adjust their positioning
         if (m_inDelete || formFactor() == Plasma::Types::Vertical) {
@@ -517,6 +522,18 @@ void View::setupWaylandLayerShell()
     LS::setFocusPolicy(this, !flags().testFlag(Qt::WindowDoesNotAcceptFocus));
 
     m_layerShellConfigured = true;
+}
+
+void View::reanchorLayerShell()
+{
+    if (!KWindowSystem::isPlatformWayland() || !m_layerShellConfigured) {
+        return;
+    }
+
+    //! Update only the anchors/exclusive-edge for the new location/alignment, preserving the
+    //! stacking layer (cover modes use LayerBottom) and keyboard policy that configureView() forces.
+    namespace LS = Latte::WindowSystem::LayerShell;
+    LS::updateAnchoring(this, screen(), location(), static_cast<Latte::Types::Alignment>(alignment()));
 }
 
 //! the main function which decides if this dock is at the

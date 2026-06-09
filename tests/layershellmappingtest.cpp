@@ -18,7 +18,8 @@ private Q_SLOTS:
     void layer_byMode();
     void exclusiveZone_byLocation();
     void seededSize_singleEdgeNeedsValidSize();
-    void margins_byEdge();
+    void canvasPlacement_byEdge();
+    void exclusiveEdge_isAlwaysAnchored();
 };
 
 void LayerShellMappingTest::anchors_bottom_alignments()
@@ -91,14 +92,55 @@ void LayerShellMappingTest::seededSize_singleEdgeNeedsValidSize()
              QSize(1, 1080));
 }
 
-void LayerShellMappingTest::margins_byEdge()
+void LayerShellMappingTest::canvasPlacement_byEdge()
 {
-    //! The margin lands on the anchored edge (QMargins is left, top, right, bottom),
-    //! so it offsets a config view off the dock it sits alongside.
-    QCOMPARE(LayerShell::marginsForEdge(Plasma::Types::BottomEdge, 40), QMargins(0, 0, 0, 40));
-    QCOMPARE(LayerShell::marginsForEdge(Plasma::Types::TopEdge, 40), QMargins(0, 40, 0, 0));
-    QCOMPARE(LayerShell::marginsForEdge(Plasma::Types::LeftEdge, 48), QMargins(48, 0, 0, 0));
-    QCOMPARE(LayerShell::marginsForEdge(Plasma::Types::RightEdge, 48), QMargins(0, 0, 48, 0));
+    const QRect screen(0, 0, 1920, 1080);
+
+    //! The edit-mode canvas must overlay the dock's canvasGeometry exactly, sitting ON the edge
+    //! (margin 0), unlike a config view which is pushed OFF the edge. Horizontal docks span the
+    //! full screen width, so the canvas anchors both length edges (left+right) and the dock edge.
+    const auto bottom = LayerShell::canvasPlacement(Plasma::Types::BottomEdge, QRect(0, 1040, 1920, 40), screen);
+    QCOMPARE(bottom.anchors, LSW::Anchors(LSW::AnchorBottom | LSW::AnchorLeft | LSW::AnchorRight));
+    QCOMPARE(bottom.margins, QMargins(0, 0, 0, 0));
+
+    const auto top = LayerShell::canvasPlacement(Plasma::Types::TopEdge, QRect(0, 0, 1920, 40), screen);
+    QCOMPARE(top.anchors, LSW::Anchors(LSW::AnchorTop | LSW::AnchorLeft | LSW::AnchorRight));
+    QCOMPARE(top.margins, QMargins(0, 0, 0, 0));
+
+    //! Vertical docks don't span the full screen height (the canvas starts at the available area's
+    //! top, e.g. below a top panel at y=100). Anchor the dock edge + top, then push down with a top
+    //! margin = canvasGeometry.y() - screen.y(); the explicit height carries the rest. A single
+    //! perpendicular anchor would NOT work here — a layer-shell margin only bites on an anchored edge.
+    const auto left = LayerShell::canvasPlacement(Plasma::Types::LeftEdge, QRect(0, 100, 48, 980), screen);
+    QCOMPARE(left.anchors, LSW::Anchors(LSW::AnchorLeft | LSW::AnchorTop));
+    QCOMPARE(left.margins, QMargins(0, 100, 0, 0));
+
+    const auto right = LayerShell::canvasPlacement(Plasma::Types::RightEdge, QRect(1872, 200, 48, 880), screen);
+    QCOMPARE(right.anchors, LSW::Anchors(LSW::AnchorRight | LSW::AnchorTop));
+    QCOMPARE(right.margins, QMargins(0, 200, 0, 0));
+}
+
+void LayerShellMappingTest::exclusiveEdge_isAlwaysAnchored()
+{
+    //! The dock re-asserts its exclusive edge (edgeFor) right after applying the anchors. That is
+    //! only legal if the edge is one of the anchors for EVERY location/alignment, otherwise the
+    //! compositor kills the surface with "exclusive edge is not of the anchors". (The edit-mode
+    //! canvas hit exactly that error by keeping a strut edge under multi-edge overlay anchors that
+    //! no longer contained it — fixed by clearing the canvas's exclusive edge entirely.)
+    const QList<Plasma::Types::Location> locations{
+        Plasma::Types::TopEdge, Plasma::Types::BottomEdge, Plasma::Types::LeftEdge, Plasma::Types::RightEdge};
+    const QList<Latte::Types::Alignment> alignments{
+        Latte::Types::Center, Latte::Types::Left, Latte::Types::Right,
+        Latte::Types::Top, Latte::Types::Bottom, Latte::Types::Justify};
+
+    for (const auto location : locations) {
+        for (const auto alignment : alignments) {
+            const LSW::Anchors anchors = LayerShell::anchorsFor(location, alignment);
+            QVERIFY2(anchors.testFlag(LayerShell::edgeFor(location)),
+                     qPrintable(QStringLiteral("exclusive edge not anchored for location=%1 alignment=%2")
+                                    .arg(int(location)).arg(int(alignment))));
+        }
+    }
 }
 
 QTEST_MAIN(LayerShellMappingTest)

@@ -130,6 +130,10 @@ public:
     void init(Plasma::Containment *plasma_containment = nullptr);
 
     void setupWaylandLayerShell();
+    //! Re-apply the layer-shell anchoring after the dock's edge or alignment changes at runtime.
+    //! Wayland places the surface by anchors, not setPosition(), so without this the dock stays
+    //! welded to its startup edge when the user moves it.
+    void reanchorLayerShell();
 
     Types::ViewType type() const;
     void setType(Types::ViewType type);

@@ -12,6 +12,7 @@
 #include "../view.h"
 #include "../../lattecorona.h"
 #include "../../wm/abstractwindowinterface.h"
+#include "../../wm/waylandlayershell.h"
 
 // Qt
 #include <QQuickItem>
@@ -148,7 +149,13 @@ void SecondaryConfigView::syncGeometry()
 
     m_geometryWhenVisible = geometry;
 
-    setPosition(position);
+    if (KWindowSystem::isPlatformWayland()) {
+        //! layer-shell ignores setPosition(). Like the primary config view, drop the anchors so the
+        //! compositor centres it rather than welding it to the edge the dock had when it opened.
+        Latte::WindowSystem::LayerShell::setUnanchored(this);
+    } else {
+        setPosition(position);
+    }
 
     setMaximumSize(size);
     setMinimumSize(size);
