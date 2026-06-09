@@ -34,8 +34,15 @@ llvm-profdata merge -sparse "$COV_DIR"/coverage/*.profraw \
     -o "$COV_DIR/coverage/merged.profdata"
 
 echo "== export =="
-# All test binaries end in 'test' and land in bin/; production binaries/plugins do not.
-mapfile -t bins < <(find "$COV_DIR/bin" -maxdepth 1 -type f -executable -name '*test' | sort)
+# Object set = exactly the instrumented targets (CMake writes cov_targets.txt from
+# _latte_cov_targets), so uninstrumented manual-test binaries can't slip in.
+if [ ! -f "$COV_DIR/cov_targets.txt" ]; then
+    echo "cov_targets.txt missing — reconfigure with -DLATTE_COVERAGE=ON"; exit 2
+fi
+bins=()
+while IFS= read -r _n; do
+    [ -n "$_n" ] && [ -x "$COV_DIR/bin/$_n" ] && bins+=("$COV_DIR/bin/$_n")
+done < "$COV_DIR/cov_targets.txt"
 if [ "${#bins[@]}" -eq 0 ]; then echo "no instrumented test binaries found"; exit 2; fi
 main="${bins[0]}"; rest=(); for b in "${bins[@]:1}"; do rest+=("-object=$b"); done
 # Drop *test.cpp driver files (incl. covselftest.cpp) but KEEP production sources

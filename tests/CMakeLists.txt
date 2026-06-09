@@ -173,6 +173,10 @@ if(LATTE_COVERAGE)
         target_compile_options(${_t} PRIVATE ${LATTE_COV_COMPILE_FLAGS})
         target_link_options(${_t} PRIVATE ${LATTE_COV_LINK_FLAGS})
     endforeach()
+    # Single source of truth for the coverage object set (read by cxx_coverage.sh),
+    # so it can't drift from the actually-instrumented targets.
+    string(REPLACE ";" "\n" _latte_cov_targets_lines "${_latte_cov_targets}")
+    file(WRITE "${CMAKE_BINARY_DIR}/cov_targets.txt" "${_latte_cov_targets_lines}\n")
 endif()
 
 add_subdirectory(manual)
