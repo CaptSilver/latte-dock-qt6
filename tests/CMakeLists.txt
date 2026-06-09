@@ -117,6 +117,11 @@ ecm_add_test(editmodehandleactiontest.cpp
 target_compile_definitions(editmodehandleactiontest PRIVATE
     CONFIGOVERLAY_QML_PATH="${CMAKE_SOURCE_DIR}/containment/package/contents/ui/editmode/ConfigOverlay.qml")
 
+ecm_add_test(coverage/selftest/covselftest.cpp coverage/selftest/covself.cpp
+    TEST_NAME covselftest
+    LINK_LIBRARIES Qt6::Test
+)
+
 ecm_add_test(smartlauncheritemtest.cpp
     ${CMAKE_SOURCE_DIR}/plasmoid/plugin/smartlauncheritem.cpp
     ${CMAKE_SOURCE_DIR}/plasmoid/plugin/smartlauncherbackend.cpp
@@ -163,7 +168,7 @@ if(LATTE_COVERAGE)
         activitiesinfotest syncedlaunchersclienttest layershellmappingtest
         windowinfowraptest visibilityrevealtest coretypesenumtest appletzoomsizetest
         panelbackgroundtest configcontrolstest contextmenudefaulttest
-        editmodehandleactiontest smartlauncheritemtest tasksbackendtest)
+        editmodehandleactiontest smartlauncheritemtest tasksbackendtest covselftest)
     foreach(_t ${_latte_cov_targets})
         target_compile_options(${_t} PRIVATE ${LATTE_COV_COMPILE_FLAGS})
         target_link_options(${_t} PRIVATE ${LATTE_COV_LINK_FLAGS})
