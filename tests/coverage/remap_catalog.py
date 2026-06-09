@@ -65,15 +65,25 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Rewrite staged install paths in a QML coverage catalog to repo-relative paths."
     )
-    parser.add_argument("--catalog", required=True, help="Input catalog JSON file.")
+    parser.add_argument(
+        "--catalog", required=True, action="append",
+        help="Input catalog JSON file. May be repeated to merge multiple catalogs.",
+    )
     parser.add_argument("--out", required=True, help="Output path for the remapped catalog.")
     args = parser.parse_args(argv)
 
-    catalog = json.loads(Path(args.catalog).read_text(encoding="utf-8"))
-    for unit in catalog.get("units", []):
-        unit["file"] = remap(unit["file"])
-        unit["key"] = remap(unit["key"])
-    Path(args.out).write_text(json.dumps(catalog, indent=2), encoding="utf-8")
+    seen: dict[str, bool] = {}
+    merged_units: list[dict] = []
+    for path in args.catalog:
+        catalog = json.loads(Path(path).read_text(encoding="utf-8"))
+        for unit in catalog.get("units", []):
+            unit["file"] = remap(unit["file"])
+            unit["key"] = remap(unit["key"])
+            if unit["key"] not in seen:
+                seen[unit["key"]] = True
+                merged_units.append(unit)
+
+    Path(args.out).write_text(json.dumps({"units": merged_units}, indent=2), encoding="utf-8")
     return 0
 
 
