@@ -1,5 +1,5 @@
 {
-  "overall_coverage": 0.47586605080831407,
+  "overall_coverage": 0.5562355658198614,
   "by_file": {
     "plasmoid/package/contents/ui/task/TaskItem.qml": {
       "loc_hit": 431,
@@ -205,11 +205,11 @@
       "coverage": 0.0
     },
     "containment/package/contents/ui/abilities/Launchers.qml": {
-      "loc_hit": 0,
+      "loc_hit": 79,
       "loc_total": 79,
-      "units_hit": 0,
+      "units_hit": 13,
       "units_total": 13,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "plasmoid/package/contents/ui/task/TaskMouseArea.qml": {
       "loc_hit": 0,
@@ -233,18 +233,18 @@
       "coverage": 0.2647058823529412
     },
     "containment/package/contents/ui/abilities/privates/ParabolicEffectPrivate.qml": {
-      "loc_hit": 0,
+      "loc_hit": 67,
       "loc_total": 67,
-      "units_hit": 0,
+      "units_hit": 10,
       "units_total": 10,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "plasmoid/package/contents/ui/PulseAudio.qml": {
-      "loc_hit": 0,
+      "loc_hit": 52,
       "loc_total": 66,
-      "units_hit": 0,
+      "units_hit": 7,
       "units_total": 11,
-      "coverage": 0.0
+      "coverage": 0.7878787878787878
     },
     "shell/package/contents/controls/TypeSelection.qml": {
       "loc_hit": 0,
@@ -282,11 +282,11 @@
       "coverage": 0.171875
     },
     "declarativeimports/abilities/host/ThinTooltip.qml": {
-      "loc_hit": 0,
+      "loc_hit": 63,
       "loc_total": 63,
-      "units_hit": 0,
+      "units_hit": 7,
       "units_total": 7,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "containment/package/contents/ui/layouts/LayoutsContainer.qml": {
       "loc_hit": 0,
@@ -303,11 +303,11 @@
       "coverage": 0.5
     },
     "shell/package/contents/views/Panel.qml": {
-      "loc_hit": 0,
+      "loc_hit": 58,
       "loc_total": 58,
-      "units_hit": 0,
+      "units_hit": 5,
       "units_total": 5,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "declarativeimports/components/SpriteRectangle.qml": {
       "loc_hit": 0,
@@ -317,11 +317,11 @@
       "coverage": 0.0
     },
     "declarativeimports/abilities/client/indicators/LatteIndicator.qml": {
-      "loc_hit": 0,
+      "loc_hit": 56,
       "loc_total": 56,
-      "units_hit": 0,
+      "units_hit": 9,
       "units_total": 9,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "plasmoid/package/contents/ui/task/animations/NewWindowAnimation.qml": {
       "loc_hit": 7,
@@ -331,11 +331,11 @@
       "coverage": 0.125
     },
     "containment/package/contents/ui/abilities/privates/IndexerPrivate.qml": {
-      "loc_hit": 0,
+      "loc_hit": 55,
       "loc_total": 55,
-      "units_hit": 0,
+      "units_hit": 3,
       "units_total": 3,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "declarativeimports/components/ComboBox.qml": {
       "loc_hit": 0,
@@ -352,11 +352,11 @@
       "coverage": 0.0
     },
     "containment/package/contents/ui/layouts/ParabolicEdgeSpacer.qml": {
-      "loc_hit": 0,
+      "loc_hit": 51,
       "loc_total": 51,
-      "units_hit": 0,
+      "units_hit": 6,
       "units_total": 6,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "declarativeimports/abilities/items/basicitem/ParabolicItem.qml": {
       "loc_hit": 23,
@@ -387,25 +387,25 @@
       "coverage": 0.0
     },
     "containment/package/contents/ui/abilities/Indexer.qml": {
-      "loc_hit": 0,
+      "loc_hit": 45,
       "loc_total": 45,
-      "units_hit": 0,
+      "units_hit": 2,
       "units_total": 2,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "declarativeimports/abilities/definition/ParabolicEffect.qml": {
-      "loc_hit": 0,
+      "loc_hit": 43,
       "loc_total": 43,
-      "units_hit": 0,
+      "units_hit": 3,
       "units_total": 3,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "declarativeimports/abilities/client/Indexer.qml": {
-      "loc_hit": 0,
+      "loc_hit": 41,
       "loc_total": 41,
-      "units_hit": 0,
+      "units_hit": 4,
       "units_total": 4,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "declarativeimports/abilities/client/Requirements.qml": {
       "loc_hit": 0,
@@ -415,11 +415,11 @@
       "coverage": 0.0
     },
     "containment/package/contents/ui/applet/communicator/Actions.qml": {
-      "loc_hit": 0,
+      "loc_hit": 38,
       "loc_total": 38,
-      "units_hit": 0,
+      "units_hit": 4,
       "units_total": 4,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "shell/package/contents/views/AppletDelegate.qml": {
       "loc_hit": 0,
@@ -450,11 +450,11 @@
       "coverage": 0.1935483870967742
     },
     "declarativeimports/abilities/client/ThinTooltip.qml": {
-      "loc_hit": 0,
+      "loc_hit": 29,
       "loc_total": 29,
-      "units_hit": 0,
+      "units_hit": 5,
       "units_total": 5,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "declarativeimports/abilities/client/PositionShortcuts.qml": {
       "loc_hit": 0,
@@ -618,11 +618,11 @@
       "coverage": 0.46153846153846156
     },
     "declarativeimports/components/IndicatorItem.qml": {
-      "loc_hit": 0,
+      "loc_hit": 13,
       "loc_total": 13,
-      "units_hit": 0,
+      "units_hit": 1,
       "units_total": 1,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "declarativeimports/abilities/host/MyView.qml": {
       "loc_hit": 0,
@@ -632,11 +632,11 @@
       "coverage": 0.0
     },
     "declarativeimports/abilities/host/ParabolicEffect.qml": {
-      "loc_hit": 0,
+      "loc_hit": 6,
       "loc_total": 12,
-      "units_hit": 0,
+      "units_hit": 2,
       "units_total": 4,
-      "coverage": 0.0
+      "coverage": 0.5
     },
     "declarativeimports/abilities/items/basicitem/HiddenSpacer.qml": {
       "loc_hit": 0,
