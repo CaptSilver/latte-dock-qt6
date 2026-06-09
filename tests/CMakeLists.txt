@@ -153,4 +153,21 @@ set_tests_properties(qmlloadcompile PROPERTIES
 add_test(NAME qmlinteraction COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/manual/qml_interaction_test.sh)
 set_tests_properties(qmlinteraction PROPERTIES TIMEOUT 120)
 
+# When coverage is on, instrument every test binary AND the production sources
+# linked into it (ecm_add_test compiles the listed app/* sources into the target).
+# Add new test names here when adding tests.
+if(LATTE_COVERAGE)
+    set(_latte_cov_targets
+        importernametest indicatorsknsrctest templatesnametest storageroundtriptest
+        abstractlayouttest bindingrestoremodetest alternativescreateapplettest
+        activitiesinfotest syncedlaunchersclienttest layershellmappingtest
+        windowinfowraptest visibilityrevealtest coretypesenumtest appletzoomsizetest
+        panelbackgroundtest configcontrolstest contextmenudefaulttest
+        editmodehandleactiontest smartlauncheritemtest tasksbackendtest)
+    foreach(_t ${_latte_cov_targets})
+        target_compile_options(${_t} PRIVATE ${LATTE_COV_COMPILE_FLAGS})
+        target_link_options(${_t} PRIVATE ${LATTE_COV_LINK_FLAGS})
+    endforeach()
+endif()
+
 add_subdirectory(manual)
