@@ -1,5 +1,5 @@
 {
-  "overall_coverage": 0.029907621247113166,
+  "overall_coverage": 0.1468822170900693,
   "by_file": {
     "plasmoid/package/contents/ui/task/TaskItem.qml": {
       "loc_hit": 0,
@@ -44,11 +44,11 @@
       "coverage": 0.0
     },
     "containment/package/contents/ui/applet/AppletItem.qml": {
-      "loc_hit": 0,
+      "loc_hit": 135,
       "loc_total": 283,
-      "units_hit": 0,
+      "units_hit": 11,
       "units_total": 20,
-      "coverage": 0.0
+      "coverage": 0.47703180212014135
     },
     "containment/package/contents/ui/main.qml": {
       "loc_hit": 0,
@@ -58,18 +58,18 @@
       "coverage": 0.0
     },
     "plasmoid/package/contents/ui/TasksExtendedManager.qml": {
-      "loc_hit": 247,
+      "loc_hit": 0,
       "loc_total": 270,
-      "units_hit": 28,
+      "units_hit": 0,
       "units_total": 34,
-      "coverage": 0.9148148148148149
+      "coverage": 0.0
     },
     "shell/package/contents/configuration/pages/AppearanceConfig.qml": {
-      "loc_hit": 0,
+      "loc_hit": 224,
       "loc_total": 267,
-      "units_hit": 0,
+      "units_hit": 39,
       "units_total": 51,
-      "coverage": 0.0
+      "coverage": 0.8389513108614233
     },
     "plasmoid/package/contents/ui/task/SubWindows.qml": {
       "loc_hit": 0,
@@ -79,18 +79,18 @@
       "coverage": 0.0
     },
     "shell/package/contents/configuration/pages/BehaviorConfig.qml": {
-      "loc_hit": 0,
+      "loc_hit": 158,
       "loc_total": 193,
-      "units_hit": 0,
+      "units_hit": 24,
       "units_total": 31,
-      "coverage": 0.0
+      "coverage": 0.8186528497409327
     },
     "containment/package/contents/ui/abilities/AutoSize.qml": {
-      "loc_hit": 0,
+      "loc_hit": 168,
       "loc_total": 172,
-      "units_hit": 0,
+      "units_hit": 12,
       "units_total": 13,
-      "coverage": 0.0
+      "coverage": 0.9767441860465116
     },
     "declarativeimports/abilities/items/basicitem/ParabolicEventsArea.qml": {
       "loc_hit": 0,
@@ -100,25 +100,25 @@
       "coverage": 0.0
     },
     "shell/package/contents/controls/CustomIndicatorButton.qml": {
-      "loc_hit": 0,
+      "loc_hit": 140,
       "loc_total": 145,
-      "units_hit": 0,
+      "units_hit": 11,
       "units_total": 12,
-      "coverage": 0.0
+      "coverage": 0.9655172413793104
     },
     "shell/package/contents/configuration/LatteDockConfiguration.qml": {
-      "loc_hit": 0,
+      "loc_hit": 6,
       "loc_total": 141,
-      "units_hit": 0,
+      "units_hit": 1,
       "units_total": 23,
-      "coverage": 0.0
+      "coverage": 0.0425531914893617
     },
     "containment/package/contents/ui/editmode/ConfigOverlay.qml": {
-      "loc_hit": 0,
+      "loc_hit": 130,
       "loc_total": 130,
-      "units_hit": 0,
+      "units_hit": 12,
       "units_total": 12,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "declarativeimports/abilities/client/ParabolicEffect.qml": {
       "loc_hit": 0,
@@ -142,11 +142,11 @@
       "coverage": 0.0
     },
     "shell/package/contents/configuration/pages/EffectsConfig.qml": {
-      "loc_hit": 0,
+      "loc_hit": 61,
       "loc_total": 120,
-      "units_hit": 0,
+      "units_hit": 14,
       "units_total": 26,
-      "coverage": 0.0
+      "coverage": 0.5083333333333333
     },
     "plasmoid/package/contents/ui/task/animations/ShowWindowAnimation.qml": {
       "loc_hit": 0,
@@ -177,11 +177,11 @@
       "coverage": 0.0
     },
     "shell/package/contents/applet/CompactApplet.qml": {
-      "loc_hit": 0,
+      "loc_hit": 96,
       "loc_total": 96,
-      "units_hit": 0,
+      "units_hit": 7,
       "units_total": 7,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "shell/package/contents/views/WidgetExplorer.qml": {
       "loc_hit": 0,
@@ -191,11 +191,11 @@
       "coverage": 0.0
     },
     "containment/package/contents/ui/applet/ItemWrapper.qml": {
-      "loc_hit": 0,
+      "loc_hit": 53,
       "loc_total": 88,
-      "units_hit": 0,
+      "units_hit": 9,
       "units_total": 11,
-      "coverage": 0.0
+      "coverage": 0.6022727272727273
     },
     "containment/package/contents/ui/background/MultiLayered.qml": {
       "loc_hit": 0,
@@ -275,11 +275,11 @@
       "coverage": 0.0
     },
     "shell/package/contents/controls/IndicatorConfigUiManager.qml": {
-      "loc_hit": 0,
+      "loc_hit": 5,
       "loc_total": 64,
-      "units_hit": 0,
+      "units_hit": 1,
       "units_total": 4,
-      "coverage": 0.0
+      "coverage": 0.078125
     },
     "declarativeimports/abilities/host/ThinTooltip.qml": {
       "loc_hit": 0,
@@ -296,11 +296,11 @@
       "coverage": 0.0
     },
     "shell/package/contents/controls/CustomVisibilityModeButton.qml": {
-      "loc_hit": 0,
+      "loc_hit": 29,
       "loc_total": 58,
-      "units_hit": 0,
+      "units_hit": 4,
       "units_total": 9,
-      "coverage": 0.0
+      "coverage": 0.5
     },
     "shell/package/contents/views/Panel.qml": {
       "loc_hit": 0,
@@ -436,11 +436,11 @@
       "coverage": 0.0
     },
     "declarativeimports/components/BadgeText.qml": {
-      "loc_hit": 0,
+      "loc_hit": 16,
       "loc_total": 32,
-      "units_hit": 0,
+      "units_hit": 1,
       "units_total": 3,
-      "coverage": 0.0
+      "coverage": 0.5
     },
     "declarativeimports/abilities/items/BasicItem.qml": {
       "loc_hit": 0,
@@ -464,11 +464,11 @@
       "coverage": 0.0
     },
     "declarativeimports/components/TextField.qml": {
-      "loc_hit": 0,
+      "loc_hit": 4,
       "loc_total": 25,
-      "units_hit": 0,
+      "units_hit": 1,
       "units_total": 5,
-      "coverage": 0.0
+      "coverage": 0.16
     },
     "containment/package/contents/ui/layouts/EnvironmentActions.qml": {
       "loc_hit": 0,
@@ -590,18 +590,18 @@
       "coverage": 0.0
     },
     "declarativeimports/components/private/TextFieldFocus.qml": {
-      "loc_hit": 0,
+      "loc_hit": 14,
       "loc_total": 14,
-      "units_hit": 0,
+      "units_hit": 2,
       "units_total": 2,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "containment/package/contents/ui/applet/ShortcutBadge.qml": {
-      "loc_hit": 0,
+      "loc_hit": 7,
       "loc_total": 14,
-      "units_hit": 0,
+      "units_hit": 1,
       "units_total": 2,
-      "coverage": 0.0
+      "coverage": 0.5
     },
     "declarativeimports/abilities/definition/animations/Tracker.qml": {
       "loc_hit": 0,
@@ -688,11 +688,11 @@
       "coverage": 0.0
     },
     "declarativeimports/components/ComboBoxButton.qml": {
-      "loc_hit": 0,
+      "loc_hit": 8,
       "loc_total": 8,
-      "units_hit": 0,
+      "units_hit": 1,
       "units_total": 1,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "containment/package/contents/ui/applet/IndicatorLevel.qml": {
       "loc_hit": 0,
@@ -716,11 +716,11 @@
       "coverage": 0.0
     },
     "declarativeimports/abilities/items/indicators/LevelOptions.qml": {
-      "loc_hit": 0,
+      "loc_hit": 6,
       "loc_total": 6,
-      "units_hit": 0,
+      "units_hit": 2,
       "units_total": 2,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "plasmoid/package/contents/ui/previews/PlasmaCoreThumbnail.qml": {
       "loc_hit": 0,
