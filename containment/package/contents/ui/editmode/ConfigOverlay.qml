@@ -405,9 +405,9 @@ MouseArea {
 
                 configureButton.visible = !currentApplet.isInternalViewSplitter
                         && (currentApplet.applet.plasmoid.pluginName !== "org.kde.latte.plasmoid")
-                        && currentApplet.applet.action("configure")
-                        && currentApplet.applet.action("configure").enabled;
-                closeButton.visible = !currentApplet.isInternalViewSplitter && currentApplet.applet.action("remove") && currentApplet.applet.action("remove").enabled;
+                        && currentApplet.applet.plasmoid.internalAction("configure")
+                        && currentApplet.applet.plasmoid.internalAction("configure").enabled;
+                closeButton.visible = !currentApplet.isInternalViewSplitter && currentApplet.applet.plasmoid.internalAction("remove") && currentApplet.applet.plasmoid.internalAction("remove").enabled;
                 lockButton.visible = !currentApplet.isInternalViewSplitter
                         && !currentApplet.communicator.indexerIsSupported
                         && !currentApplet.communicator.appletBlocksParabolicEffect
@@ -446,7 +446,7 @@ MouseArea {
                         QQC2.ToolTip.visible: hovered
                         onClicked: {
                             tooltip.visible = false;
-                            currentApplet.applet.action("configure").trigger();
+                            currentApplet.applet.plasmoid.internalAction("configure").trigger();
                         }
                     }
 
@@ -494,7 +494,7 @@ MouseArea {
                             onClicked: {
                                 tooltip.visible = false;
                                 if(currentApplet && currentApplet.applet)
-                                    currentApplet.applet.action("remove").trigger();
+                                    currentApplet.applet.plasmoid.internalAction("remove").trigger();
                             }
                         }
                     }

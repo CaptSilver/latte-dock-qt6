@@ -110,6 +110,13 @@ target_compile_definitions(contextmenudefaulttest PRIVATE
     VIEW_CPP_PATH="${CMAKE_SOURCE_DIR}/app/view/view.cpp"
     LATTE_CONTEXTMENU_PLUGIN="${CMAKE_BINARY_DIR}/bin/org.kde.latte.contextmenu.so")
 
+ecm_add_test(editmodehandleactiontest.cpp
+    TEST_NAME editmodehandleactiontest
+    LINK_LIBRARIES Qt6::Test Qt6::Gui
+)
+target_compile_definitions(editmodehandleactiontest PRIVATE
+    CONFIGOVERLAY_QML_PATH="${CMAKE_SOURCE_DIR}/containment/package/contents/ui/editmode/ConfigOverlay.qml")
+
 ecm_add_test(smartlauncheritemtest.cpp
     ${CMAKE_SOURCE_DIR}/plasmoid/plugin/smartlauncheritem.cpp
     ${CMAKE_SOURCE_DIR}/plasmoid/plugin/smartlauncherbackend.cpp
