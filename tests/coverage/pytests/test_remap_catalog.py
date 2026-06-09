@@ -72,3 +72,41 @@ def test_merges_multiple_catalogs_dedup_by_key(tmp_path):
     assert len(data["units"]) == 3
     # No staged install paths survive remapping.
     assert not any("usr/" in u["file"] for u in data["units"])
+
+
+def test_remaps_runlog_tick_keys_to_repo_relative(tmp_path):
+    # A staged tick carries the install prefix; an already-repo-relative tick
+    # (mirror run / _covself) must pass through untouched; non-tick lines stay.
+    runlog = (
+        "QWARN  : qml: __COV_TICK__:usr/share/plasma/plasmoids/"
+        "org.kde.latte.plasmoid/contents/ui/TasksExtendedManager.qml::addToBuffer@10\n"
+        "PASS   : some::test()\n"
+        "QWARN  : qml: __COV_TICK__:tests/qml/_covself/CovSelf.qml::covSelfCovered@6\n"
+        "QWARN  : qml: __COV_TICK__:usr/lib64/qt6/qml/org/kde/latte/components/CheckBox.qml::onClicked@3\n"
+    )
+    src = tmp_path / "run.txt"
+    src.write_text(runlog, encoding="utf-8")
+    out = tmp_path / "run-remapped.txt"
+    r = subprocess.run([sys.executable, str(TOOL), "--runlog", str(src),
+                        "--runlog-out", str(out)],
+                       capture_output=True, text=True)
+    assert r.returncode == 0, r.stderr
+    text = out.read_text()
+    assert ("__COV_TICK__:plasmoid/package/contents/ui/TasksExtendedManager.qml"
+            "::addToBuffer@10") in text
+    assert "__COV_TICK__:declarativeimports/components/CheckBox.qml::onClicked@3" in text
+    # Repo-relative ticks and plain lines survive unchanged.
+    assert "__COV_TICK__:tests/qml/_covself/CovSelf.qml::covSelfCovered@6" in text
+    assert "PASS   : some::test()" in text
+    # No staged prefixes leak through.
+    assert "usr/share/plasma" not in text
+    assert "usr/lib64/qt6" not in text
+
+
+def test_runlog_requires_runlog_out(tmp_path):
+    src = tmp_path / "run.txt"
+    src.write_text("nothing\n", encoding="utf-8")
+    r = subprocess.run([sys.executable, str(TOOL), "--runlog", str(src)],
+                       capture_output=True, text=True)
+    assert r.returncode != 0
+    assert "runlog-out" in r.stderr

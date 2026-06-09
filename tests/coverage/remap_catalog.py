@@ -17,6 +17,7 @@ Entries that don't match any staged prefix pass through unchanged.
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -61,16 +62,41 @@ def remap(s: str) -> str:
     return s
 
 
+# The staged run's __COV_TICK__ keys carry staged install prefixes too, so the
+# runlog needs the same remap as the catalog or report.py can't match a staged
+# tick to its (already repo-relative) catalog unit.
+_TICK = re.compile(r"(__COV_TICK__:)([^\s\"]+)")
+
+
+def remap_runlog(text: str) -> str:
+    return _TICK.sub(lambda m: m.group(1) + remap(m.group(2)), text)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Rewrite staged install paths in a QML coverage catalog to repo-relative paths."
+        description="Rewrite staged install paths in a QML coverage catalog (or runlog) to repo-relative paths."
     )
     parser.add_argument(
-        "--catalog", required=True, action="append",
+        "--catalog", action="append", default=[],
         help="Input catalog JSON file. May be repeated to merge multiple catalogs.",
     )
-    parser.add_argument("--out", required=True, help="Output path for the remapped catalog.")
+    parser.add_argument("--out", help="Output path for the merged, remapped catalog.")
+    parser.add_argument(
+        "--runlog",
+        help="Input runlog whose __COV_TICK__ keys should be remapped to repo-relative.",
+    )
+    parser.add_argument("--runlog-out", help="Output path for the remapped runlog.")
     args = parser.parse_args(argv)
+
+    if args.runlog:
+        if not args.runlog_out:
+            parser.error("--runlog requires --runlog-out")
+        text = Path(args.runlog).read_text(encoding="utf-8", errors="replace")
+        Path(args.runlog_out).write_text(remap_runlog(text), encoding="utf-8")
+        return 0
+
+    if not args.catalog or not args.out:
+        parser.error("catalog mode requires --catalog and --out")
 
     seen: dict[str, bool] = {}
     merged_units: list[dict] = []

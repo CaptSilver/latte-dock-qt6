@@ -1,5 +1,5 @@
 {
-  "overall_coverage": 0.0013856812933025404,
+  "overall_coverage": 0.029907621247113166,
   "by_file": {
     "plasmoid/package/contents/ui/task/TaskItem.qml": {
       "loc_hit": 0,
@@ -58,11 +58,11 @@
       "coverage": 0.0
     },
     "plasmoid/package/contents/ui/TasksExtendedManager.qml": {
-      "loc_hit": 0,
+      "loc_hit": 247,
       "loc_total": 270,
-      "units_hit": 0,
+      "units_hit": 28,
       "units_total": 34,
-      "coverage": 0.0
+      "coverage": 0.9148148148148149
     },
     "shell/package/contents/configuration/pages/AppearanceConfig.qml": {
       "loc_hit": 0,
