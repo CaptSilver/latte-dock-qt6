@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Coverage ratchet as a pre-push gate. Install with:
+#   ln -sf ../../tests/coverage/pre-push.sample .git/hooks/pre-push
+# Runs the gate inside the fedora distrobox; blocks the push on regression.
+set -euo pipefail
+exec distrobox enter fedora -- bash -lc '~/build/latte-dock/tests/coverage/run.sh'
