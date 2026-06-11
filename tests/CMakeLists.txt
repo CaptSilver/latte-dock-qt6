@@ -192,3 +192,4 @@ if(LATTE_COVERAGE)
 endif()
 
 add_subdirectory(manual)
+add_subdirectory(sceneprobe)
