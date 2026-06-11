@@ -7,6 +7,10 @@
 # Usage (inside the fedora distrobox):
 #   tests/sceneprobe/run.sh [build-dir]   (default: build-asan if built, else build)
 set -u
+SCENEPROBE_DEVICE=lavapipe
+if [ "${1:-}" = "--device" ]; then SCENEPROBE_DEVICE="${2:-lavapipe}"; shift 2; fi
+export SCENEPROBE_DEVICE
+
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 HERE="$REPO/tests/sceneprobe"
 WRAP="$HERE/run_in_kwin.sh"
@@ -14,6 +18,7 @@ BUILD="${1:-$REPO/build-asan}"
 [ -x "$BUILD/bin/latte-sceneprobe" ] || BUILD="$REPO/build"
 PROBE="$BUILD/bin/latte-sceneprobe"
 [ -x "$PROBE" ] || { echo "no latte-sceneprobe at $PROBE (build it first)"; exit 2; }
+echo "device mode: $SCENEPROBE_DEVICE"
 
 OUT="$(mktemp)"; trap 'rm -f "$OUT"' EXIT
 

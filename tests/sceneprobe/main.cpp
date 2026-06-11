@@ -108,6 +108,9 @@ int main(int argc, char **argv)
     QRhi *rhi = renderControl.rhi();
     if (!rhi) { std::fprintf(stderr, "FATAL: no QRhi (backend not vulkan?)\n"); return 2; }
 
+    const QRhiDriverInfo di = rhi->driverInfo();
+    std::printf("render device: %s\n", di.deviceName.constData());
+
     QScopedPointer<QRhiTexture> tex(rhi->newTexture(QRhiTexture::RGBA8, size, 1,
         QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource));
     tex->create();
