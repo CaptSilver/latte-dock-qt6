@@ -17,8 +17,20 @@ PROBE="$BUILD/bin/latte-sceneprobe"
 
 OUT="$(mktemp)"; trap 'rm -f "$OUT"' EXIT
 
+# Stage the current source's Latte QML modules into a fresh dir so scenes can import the
+# real org.kde.latte.components types — the system copy in this environment can be stale
+# (qmldir lists files that aren't installed). The modules are source .qml copied by install,
+# so they reflect current source regardless of build state. Installs from the normal build.
+STAGE_BUILD="$REPO/build"
+[ -d "$STAGE_BUILD" ] || { echo "no build dir at $STAGE_BUILD to stage QML from"; exit 2; }
+STAGE="$(mktemp -d)"
+trap 'rm -f "$OUT"; rm -rf "$STAGE"' EXIT
+if ! DESTDIR="$STAGE" cmake --install "$STAGE_BUILD" >/tmp/sceneprobe-stage.log 2>&1; then
+    echo "QML staging failed (cmake --install):"; tail -8 /tmp/sceneprobe-stage.log; exit 2
+fi
+
 export LATTE_VK_SUPPRESSIONS="$HERE/vk-suppressions.txt"
-export LATTE_QML_IMPORT_PATH="${LATTE_QML_IMPORT_PATH:-/usr/lib64/qt6/qml}"
+export LATTE_QML_IMPORT_PATH="$STAGE/usr/lib64/qt6/qml"
 export ASAN_OPTIONS="detect_leaks=0:halt_on_error=1:exitcode=99"
 
 run_scene(){ "$WRAP" "$PROBE" "$1" >"$OUT" 2>&1; return $?; }
