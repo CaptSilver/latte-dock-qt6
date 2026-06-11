@@ -117,6 +117,18 @@ ecm_add_test(editmodehandleactiontest.cpp
 target_compile_definitions(editmodehandleactiontest PRIVATE
     CONFIGOVERLAY_QML_PATH="${CMAKE_SOURCE_DIR}/containment/package/contents/ui/editmode/ConfigOverlay.qml")
 
+qt_wrap_cpp(appletremovaltest_TYPES_MOC ${CMAKE_BINARY_DIR}/containment/plugin/lattetypes.h)
+ecm_add_test(appletremovaltest.cpp
+    ${CMAKE_SOURCE_DIR}/containment/plugin/layoutmanager.cpp
+    ${appletremovaltest_TYPES_MOC}
+    TEST_NAME appletremovaltest
+    LINK_LIBRARIES Qt6::Test Qt6::Gui Qt6::Qml Qt6::Quick Plasma::Plasma Plasma::PlasmaQuick KF6::ConfigQml
+)
+target_include_directories(appletremovaltest PRIVATE
+    ${CMAKE_SOURCE_DIR}/containment/plugin
+    ${CMAKE_BINARY_DIR}/containment)
+set_tests_properties(appletremovaltest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 ecm_add_test(coverage/selftest/covselftest.cpp coverage/selftest/covself.cpp
     TEST_NAME covselftest
     LINK_LIBRARIES Qt6::Test

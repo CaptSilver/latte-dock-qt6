@@ -1272,13 +1272,11 @@ void LayoutManager::removeAppletItem(QObject *applet)
         return;
     }
 
-    int id = plasmaApplet->id();
-
-    if (plasmaApplet->destroyed() && !m_appletsInScheduledDestruction.contains(id)/*this way we really delete it in the end*/) {
-        setAppletInScheduledDestruction(id, true);
-        return;
-    }
-
+    //! Plasma 6 emits Containment::appletRemoved with the applet already marked destroyed(), and
+    //! unlike Plasma 5 it never calls back a second time. The previous two-phase code parked the
+    //! container on that first call and returned, waiting for a follow-up that never comes — so a
+    //! removed widget stayed parked in m_appletsInScheduledDestruction and was never deleted.
+    //! Finalize now; destroyAppletContainer() locates the container by matching applet().
     destroyAppletContainer(plasmaApplet);
 }
 
