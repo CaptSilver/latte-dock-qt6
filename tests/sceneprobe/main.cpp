@@ -9,10 +9,39 @@
 #include <QQmlComponent>
 #include <QQuickRenderTarget>
 #include <rhi/qrhi.h>
+#include <vulkan/vulkan.h>
+#include <atomic>
 #include <cstdio>
+
+static std::atomic_bool g_shaderError{false};
+
+static void messageHandler(QtMsgType type, const QMessageLogContext &ctx, const QString &msg)
+{
+    if (msg.contains(QLatin1String("Failed to deserialize QShader"))
+        || msg.contains(QLatin1String("shader preparation failed"))
+        || (ctx.category && QLatin1String(ctx.category) == QLatin1String("qt.scenegraph.general")
+            && type >= QtWarningMsg)) {
+        g_shaderError = true;
+    }
+    std::fprintf(stderr, "[qt] %s\n", qPrintable(msg)); // keep Qt output visible
+}
+
+static std::atomic_bool g_validationError{false};
+
+static VKAPI_ATTR VkBool32 VKAPI_CALL vkDebugCb(
+    VkDebugUtilsMessageSeverityFlagBitsEXT severity,
+    VkDebugUtilsMessageTypeFlagsEXT, const VkDebugUtilsMessengerCallbackDataEXT *data, void *)
+{
+    if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
+        g_validationError = true;
+        std::fprintf(stderr, "[vk-validation ERROR] %s\n", data->pMessage);
+    }
+    return VK_FALSE;
+}
 
 int main(int argc, char **argv)
 {
+    qInstallMessageHandler(messageHandler);
     qputenv("QSG_RHI_BACKEND", "vulkan");
     QGuiApplication app(argc, argv);
 
@@ -25,6 +54,22 @@ int main(int argc, char **argv)
     inst.setLayers({ QByteArrayLiteral("VK_LAYER_KHRONOS_validation") });
     inst.setExtensions({ QByteArrayLiteral("VK_EXT_debug_utils") });
     if (!inst.create()) { std::fprintf(stderr, "FATAL: QVulkanInstance::create failed (err %d)\n", inst.errorCode()); return 2; }
+
+    auto createMsgr = (PFN_vkCreateDebugUtilsMessengerEXT)
+        inst.getInstanceProcAddr("vkCreateDebugUtilsMessengerEXT");
+    auto destroyMsgr = (PFN_vkDestroyDebugUtilsMessengerEXT)
+        inst.getInstanceProcAddr("vkDestroyDebugUtilsMessengerEXT");
+    VkDebugUtilsMessengerEXT messenger = VK_NULL_HANDLE;
+    if (createMsgr) {
+        VkDebugUtilsMessengerCreateInfoEXT ci{};
+        ci.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+        ci.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT
+                           | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT;
+        ci.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT
+                       | VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT;
+        ci.pfnUserCallback = vkDebugCb;
+        createMsgr(inst.vkInstance(), &ci, nullptr, &messenger);
+    }
 
     QQuickRenderControl renderControl;
     QQuickWindow window(&renderControl);
@@ -72,6 +117,13 @@ int main(int argc, char **argv)
         renderControl.endFrame();
         QCoreApplication::processEvents();
     }
-    std::printf("rendered %d frames of %s\n", frames, qPrintable(scenePath));
+    // Destroy messenger before the QVulkanInstance goes out of scope; validation
+    // fires VUID-vkDestroyInstance-instance-00629 if we don't.
+    if (messenger != VK_NULL_HANDLE && destroyMsgr)
+        destroyMsgr(inst.vkInstance(), messenger, nullptr);
+
+    if (g_validationError) { std::fprintf(stderr, "GATE FAIL: Vulkan validation error\n"); return 1; }
+    if (g_shaderError)     { std::fprintf(stderr, "GATE FAIL: Qt shader/scene-graph error\n"); return 1; }
+    std::printf("rendered %d frames of %s — clean\n", frames, qPrintable(scenePath));
     return 0;
 }
