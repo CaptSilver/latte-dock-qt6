@@ -12,6 +12,9 @@
 #include <vulkan/vulkan.h>
 #include <atomic>
 #include <cstdio>
+#include <fstream>
+#include <set>
+#include <string>
 
 static std::atomic_bool g_shaderError{false};
 
@@ -27,12 +30,20 @@ static void messageHandler(QtMsgType type, const QMessageLogContext &ctx, const 
 }
 
 static std::atomic_bool g_validationError{false};
+static std::set<std::string> g_vkSuppress;
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL vkDebugCb(
     VkDebugUtilsMessageSeverityFlagBitsEXT severity,
     VkDebugUtilsMessageTypeFlagsEXT, const VkDebugUtilsMessengerCallbackDataEXT *data, void *)
 {
     if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
+        const std::string id = data->pMessageIdName ? data->pMessageIdName : "";
+        for (const std::string &s : g_vkSuppress) {
+            if (!s.empty() && id.find(s) != std::string::npos) {
+                std::fprintf(stderr, "[vk-validation SUPPRESSED] %s\n", data->pMessage);
+                return VK_FALSE;
+            }
+        }
         g_validationError = true;
         std::fprintf(stderr, "[vk-validation ERROR] %s\n", data->pMessage);
     }
@@ -75,6 +86,17 @@ int main(int argc, char **argv)
     QQuickWindow window(&renderControl);
     window.setVulkanInstance(&inst);
     window.setColor(Qt::black);
+
+    if (const QByteArray supPath = qgetenv("LATTE_VK_SUPPRESSIONS"); !supPath.isEmpty()) {
+        std::ifstream f(supPath.constData());
+        std::string line;
+        while (std::getline(f, line)) {
+            const auto a = line.find_first_not_of(" \t\r\n");
+            if (a == std::string::npos || line[a] == '#') continue;
+            const auto b = line.find_last_not_of(" \t\r\n");
+            g_vkSuppress.insert(line.substr(a, b - a + 1));
+        }
+    }
 
     if (!renderControl.initialize()) { std::fprintf(stderr, "FATAL: renderControl.initialize failed\n"); return 2; }
     QRhi *rhi = renderControl.rhi();

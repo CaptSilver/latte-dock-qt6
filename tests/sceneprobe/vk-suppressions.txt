@@ -1,0 +1,7 @@
+# Vulkan validation VUIDs to ignore in latte-sceneprobe. Each line is a VUID id
+# (substring-matched against pMessageIdName). Suppress only confirmed Qt/driver-internal
+# false positives that fire on a scene with no Latte code, with a one-line reason.
+# Qt RHI requests VK_KHR_create_renderpass2 without its dependency extensions on lavapipe:
+VUID-vkCreateDevice-ppEnabledExtensionNames-01387
+# validation-layer vs lavapipe version skew on Qt's own scenegraph SPIR-V:
+VUID-VkShaderModuleCreateInfo-pCode-08740

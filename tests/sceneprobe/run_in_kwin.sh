@@ -14,6 +14,9 @@ echo 124 > "$ECF"
 {
   printf '#!/bin/bash\n'
   printf 'export QT_QPA_PLATFORM=wayland QSG_RHI_BACKEND=vulkan VK_ICD_FILENAMES=%q LP_NUM_THREADS=0\n' "$ICD"
+  for v in LATTE_VK_SUPPRESSIONS LATTE_QML_IMPORT_PATH ASAN_OPTIONS; do
+    if [ -n "${!v:-}" ]; then printf 'export %s=%q\n' "$v" "${!v}"; fi
+  done
   printf '%q ' "$@"
   printf '>%q 2>&1; echo $? >%q\n' "$OUTF" "$ECF"
 } > "$SESS"
