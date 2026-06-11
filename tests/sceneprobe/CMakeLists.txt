@@ -1,5 +1,5 @@
 find_package(Vulkan REQUIRED)
-find_package(Qt6 COMPONENTS GuiPrivate)
+find_package(Qt6 REQUIRED COMPONENTS GuiPrivate)
 
 option(LATTE_SCENEPROBE_ASAN "Build latte-sceneprobe with AddressSanitizer" OFF)
 

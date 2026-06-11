@@ -1,6 +1,7 @@
 // latte-sceneprobe: render a QML scene offscreen on Vulkan for N frames.
 // Runs under a nested kwin_wayland session (wayland QPA) so QVulkanInstance works.
 #include <QGuiApplication>
+#include <QScopeGuard>
 #include <QVulkanInstance>
 #include <QQuickRenderControl>
 #include <QQuickWindow>
@@ -68,8 +69,6 @@ int main(int argc, char **argv)
 
     auto createMsgr = (PFN_vkCreateDebugUtilsMessengerEXT)
         inst.getInstanceProcAddr("vkCreateDebugUtilsMessengerEXT");
-    auto destroyMsgr = (PFN_vkDestroyDebugUtilsMessengerEXT)
-        inst.getInstanceProcAddr("vkDestroyDebugUtilsMessengerEXT");
     VkDebugUtilsMessengerEXT messenger = VK_NULL_HANDLE;
     if (createMsgr) {
         VkDebugUtilsMessengerCreateInfoEXT ci{};
@@ -81,6 +80,13 @@ int main(int argc, char **argv)
         ci.pfnUserCallback = vkDebugCb;
         createMsgr(inst.vkInstance(), &ci, nullptr, &messenger);
     }
+    auto messengerGuard = qScopeGuard([&] {
+        if (messenger != VK_NULL_HANDLE) {
+            auto destroyMsgr = (PFN_vkDestroyDebugUtilsMessengerEXT)
+                inst.getInstanceProcAddr("vkDestroyDebugUtilsMessengerEXT");
+            if (destroyMsgr) destroyMsgr(inst.vkInstance(), messenger, nullptr);
+        }
+    });
 
     QQuickRenderControl renderControl;
     QQuickWindow window(&renderControl);
@@ -139,11 +145,6 @@ int main(int argc, char **argv)
         renderControl.endFrame();
         QCoreApplication::processEvents();
     }
-    // Destroy messenger before the QVulkanInstance goes out of scope; validation
-    // fires VUID-vkDestroyInstance-instance-00629 if we don't.
-    if (messenger != VK_NULL_HANDLE && destroyMsgr)
-        destroyMsgr(inst.vkInstance(), messenger, nullptr);
-
     if (g_validationError) { std::fprintf(stderr, "GATE FAIL: Vulkan validation error\n"); return 1; }
     if (g_shaderError)     { std::fprintf(stderr, "GATE FAIL: Qt shader/scene-graph error\n"); return 1; }
     std::printf("rendered %d frames of %s — clean\n", frames, qPrintable(scenePath));

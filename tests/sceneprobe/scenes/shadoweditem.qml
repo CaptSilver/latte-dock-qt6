@@ -1,9 +1,9 @@
-// Renders the MultiEffect-based drop shadow that ShadowedItem (org.kde.latte.components)
-// wraps, sized as a typical dock icon. ShadowedItem IS a MultiEffect with shadowEnabled +
-// shadowBlurFor() defaults; the scene instantiates that equivalent directly so it
-// doesn't need the pure-QML module (which Qt6 can't resolve file-based types from when
-// using addImportPath in a nested kwin session — a known Qt6 limitation with plugin-less
-// modules). The shadow formula is shadowBlur = min(1.0, sizePx / blurMaxPx).
+// Exercises the shadow render path used by Latte's ShadowedItem. ShadowedItem is itself a thin
+// MultiEffect wrapper, so this inlines MultiEffect with the same props to avoid depending on a
+// freshly-installed org.kde.latte.components module. Importing the real component works once that
+// module is installed up to date; staging the current source modules onto LATTE_QML_IMPORT_PATH
+// (ahead of the system copy) is the way to test Latte's own component here later.
+// The shadow formula is shadowBlur = min(1.0, sizePx / blurMaxPx).
 import QtQuick
 import QtQuick.Effects
 
