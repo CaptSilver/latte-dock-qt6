@@ -1,65 +1,77 @@
-// latte-sceneprobe: headless Vulkan render gate. Task 0 = instance smoke test only.
-//
-// QVulkanInstance requires the QPA to advertise Vulkan support, which the offscreen
-// platform does not do.  We load Vulkan directly and hand the VkInstance to Qt only
-// for the function-pointer table (QVulkanFunctions), keeping everything else headless.
+// latte-sceneprobe: render a QML scene offscreen on Vulkan for N frames.
+// Runs under a nested kwin_wayland session (wayland QPA) so QVulkanInstance works.
 #include <QGuiApplication>
-#include <vulkan/vulkan.h>
+#include <QVulkanInstance>
+#include <QQuickRenderControl>
+#include <QQuickWindow>
+#include <QQuickItem>
+#include <QQmlEngine>
+#include <QQmlComponent>
+#include <QQuickRenderTarget>
+#include <rhi/qrhi.h>
 #include <cstdio>
-#include <cstring>
-
-static bool hasLayer(const char *name)
-{
-    uint32_t n = 0;
-    vkEnumerateInstanceLayerProperties(&n, nullptr);
-    QVector<VkLayerProperties> props(n);
-    vkEnumerateInstanceLayerProperties(&n, props.data());
-    for (const auto &p : props)
-        if (std::strcmp(p.layerName, name) == 0)
-            return true;
-    return false;
-}
 
 int main(int argc, char **argv)
 {
-    qputenv("QT_QPA_PLATFORM", "offscreen");
+    qputenv("QSG_RHI_BACKEND", "vulkan");
     QGuiApplication app(argc, argv);
 
-    const char *layerName = "VK_LAYER_KHRONOS_validation";
-    const bool validationAvailable = hasLayer(layerName);
-    std::printf("VK_LAYER_KHRONOS_validation available: %s\n",
-                validationAvailable ? "yes" : "no (skipped)");
+    if (app.arguments().size() < 2) { std::fprintf(stderr, "usage: latte-sceneprobe scene.qml\n"); return 2; }
+    const QString scenePath = app.arguments().at(1);
+    const int frames = 5;
+    const QSize size(256, 256);
 
-    const char *layers[] = {layerName};
-    VkApplicationInfo ai = {};
-    ai.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    ai.apiVersion = VK_API_VERSION_1_1;
-    VkInstanceCreateInfo ci = {};
-    ci.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    ci.pApplicationInfo = &ai;
-    if (validationAvailable) {
-        ci.enabledLayerCount = 1;
-        ci.ppEnabledLayerNames = layers;
-    }
+    QVulkanInstance inst;
+    inst.setLayers({ QByteArrayLiteral("VK_LAYER_KHRONOS_validation") });
+    inst.setExtensions({ QByteArrayLiteral("VK_EXT_debug_utils") });
+    if (!inst.create()) { std::fprintf(stderr, "FATAL: QVulkanInstance::create failed (err %d)\n", inst.errorCode()); return 2; }
 
-    VkInstance vkInst = VK_NULL_HANDLE;
-    VkResult r = vkCreateInstance(&ci, nullptr, &vkInst);
-    if (r != VK_SUCCESS) {
-        std::fprintf(stderr, "FATAL: vkCreateInstance failed (VkResult %d)\n", r);
+    QQuickRenderControl renderControl;
+    QQuickWindow window(&renderControl);
+    window.setVulkanInstance(&inst);
+    window.setColor(Qt::black);
+
+    if (!renderControl.initialize()) { std::fprintf(stderr, "FATAL: renderControl.initialize failed\n"); return 2; }
+    QRhi *rhi = renderControl.rhi();
+    if (!rhi) { std::fprintf(stderr, "FATAL: no QRhi (backend not vulkan?)\n"); return 2; }
+
+    QScopedPointer<QRhiTexture> tex(rhi->newTexture(QRhiTexture::RGBA8, size, 1,
+        QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource));
+    tex->create();
+    QScopedPointer<QRhiRenderBuffer> ds(rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, size, 1));
+    ds->create();
+    QRhiTextureRenderTargetDescription rtDesc(QRhiColorAttachment(tex.data()));
+    rtDesc.setDepthStencilBuffer(ds.data());
+    QScopedPointer<QRhiTextureRenderTarget> rt(rhi->newTextureRenderTarget(rtDesc));
+    QScopedPointer<QRhiRenderPassDescriptor> rp(rt->newCompatibleRenderPassDescriptor());
+    rt->setRenderPassDescriptor(rp.data());
+    rt->create();
+    window.setRenderTarget(QQuickRenderTarget::fromRhiRenderTarget(rt.data()));
+
+    QQmlEngine engine;
+    const QByteArray extra = qgetenv("LATTE_QML_IMPORT_PATH");
+    if (!extra.isEmpty()) engine.addImportPath(QString::fromLocal8Bit(extra));
+    QQmlComponent component(&engine, QUrl::fromLocalFile(scenePath));
+    QObject *root = component.create();
+    if (!root) {
+        for (const QQmlError &e : component.errors()) std::fprintf(stderr, "QML: %s\n", qPrintable(e.toString()));
         return 2;
     }
-    std::printf("validation layer requested; instance up\n");
+    QQuickItem *rootItem = qobject_cast<QQuickItem *>(root);
+    if (!rootItem) { std::fprintf(stderr, "FATAL: scene root is not a QQuickItem\n"); return 2; }
+    rootItem->setParentItem(window.contentItem());
+    window.contentItem()->setSize(size);
+    window.setGeometry(0, 0, size.width(), size.height());
+    rootItem->setSize(size);
 
-    uint32_t count = 0;
-    vkEnumeratePhysicalDevices(vkInst, &count, nullptr);
-    QVector<VkPhysicalDevice> devs(count);
-    vkEnumeratePhysicalDevices(vkInst, &count, devs.data());
-    for (VkPhysicalDevice d : devs) {
-        VkPhysicalDeviceProperties p = {};
-        vkGetPhysicalDeviceProperties(d, &p);
-        std::printf("device: %s (type %d)\n", p.deviceName, static_cast<int>(p.deviceType));
+    for (int i = 0; i < frames; ++i) {
+        renderControl.polishItems();
+        renderControl.beginFrame();
+        renderControl.sync();
+        renderControl.render();
+        renderControl.endFrame();
+        QCoreApplication::processEvents();
     }
-    std::fflush(stdout);
-    vkDestroyInstance(vkInst, nullptr);
-    return count > 0 ? 0 : 3;
+    std::printf("rendered %d frames of %s\n", frames, qPrintable(scenePath));
+    return 0;
 }
