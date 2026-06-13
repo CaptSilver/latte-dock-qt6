@@ -9,6 +9,8 @@
 #include <QQmlEngine>
 #include <QQmlComponent>
 #include <QQuickRenderTarget>
+#include <QImage>
+#include <QFileInfo>
 #include <rhi/qrhi.h>
 #include <vulkan/vulkan.h>
 #include <atomic>
@@ -16,6 +18,7 @@
 #include <fstream>
 #include <set>
 #include <string>
+#include "imagecompare.h"
 
 static std::atomic_bool g_shaderError{false};
 
@@ -49,6 +52,25 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL vkDebugCb(
         std::fprintf(stderr, "[vk-validation ERROR] %s\n", data->pMessage);
     }
     return VK_FALSE;
+}
+
+// Read the rendered colour texture back into an 8-bit RGBA QImage. Runs a dedicated
+// offscreen frame after the render loop; the texture persists from the last rendered frame.
+static QImage readbackTexture(QRhi *rhi, QRhiTexture *tex)
+{
+    QRhiCommandBuffer *cb = nullptr;
+    if (rhi->beginOffscreenFrame(&cb) != QRhi::FrameOpSuccess) return {};
+    QRhiResourceUpdateBatch *u = rhi->nextResourceUpdateBatch();
+    QRhiReadbackResult rb;
+    bool done = false;
+    rb.completed = [&done] { done = true; };
+    u->readBackTexture(QRhiReadbackDescription(tex), &rb);
+    cb->resourceUpdate(u);
+    rhi->endOffscreenFrame(); // submits and waits; completed fires
+    if (!done || rb.data.isEmpty()) return {};
+    QImage img(reinterpret_cast<const uchar *>(rb.data.constData()),
+               rb.pixelSize.width(), rb.pixelSize.height(), QImage::Format_RGBA8888);
+    return img.copy(); // deep-copy out of rb.data
 }
 
 int main(int argc, char **argv)
@@ -148,6 +170,10 @@ int main(int argc, char **argv)
         renderControl.endFrame();
         QCoreApplication::processEvents();
     }
+
+    QImage frame = readbackTexture(rhi, tex.data());
+    if (frame.isNull()) { std::fprintf(stderr, "FATAL: texture read-back failed\n"); return 2; }
+
     if (g_validationError) { std::fprintf(stderr, "GATE FAIL: Vulkan validation error\n"); return 1; }
     if (g_shaderError)     { std::fprintf(stderr, "GATE FAIL: Qt shader/scene-graph error\n"); return 1; }
     std::printf("rendered %d frames of %s — clean\n", frames, qPrintable(scenePath));
