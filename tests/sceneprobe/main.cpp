@@ -34,6 +34,7 @@ static void messageHandler(QtMsgType type, const QMessageLogContext &ctx, const 
 }
 
 static std::atomic_bool g_validationError{false};
+static bool g_outputError = false;
 static std::set<std::string> g_vkSuppress;
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL vkDebugCb(
@@ -174,8 +175,55 @@ int main(int argc, char **argv)
     QImage frame = readbackTexture(rhi, tex.data());
     if (frame.isNull()) { std::fprintf(stderr, "FATAL: texture read-back failed\n"); return 2; }
 
+    {
+        const QString inv = LatteProbe::checkInvariants(frame, 0.005);
+        if (!inv.isEmpty()) {
+            std::fprintf(stderr, "OUTPUT FAIL (invariants): %s\n", qPrintable(inv));
+            g_outputError = true;
+        }
+        const QVariantList exps = root->property("probeExpect").toList();
+        const QString exp = LatteProbe::checkExpectations(frame, exps);
+        if (!exp.isEmpty()) {
+            std::fprintf(stderr, "OUTPUT FAIL (probeExpect): %s\n", qPrintable(exp));
+            g_outputError = true;
+        }
+    }
+
+    {
+        const QByteArray dev = qgetenv("SCENEPROBE_DEVICE");
+        const QString device = dev.isEmpty() ? QStringLiteral("lavapipe") : QString::fromLocal8Bit(dev);
+        QString base = scenePath; base.chop(4); // drop ".qml"
+        const QString refPath = base + QStringLiteral(".expected.") + device + QStringLiteral(".png");
+        const QString artDir = QString::fromLocal8Bit(qgetenv("SCENEPROBE_ARTIFACTS"));
+        const QString stem = artDir.isEmpty() ? base : artDir + QStringLiteral("/") + QFileInfo(scenePath).completeBaseName();
+
+        QImage ref(refPath);
+        if (ref.isNull()) {
+            const QString cand = stem + QStringLiteral(".actual.png");
+            frame.save(cand);
+            std::fprintf(stderr, "no reference for %s (%s) — baseline written to %s; bless to enable pixel compare\n",
+                         qPrintable(QFileInfo(scenePath).fileName()), qPrintable(device), qPrintable(cand));
+        } else {
+            LatteProbe::CompareTolerance tol = (device == QLatin1String("lavapipe"))
+                ? LatteProbe::CompareTolerance{0, 0.0}
+                : LatteProbe::CompareTolerance{2, 0.005};
+            const LatteProbe::CompareResult r = LatteProbe::compareImages(frame, ref, tol);
+            std::fprintf(stderr, "%s\n",
+                         qPrintable(LatteProbe::verdictLine(QFileInfo(scenePath).fileName(), device, r)));
+            if (!r.match) {
+                std::fprintf(stderr, "  diff bbox: (%d,%d %dx%d)\n",
+                             r.diffBounds.x(), r.diffBounds.y(), r.diffBounds.width(), r.diffBounds.height());
+                frame.save(stem + QStringLiteral(".actual.png"));
+                ref.save(stem + QStringLiteral(".expected.png"));
+                LatteProbe::amplifiedDiff(frame, ref).save(stem + QStringLiteral(".diff.png"));
+                g_outputError = true;
+            }
+        }
+    }
+
     if (g_validationError) { std::fprintf(stderr, "GATE FAIL: Vulkan validation error\n"); return 1; }
     if (g_shaderError)     { std::fprintf(stderr, "GATE FAIL: Qt shader/scene-graph error\n"); return 1; }
+    if (g_outputError)     { std::fprintf(stderr, "GATE FAIL: rendered output assertion failed\n"); return 1; }
     std::printf("rendered %d frames of %s — clean\n", frames, qPrintable(scenePath));
     return 0;
 }
