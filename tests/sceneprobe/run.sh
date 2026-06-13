@@ -55,6 +55,9 @@ run_scene "$HERE/scenes/selftest-good.qml" || { echo "GATE BROKEN: selftest-good
 run_scene "$HERE/scenes/selftest-bad.qml"; rc=$?
 [ "$rc" -eq 1 ] || { echo "GATE BROKEN: selftest-bad exited $rc, expected 1"; cat "$OUT"; exit 3; }
 echo "self-test ok (good passes, bad fails)"
+run_scene "$HERE/scenes/selftest-blank.qml"; rc=$?
+[ "$rc" -eq 1 ] || { echo "GATE BROKEN: selftest-blank exited $rc, expected 1 (output floor)"; cat "$OUT"; exit 3; }
+echo "self-test ok (output floor catches blank)"
 
 fails=0
 for s in "$HERE"/scenes/*.qml; do
