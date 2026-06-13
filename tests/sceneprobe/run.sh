@@ -46,7 +46,9 @@ export LATTE_QML_IMPORT_PATH="$STAGE/usr/lib64/qt6/qml"
 export ASAN_OPTIONS="detect_leaks=0:halt_on_error=1:exitcode=99"
 export SCENEPROBE_ARTIFACTS="${SCENEPROBE_ARTIFACTS:-/tmp/latte-sceneprobe-artifacts}"
 mkdir -p "$SCENEPROBE_ARTIFACTS"
+rm -f "$SCENEPROBE_ARTIFACTS"/*.actual.png "$SCENEPROBE_ARTIFACTS"/*.diff.png "$SCENEPROBE_ARTIFACTS"/*.expected.png 2>/dev/null
 echo "artifacts: $SCENEPROBE_ARTIFACTS"
+[ "$BLESS" -eq 1 ] && export SCENEPROBE_BLESS=1
 
 run_scene(){ "$WRAP" "$PROBE" "$1" >"$OUT" 2>&1; return $?; }
 
@@ -62,22 +64,16 @@ echo "self-test ok (output floor catches blank)"
 fails=0
 for s in "$HERE"/scenes/*.qml; do
     case "$s" in *selftest-*) continue;; esac
-    if run_scene "$s"; then echo "PASS  $(basename "$s")"; else echo "FAIL  $(basename "$s")"; cat "$OUT"; fails=$((fails+1)); fi
-done
-
-if [ "$BLESS" -eq 1 ]; then
-    for s in "$HERE"/scenes/*.qml; do
-        case "$s" in *selftest-*) continue;; esac
-        base="${s%.qml}"
-        cand="$SCENEPROBE_ARTIFACTS/$(basename "$base").actual.png"
-        if [ -f "$cand" ]; then
-            cp "$cand" "${base}.expected.${SCENEPROBE_DEVICE}.png"
-            echo "blessed $(basename "${base}").expected.${SCENEPROBE_DEVICE}.png"
-        else
-            echo "bless: no candidate for $(basename "$base") at $cand"
+    if run_scene "$s"; then
+        echo "PASS  $(basename "$s")"
+        if [ "$BLESS" -eq 1 ]; then
+            base="${s%.qml}"; cand="$SCENEPROBE_ARTIFACTS/$(basename "$base").actual.png"
+            if [ -f "$cand" ]; then cp "$cand" "${base}.expected.${SCENEPROBE_DEVICE}.png"; echo "  blessed $(basename "${base}").expected.${SCENEPROBE_DEVICE}.png"; fi
         fi
-    done
-fi
+    else
+        echo "FAIL  $(basename "$s")"; cat "$OUT"; fails=$((fails+1))
+    fi
+done
 
 echo "---- $fails scene(s) failed ----"
 [ "$fails" -eq 0 ] && { echo "RENDER GATE: PASS"; exit 0; } || { echo "RENDER GATE: FAIL"; exit 1; }

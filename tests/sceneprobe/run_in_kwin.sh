@@ -31,7 +31,7 @@ echo 124 > "$ECF"
 {
   printf '#!/bin/bash\n'
   printf 'export QT_QPA_PLATFORM=wayland QSG_RHI_BACKEND=vulkan VK_ICD_FILENAMES=%q %s\n' "$ICD" "$DEV_ENV"
-  for v in LATTE_VK_SUPPRESSIONS LATTE_QML_IMPORT_PATH ASAN_OPTIONS SCENEPROBE_DEVICE SCENEPROBE_ARTIFACTS; do
+  for v in LATTE_VK_SUPPRESSIONS LATTE_QML_IMPORT_PATH ASAN_OPTIONS SCENEPROBE_DEVICE SCENEPROBE_ARTIFACTS SCENEPROBE_BLESS; do
     if [ -n "${!v:-}" ]; then printf 'export %s=%q\n' "$v" "${!v}"; fi
   done
   printf '%q ' "$@"

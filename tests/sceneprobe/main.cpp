@@ -1,6 +1,7 @@
 // latte-sceneprobe: render a QML scene offscreen on Vulkan for N frames.
 // Runs under a nested kwin_wayland session (wayland QPA) so QVulkanInstance works.
 #include <QGuiApplication>
+#include <QAnimationDriver>
 #include <QScopeGuard>
 #include <QVulkanInstance>
 #include <QQuickRenderControl>
@@ -73,6 +74,16 @@ static QImage readbackTexture(QRhi *rhi, QRhiTexture *tex)
                rb.pixelSize.width(), rb.pixelSize.height(), QImage::Format_RGBA8888);
     return img.copy(); // deep-copy out of rb.data
 }
+
+// Deterministic animation clock: advance a fixed step per rendered frame so animated
+// scenes (e.g. multieffect_degenerate) read back reproducibly regardless of wall-clock.
+class StepAnimationDriver : public QAnimationDriver {
+public:
+    void advance() override { m_elapsed += 16; advanceAnimation(); }
+    qint64 elapsed() const override { return m_elapsed; }
+private:
+    qint64 m_elapsed = 0;
+};
 
 int main(int argc, char **argv)
 {
@@ -163,7 +174,11 @@ int main(int argc, char **argv)
     window.setGeometry(0, 0, size.width(), size.height());
     rootItem->setSize(size);
 
+    StepAnimationDriver animDriver;
+    animDriver.install();
+
     for (int i = 0; i < frames; ++i) {
+        animDriver.advance();
         renderControl.polishItems();
         renderControl.beginFrame();
         renderControl.sync();
@@ -189,42 +204,48 @@ int main(int argc, char **argv)
         }
     }
 
-    {
+    // Self-test scenes (selftest-*) prove the gate's own pass/fail wiring via exit codes,
+    // not pixel stability — they intentionally ship no reference, so skip the compare for
+    // them. Without this guard the "missing reference fails" rule would trip selftest-good.
+    if (!QFileInfo(scenePath).fileName().startsWith(QLatin1String("selftest-"))) {
         const QByteArray dev = qgetenv("SCENEPROBE_DEVICE");
         const QString device = dev.isEmpty() ? QStringLiteral("lavapipe") : QString::fromLocal8Bit(dev);
-        QString base = scenePath; base.chop(4); // drop ".qml"
+        const bool blessing = !qgetenv("SCENEPROBE_BLESS").isEmpty();
+        QString base = scenePath; base.chop(4);
         const QString refPath = base + QStringLiteral(".expected.") + device + QStringLiteral(".png");
         const QString artDir = QString::fromLocal8Bit(qgetenv("SCENEPROBE_ARTIFACTS"));
         const QString stem = artDir.isEmpty() ? base : artDir + QStringLiteral("/") + QFileInfo(scenePath).completeBaseName();
 
-        QImage ref(refPath);
-        if (ref.isNull()) {
-            const QString cand = stem + QStringLiteral(".actual.png");
-            frame.save(cand);
-            std::fprintf(stderr, "no reference for %s (%s) — baseline written to %s; bless to enable pixel compare\n",
-                         qPrintable(QFileInfo(scenePath).fileName()), qPrintable(device), qPrintable(cand));
+        if (blessing) {
+            frame.save(stem + QStringLiteral(".actual.png"));
+            std::fprintf(stderr, "bless: candidate written for %s (%s)\n",
+                         qPrintable(QFileInfo(scenePath).fileName()), qPrintable(device));
         } else {
-            LatteProbe::CompareTolerance tol = (device == QLatin1String("lavapipe"))
-                ? LatteProbe::CompareTolerance{0, 0.0}
-                : LatteProbe::CompareTolerance{2, 0.005};
-            // A scene whose compositing isn't bit-reproducible (e.g. layer-backed mask
-            // edges vary run-to-run even on lavapipe) can declare its own tolerance, used
-            // in place of the device default.
-            const QVariantMap pt = root->property("probeTolerance").toMap();
-            if (pt.contains(QLatin1String("delta")) || pt.contains(QLatin1String("budget"))) {
-                tol.perChannelDelta = pt.value(QStringLiteral("delta"), tol.perChannelDelta).toInt();
-                tol.maxExceedFraction = pt.value(QStringLiteral("budget"), tol.maxExceedFraction).toDouble();
-            }
-            const LatteProbe::CompareResult r = LatteProbe::compareImages(frame, ref, tol);
-            std::fprintf(stderr, "%s\n",
-                         qPrintable(LatteProbe::verdictLine(QFileInfo(scenePath).fileName(), device, r)));
-            if (!r.match) {
-                std::fprintf(stderr, "  diff bbox: (%d,%d %dx%d)\n",
-                             r.diffBounds.x(), r.diffBounds.y(), r.diffBounds.width(), r.diffBounds.height());
+            QImage ref(refPath);
+            if (ref.isNull()) {
                 frame.save(stem + QStringLiteral(".actual.png"));
-                ref.save(stem + QStringLiteral(".expected.png"));
-                LatteProbe::amplifiedDiff(frame, ref).save(stem + QStringLiteral(".diff.png"));
+                std::fprintf(stderr, "OUTPUT FAIL: no reference for %s (%s) — run the gate with --bless to create it\n",
+                             qPrintable(QFileInfo(scenePath).fileName()), qPrintable(device));
                 g_outputError = true;
+            } else {
+                LatteProbe::CompareTolerance tol = (device == QLatin1String("lavapipe"))
+                    ? LatteProbe::CompareTolerance{0, 0.0}
+                    : LatteProbe::CompareTolerance{2, 0.005};
+                const QVariantMap pt = root->property("probeTolerance").toMap();
+                if (pt.contains(QLatin1String("delta")) || pt.contains(QLatin1String("budget"))) {
+                    tol.perChannelDelta = pt.value(QStringLiteral("delta"), tol.perChannelDelta).toInt();
+                    tol.maxExceedFraction = pt.value(QStringLiteral("budget"), tol.maxExceedFraction).toDouble();
+                }
+                const LatteProbe::CompareResult r = LatteProbe::compareImages(frame, ref, tol);
+                std::fprintf(stderr, "%s\n", qPrintable(LatteProbe::verdictLine(QFileInfo(scenePath).fileName(), device, r)));
+                if (!r.match) {
+                    std::fprintf(stderr, "  diff bbox: (%d,%d %dx%d)\n",
+                                 r.diffBounds.x(), r.diffBounds.y(), r.diffBounds.width(), r.diffBounds.height());
+                    frame.save(stem + QStringLiteral(".actual.png"));
+                    ref.save(stem + QStringLiteral(".expected.png"));
+                    LatteProbe::amplifiedDiff(frame, ref).save(stem + QStringLiteral(".diff.png"));
+                    g_outputError = true;
+                }
             }
         }
     }
