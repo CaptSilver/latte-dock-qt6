@@ -164,6 +164,12 @@ public Q_SLOTS:
     void moveViewToLayout(const uint &containmentId, const QString &layoutName);
     void removeView(const uint &containmentId);
 
+    void addApplet(const uint &containmentId, const QString &pluginId);
+    void removeApplet(const uint &containmentId, const uint &appletId);
+    void triggerAppletAction(const uint &containmentId, const uint &appletId, const QString &actionName);
+    QList<uint> appletIds(const uint &containmentId);
+    QList<uint> containmentIds();
+
     void setBackgroundFromBroadcast(QString activity, QString screenName, QString filename);
     void setBroadcastedBackgroundsEnabled(QString activity, QString screenName, bool enabled);
     void showAlternativesForApplet(Plasma::Applet *applet);

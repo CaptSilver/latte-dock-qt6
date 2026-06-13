@@ -65,5 +65,27 @@
         <arg name="screenName" type="s" direction="in"/>
         <arg name="screenEdge" type="i" direction="in"/>
     </method>
+    <method name="addApplet">
+        <arg name="containmentId" type="u" direction="in"/>
+        <arg name="pluginId" type="s" direction="in"/>
+    </method>
+    <method name="removeApplet">
+        <arg name="containmentId" type="u" direction="in"/>
+        <arg name="appletId" type="u" direction="in"/>
+    </method>
+    <method name="triggerAppletAction">
+        <arg name="containmentId" type="u" direction="in"/>
+        <arg name="appletId" type="u" direction="in"/>
+        <arg name="actionName" type="s" direction="in"/>
+    </method>
+    <method name="appletIds">
+        <arg name="ids" type="au" direction="out"/>
+        <arg name="containmentId" type="u" direction="in"/>
+        <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="QList&lt;uint&gt;"/>
+    </method>
+    <method name="containmentIds">
+        <arg name="ids" type="au" direction="out"/>
+        <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="QList&lt;uint&gt;"/>
+    </method>
   </interface>
 </node>

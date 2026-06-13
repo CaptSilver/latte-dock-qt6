@@ -59,6 +59,7 @@
 
 // Plasma
 #include <Plasma/Plasma>
+#include <Plasma/Applet>
 #include <Plasma/Corona>
 #include <Plasma/Containment>
 #include <PlasmaQuick/ConfigView>
@@ -1303,6 +1304,65 @@ void Corona::removeView(const uint &containmentId)
     if (view) {
         view->removeView();
     }
+}
+
+void Corona::addApplet(const uint &containmentId, const QString &pluginId)
+{
+    auto view = m_layoutsManager->synchronizer()->viewForContainment((int)containmentId);
+    if (view && view->extendedInterface()) {
+        view->extendedInterface()->addApplet(pluginId);
+    }
+}
+
+void Corona::removeApplet(const uint &containmentId, const uint &appletId)
+{
+    auto view = m_layoutsManager->synchronizer()->viewForContainment((int)containmentId);
+    if (view && view->extendedInterface()) {
+        view->extendedInterface()->removeApplet((int)appletId);
+    }
+}
+
+void Corona::triggerAppletAction(const uint &containmentId, const uint &appletId, const QString &actionName)
+{
+    auto view = m_layoutsManager->synchronizer()->viewForContainment((int)containmentId);
+    if (!view || !view->containment()) {
+        return;
+    }
+
+    const auto applets = view->containment()->applets();
+    for (auto *applet : applets) {
+        if (applet->id() == appletId) {
+            if (QAction *act = applet->internalAction(actionName)) {
+                act->trigger();
+            }
+            return;
+        }
+    }
+}
+
+QList<uint> Corona::appletIds(const uint &containmentId)
+{
+    QList<uint> ids;
+    auto view = m_layoutsManager->synchronizer()->viewForContainment((int)containmentId);
+    if (view && view->containment()) {
+        const auto applets = view->containment()->applets();
+        for (auto *applet : applets) {
+            ids << applet->id();
+        }
+    }
+    return ids;
+}
+
+QList<uint> Corona::containmentIds()
+{
+    QList<uint> ids;
+    const auto views = m_layoutsManager->synchronizer()->currentViews();
+    for (auto *view : views) {
+        if (view && view->containment()) {
+            ids << view->containment()->id();
+        }
+    }
+    return ids;
 }
 
 void Corona::setBackgroundFromBroadcast(QString activity, QString screenName, QString filename)
