@@ -19,3 +19,6 @@ include(ECMAddTests)
 ecm_add_test(imagecompare_test.cpp
     TEST_NAME sceneprobe_imagecompare
     LINK_LIBRARIES latte-imagecompare Qt6::Test)
+
+add_executable(latte-imgdiff imgdiff_main.cpp)
+target_link_libraries(latte-imgdiff Qt6::Gui latte-imagecompare)
