@@ -8,7 +8,14 @@
 #   tests/sceneprobe/run.sh [build-dir]   (default: build-asan if built, else build)
 set -u
 SCENEPROBE_DEVICE=lavapipe
-if [ "${1:-}" = "--device" ]; then SCENEPROBE_DEVICE="${2:-lavapipe}"; shift 2; fi
+BLESS=0
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --device) SCENEPROBE_DEVICE="${2:-lavapipe}"; shift 2;;
+    --bless) BLESS=1; shift;;
+    *) break;;
+  esac
+done
 export SCENEPROBE_DEVICE
 
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -37,6 +44,9 @@ fi
 export LATTE_VK_SUPPRESSIONS="$HERE/vk-suppressions.txt"
 export LATTE_QML_IMPORT_PATH="$STAGE/usr/lib64/qt6/qml"
 export ASAN_OPTIONS="detect_leaks=0:halt_on_error=1:exitcode=99"
+export SCENEPROBE_ARTIFACTS="${SCENEPROBE_ARTIFACTS:-/tmp/latte-sceneprobe-artifacts}"
+mkdir -p "$SCENEPROBE_ARTIFACTS"
+echo "artifacts: $SCENEPROBE_ARTIFACTS"
 
 run_scene(){ "$WRAP" "$PROBE" "$1" >"$OUT" 2>&1; return $?; }
 
@@ -51,6 +61,20 @@ for s in "$HERE"/scenes/*.qml; do
     case "$s" in *selftest-*) continue;; esac
     if run_scene "$s"; then echo "PASS  $(basename "$s")"; else echo "FAIL  $(basename "$s")"; cat "$OUT"; fails=$((fails+1)); fi
 done
+
+if [ "$BLESS" -eq 1 ]; then
+    for s in "$HERE"/scenes/*.qml; do
+        case "$s" in *selftest-*) continue;; esac
+        base="${s%.qml}"
+        cand="$SCENEPROBE_ARTIFACTS/$(basename "$base").actual.png"
+        if [ -f "$cand" ]; then
+            cp "$cand" "${base}.expected.${SCENEPROBE_DEVICE}.png"
+            echo "blessed $(basename "${base}").expected.${SCENEPROBE_DEVICE}.png"
+        else
+            echo "bless: no candidate for $(basename "$base") at $cand"
+        fi
+    done
+fi
 
 echo "---- $fails scene(s) failed ----"
 [ "$fails" -eq 0 ] && { echo "RENDER GATE: PASS"; exit 0; } || { echo "RENDER GATE: FAIL"; exit 1; }
