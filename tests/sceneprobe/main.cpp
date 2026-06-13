@@ -207,6 +207,14 @@ int main(int argc, char **argv)
             LatteProbe::CompareTolerance tol = (device == QLatin1String("lavapipe"))
                 ? LatteProbe::CompareTolerance{0, 0.0}
                 : LatteProbe::CompareTolerance{2, 0.005};
+            // A scene whose compositing isn't bit-reproducible (e.g. layer-backed mask
+            // edges vary run-to-run even on lavapipe) can declare its own tolerance, used
+            // in place of the device default.
+            const QVariantMap pt = root->property("probeTolerance").toMap();
+            if (pt.contains(QLatin1String("delta")) || pt.contains(QLatin1String("budget"))) {
+                tol.perChannelDelta = pt.value(QStringLiteral("delta"), tol.perChannelDelta).toInt();
+                tol.maxExceedFraction = pt.value(QStringLiteral("budget"), tol.maxExceedFraction).toDouble();
+            }
             const LatteProbe::CompareResult r = LatteProbe::compareImages(frame, ref, tol);
             std::fprintf(stderr, "%s\n",
                          qPrintable(LatteProbe::verdictLine(QFileInfo(scenePath).fileName(), device, r)));
