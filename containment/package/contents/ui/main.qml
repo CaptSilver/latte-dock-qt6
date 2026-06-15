@@ -324,6 +324,10 @@ ContainmentItem {
     readonly property alias layoutsContainerItem: layoutsContainer
 
     readonly property alias latteView: _interfaces.view
+    //! The Interfaces object itself (never null in the containment scope, unlike latteView which forwards
+    //! to _interfaces.view and is null at component load). Carries the dedicated debugLog() channel so
+    //! child QML files (ConfigOverlay) can reliably reach C++ logging.
+    readonly property alias latteDebug: _interfaces
     readonly property alias layoutsManager: _interfaces.layoutsManager
     readonly property alias shortcutsEngine: _interfaces.globalShortcuts
     readonly property alias themeExtended: _interfaces.themeExtended
@@ -422,6 +426,14 @@ ContainmentItem {
     onEditModeChanged: {
         if (!editMode) {
             layouter.updateSizeForAppletsInFill();
+
+            //! Leaving edit mode clears the rearrange (configure-applets) sub-mode. In that sub-mode the
+            //! canvas is click-through, so its on-canvas toggle can't turn it back off; resetting here
+            //! guarantees you can always get out (Escape / leave edit mode) and never re-enter stuck in
+            //! rearrange.
+            if (universalSettings && universalSettings.inConfigureAppletsMode) {
+                universalSettings.inConfigureAppletsMode = false;
+            }
         }
 
         //! This is used in case the dndspacer has been left behind

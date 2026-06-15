@@ -5,7 +5,6 @@
 */
 
 import QtQuick 2.7
-import QtQuick.Controls 2.15 as QQC2
 import QtQuick.Layouts 1.0
 
 import org.kde.plasma.plasmoid 2.0
@@ -60,6 +59,8 @@ MouseArea {
 
     onHeightChanged: tooltip.visible = false;
     onWidthChanged: tooltip.visible = false;
+
+    Component.onCompleted: if (root.latteDebug) root.latteDebug.debugLog("ConfigOverlay loaded");
 
 
     function hoveredItem(x, y) {
@@ -151,9 +152,11 @@ MouseArea {
         }
     }
 
-    onExited: hideTimer.restart();
+    onEntered: root.latteDebug.debugLog("configArea ENTER");
+    onExited: { root.latteDebug.debugLog("configArea EXIT"); hideTimer.restart(); }
 
     onCurrentAppletChanged: {
+        root.latteDebug.debugLog("currentApplet=" + (currentApplet ? ((currentApplet.applet ? currentApplet.applet.plasmoid.title : "splitter")) : "null"));
         previousCurrentApplet = currentApplet;
 
         if (!currentApplet || !root.dragOverlay.currentApplet) {
@@ -172,6 +175,7 @@ MouseArea {
     }
 
     onPressed: (mouse) => {
+        root.latteDebug.debugLog("configArea PRESSED currentApplet=" + (root.dragOverlay.currentApplet ? "set" : "null"));
         if (!root.dragOverlay.currentApplet) {
             return;
         }
@@ -265,6 +269,7 @@ MouseArea {
         id: hideTimer
         interval: animations.duration.large * 2
         onTriggered: {
+            root.latteDebug.debugLog("hideTimer FIRED tooltipMA.containsMouse=" + tooltipMouseArea.containsMouse + " configArea.containsMouse=" + configurationArea.containsMouse);
             if (!tooltipMouseArea.containsMouse) {
                 tooltip.visible = false;
                 currentApplet = null;
@@ -399,6 +404,8 @@ MouseArea {
         flags: Qt.WindowStaysOnTopHint | Qt.WindowDoesNotAcceptFocus | Qt.BypassWindowManagerHint | Qt.ToolTip
         location: Plasmoid.location
 
+        onVisibleChanged: root.latteDebug.debugLog("TOOLTIP visible=" + visible);
+
         onVisualParentChanged: {
             if (visualParent && currentApplet
                     && (currentApplet.applet || currentApplet.isSeparator || currentApplet.isInternalViewSplitter)) {
@@ -428,9 +435,15 @@ MouseArea {
             LayoutMirroring.enabled: Qt.application.layoutDirection === Qt.RightToLeft
             LayoutMirroring.childrenInherit: true
 
-            onEntered: hideTimer.stop();
-            onExited: hideTimer.restart();
+            onEntered: { root.latteDebug.debugLog("tooltipMA ENTER"); hideTimer.stop(); }
+            onExited: { root.latteDebug.debugLog("tooltipMA EXIT"); hideTimer.restart(); }
 
+            //! These handle buttons deliberately carry NO QQC2.ToolTip. On Wayland an attached
+            //! ToolTip pops a separate surface at the cursor the instant a button is hovered; the
+            //! compositor then sends a leave to the button AND this wrapping MouseArea, the ToolTip
+            //! hides, the cursor re-enters, and it loops ~20Hz — the edit-handle flicker that also
+            //! ate clicks (hideTimer riding a false window). Don't re-add per-button tooltips here;
+            //! if hints are needed, drive the in-Dialog label instead of a popup.
             Row {
                 id: handleRow
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -442,8 +455,6 @@ MouseArea {
                         id: configureButton
                         anchors.verticalCenter: parent.verticalCenter
                         icon.name: "configure"
-                        QQC2.ToolTip.text: i18n("Configure applet")
-                        QQC2.ToolTip.visible: hovered
                         onClicked: {
                             tooltip.visible = false;
                             currentApplet.applet.plasmoid.internalAction("configure").trigger();
@@ -465,8 +476,6 @@ MouseArea {
                             id: colorizingButton
                             checkable: true
                             icon.name: "color-picker"
-                            QQC2.ToolTip.text: i18n("Enable painting  for this applet")
-                            QQC2.ToolTip.visible: hovered
 
                             onClicked: {
                                 fastLayoutManager.setOption(currentApplet.applet.plasmoid.id, "userBlocksColorizing", !checked);
@@ -477,8 +486,6 @@ MouseArea {
                             id: lockButton
                             checkable: true
                             icon.name: checked ? "lock" : "unlock"
-                            QQC2.ToolTip.text: i18n("Disable parabolic effect for this applet")
-                            QQC2.ToolTip.visible: hovered
 
                             onClicked: {
                                 fastLayoutManager.setOption(currentApplet.applet.plasmoid.id, "lockZoom", checked);
@@ -489,8 +496,6 @@ MouseArea {
                             id: closeButton
                             anchors.verticalCenter: parent.verticalCenter
                             icon.name: "delete"
-                            QQC2.ToolTip.text: i18n("Remove applet")
-                            QQC2.ToolTip.visible: hovered
                             onClicked: {
                                 tooltip.visible = false;
                                 if(currentApplet && currentApplet.applet)

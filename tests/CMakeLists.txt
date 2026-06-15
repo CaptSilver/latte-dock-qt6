@@ -170,6 +170,12 @@ set_tests_properties(qmlloadcompile PROPERTIES
 add_test(NAME qmlinteraction COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/manual/qml_interaction_test.sh)
 set_tests_properties(qmlinteraction PROPERTIES TIMEOUT 120)
 
+# Static guard against the edit-mode handle flicker regressing: the ConfigOverlay handle buttons must
+# never carry an attached QQC2.ToolTip (Wayland popup-surface hover-steal). No headless behavioral repro
+# exists for a multi-surface compositor interaction, so this pins the fix at the source.
+add_test(NAME editmodetooltipguard COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/manual/editmode_tooltip_guard.sh)
+set_tests_properties(editmodetooltipguard PROPERTIES TIMEOUT 30)
+
 # When coverage is on, instrument every test binary AND the production sources
 # linked into it (ecm_add_test compiles the listed app/* sources into the target).
 # Add new test names here when adding tests.
