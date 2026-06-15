@@ -12,6 +12,7 @@
 // Qt
 #include <QMargins>
 #include <QRect>
+#include <QRegion>
 #include <QSize>
 
 // Plasma
@@ -104,6 +105,16 @@ CanvasPlacement canvasPlacement(Plasma::Types::Location location,
 //! setPosition() the compositor ignores for the edit-mode canvas view on Wayland.
 void applyCanvasPlacement(QWindow *window, Plasma::Types::Location location,
                           const QRect &canvasGeometry, const QRect &screenGeometry);
+
+//! The input region (window-local, for QWindow::setMask) the edit-mode canvas should catch pointer
+//! events in. The canvas surface overlays the dock exactly and sits above it, so a full input region
+//! eats every right-click/drag/wheel the dock's widgets need. In configure-applets mode the dock's
+//! area MUST be click-through so those events reach the dock beneath; only the interactive chrome
+//! (the max-length ruler / header) keeps grabbing — an empty @p interactiveChrome makes the whole
+//! canvas click-through. In plain edit mode the whole canvas catches input (wheel->background opacity,
+//! ruler, context menu). Pure mapping, unit-tested. CanvasConfigView applies the result via setMask().
+QRegion canvasInputRegion(bool inConfigureAppletsMode, const QSize &canvasSize,
+                          const QRect &interactiveChrome);
 
 } // namespace LayerShell
 } // namespace WindowSystem

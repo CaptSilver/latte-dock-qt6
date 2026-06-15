@@ -10,6 +10,7 @@
 #include "../panelshadows_p.h"
 #include "../view.h"
 #include "../../lattecorona.h"
+#include "../../settings/universalsettings.h"
 #include "../../wm/abstractwindowinterface.h"
 #include "../../wm/waylandlayershell.h"
 
@@ -48,6 +49,15 @@ void CanvasConfigView::init()
     auto source = QUrl::fromLocalFile(m_latteView->containment()->corona()->kPackage().filePath(tempFilePath));
     setSource(source);
     syncGeometry();
+
+    //! Re-carve the input region whenever the rearrange (configure-applets) mode flips or the canvas
+    //! is resized; a resize resets the mask, and the mode change must add/remove the click-through band.
+    if (m_corona && m_corona->universalSettings()) {
+        connect(m_corona->universalSettings(), &Latte::UniversalSettings::inConfigureAppletsModeChanged,
+                this, &CanvasConfigView::updateInputRegion);
+    }
+    connect(this, &QQuickView::widthChanged, this, &CanvasConfigView::updateInputRegion);
+    connect(this, &QQuickView::heightChanged, this, &CanvasConfigView::updateInputRegion);
 
     if (m_parent && KWindowSystem::isPlatformX11()) {
         m_parent->requestActivate();
@@ -88,8 +98,9 @@ void CanvasConfigView::syncGeometry()
     if (KWindowSystem::isPlatformWayland()) {
         //! layer-shell ignores setPosition(); the canvas is configured Center-anchored by
         //! SubConfigView so it would land centred on top of the dock. Anchor it to overlay the
-        //! dock's canvasGeometry exactly instead, so the edit grid sits on the dock and lets wheel
-        //! events through to it.
+        //! dock's canvasGeometry exactly instead. The canvas then covers the dock, so in
+        //! configure-applets mode updateInputRegion() carves its input region down to the chrome
+        //! strip (and the blueprint goes transparent) to let pointer events reach the widgets.
         Latte::WindowSystem::LayerShell::applyCanvasPlacement(this, m_latteView->location(), geometry, m_latteView->screenGeometry());
     } else {
         setPosition(geometry.topLeft());
@@ -99,11 +110,47 @@ void CanvasConfigView::syncGeometry()
     setMinimumSize(geometry.size());
     resize(geometry.size());
 
+    updateInputRegion();
+
     //! after placement request to activate the main config window in order to avoid
     //! rare cases of closing settings window from secondaryConfigView->focusOutEvent
     if (m_parent && KWindowSystem::isPlatformX11()) {
         m_parent->requestActivate();
     }
+}
+
+void CanvasConfigView::updateInputRegion()
+{
+    if (!m_latteView) {
+        return;
+    }
+
+    //! Never touch the surface mask before the wayland surface exists (same guard as the sibling
+    //! views' updateEffects, https://bugs.kde.org/show_bug.cgi?id=392890).
+    if (KWindowSystem::isPlatformWayland() && !isVisible()) {
+        return;
+    }
+
+    const bool configuring = m_corona && m_corona->universalSettings()
+            && m_corona->universalSettings()->inConfigureAppletsMode();
+
+    //! Configure-applets (rearrange) mode: carve the canvas click-through over the widgets, but keep the
+    //! rearrange/exit toggle's rect interactive so it can still be clicked (Escape also exits). The QML
+    //! surfaces the toggle's canvas-local rect; everything else falls through to the dock and its tooltips.
+    QRect toggleRect;
+    if (configuring && rootObject()) {
+        toggleRect = rootObject()->property("rearrangeToggleRect").toRect();
+    }
+
+    if (m_latteView) {
+        m_latteView->debugLog(QStringLiteral("CanvasInputRegion cfg=%1 size=%2x%3 toggleRect=(%4,%5 %6x%7)")
+                              .arg(configuring ? 1 : 0).arg(size().width()).arg(size().height())
+                              .arg(toggleRect.x()).arg(toggleRect.y()).arg(toggleRect.width()).arg(toggleRect.height()));
+    }
+
+    //! Carve disabled while diagnosing the flicker: full click-through in configure mode (empty chrome ->
+    //! off-surface region). The toggleRect mapping above is logged-only until it is made reliable.
+    setMask(Latte::WindowSystem::LayerShell::canvasInputRegion(configuring, size(), QRect()));
 }
 
 bool CanvasConfigView::event(QEvent *e)
@@ -134,6 +181,11 @@ void CanvasConfigView::showEvent(QShowEvent *ev)
     }
 
     syncGeometry();
+
+    //! syncGeometry() short-circuits when the geometry is unchanged, and its earlier (init-time) run
+    //! happened before the wayland surface existed, so carve the input region explicitly now that the
+    //! surface is up.
+    updateInputRegion();
 
     //! show Canvas on top of all other panels/docks and show
     //! its parent view on top afterwards

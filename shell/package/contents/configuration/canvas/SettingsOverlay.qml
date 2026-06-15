@@ -24,6 +24,10 @@ Item{
     readonly property int thickness: ruler.thickness + headerSettings.thickness + spacing * 6
     readonly property int spacing: 4
 
+    //! The rearrange/exit toggle button, surfaced up to CanvasConfiguration so CanvasConfigView can keep
+    //! exactly its rect interactive while the rest of the canvas is click-through in configure-applets mode.
+    property alias rearrangeToggle: headerSettings.rearrangeButton
+
     property int textShadow: {
         if (textColorIsDark)  {
             return 1;

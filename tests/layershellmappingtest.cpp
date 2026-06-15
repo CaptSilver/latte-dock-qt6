@@ -5,6 +5,7 @@
 
 #include <QTest>
 #include <QObject>
+#include <QRegion>
 
 using namespace Latte::WindowSystem;
 using LSW = LayerShellQt::Window;
@@ -20,6 +21,9 @@ private Q_SLOTS:
     void seededSize_singleEdgeNeedsValidSize();
     void canvasPlacement_byEdge();
     void exclusiveEdge_isAlwaysAnchored();
+    void canvasInputRegion_plainEditModeIsFullyInteractive();
+    void canvasInputRegion_configureModeIsClickThroughOverDock();
+    void canvasInputRegion_configureModeKeepsChromeInteractive();
 };
 
 void LayerShellMappingTest::anchors_bottom_alignments()
@@ -141,6 +145,55 @@ void LayerShellMappingTest::exclusiveEdge_isAlwaysAnchored()
                                     .arg(int(location)).arg(int(alignment))));
         }
     }
+}
+
+void LayerShellMappingTest::canvasInputRegion_plainEditModeIsFullyInteractive()
+{
+    //! Plain edit mode (NOT configuring applets): the canvas legitimately owns the whole surface so
+    //! the mouse wheel changes background opacity and the max-length ruler is draggable everywhere.
+    //! The input region must cover the entire canvas, including the centre over the dock.
+    const QSize canvas(1920, 40);
+    const QRegion region = LayerShell::canvasInputRegion(false, canvas, QRect());
+
+    QCOMPARE(region, QRegion(QRect(0, 0, 1920, 40)));
+    QVERIFY2(region.contains(QPoint(960, 20)),
+             "plain edit mode: the canvas must catch input over the dock (wheel->opacity, ruler)");
+}
+
+void LayerShellMappingTest::canvasInputRegion_configureModeIsClickThroughOverDock()
+{
+    //! Configure-applets mode: the canvas sits ON TOP of the dock, so with a full input region every
+    //! right-click/drag/wheel hits the grid instead of the widgets (the reported bug). With no
+    //! interactive chrome the canvas must catch NOTHING over its own surface so those events reach the
+    //! dock beneath. Crucially it must do that with a deliberately off-surface region, NOT an empty
+    //! QRegion: the Qt6 wayland plugin maps QWindow::setMask() to the wl_surface input region, and an
+    //! empty mask there means the INFINITE (grab-all) region -- the exact opposite of click-through
+    //! (qwaylandwindow_p.h: "Empty QRegion maps to 'infinite' input region").
+    const QSize canvas(1920, 40);
+    const QRegion region = LayerShell::canvasInputRegion(true, canvas, QRect());
+
+    QVERIFY2(region.intersected(QRect(QPoint(0, 0), canvas)).isEmpty(),
+             "configure-applets mode: the canvas must catch no on-surface pixel so right-click/drag/"
+             "remove reach the dock, not the edit grid");
+    QVERIFY2(!region.isEmpty(),
+             "click-through must use an off-surface region, not an empty QRegion (empty == infinite/"
+             "grab-all on the Qt6 wayland plugin)");
+    QVERIFY(!region.contains(QPoint(960, 20)));
+}
+
+void LayerShellMappingTest::canvasInputRegion_configureModeKeepsChromeInteractive()
+{
+    //! Configure-applets mode with interactive chrome (e.g. an 8px max-length ruler strip at the canvas
+    //! edge): the chrome keeps catching input while the rest of the canvas over the dock stays
+    //! click-through. This lets the ruler work without re-blocking the widgets.
+    const QSize canvas(1920, 40);
+    const QRect chrome(0, 0, 1920, 8);
+    const QRegion region = LayerShell::canvasInputRegion(true, canvas, chrome);
+
+    QVERIFY2(region.contains(QPoint(960, 4)),
+             "configure-applets mode: the kept-interactive chrome (the rearrange/exit toggle rect) must catch input");
+    QVERIFY2(!region.contains(QPoint(960, 30)),
+             "configure-applets mode: the dock area outside the toggle rect must be click-through");
 }
 
 QTEST_MAIN(LayerShellMappingTest)

@@ -21,6 +21,9 @@ Item {
     readonly property bool containsMouse: rearrangeBtn.containsMouse || stickOnBottomBtn.containsMouse || stickOnTopBtn.containsMouse
     readonly property int thickness: rearrangeBtn.implicitHeight
 
+    //! Surfaced up so the canvas can keep this toggle's rect interactive while click-through in rearrange mode.
+    property alias rearrangeButton: rearrangeBtn
+
     readonly property int headMargin: spacing * 2
 
     rotation: {

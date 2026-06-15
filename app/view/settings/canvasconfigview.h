@@ -78,6 +78,11 @@ protected:
     void initParentView(Latte::View *view) override;
     void updateEnabledBorders() override;
 
+    //! Carve the canvas surface's input region: full in plain edit mode (wheel->opacity, ruler), but
+    //! down to the inner ruler/header chrome strip in configure-applets mode so right-click/drag/remove
+    //! fall through to the widgets beneath. Mirrors the sibling views' updateEffects() setMask path.
+    void updateInputRegion();
+
 private:
     QRect m_geometryWhenVisible;
 

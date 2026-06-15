@@ -17,19 +17,49 @@ import org.kde.latte.private.containment 0.1 as LatteContainment
 import "canvas" as CanvasComponent
 
 Loader {
+    id: canvasRoot
     active: plasmoid && plasmoid.configuration && latteView
+
+    //! Exposed to CanvasConfigView (C++): the rearrange/exit toggle's rect in canvas-local coords. In
+    //! configure-applets mode the canvas is carved click-through EXCEPT this rect, so the toggle stays
+    //! clickable (to leave rearrange) while every widget interaction falls through to the dock.
+    property rect rearrangeToggleRect: item ? item.rearrangeToggleRect : Qt.rect(-1, -1, 0, 0)
 
     sourceComponent: Item{
         id: root
         readonly property bool isVertical: plasmoid.formFactor === PlasmaCore.Types.Vertical
         readonly property bool isHorizontal: !isVertical
+        readonly property rect rearrangeToggleRect: {
+            var b = settingsOverlay.rearrangeToggle;
+            if (!b || !b.visible) {
+                return Qt.rect(-1, -1, 0, 0);
+            }
+            //! reference the reactive geometry so the binding re-evaluates when the toggle moves/resizes
+            var reactive = b.x + b.y + b.width + b.height + root.width + root.height;
+            return b.mapToItem(root, 0, 0, b.width, b.height);
+        }
 
         property int animationSpeed: LatteCore.WindowSystem.compositingActive ? 500 : 0
         property int panelAlignment: plasmoid.configuration.alignment
 
         readonly property real appliedOpacity: imageTiler.opacity
-        readonly property real maxOpacity: universalSettings.inConfigureAppletsMode || !LatteCore.WindowSystem.compositingActive ?
-                                               1 : plasmoid.configuration.editBackgroundOpacity
+        readonly property real maxOpacity: {
+            //! Rearranging widgets: the canvas overlays the dock and its input region is carved away
+            //! over the widgets (CanvasConfigView::updateInputRegion), so the blueprint must be
+            //! transparent too -- otherwise it paints over the very widgets you are trying to see and move.
+            if (universalSettings.inConfigureAppletsMode) {
+                return 0;
+            }
+
+            //! No compositor -> no real transparency, so show the blueprint solid.
+            if (!LatteCore.WindowSystem.compositingActive) {
+                return 1;
+            }
+
+            //! Track the dock's real background opacity (what the edit-mode wheel now changes) so the
+            //! blueprint preview matches what you scroll. -1 means the theme default (treat as opaque).
+            return plasmoid.configuration.panelTransparency === -1 ? 1 : plasmoid.configuration.panelTransparency / 100;
+        }
 
         property real offset: {
             if (root.isHorizontal) {
@@ -97,9 +127,9 @@ Loader {
             hoverEnabled: true
 
             property bool wheelIsBlocked: false;
-            readonly property double opacityStep: 0.1
-            readonly property string tooltip: i18nc("opacity for background under edit mode, %1 is opacity percentage",
-                                                    "You can use mouse wheel to change background opacity of %1%",Math.round(plasmoid.configuration.editBackgroundOpacity * 100))
+            readonly property int opacityStep: 5
+            readonly property string tooltip: i18nc("opacity for the dock background under edit mode, %1 is opacity percentage",
+                                                    "You can use mouse wheel to change the dock background opacity of %1%", plasmoid.configuration.panelTransparency === -1 ? 100 : plasmoid.configuration.panelTransparency)
 
             onWheel: (wheel) => {
                 processWheel(wheel);
@@ -116,10 +146,13 @@ Loader {
 
                 var angle = wheel.angleDelta.y / 8;
 
+                //! -1 = theme default (treated as fully opaque); start from 100 so the first scroll steps down.
+                var current = plasmoid.configuration.panelTransparency === -1 ? 100 : plasmoid.configuration.panelTransparency;
+
                 if (angle > 10) {
-                    plasmoid.configuration.editBackgroundOpacity = Math.min(100, plasmoid.configuration.editBackgroundOpacity + opacityStep)
+                    plasmoid.configuration.panelTransparency = Math.min(100, current + opacityStep);
                 } else if (angle < -10) {
-                    plasmoid.configuration.editBackgroundOpacity = Math.max(0, plasmoid.configuration.editBackgroundOpacity - opacityStep)
+                    plasmoid.configuration.panelTransparency = Math.max(0, current - opacityStep);
                 }
             }
 

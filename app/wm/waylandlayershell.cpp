@@ -232,6 +232,29 @@ void applyCanvasPlacement(QWindow *window, Plasma::Types::Location location,
     }
 }
 
+QRegion canvasInputRegion(bool inConfigureAppletsMode, const QSize &canvasSize,
+                          const QRect &interactiveChrome)
+{
+    if (!inConfigureAppletsMode) {
+        //! Plain edit mode: the canvas owns its whole surface (wheel->background opacity, ruler,
+        //! context menu) since the user is not interacting with the widgets themselves.
+        return QRegion(QRect(QPoint(0, 0), canvasSize));
+    }
+
+    //! Configuring applets: the canvas overlays the dock and sits above it, so anything it grabs is
+    //! stolen from the widgets. Keep ONLY @p interactiveChrome catching input (the rearrange/exit toggle's
+    //! rect); the rest is click-through so right-click/drag/remove and the widgets' edit tooltips reach
+    //! the dock beneath.
+    if (interactiveChrome.isValid()) {
+        return QRegion(interactiveChrome);
+    }
+
+    //! No chrome -> the canvas must grab nothing. An empty QRegion will NOT do that: the Qt6 wayland
+    //! plugin maps an empty mask to the infinite (grab-all) input region. Hand it a 1px off-surface
+    //! region instead, so the on-surface input area is empty and every event falls through to the dock.
+    return QRegion(QRect(-1, -1, 1, 1));
+}
+
 } // namespace LayerShell
 } // namespace WindowSystem
 } // namespace Latte
