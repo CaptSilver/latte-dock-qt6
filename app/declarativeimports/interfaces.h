@@ -41,6 +41,12 @@ public:
 public Q_SLOTS:
     Q_INVOKABLE void updateInterfaces();
 
+    //! Dedicated diagnostic log channel for the containment QML. `_interfaces` is a plain non-null
+    //! object in the containment scope (unlike the latteView alias, which is null at component load),
+    //! so `root.latteDebug.debugLog(...)` is the reliable QML->C++ sink. Writes to a user-private
+    //! runtime file (and stderr) only when LATTE_DEBUG_EDITMODE is set; silent by default, long-term.
+    Q_INVOKABLE void debugLog(const QString &msg) const;
+
 Q_SIGNALS:
     void interfaceChanged();
     void globalShortcutsChanged();

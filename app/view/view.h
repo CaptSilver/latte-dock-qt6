@@ -282,6 +282,11 @@ public Q_SLOTS:
     Q_INVOKABLE bool isHighestPriorityView();
     Q_INVOKABLE QAction *action(const QString &name);
 
+    //! Diagnostic logging for the QML edit-mode/interaction paths. QML console.log() is swallowed by
+    //! Latte's debug message handler, so route diagnostics through here: it writes to stderr only when
+    //! LATTE_DEBUG_EDITMODE is set, so the call sites can stay in the tree long-term without adding noise.
+    Q_INVOKABLE void debugLog(const QString &msg) const;
+
 protected Q_SLOTS:
     void showConfigurationInterface(Plasma::Applet *applet) override;
     void showWidgetExplorer(const QPointF &point);

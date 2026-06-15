@@ -7,7 +7,41 @@
 
 #include <PlasmaQuick/AppletQuickItem>
 
+#include <QFile>
+#include <QStandardPaths>
+
+#include <cstdio>
+#include <fcntl.h>
+
 namespace Latte{
+
+void Interfaces::debugLog(const QString &msg) const
+{
+    if (!qEnvironmentVariableIsSet("LATTE_DEBUG_EDITMODE")) {
+        return;
+    }
+
+    //! Open once in the user-private runtime dir (XDG_RUNTIME_DIR, mode 0700), O_NOFOLLOW/0600 to dodge
+    //! the predictable-temp-path symlink hazard. Same file as View::debugLog (O_APPEND) so C++ and QML
+    //! traces interleave.
+    static FILE *logfile = []() -> FILE * {
+        QString dir = QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation);
+        if (dir.isEmpty()) {
+            dir = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+        }
+        const QString path = dir + QStringLiteral("/latte-editmode.log");
+        const int fd = open(QFile::encodeName(path).constData(),
+                            O_WRONLY | O_CREAT | O_APPEND | O_NOFOLLOW | O_CLOEXEC, 0600);
+        return fd >= 0 ? fdopen(fd, "a") : nullptr;
+    }();
+
+    if (logfile) {
+        fprintf(logfile, "LATTE-DBG %s\n", qPrintable(msg));
+        fflush(logfile);
+    }
+    fprintf(stderr, "LATTE-DBG %s\n", qPrintable(msg));
+    fflush(stderr);
+}
 
 Interfaces::Interfaces(QObject *parent)
     : QObject(parent)
