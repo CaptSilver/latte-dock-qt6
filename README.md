@@ -4,6 +4,8 @@ Latte is a dock based on plasma frameworks that provides an elegant and intuitiv
 
 **"Art in Coffee"**
 
+> This is the **Plasma 6 port** of Latte Dock, rebuilt on **Qt 6 and KDE Frameworks 6**. The original Latte stopped at Plasma 5 / Qt 5 and never made the jump to Plasma 6, so this fork picks it up from there. It's developed and tested on Wayland.
+
 Screenshots
 ===========
 
@@ -14,98 +16,38 @@ Screenshots
 Development
 ============
 
-- Official KDE repo in which you can also send your MRs is located at: https://invent.kde.org/plasma/latte-dock
-- Bug reports can be sent at: https://bugs.kde.org/enter_bug.cgi?product=lattedock
-
+- This Plasma 6 fork — open issues and pull requests here: https://github.com/CaptSilver/latte-dock-qt6
+- The original (Plasma 5 / Qt 5) upstream, kept for history: https://invent.kde.org/plasma/latte-dock
 
 Installation
 ============
 
-### Requirements
+There aren't any distro packages for the Plasma 6 port yet, so you'll build it yourself. One thing to watch: the `latte-dock` package already in your distro's repos is the old Plasma 5 build — it won't run on Plasma 6.
 
-We need to use at least:
+### What you need
 
-- **Plasma >= 5.24.0**
-- **PlasmaWaylandProtocols >= 1.6.0**
-- **Qt >= 5.15**
+A Plasma 6 desktop plus the Qt 6 / KF6 development stack:
 
-Minimum requirements:
- 
-**tools:**
+- **CMake >= 3.16** and **extra-cmake-modules (ECM) >= 6.5**
+- **Qt >= 6.6** — DBus, Gui, Qml, Quick, Widgets, WaylandClient, Test
+- **KDE Frameworks >= 6.5** — Archive, Config, CoreAddons, Crash, DBusAddons, GlobalAccel, GuiAddons, I18n, IconThemes, KIO, KirigamiPlatform, NewStuff, Notifications, Package, Service, Svg, WindowSystem, XmlGui
+- **Plasma 6** — libplasma (Plasma), PlasmaQuick, PlasmaActivities, PlasmaActivitiesStats
+- **KSysGuard** and **LibNotificationManager**
+- **Wayland** — KWayland, LayerShellQt, PlasmaWaylandProtocols >= 1.6, Wayland (Client), qtwaylandscanner
+
+Grab the matching `-dev` / `-devel` packages for those. If you're already on a Plasma 6 desktop you probably have most of them; the ones people tend to forget are `extra-cmake-modules`, `layer-shell-qt`, the libplasma dev package and `plasma-wayland-protocols`. On Arch they're in `extra` (`plasma-desktop`, `layer-shell-qt`, `extra-cmake-modules`); on Fedora look for the `kf6-*-devel`, `plasma-*-devel`, `libplasma-devel` and `layer-shell-qt-devel` packages.
+
+### Building it
+
 ```
- bash
-```
-
-**development packages for:**
-```
- Qt5Core >= 5.15.0
- Qt5Gui >= 5.15.0
- Qt5Dbus >= 5.15.0
-
- KF5Plasma >= 5.82.0
- KF5PlasmaQuick >= 5.82.0
- KF5Activities >= 5.82.0
- KF5CoreAddons >= 5.82.0
- KF5GuiAddons >= 5.82.0
- KF5DBusAddons >= 5.82.0
- KF5Declarative >= 5.82.0
- KF5Kirigami2 >= 5.82.0
- KF5Wayland >= 5.82.0
- KF5Package >= 5.82.0
- KF5XmlGui >= 5.82.0
- KF5IconThemes >= 5.82.0
- KF5KIO >= 5.82.0
- KF5I18n >= 5.82.0
- KF5Notifications >= 5.82.0
- KF5NewStuff >= 5.82.0
- KF5Archive >= 5.82.0
- KF5GlobalAccel >= 5.82.0
- KF5Crash >= 5.82.0
-
-  For X11 support:
-    KF5WindowSystem >= 5.82.0
-    Qt5X11Extras >= 5.7.0
-    libxcb
-    libxcb-randr
-    libxcb-shape
-    libSM
+git clone https://github.com/CaptSilver/latte-dock-qt6.git
+cd latte-dock-qt6
+cmake -B build -DCMAKE_INSTALL_PREFIX=/usr -DKDE_INSTALL_USE_QT_SYS_PATHS=ON -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j$(nproc)
+sudo cmake --install build
 ```
 
-### From repositories
-
-#### Ubuntu/Debian
-
-- [Ubuntu](https://packages.ubuntu.com/bionic/latte-dock)
-
-#### OpenSUSE
-
-- [openSUSE](https://software.opensuse.org/package/latte-dock?search_term=latte+dock)
-- [psifidotos - OBS](https://software.opensuse.org//download.html?project=home%3Apsifidotos&package=latte-dock)
-
-#### Fedora
-
-- [Fedora](https://koji.fedoraproject.org/koji/packageinfo?packageID=24229)
-
-#### Arch Linux
-
-- [Arch Linux](https://aur.archlinux.org/packages/latte-dock)
-
-#### Gentoo
-
-- [Gentoo](https://packages.gentoo.org/packages/kde-misc/latte-dock)
-
-#### Solus Project
-
-- [Solus](https://packages.solus-project.com/shannon/l/latte-dock/)
-
-#### Void Linux
-
-- [Void Linux](https://github.com/void-linux/void-packages/tree/master/srcpkgs/latte-dock)
-
-#### FreeBSD
-- [FreeBSD Port](https://www.freshports.org/deskutils/latte-dock/)
-
-See the [installation instructions](./INSTALLATION.md) for other Linux distributions or development builds
+Don't drop `-DKDE_INSTALL_USE_QT_SYS_PATHS=ON` — it lands the QML packages where Plasma actually looks for them. Without it the dock and its widgets won't load.
 
 ## Run Latte-Dock
 
@@ -119,4 +61,8 @@ or activating **Latte Dock** from the applications menu.
 
 Contributors
 ============
+[Michail Vourlakos](https://github.com/psifidotos) and [Smith AR](https://github.com/audoban): original Latte Dock.
+
+[David Goree](https://github.com/CaptSilver): the Qt 6 / Plasma 6 port.
+
 [Varlesh](https://github.com/varlesh): Logos and Icons.
