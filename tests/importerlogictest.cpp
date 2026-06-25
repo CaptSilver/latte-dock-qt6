@@ -8,8 +8,8 @@
 // manager.h/lattecorona.h transitively, so importer.cpp is driven through the
 // prebuilt latte-dock application objects (the glob-link), not recompiled here.
 //
-// importernametest.cpp re-implements the suffix/extension string logic in the
-// test itself; this test instead calls the REAL compiled statics:
+// This test calls the REAL compiled statics rather than re-implementing the
+// suffix/extension string logic in the test itself:
 //   fileVersion() (incl. the .latterc KTar archive branch a mirror can't reach),
 //   nameOfConfigFile(), layoutUserDir()/layoutUserFilePath(), layoutExists(),
 //   uniqueLayoutName(), availableLayouts(), systemShellDataPath(),

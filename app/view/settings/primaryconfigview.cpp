@@ -663,11 +663,7 @@ void PrimaryConfigView::updateEffects()
         setMask(QRegion());
     }
 
-    if (true) {
-        KWindowEffects::enableBlurBehind(this, true, fixedMask);
-    } else {
-        KWindowEffects::enableBlurBehind(this, false);
-    }
+    KWindowEffects::enableBlurBehind(this, true, fixedMask);
 }
 
 }

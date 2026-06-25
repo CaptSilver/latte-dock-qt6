@@ -38,8 +38,6 @@ Loader{
     readonly property real themeTextColorBrightness: ColorizerTools.colorBrightness(textColor)
     readonly property real backgroundColorBrightness: ColorizerTools.colorBrightness(backgroundColor)
 
-    readonly property color focusGlowColor: Qt.hsva(buttonFocusColor.h, buttonFocusColor.s, 1.0, 1.0)
-
     readonly property color outlineColorBase: backgroundColor
     readonly property real outlineColorBaseBrightness: ColorizerTools.colorBrightness(outlineColorBase)
     readonly property color outlineColor: {

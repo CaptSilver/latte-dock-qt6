@@ -77,6 +77,7 @@ private Q_SLOTS:
     void panelBackground_updateShadow_emitsNotify();
     void synchronizer_unloadLayouts_unloadsViewsBeforeContainments();
     void corona_showSettingsWindow_warnsWhenInStartup();
+    void deadCompositingBranchesAreCollapsed();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -238,6 +239,29 @@ void SourceGuardTest::corona_showSettingsWindow_warnsWhenInStartup()
     // true forever; the guard must log rather than silently swallow the request.
     QVERIFY2(s.contains(QStringLiteral("if(m_inStartup){qWarning")),
              "showSettingsWindow must warn, not silently return, while startup is blocked");
+}
+
+void SourceGuardTest::deadCompositingBranchesAreCollapsed()
+{
+    // KF6 dropped KWindowSystem::compositingActive(); the migration replaced it with
+    // the literal true, leaving if(true)/if(!true) dead branches (Wayland always
+    // composites). They obscure which path runs and must be collapsed away.
+    const char *files[] = {
+        "app/view/effects.cpp",
+        "app/view/helpers/screenedgeghostwindow.cpp",
+        "app/view/visibilitymanager.cpp",
+        "app/view/settings/secondaryconfigview.cpp",
+        "app/view/settings/primaryconfigview.cpp",
+        "app/view/settings/widgetexplorerview.cpp",
+    };
+    for (const char *f : files) {
+        const QString s = stripped(readFile(QString::fromUtf8(f)));
+        QVERIFY2(!s.isEmpty(), qPrintable(QStringLiteral("could not read %1").arg(QString::fromUtf8(f))));
+        QVERIFY2(!s.contains(QStringLiteral("if(true)")),
+                 qPrintable(QStringLiteral("%1 still has an if(true) dead branch").arg(QString::fromUtf8(f))));
+        QVERIFY2(!s.contains(QStringLiteral("!true")),
+                 qPrintable(QStringLiteral("%1 still has a !true dead branch").arg(QString::fromUtf8(f))));
+    }
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

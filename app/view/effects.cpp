@@ -59,19 +59,9 @@ void Effects::init()
     connect(m_view, &Latte::View::behaveAsPlasmaPanelChanged, this, &Effects::updateMask);
     if (KWindowSystem::isPlatformX11()) {
         connect(KX11Extras::self(), &KX11Extras::compositingChanged, this, [&]() {
-            if (!true && !m_view->behaveAsPlasmaPanel()) {
-                setMask(m_rect);
-            }
-
             updateMask();
         });
     }
-
-    connect(this, &Effects::rectChanged, this, [&]() {
-        if (!true && !m_view->behaveAsPlasmaPanel()) {
-            setMask(m_rect);
-        }
-    });
 
     connect(this, &Effects::backgroundRadiusChanged, this, &Effects::updateBackgroundCorners);
 
@@ -474,50 +464,15 @@ void Effects::updateBackgroundCorners()
 
 void Effects::updateMask()
 {
-    if (true) {
-        if (KWindowSystem::isPlatformX11()) {
-            if (m_view->behaveAsPlasmaPanel()) {
-                // set as NULL in order for plasma framrworks to identify NULL Mask properly
-                m_view->setMask(QRect(-1, -1, 0, 0));
-            } else {
-                m_view->setMask(QRect(0, 0, m_view->width(), m_view->height()));
-            }
+    if (KWindowSystem::isPlatformX11()) {
+        if (m_view->behaveAsPlasmaPanel()) {
+            // set as NULL in order for plasma framrworks to identify NULL Mask properly
+            m_view->setMask(QRect(-1, -1, 0, 0));
         } else {
-            // under wayland do nothing
+            m_view->setMask(QRect(0, 0, m_view->width(), m_view->height()));
         }
     } else {
-        QRegion fixedMask;
-
-        QRect maskRect = m_view->behaveAsPlasmaPanel() ? QRect(0,0, m_view->width(), m_view->height()) : m_mask;
-
-        if (m_backgroundRadiusEnabled) {
-            //! CustomBackground way
-            fixedMask = customMask(QRect(0,0,maskRect.width(), maskRect.height()));
-        } else {
-            //! KSvg::ImageSet way
-            //! this is used when compositing is disabled and provides
-            //! the correct way for the mask to be painted in order for
-            //! rounded corners to be shown correctly
-            //! the enabledBorders check was added because there was cases
-            //! that the mask region wasn't calculated correctly after location changes
-            if (!m_panelBackgroundSvg) {
-                return;
-            }
-
-            const QVariant maskProperty = m_panelBackgroundSvg->property("mask");
-            if (static_cast<QMetaType::Type>(maskProperty.type()) == QMetaType::QRegion) {
-                fixedMask = maskProperty.value<QRegion>();
-            }
-        }
-
-        fixedMask.translate(maskRect.x(), maskRect.y());
-
-        //! fix for KF5.32 that return empty QRegion's for the mask
-        if (fixedMask.isEmpty()) {
-            fixedMask = QRegion(maskRect);
-        }
-
-        m_view->setMask(fixedMask);
+        // under wayland do nothing
     }
 }
 

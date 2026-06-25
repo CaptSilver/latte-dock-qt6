@@ -1,10 +1,5 @@
 include(ECMAddTests)
 
-ecm_add_test(importernametest.cpp
-    TEST_NAME importernametest
-    LINK_LIBRARIES Qt6::Test Qt6::Core KF6::ConfigCore
-)
-
 ecm_add_test(indicatorsknsrctest.cpp
     TEST_NAME indicatorsknsrctest
     LINK_LIBRARIES Qt6::Test Qt6::Core KF6::ConfigCore
@@ -517,7 +512,7 @@ set_tests_properties(editmodetooltipguard PROPERTIES TIMEOUT 30)
 # Add new test names here when adding tests.
 if(LATTE_COVERAGE)
     set(_latte_cov_targets
-        importernametest indicatorsknsrctest templatesnametest storageroundtriptest
+        indicatorsknsrctest templatesnametest storageroundtriptest
         abstractlayouttest bindingrestoremodetest alternativescreateapplettest sourceguardtest
         activitiesinfotest syncedlaunchersclienttest layershellmappingtest
         windowinfowraptest visibilityrevealtest coretypesenumtest appletzoomsizetest
