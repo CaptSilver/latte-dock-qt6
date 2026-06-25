@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Headless compile-check for every QML file in Latte's shell/containment/plasmoid
-# packages. Unlike qml_load_gate.sh (which runs the dock and only sees QML that
+# and indicator packages. Unlike qml_load_gate.sh (which runs the dock and only sees QML that
 # loads during passive startup), this compiles each file in the real QML engine
 # via Qt.createComponent — so it catches removed-type / removed-property errors
 # in lazy, interaction-only components (the widget explorer, task context menu,
@@ -38,10 +38,16 @@ if ! ( cd "$BUILD" && DESTDIR="$STAGE" cmake --install . ) >/tmp/qml-compile-sta
 fi
 
 PKG="$STAGE/usr/share/plasma"
+# Indicators live outside the plasma package tree (share/latte/indicators) and
+# feed the running/active dot under each task icon. They escaped this gate once:
+# the dot vanished because the C++ side failed to load the package, and a QML
+# error here would do the same silently, so compile-check them too.
+IND="$STAGE/usr/share/latte/indicators"
 mapfile -t ALL < <(find \
     "$PKG/shells/org.kde.latte.shell" \
     "$PKG/plasmoids/org.kde.latte.containment" \
     "$PKG/plasmoids/org.kde.latte.plasmoid" \
+    "$IND" \
     -name '*.qml' 2>/dev/null | sort)
 
 if [ "${#ALL[@]}" -eq 0 ]; then echo "no staged QML found under $PKG"; exit 2; fi

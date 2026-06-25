@@ -118,7 +118,7 @@ void Factory::reload(const QString &indicatorPath)
         QString metadataFile = metadataFileAbsolutePath(indicatorPath);
 
         if(QFileInfo(metadataFile).exists()) {
-            KPluginMetaData metadata = KPluginMetaData(metadataFile);
+            KPluginMetaData metadata = KPluginMetaData::fromJsonFile(metadataFile);
 
             if (metadataAreValid(metadata)) {
                 pluginChangedId = metadata.pluginId();
@@ -246,7 +246,7 @@ bool Factory::metadataAreValid(KPluginMetaData &metadata)
 bool Factory::metadataAreValid(QString &file)
 {
     if (QFileInfo(file).exists()) {
-        KPluginMetaData metadata(file);
+        KPluginMetaData metadata = KPluginMetaData::fromJsonFile(file);
         return metadata.isValid();
     }
 
@@ -339,7 +339,7 @@ Latte::ImportExport::State Factory::importIndicatorFile(QString compressedFile)
         }
     }
 
-    KPluginMetaData metadata = KPluginMetaData(metadataFile);
+    KPluginMetaData metadata = KPluginMetaData::fromJsonFile(metadataFile);
 
     if (metadataAreValid(metadata)) {
         QStringList standardPaths = Latte::Layouts::Importer::standardPaths();

@@ -10,6 +10,13 @@ ecm_add_test(indicatorsknsrctest.cpp
     LINK_LIBRARIES Qt6::Test Qt6::Core KF6::ConfigCore
 )
 
+ecm_add_test(indicatormetadatatest.cpp
+    TEST_NAME indicatormetadatatest
+    LINK_LIBRARIES Qt6::Test Qt6::Core KF6::CoreAddons
+)
+target_compile_definitions(indicatormetadatatest PRIVATE
+    REPO_ROOT="${CMAKE_SOURCE_DIR}")
+
 ecm_add_test(templatesnametest.cpp
     TEST_NAME templatesnametest
     LINK_LIBRARIES Qt6::Test Qt6::Core
