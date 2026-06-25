@@ -44,7 +44,7 @@ echo "== instrument production QML + QML self-test fixture (overwrites mirror co
 python3 "$REPO/tools/qmlcov/instrument.py" \
     --root "$REPO" \
     --include declarativeimports --include plasmoid --include shell --include containment \
-    --include tests/qml/_covself \
+    --include indicators --include tests/qml/_covself \
     --out "$MIRROR" --catalog "$CAT_MIRROR"
 
 echo "== run Qt Quick Test against the instrumented mirror =="

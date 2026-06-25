@@ -33,6 +33,7 @@ TestCase {
       + '    property bool colorizerEnabled: true\n'
       + '    property QtObject dragOverlay: QtObject { property var currentApplet: null }\n'
       + '    property QtObject debug: QtObject { property bool graphicsEnabled: false }\n'
+      + '    property QtObject latteDebug: QtObject { function debugLog(m) {} }\n'
       + '    property QtObject environment: QtObject { property bool isGraphicsSystemAccelerated: false }\n'
       + '    property QtObject myView: QtObject {\n'
       + '        property int alignment: 0\n'
