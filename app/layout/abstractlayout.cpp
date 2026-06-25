@@ -338,20 +338,6 @@ Type AbstractLayout::type() const
     return Type::Abstract;
 }
 
-QList<Plasma::Types::Location> combinedFreeEdges(const QList<Plasma::Types::Location> &edges1, const QList<Plasma::Types::Location> &edges2)
-{
-    QList<Plasma::Types::Location> validFreeEdges;
-
-    for (int i=0; i<edges1.count(); ++i) {
-        if (edges2.contains(edges1[i])) {
-            validFreeEdges << edges1[i];
-        }
-    }
-
-    return validFreeEdges;
-}
-
-
 QString AbstractLayout::layoutName(const QString &fileName)
 {
     int lastSlash = fileName.lastIndexOf(QLatin1String("/"));
