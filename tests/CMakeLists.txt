@@ -92,6 +92,17 @@ ecm_add_test(commontoolstest.cpp ${CMAKE_SOURCE_DIR}/app/tools/commontools.cpp
 )
 target_include_directories(commontoolstest PRIVATE ${CMAKE_SOURCE_DIR}/app)
 
+ecm_add_test(coretoolstest.cpp
+    ${CMAKE_SOURCE_DIR}/declarativeimports/core/tools.cpp
+    ${CMAKE_SOURCE_DIR}/declarativeimports/core/environment.cpp
+    ${CMAKE_SOURCE_DIR}/declarativeimports/core/extras.cpp
+    TEST_NAME coretoolstest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Qml Plasma::Plasma
+)
+target_include_directories(coretoolstest PRIVATE
+    ${CMAKE_SOURCE_DIR}/declarativeimports/core
+    ${CMAKE_BINARY_DIR}/declarativeimports/core)
+
 ecm_add_test(bindingrestoremodetest.cpp
     TEST_NAME bindingrestoremodetest
     LINK_LIBRARIES Qt6::Test Qt6::Core
@@ -133,6 +144,57 @@ ecm_add_test(visibilityrevealtest.cpp
     LINK_LIBRARIES Qt6::Test Qt6::Gui Plasma::Plasma Plasma::PlasmaQuick
 )
 target_include_directories(visibilityrevealtest PRIVATE ${CMAKE_BINARY_DIR}/app)
+
+# tasksmodel.cpp and indicator/indicatorinfo.cpp are both self-contained
+# QObject/model classes (no Corona/View graph), so link them directly.
+ecm_add_test(viewmodelstest.cpp
+    ${CMAKE_SOURCE_DIR}/app/view/tasksmodel.cpp
+    ${CMAKE_SOURCE_DIR}/app/view/indicator/indicatorinfo.cpp
+    TEST_NAME viewmodelstest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick
+        Plasma::Plasma Plasma::PlasmaQuick KF6::Svg
+)
+target_include_directories(viewmodelstest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/view ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(viewmodelstest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+set_source_files_properties(
+    ${CMAKE_BINARY_DIR}/app/qwayland-kde-primary-output-v1.cpp
+    ${CMAKE_BINARY_DIR}/app/wayland-kde-primary-output-v1-protocol.c
+    PROPERTIES GENERATED TRUE)
+# Both ScreenPool implementations are self-contained: their headers pull in only
+# data/screendata.h and primaryoutputwatcher.h, not the Corona/View graph, so the
+# real production sources link directly. The generated qwayland header lives in
+# ${CMAKE_BINARY_DIR}/app, so that build dir must dependency-build first.
+ecm_add_test(screenpooltest.cpp
+    ${CMAKE_SOURCE_DIR}/app/screenpool.cpp
+    ${CMAKE_SOURCE_DIR}/app/plasma/extended/screenpool.cpp
+    ${CMAKE_SOURCE_DIR}/app/primaryoutputwatcher.cpp
+    ${CMAKE_BINARY_DIR}/app/qwayland-kde-primary-output-v1.cpp
+    ${CMAKE_BINARY_DIR}/app/wayland-kde-primary-output-v1-protocol.c
+    ${CMAKE_SOURCE_DIR}/app/data/genericdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/activitydata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/appletdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layoutcolordata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layouticondata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/errorinformationdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/errordata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/generictable.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layoutdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/viewdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/screendata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/viewstable.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layoutstable.cpp
+    ${CMAKE_SOURCE_DIR}/app/tools/commontools.cpp
+    TEST_NAME screenpooltest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::WaylandClient
+        KF6::ConfigCore KF6::CoreAddons KF6::I18n KF6::WindowSystem
+        Plasma::Plasma Plasma::KWaylandClient Wayland::Client
+)
+add_dependencies(screenpooltest latte-dock)
+target_include_directories(screenpooltest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/data ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(screenpooltest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
 qt_wrap_cpp(coretypesenumtest_MOC_SRCS ${CMAKE_BINARY_DIR}/app/coretypes.h)
 ecm_add_test(coretypesenumtest.cpp ${coretypesenumtest_MOC_SRCS}
@@ -207,6 +269,18 @@ ecm_add_test(coverage/selftest/covselftest.cpp coverage/selftest/covself.cpp
     LINK_LIBRARIES Qt6::Test
 )
 
+ecm_add_test(shortcutstest.cpp
+    ${CMAKE_SOURCE_DIR}/app/shortcuts/shortcutstracker.cpp
+    ${CMAKE_SOURCE_DIR}/app/shortcuts/modifiertracker.cpp
+    ${CMAKE_SOURCE_DIR}/app/tools/commontools.cpp
+    TEST_NAME shortcutstest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui
+        KF6::ConfigCore KF6::CoreAddons KF6::GuiAddons KF6::GlobalAccel
+)
+target_include_directories(shortcutstest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/shortcuts ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(shortcutstest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 # UniversalSettings only casts its parent to Latte::Corona (null here) but that
 # qobject_cast odr-uses Corona's metaobject, which drags in the whole application
 # object graph. Rather than recompile half the app, link the real production
@@ -276,6 +350,27 @@ target_include_directories(wmtoolstest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/wm ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(wmtoolstest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+# schemesmodel.cpp pulls in the whole app object graph through importer.cpp ->
+# lattecorona.h, so the prebuilt-objects trick links the real compiled
+# settings/detailsdialog/schemesmodel.cpp.o + wm/schemecolors.cpp.o +
+# layouts/importer.cpp.o (minus main.cpp) and drives them through the headers.
+# Genuine real-link against the shipped objects.
+ecm_add_test(schemesmodeltest.cpp
+    TEST_NAME schemesmodeltest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::DBus Qt6::Network
+        Plasma::Activities KF6::Archive KF6::CoreAddons KF6::Crash KF6::DBusAddons
+        KF6::ConfigQml KF6::ConfigCore KF6::GuiAddons KF6::GlobalAccel KF6::I18n
+        KF6::IconThemes KF6::IconWidgets KF6::KIOWidgets KF6::Notifications
+        KF6::NewStuffWidgets Plasma::Plasma KF6::Svg KF6::Package Plasma::PlasmaQuick
+        Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
+        KF6::Service Wayland::Client
+)
+target_link_libraries(schemesmodeltest ${_latte_app_objs})
+add_dependencies(schemesmodeltest latte-dock)
+target_include_directories(schemesmodeltest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/settings ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(schemesmodeltest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 ecm_add_test(smartlauncheritemtest.cpp
     ${CMAKE_SOURCE_DIR}/plasmoid/plugin/smartlauncheritem.cpp
     ${CMAKE_SOURCE_DIR}/plasmoid/plugin/smartlauncherbackend.cpp
@@ -329,7 +424,8 @@ if(LATTE_COVERAGE)
         windowinfowraptest visibilityrevealtest coretypesenumtest appletzoomsizetest
         panelbackgroundtest configcontrolstest contextmenudefaulttest
         editmodehandleactiontest smartlauncheritemtest tasksbackendtest covselftest
-        datatypestest commontoolstest layoutmanagertest settingsmodelstest wmtoolstest)
+        datatypestest commontoolstest layoutmanagertest settingsmodelstest wmtoolstest
+        shortcutstest viewmodelstest screenpooltest coretoolstest)
     foreach(_t ${_latte_cov_targets})
         target_compile_options(${_t} PRIVATE ${LATTE_COV_COMPILE_FLAGS})
         target_link_options(${_t} PRIVATE ${LATTE_COV_LINK_FLAGS})

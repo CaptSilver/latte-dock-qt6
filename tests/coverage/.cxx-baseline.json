@@ -1,5 +1,5 @@
 {
-  "overall_coverage": 0.37656427758816835,
+  "overall_coverage": 0.418551606158525,
   "by_file": {
     "/home/bazzite/build/latte-dock/app/data/activitiesinfo.cpp": {
       "lines_hit": 18,
@@ -57,9 +57,9 @@
       "coverage": 1.0
     },
     "/home/bazzite/build/latte-dock/app/data/generictable.cpp": {
-      "lines_hit": 166,
+      "lines_hit": 167,
       "lines_total": 181,
-      "coverage": 0.9171270718232044
+      "coverage": 0.9226519337016574
     },
     "/home/bazzite/build/latte-dock/app/data/layoutcolordata.cpp": {
       "lines_hit": 23,
@@ -141,10 +141,35 @@
       "lines_total": 0,
       "coverage": 1.0
     },
+    "/home/bazzite/build/latte-dock/app/plasma/extended/screenpool.cpp": {
+      "lines_hit": 67,
+      "lines_total": 79,
+      "coverage": 0.8481012658227848
+    },
+    "/home/bazzite/build/latte-dock/app/plasma/extended/screenpool.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
     "/home/bazzite/build/latte-dock/app/plasma/quick/containmentview.h": {
       "lines_hit": 0,
       "lines_total": 0,
       "coverage": 1.0
+    },
+    "/home/bazzite/build/latte-dock/app/primaryoutputwatcher.cpp": {
+      "lines_hit": 17,
+      "lines_total": 85,
+      "coverage": 0.2
+    },
+    "/home/bazzite/build/latte-dock/app/primaryoutputwatcher.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/home/bazzite/build/latte-dock/app/screenpool.cpp": {
+      "lines_hit": 85,
+      "lines_total": 182,
+      "coverage": 0.46703296703296704
     },
     "/home/bazzite/build/latte-dock/app/screenpool.h": {
       "lines_hit": 0,
@@ -171,10 +196,50 @@
       "lines_total": 0,
       "coverage": 1.0
     },
+    "/home/bazzite/build/latte-dock/app/shortcuts/modifiertracker.cpp": {
+      "lines_hit": 71,
+      "lines_total": 103,
+      "coverage": 0.6893203883495146
+    },
+    "/home/bazzite/build/latte-dock/app/shortcuts/modifiertracker.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/home/bazzite/build/latte-dock/app/shortcuts/shortcutstracker.cpp": {
+      "lines_hit": 92,
+      "lines_total": 99,
+      "coverage": 0.9292929292929293
+    },
+    "/home/bazzite/build/latte-dock/app/shortcuts/shortcutstracker.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
     "/home/bazzite/build/latte-dock/app/tools/commontools.cpp": {
       "lines_hit": 44,
       "lines_total": 69,
       "coverage": 0.6376811594202898
+    },
+    "/home/bazzite/build/latte-dock/app/view/indicator/indicatorinfo.cpp": {
+      "lines_hit": 107,
+      "lines_total": 125,
+      "coverage": 0.856
+    },
+    "/home/bazzite/build/latte-dock/app/view/indicator/indicatorinfo.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/home/bazzite/build/latte-dock/app/view/tasksmodel.cpp": {
+      "lines_hit": 58,
+      "lines_total": 91,
+      "coverage": 0.6373626373626373
+    },
+    "/home/bazzite/build/latte-dock/app/view/tasksmodel.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
     },
     "/home/bazzite/build/latte-dock/app/view/visibilitymanager.h": {
       "lines_hit": 6,
@@ -210,6 +275,31 @@
       "lines_hit": 0,
       "lines_total": 0,
       "coverage": 1.0
+    },
+    "/home/bazzite/build/latte-dock/declarativeimports/core/environment.cpp": {
+      "lines_hit": 17,
+      "lines_total": 43,
+      "coverage": 0.3953488372093023
+    },
+    "/home/bazzite/build/latte-dock/declarativeimports/core/environment.h": {
+      "lines_hit": 0,
+      "lines_total": 7,
+      "coverage": 0.0
+    },
+    "/home/bazzite/build/latte-dock/declarativeimports/core/extras.h": {
+      "lines_hit": 12,
+      "lines_total": 16,
+      "coverage": 0.75
+    },
+    "/home/bazzite/build/latte-dock/declarativeimports/core/tools.cpp": {
+      "lines_hit": 20,
+      "lines_total": 29,
+      "coverage": 0.6896551724137931
+    },
+    "/home/bazzite/build/latte-dock/declarativeimports/core/tools.h": {
+      "lines_hit": 0,
+      "lines_total": 7,
+      "coverage": 0.0
     },
     "/home/bazzite/build/latte-dock/plasmoid/plugin/backend.cpp": {
       "lines_hit": 94,
