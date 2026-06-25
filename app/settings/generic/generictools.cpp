@@ -234,7 +234,7 @@ void drawLayoutIcon(QPainter *painter, const QStyleOption &option, const bool &i
     int lenmargin = (lengthMargin == -1 ? ICONMARGIN + MARGIN : lengthMargin);
     int thickmargin = (thickMargin == -1 ? ICONMARGIN : thickMargin);
 
-    int iconsize = option.rect.height() - 2*thickMargin;
+    int iconsize = option.rect.height() - 2*thickmargin;
     int total = iconsize + 2*lenmargin;
 
     Qt::AlignmentFlag curalign = alignment;
@@ -303,7 +303,7 @@ void drawColorSchemeIcon(QPainter *painter, const QStyleOption &option, const QC
     int lenmargin = (lengthMargin == -1 ? ICONMARGIN + MARGIN : lengthMargin);
     int thickmargin = (thickMargin == -1 ? ICONMARGIN : thickMargin);
 
-    int iconsize = option.rect.height() - 2*thickMargin;
+    int iconsize = option.rect.height() - 2*thickmargin;
     int total = iconsize + 2*lenmargin;
 
     Qt::AlignmentFlag curalign = alignment;
@@ -358,7 +358,7 @@ QRect remainedFromIcon(const QStyleOption &option, Qt::AlignmentFlag alignment, 
     int lenmargin = (lengthMargin == -1 ? ICONMARGIN + MARGIN : lengthMargin);
     int thickmargin = (thickMargin == -1 ? ICONMARGIN : thickMargin);
 
-    int iconsize = option.rect.height() - 2*thickMargin;
+    int iconsize = option.rect.height() - 2*thickmargin;
     int total = iconsize + 2*lenmargin;
 
     Qt::AlignmentFlag curalign = alignment;
@@ -380,7 +380,7 @@ void drawIcon(QPainter *painter, const QStyleOption &option, const QString &icon
     int lenmargin = (lengthMargin == -1 ? ICONMARGIN + MARGIN : lengthMargin);
     int thickmargin = (thickMargin == -1 ? ICONMARGIN : thickMargin);
 
-    int iconsize = option.rect.height() - 2*thickMargin;
+    int iconsize = option.rect.height() - 2*thickmargin;
     int total = iconsize + 2*lenmargin;
 
     bool active = Latte::isActive(option);

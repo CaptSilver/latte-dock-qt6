@@ -129,6 +129,14 @@ T &GenericTable<T>::operator[](const QString &id)
         }
     }
 
+    if (pos < 0) {
+        //! a missing id must not index m_list[-1]; hand back a clean throwaway
+        //! default rather than read out of bounds.
+        static T invalid;
+        invalid = T();
+        return invalid;
+    }
+
     return m_list[pos];
 }
 
@@ -144,18 +152,32 @@ const T GenericTable<T>::operator[](const QString &id) const
         }
     }
 
+    if (pos < 0) {
+        return T();
+    }
+
     return m_list[pos];
 }
 
 template <class T>
 T &GenericTable<T>::operator[](const uint &index)
 {
+    if (index >= uint(m_list.count())) {
+        static T invalid;
+        invalid = T();
+        return invalid;
+    }
+
     return m_list[index];
 }
 
 template <class T>
 const T GenericTable<T>::operator[](const uint &index) const
 {
+    if (index >= uint(m_list.count())) {
+        return T();
+    }
+
     return m_list[index];
 }
 

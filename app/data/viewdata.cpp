@@ -157,12 +157,12 @@ View::operator QString() const
     result += QStringLiteral(" : ");
     result += isActive ? QStringLiteral("Active") : QStringLiteral("Inactive");
     result += QStringLiteral(" : ");
-    if (m_state==OriginFromLayout && isMoveOrigin) {
+    if (m_state==OriginFromLayout && isMoveOrigin && isMoveDestination) {
+        result += QStringLiteral(" ↑↓ ");
+    } else if (m_state==OriginFromLayout && isMoveOrigin) {
         result += QStringLiteral(" ↑ ");
     } else if (m_state==OriginFromLayout && isMoveDestination) {
         result += QStringLiteral(" ↓ ");
-    } else if (m_state==OriginFromLayout && isMoveOrigin && isMoveDestination) {
-        result += QStringLiteral(" ↑↓ ");
     } else {
         result += QStringLiteral(" - ");
     }
@@ -195,7 +195,6 @@ View::operator QString() const
         result += QStringLiteral("All Secondary Screens");
     }
 
-    result += onPrimary ? QStringLiteral("Primary") : QStringLiteral("Explicit");
     result += QStringLiteral(" : ");
     result += QString::number(screen);
     result += QStringLiteral(" : ");

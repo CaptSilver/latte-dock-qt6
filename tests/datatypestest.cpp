@@ -36,6 +36,7 @@ private Q_SLOTS:
     void table_insertSortLookupRemove();
     void table_insertBasedOnNameAndId_caseInsensitive();
     void table_operatorIndex_byIdAndIndex();
+    void table_operatorIndex_missingIdIsSafe();
     void table_operatorQString_join();
     void layoutColor_setDataAndEquality();
     void layoutIcon_isEmptyAndEquality();
@@ -44,6 +45,7 @@ private Q_SLOTS:
     void layout_activityAndTemplateChecks();
     void layout_operatorEqualExclusions();
     void view_stateMachine();
+    void view_operatorQStringMarkers();
     void screen_serializeRoundTrip();
     void screen_isScreensGroup();
     void viewsTable_hasContainmentIdRecursion();
@@ -196,6 +198,25 @@ void DataTypesTest::table_operatorIndex_byIdAndIndex()
     const Data::GenericTable<Data::Generic> ct = t;
     QCOMPARE(ct[QStringLiteral("a")].name, QStringLiteral("Alpha"));
     QCOMPARE(ct[uint(1)].id, QStringLiteral("b"));
+}
+
+void DataTypesTest::table_operatorIndex_missingIdIsSafe()
+{
+    Data::GenericTable<Data::Generic> t;
+    t << Data::Generic(QStringLiteral("a"), QStringLiteral("Alpha"));
+
+    // A missing-id lookup must return a default T, never index m_list[-1].
+    const Data::GenericTable<Data::Generic> &ct = t;
+    const Data::Generic constMiss = ct[QStringLiteral("nope")];     // const id overload
+    QVERIFY(constMiss.id.isEmpty());
+
+    Data::Generic &ncMiss = t[QStringLiteral("nope")];              // non-const id overload
+    QVERIFY(ncMiss.id.isEmpty());
+
+    // An out-of-range index is likewise guarded, not read past the end.
+    const Data::Generic idxMiss = ct[uint(99)];
+    QVERIFY(idxMiss.id.isEmpty());
+    QVERIFY(t[uint(99)].id.isEmpty());
 }
 
 void DataTypesTest::table_operatorQString_join()
@@ -407,6 +428,32 @@ void DataTypesTest::view_stateMachine()
     v.subcontainments << Data::Generic(QStringLiteral("sub1"), QStringLiteral("Sub One"));
     QVERIFY(v.hasSubContainment(QStringLiteral("sub1")));
     QVERIFY(!v.hasSubContainment(QStringLiteral("nope")));
+}
+
+void DataTypesTest::view_operatorQStringMarkers()
+{
+    Data::View v(QStringLiteral("v1"), QStringLiteral("View One"));
+    v.setState(Data::View::OriginFromLayout);
+
+    // Both move flags set -> the combined up/down marker must win, not a single arrow.
+    v.isMoveOrigin = true;
+    v.isMoveDestination = true;
+    const QString both = v;
+    QVERIFY2(both.contains(QString::fromUtf8("↑↓")),
+             qPrintable(QStringLiteral("combined move marker missing: %1").arg(both)));
+
+    // Single-screen primary view: the Primary token appears exactly once.
+    v.screensGroup = Latte::Types::SingleScreenGroup;
+    v.onPrimary = true;
+    const QString single = v;
+    QCOMPARE(single.count(QStringLiteral("Primary")), 1);
+
+    // A non-single-screen group must not get a stray Primary/Explicit suffix.
+    v.screensGroup = Latte::Types::AllScreensGroup;
+    const QString allScreens = v;
+    QVERIFY(allScreens.contains(QStringLiteral("All Screens")));
+    QCOMPARE(allScreens.count(QStringLiteral("Primary")), 0);
+    QCOMPARE(allScreens.count(QStringLiteral("Explicit")), 0);
 }
 
 void DataTypesTest::screen_serializeRoundTrip()

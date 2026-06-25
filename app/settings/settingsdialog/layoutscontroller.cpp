@@ -275,6 +275,10 @@ const Latte::Data::Layout Layouts::selectedLayoutCurrentData() const
 const Latte::Data::Layout Layouts::selectedLayoutOriginalData() const
 {
     int selectedRow = m_view->currentIndex().row();
+    if (selectedRow < 0) {
+        return Latte::Data::Layout();
+    }
+
     QString selectedId = m_proxyModel->data(m_proxyModel->index(selectedRow, Model::Layouts::IDCOLUMN), Qt::UserRole).toString();
 
     return m_model->originalData(selectedId);

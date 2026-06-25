@@ -59,9 +59,12 @@ void PrimaryOutputWatcher::setupRegistry()
         return;
     }
 
-    // Asking for primaryOutputName() before this happened, will return qGuiApp->primaryScreen()->name() anyways, so set it so the primaryOutputNameChange will
-    // have parameters that are coherent
-    m_primaryOutputName = qGuiApp->primaryScreen()->name();
+    // Asking for primaryOutputName() before this happened will fall back to the
+    // qGuiApp primary screen anyway, so seed it here so the primaryOutputNameChanged
+    // parameters are coherent. primaryScreen() can be null with no monitors attached.
+    if (QScreen *primary = qGuiApp->primaryScreen()) {
+        m_primaryOutputName = primary->name();
+    }
     m_registry = new KWayland::Client::Registry(this);
     connect(m_registry, &KWayland::Client::Registry::interfaceAnnounced, this, [this](const QByteArray &interface, quint32 name, quint32 version) {
         if (interface == WaylandPrimaryOutput::interface()->name) {

@@ -159,7 +159,13 @@ void ScreenPool::removeScreens(const Latte::Data::ScreensTable &obsoleteScreens)
 
 int ScreenPool::primaryScreenId() const
 {
-    return id(primaryScreen()->name());
+    QScreen *primary{primaryScreen()};
+
+    if (!primary) {
+        return NOSCREENID;
+    }
+
+    return id(primary->name());
 }
 
 QList<int> ScreenPool::secondaryScreenIds() const

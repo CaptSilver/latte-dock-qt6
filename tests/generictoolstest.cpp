@@ -49,6 +49,7 @@ private Q_SLOTS:
 
     void remainedFromChangesIndicatorShrinksWidth();
     void remainedFromIconShiftsLeftAligned();
+    void remainedFromIconDefaultThickMarginResolves();
     void remainedFromLayoutIconCenteredReturnsFull();
     void remainedFromScreenDrawingShrinks();
 
@@ -240,13 +241,25 @@ void GenericToolsTest::remainedFromChangesIndicatorShrinksWidth()
 void GenericToolsTest::remainedFromIconShiftsLeftAligned()
 {
     // Left-aligned (LTR): the remaining rect starts after the icon slot and is
-    // narrower by the same amount. Slot = iconsize + 2*lenmargin. With default
-    // margins (-1) and thickMargin passed as -1 the iconsize is height - 2*(-1).
+    // narrower by the same amount. Slot = iconsize + 2*lenmargin, with the default
+    // -1 thickMargin resolving to ICONMARGIN.
     QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
     QRect r = remainedFromIcon(opt, Qt::AlignLeft);
     QVERIFY(r.x() > 0);
     QCOMPARE(r.width(), 200 - r.x());
     QCOMPARE(r.height(), 30);
+}
+
+void GenericToolsTest::remainedFromIconDefaultThickMarginResolves()
+{
+    // thickMargin defaults to -1, which must resolve to ICONMARGIN for BOTH the
+    // icon size and the offset. Passing -1 must therefore yield the same rect as
+    // passing the resolved margin explicitly; the bug sized the icon from the raw
+    // -1 sentinel (height - 2*(-1)) so the two diverged.
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
+    const QRect resolvedDefault = remainedFromIcon(opt, Qt::AlignLeft, -1, -1);
+    const QRect explicitMargin = remainedFromIcon(opt, Qt::AlignLeft, -1, 1); // 1 == ICONMARGIN
+    QCOMPARE(resolvedDefault, explicitMargin);
 }
 
 void GenericToolsTest::remainedFromLayoutIconCenteredReturnsFull()

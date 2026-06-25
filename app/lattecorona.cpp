@@ -507,6 +507,10 @@ QRect Corona::screenGeometry(int id) const
         }
     }
 
+    if (!screen) {
+        return {};
+    }
+
     return screen->geometry();
 }
 

@@ -67,6 +67,8 @@ private Q_SLOTS:
     void visibilityManager_updateSidebarState_assignsState();
     void layoutsController_modeIsChanged_delegatesToModel();
     void containmentInterface_updateContainmentConfigProperty_guardReturns();
+    void primaryScreen_dereferencesAreNullGuarded();
+    void layoutsController_selectedLayoutOriginalData_guardsNegativeRow();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -101,6 +103,38 @@ void SourceGuardTest::containmentInterface_updateContainmentConfigProperty_guard
     // falls through to dereferencing a possibly-null m_configuration.
     QVERIFY2(s.contains(QStringLiteral("contains(key)){return;")),
              "updateContainmentConfigProperty guard must early-return on a null/absent config");
+}
+
+void SourceGuardTest::primaryScreen_dereferencesAreNullGuarded()
+{
+    // qGuiApp->primaryScreen() can be null (all monitors off / transient unplug),
+    // so every site that dereferences it must guard first. No headless repro: the
+    // offscreen QPA always reports a screen.
+    const QString screenPool = stripped(functionBody(readFile(QStringLiteral("app/screenpool.cpp")),
+                                       QStringLiteral("int ScreenPool::primaryScreenId() const")));
+    QVERIFY2(screenPool.contains(QStringLiteral("if(!primary){returnNOSCREENID;}")),
+             "primaryScreenId must null-check primaryScreen() before ->name()");
+
+    const QString corona = stripped(functionBody(readFile(QStringLiteral("app/lattecorona.cpp")),
+                                   QStringLiteral("QRect Corona::screenGeometry(int id) const")));
+    QVERIFY2(corona.contains(QStringLiteral("if(!screen){return")),
+             "screenGeometry must null-check the resolved screen before ->geometry()");
+
+    const QString watcher = stripped(functionBody(readFile(QStringLiteral("app/primaryoutputwatcher.cpp")),
+                                    QStringLiteral("void PrimaryOutputWatcher::setupRegistry()")));
+    QVERIFY2(watcher.contains(QStringLiteral("if(QScreen*primary=qGuiApp->primaryScreen())")),
+             "setupRegistry must guard qGuiApp->primaryScreen() before ->name()");
+}
+
+void SourceGuardTest::layoutsController_selectedLayoutOriginalData_guardsNegativeRow()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/settings/settingsdialog/layoutscontroller.cpp")),
+                                            QStringLiteral("const Latte::Data::Layout Layouts::selectedLayoutOriginalData() const")));
+    QVERIFY2(!s.isEmpty(), "selectedLayoutOriginalData() not found");
+    // Must short-circuit a -1 (no selection) row like its three siblings, rather
+    // than building m_proxyModel->index(-1, ...) and reading from it.
+    QVERIFY2(s.contains(QStringLiteral("if(selectedRow<0)")),
+             "selectedLayoutOriginalData must guard selectedRow < 0");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)
