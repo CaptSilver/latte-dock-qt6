@@ -1,0 +1,51 @@
+# Hand-maintained Qt/KDE C++ style for Latte Dock.
+# Fixes indentation, braces, pointer placement and spacing without reflowing
+# existing line breaks (ColumnLimit: 0), so it leaves the legacy tree alone and
+# only normalises what's genuinely off-style.
+---
+Language: Cpp
+Standard: c++17
+ColumnLimit: 0
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ContinuationIndentWidth: 4
+ConstructorInitializerIndentWidth: 4
+AccessModifierOffset: -4
+NamespaceIndentation: None
+PointerAlignment: Right
+IndentCaseLabels: false
+DerivePointerAlignment: false
+AlignAfterOpenBracket: Align
+AlignTrailingComments: true
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: true
+  AfterControlStatement: false
+  AfterEnum: false
+  AfterFunction: true
+  AfterNamespace: false
+  AfterStruct: true
+  AfterUnion: true
+  AfterExternBlock: false
+  BeforeCatch: false
+  BeforeElse: false
+  BeforeLambdaBody: false
+  IndentBraces: false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+BreakConstructorInitializers: BeforeColon
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 1
+SortIncludes: false
+SpaceBeforeParens: ControlStatements
+SpacesBeforeTrailingComments: 1
+SpaceAfterTemplateKeyword: true
+FixNamespaceComments: false
+ReflowComments: false
+...
