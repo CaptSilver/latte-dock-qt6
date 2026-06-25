@@ -97,6 +97,15 @@ ecm_add_test(screengeometrycalculatortest.cpp ${CMAKE_SOURCE_DIR}/app/screengeom
 target_include_directories(screengeometrycalculatortest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
 
+# coronahelpers.cpp is pure string/config logic lifted out of Latte::Corona
+# (layout-file path checks + obsolete-config pruning). Header reaches only Qt +
+# KConfigCore, so the real source links directly with no View/Corona graph.
+ecm_add_test(coronahelperstest.cpp ${CMAKE_SOURCE_DIR}/app/coronahelpers.cpp
+    TEST_NAME coronahelperstest
+    LINK_LIBRARIES Qt6::Test Qt6::Core KF6::ConfigCore
+)
+target_include_directories(coronahelperstest PRIVATE ${CMAKE_SOURCE_DIR}/app)
+
 # generictools.cpp is a bag of Settings::Generic free helpers (QStyleOption/QPainter
 # painters + string/format/geometry helpers). Its header pulls in only Qt, so the
 # real source links directly. It calls QApplication::style()/QStyle, so it needs

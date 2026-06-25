@@ -2,6 +2,7 @@ set(lattedock-app_SRCS
     alternativeshelper.cpp
     apptypes.cpp
     infoview.cpp
+    coronahelpers.cpp
     lattecorona.cpp
     screengeometrycalculator.cpp
     screenpool.cpp

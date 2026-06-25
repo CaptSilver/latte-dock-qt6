@@ -213,9 +213,6 @@ private:
     void qmlRegisterTypes() const;
     void setupWaylandIntegration();
 
-    bool appletExists(uint containmentId, uint appletId) const;
-    bool containmentExists(uint id) const;
-
     int primaryScreenId() const;
 
     //! Snapshot the views living on a screen as plain footprints, so the

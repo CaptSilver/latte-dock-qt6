@@ -11,6 +11,7 @@
 #include <coretypes.h>
 #include "alternativeshelper.h"
 #include "apptypes.h"
+#include "coronahelpers.h"
 #include "lattedockadaptor.h"
 #include "screengeometrycalculator.h"
 #include "screenpool.h"
@@ -380,68 +381,25 @@ KWayland::Client::PlasmaShell *Corona::waylandCoronaInterface() const
 
 void Corona::cleanConfig()
 {
-    auto containmentsEntries = config()->group(QStringLiteral("Containments"));
-    bool changed = false;
+    QSet<uint> liveContainmentIds;
+    QHash<uint, QSet<uint>> liveAppletIds;
 
-    for(const auto &cId : containmentsEntries.groupList()) {
-        if (!containmentExists(cId.toUInt())) {
-            //cleanup obsolete containments
-            containmentsEntries.group(cId).deleteGroup();
-            changed = true;
-            qDebug() << "obsolete containment configuration deleted:" << cId;
-        } else {
-            //cleanup obsolete applets of running containments
-            auto appletsEntries = containmentsEntries.group(cId).group(QStringLiteral("Applets"));
+    for (const auto containment : containments()) {
+        liveContainmentIds.insert(containment->id());
 
-            for(const auto &appletId : appletsEntries.groupList()) {
-                if (!appletExists(cId.toUInt(), appletId.toUInt())) {
-                    appletsEntries.group(appletId).deleteGroup();
-                    changed = true;
-                    qDebug() << "obsolete applet configuration deleted:" << appletId;
-                }
-            }
+        QSet<uint> appletIds;
+        for (const auto applet : containment->applets()) {
+            appletIds.insert(applet->id());
         }
+        liveAppletIds.insert(containment->id(), appletIds);
     }
 
-    if (changed) {
+    auto containmentsEntries = config()->group(QStringLiteral("Containments"));
+
+    if (CoronaHelpers::pruneObsoleteContainmentConfig(containmentsEntries, liveContainmentIds, liveAppletIds)) {
         config()->sync();
         qDebug() << "configuration file cleaned...";
     }
-}
-
-bool Corona::containmentExists(uint id) const
-{
-    for(const auto containment : containments()) {
-        if (id == containment->id()) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool Corona::appletExists(uint containmentId, uint appletId) const
-{
-    Plasma::Containment *containment = nullptr;
-
-    for(const auto cont : containments()) {
-        if (containmentId == cont->id()) {
-            containment = cont;
-            break;
-        }
-    }
-
-    if (!containment) {
-        return false;
-    }
-
-    for(const auto applet : containment->applets()) {
-        if (applet->id() == appletId) {
-            return true;
-        }
-    }
-
-    return false;
 }
 
 bool Corona::inQuit() const
@@ -930,7 +888,7 @@ void Corona::setAutostart(const bool &enabled)
 
 void Corona::switchToLayout(QString layout)
 {
-    if ((layout.startsWith(QLatin1String("file:/")) || layout.startsWith(QLatin1String("/"))) && layout.endsWith(QLatin1String(".layout.latte"))) {
+    if (CoronaHelpers::isLayoutFilePath(layout)) {
         importLayoutFile(layout);
     } else {
         m_layoutsManager->switchToLayout(layout);
@@ -939,9 +897,7 @@ void Corona::switchToLayout(QString layout)
 
 void Corona::importLayoutFile(const QString &filepath, const QString &suggestedLayoutName)
 {
-    bool isFilepathValid = (filepath.startsWith(QLatin1String("file:/")) || filepath.startsWith(QLatin1String("/"))) && filepath.endsWith(QLatin1String(".layout.latte"));
-
-    if (!isFilepathValid) {
+    if (!CoronaHelpers::isLayoutFilePath(filepath)) {
         qDebug() << i18n("The layout cannot be imported from file :: ") << filepath;
         return;
     }
@@ -949,14 +905,7 @@ void Corona::importLayoutFile(const QString &filepath, const QString &suggestedL
     //! Import and load runtime a layout through dbus interface
     //! It can be used from external programs that want to update runtime
     //! the Latte shown layout
-    QString layoutPath = filepath;
-
-    //! cleanup layout path
-    if (layoutPath.startsWith(QLatin1String("file:///"))) {
-        layoutPath = layoutPath.remove(QLatin1String("file://"));
-    } else if (layoutPath.startsWith(QLatin1String("file://"))) {
-        layoutPath = layoutPath.remove(QLatin1String("file:/"));
-    }
+    QString layoutPath = CoronaHelpers::cleanLayoutFilePath(filepath);
 
     //! check out layoutpath existence
     if (QFileInfo(layoutPath).exists()) {
@@ -967,7 +916,7 @@ void Corona::importLayoutFile(const QString &filepath, const QString &suggestedL
         if (importedLayout.isEmpty()) {
             qDebug() << i18n("The layout cannot be imported from file :: ") << layoutPath;
         } else {
-           m_layoutsManager->switchToLayout(importedLayout, MemoryUsage::SingleLayout);
+            m_layoutsManager->switchToLayout(importedLayout, MemoryUsage::SingleLayout);
         }
     } else {
         qDebug() << " Layout from missing file can not be imported and loaded :: " << layoutPath;
