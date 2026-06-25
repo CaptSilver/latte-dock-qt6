@@ -22,10 +22,22 @@ not on the host).
 
 Commit the updated `.cxx-baseline.json` / `.qml-baseline.json`.
 
+## Scope
+
+`LATTE_COVERAGE` instruments the **whole `latte-dock` app target**, not just the sources
+compiled into a test. So the C++ number is real whole-app line coverage: every app file
+counts, and the Corona-coupled core (`view.cpp`, `lattecorona.cpp`, `positioner`, the
+settings dialogs, …) sits at or near 0% until the live-dock capture exercises it — that
+is honest, not a gap in the harness. The behavioral tests that link the app objects
+(`universalsettingstest`, `viewsmodeltest`, …) contribute their coverage because those
+objects are now instrumented; they are listed in `_latte_cov_targets` so their binaries
+emit profile data and join the export object set.
+
 ## Target
 
-Both baselines climb toward 90%+. The ratchet only prevents backsliding; raising the
-number means writing tests (QML instantiation tests behind stubs; C++ real-link tests
-as Corona-coupled logic is decoupled). Not measured here: standalone `.js` files
-(the tracer instruments `.qml` only) and Corona/View C++ not linked into any test
-(tracked separately by the live-dock capture — see the follow-on plans).
+Both numbers climb toward 90%+, from very different starting points: QML is already in the
+60s (whole production-QML coverage), C++ starts low because the live-only runtime now counts
+in its denominator. The ratchet only prevents backsliding; raising C++ means more headless
+tests for the decoupleable logic plus the **live-dock capture** for the runtime core (the
+only thing that exercises `view`/`positioner`/`visibilitymanager`). Not measured: standalone
+`.js` files (the tracer instruments `.qml` only).

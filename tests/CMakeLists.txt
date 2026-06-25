@@ -517,7 +517,12 @@ if(LATTE_COVERAGE)
         panelbackgroundtest configcontrolstest contextmenudefaulttest
         editmodehandleactiontest smartlauncheritemtest tasksbackendtest covselftest
         datatypestest commontoolstest layoutmanagertest settingsmodelstest wmtoolstest
-        shortcutstest viewmodelstest screenpooltest coretoolstest generictoolstest)
+        shortcutstest viewmodelstest screenpooltest coretoolstest generictoolstest
+        # GLOB-behavioral tests link the (now instrumented) app objects; listing them
+        # gives their binaries the profile link flag and the export object set, which
+        # is what makes the Corona-coupled core count toward whole-app coverage.
+        universalsettingstest storagetest schemesmodeltest viewsmodeltest
+        layoutsmodeltest lastactivewindowtest importerlogictest)
     foreach(_t ${_latte_cov_targets})
         target_compile_options(${_t} PRIVATE ${LATTE_COV_COMPILE_FLAGS})
         target_link_options(${_t} PRIVATE ${LATTE_COV_LINK_FLAGS})

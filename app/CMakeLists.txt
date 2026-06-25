@@ -90,6 +90,13 @@ target_link_libraries(latte-dock
     Wayland::Client
 )
 
+# Instrument the app itself under coverage builds so its line coverage is measured:
+# the behavioral tests link these objects and the live-dock capture runs this binary.
+if(LATTE_COVERAGE)
+    target_compile_options(latte-dock PRIVATE ${LATTE_COV_COMPILE_FLAGS})
+    target_link_options(latte-dock PRIVATE ${LATTE_COV_LINK_FLAGS})
+endif()
+
 configure_file(org.kde.latte-dock.desktop.cmake org.kde.latte-dock.desktop)
 configure_file(org.kde.latte-dock.appdata.xml.cmake org.kde.latte-dock.appdata.xml)
 

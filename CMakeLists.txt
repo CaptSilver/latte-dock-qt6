@@ -117,6 +117,21 @@ configure_file(app/settings/generic/generictools.h containmentactions/contextmen
 configure_file(app/settings/generic/generictools.cpp containmentactions/contextmenu/generictools.cpp)
 configure_file(app/data/contextmenudata.h containmentactions/contextmenu/contextmenudata.h)
 
+# Clang source-based coverage. OFF by default; production and RPM builds stay on
+# gcc. Defined before the subdirectories so the production app target picks up the
+# flags too: with LATTE_COVERAGE on, the whole latte-dock app is instrumented and
+# the coverage gate measures real whole-app line coverage (test-linked sources +
+# the behavioral tests that link the app objects + the live-dock capture).
+option(LATTE_COVERAGE "Enable Clang source-based coverage instrumentation" OFF)
+if(LATTE_COVERAGE)
+    if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        message(FATAL_ERROR "LATTE_COVERAGE requires Clang (found ${CMAKE_CXX_COMPILER_ID}); configure with -DCMAKE_CXX_COMPILER=clang++")
+    endif()
+    set(LATTE_COV_COMPILE_FLAGS -fprofile-instr-generate -fcoverage-mapping -g -O0)
+    set(LATTE_COV_LINK_FLAGS -fprofile-instr-generate)
+    message(STATUS "LATTE_COVERAGE on: instrumenting the app + test targets")
+endif()
+
 # subdirectories
 add_subdirectory(declarativeimports)
 add_subdirectory(indicators)
@@ -126,19 +141,6 @@ add_subdirectory(containment)
 add_subdirectory(icons)
 add_subdirectory(plasmoid)
 add_subdirectory(shell)
-
-# Clang source-based coverage for the test suite. OFF by default; production and
-# RPM builds stay on gcc. Flags are applied per test target in tests/CMakeLists.txt
-# so the production sources compiled into each test get instrumented too.
-option(LATTE_COVERAGE "Enable Clang source-based coverage instrumentation" OFF)
-if(LATTE_COVERAGE)
-    if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        message(FATAL_ERROR "LATTE_COVERAGE requires Clang (found ${CMAKE_CXX_COMPILER_ID}); configure with -DCMAKE_CXX_COMPILER=clang++")
-    endif()
-    set(LATTE_COV_COMPILE_FLAGS -fprofile-instr-generate -fcoverage-mapping -g -O0)
-    set(LATTE_COV_LINK_FLAGS -fprofile-instr-generate)
-    message(STATUS "LATTE_COVERAGE on: instrumenting test targets with ${LATTE_COV_COMPILE_FLAGS}")
-endif()
 
 if(BUILD_TESTING)
     add_subdirectory(tests)
