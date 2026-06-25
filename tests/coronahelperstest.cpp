@@ -31,6 +31,9 @@ private Q_SLOTS:
     void contextMenu_marshalsFieldsAndOriginalView();
     void contextMenu_encodesClonedViewAndMultipleLayouts();
     void contextMenu_encodesNeitherWhenNoView();
+    void parseWindowIdAndScheme_splitsOnFirstDash();
+    void parseWindowIdAndScheme_handlesEdges();
+    void validPageOrFirst_keepsInRangeElseFirst();
 };
 
 void CoronaHelpersTest::isLayoutFilePath_acceptsAbsoluteAndFileUrls()
@@ -184,6 +187,40 @@ void CoronaHelpersTest::contextMenu_encodesNeitherWhenNoView()
         QStringLiteral("0;;0;;0")};
 
     QCOMPARE(CoronaHelpers::buildContextMenuData(in), expected);
+}
+
+void CoronaHelpersTest::parseWindowIdAndScheme_splitsOnFirstDash()
+{
+    auto a = CoronaHelpers::parseWindowIdAndScheme(QStringLiteral("123-MyScheme"));
+    QCOMPARE(a.windowId, QStringLiteral("123"));
+    QCOMPARE(a.scheme, QStringLiteral("MyScheme"));
+
+    //! only the first dash splits; later dashes stay in the scheme
+    auto b = CoronaHelpers::parseWindowIdAndScheme(QStringLiteral("42-Breeze-Dark"));
+    QCOMPARE(b.windowId, QStringLiteral("42"));
+    QCOMPARE(b.scheme, QStringLiteral("Breeze-Dark"));
+}
+
+void CoronaHelpersTest::parseWindowIdAndScheme_handlesEdges()
+{
+    //! leading dash -> empty id
+    auto a = CoronaHelpers::parseWindowIdAndScheme(QStringLiteral("-Breeze"));
+    QCOMPARE(a.windowId, QString());
+    QCOMPARE(a.scheme, QStringLiteral("Breeze"));
+
+    //! no dash -> indexOf(-1) leaves both fields equal to the whole string
+    auto b = CoronaHelpers::parseWindowIdAndScheme(QStringLiteral("noscheme"));
+    QCOMPARE(b.windowId, QStringLiteral("noscheme"));
+    QCOMPARE(b.scheme, QStringLiteral("noscheme"));
+}
+
+void CoronaHelpersTest::validPageOrFirst_keepsInRangeElseFirst()
+{
+    QCOMPARE(CoronaHelpers::validPageOrFirst(2, 0, 4), 2);
+    QCOMPARE(CoronaHelpers::validPageOrFirst(0, 0, 4), 0);
+    QCOMPARE(CoronaHelpers::validPageOrFirst(4, 0, 4), 4);
+    QCOMPARE(CoronaHelpers::validPageOrFirst(-1, 0, 4), 0);
+    QCOMPARE(CoronaHelpers::validPageOrFirst(5, 0, 4), 0);
 }
 
 QTEST_MAIN(CoronaHelpersTest)

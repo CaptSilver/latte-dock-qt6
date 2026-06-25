@@ -97,6 +97,21 @@ QStringList buildContextMenuData(const ContextMenuInputs &inputs)
     return data;
 }
 
+WindowIdAndScheme parseWindowIdAndScheme(const QString &windowIdAndScheme)
+{
+    const int firstDash = windowIdAndScheme.indexOf(QLatin1Char('-'));
+
+    WindowIdAndScheme result;
+    result.windowId = windowIdAndScheme.mid(0, firstDash);
+    result.scheme = windowIdAndScheme.mid(firstDash + 1);
+    return result;
+}
+
+int validPageOrFirst(int page, int firstPage, int lastPage)
+{
+    return (page >= firstPage && page <= lastPage) ? page : firstPage;
+}
+
 }
 
 }

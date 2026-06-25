@@ -858,20 +858,19 @@ void Corona::activateLauncherMenu()
 
 void Corona::windowColorScheme(QString windowIdAndScheme)
 {
-    int firstSlash = windowIdAndScheme.indexOf(QLatin1Char('-'));
-    QString windowIdStr = windowIdAndScheme.mid(0, firstSlash);
-    QString schemeStr = windowIdAndScheme.mid(firstSlash + 1);
+    const auto request = CoronaHelpers::parseWindowIdAndScheme(windowIdAndScheme);
+    const QString schemeStr = request.scheme;
 
     if (KWindowSystem::isPlatformWayland()) {
         QTimer::singleShot(200, [this, schemeStr]() {
             //! [Wayland Case] - give the time to be informed correctly for the active window id
             //! otherwise the active window id may not be the same with the one triggered
             //! the color scheme dbus signal
-            QString windowIdStr = m_wm->activeWindow().toString();
-            m_wm->schemesTracker()->setColorSchemeForWindow(windowIdStr.toUInt(), schemeStr);
+            const QString activeWindowIdStr = m_wm->activeWindow().toString();
+            m_wm->schemesTracker()->setColorSchemeForWindow(activeWindowIdStr.toUInt(), schemeStr);
         });
     } else {
-        m_wm->schemesTracker()->setColorSchemeForWindow(windowIdStr.toUInt(), schemeStr);
+        m_wm->schemesTracker()->setColorSchemeForWindow(request.windowId.toUInt(), schemeStr);
     }
 }
 
@@ -930,13 +929,9 @@ void Corona::showSettingsWindow(int page)
         return;
     }
 
-    Settings::Dialog::ConfigurationPage p = Settings::Dialog::LayoutPage;
+    const int validPage = CoronaHelpers::validPageOrFirst(page, Settings::Dialog::LayoutPage, Settings::Dialog::PreferencesPage);
 
-    if (page >= Settings::Dialog::LayoutPage && page <= Settings::Dialog::PreferencesPage) {
-        p = static_cast<Settings::Dialog::ConfigurationPage>(page);
-    }
-
-    m_layoutsManager->showLatteSettingsDialog(p);
+    m_layoutsManager->showLatteSettingsDialog(static_cast<Settings::Dialog::ConfigurationPage>(validPage));
 }
 
 QStringList Corona::contextMenuData(const uint &containmentId)

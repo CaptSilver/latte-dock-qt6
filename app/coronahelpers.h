@@ -23,6 +23,14 @@ namespace Latte {
 //! live Corona/View graph.
 namespace CoronaHelpers {
 
+//! The two parts of the "<windowId>-<colorScheme>" payload of the window color
+//! scheme dbus signal.
+struct WindowIdAndScheme
+{
+    QString windowId;
+    QString scheme;
+};
+
 //! One entry of the layouts submenu: a layout name plus its icon descriptor.
 struct ContextMenuLayoutEntry
 {
@@ -68,6 +76,14 @@ bool pruneObsoleteContainmentConfig(KConfigGroup &containments,
 //! submenu, the selected view's layout, and the view-type triple. Fields are
 //! ";;"-joined lists; each submenu entry is "name**isBackgroundFile**icon".
 QStringList buildContextMenuData(const ContextMenuInputs &inputs);
+
+//! Split a "<windowId>-<colorScheme>" string on its first dash. With no dash
+//! both fields hold the whole string (mirrors the original indexOf(-1) path).
+WindowIdAndScheme parseWindowIdAndScheme(const QString &windowIdAndScheme);
+
+//! Return page when it lies within [firstPage, lastPage], otherwise firstPage.
+//! Used to validate a requested settings-dialog page against its enum range.
+int validPageOrFirst(int page, int firstPage, int lastPage);
 
 }
 
