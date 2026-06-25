@@ -399,7 +399,7 @@ void VisibilityManager::updateSidebarState()
         return;
     }
 
-    m_isSidebar == cursidebarstate;
+    m_isSidebar = cursidebarstate;
     Q_EMIT isSidebarChanged();
 
 }

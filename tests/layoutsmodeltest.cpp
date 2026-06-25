@@ -33,8 +33,18 @@
 #include <QSignalSpy>
 #include <QtTest>
 
+#include <type_traits>
+#include <utility>
+
 using namespace Latte;
 using LModel = Settings::Model::Layouts;
+
+// currentData()'s not-found branch returns a temporary Data::Layout. Returning
+// that by reference (as it once did) dangles -> use-after-free when a caller
+// copies the result. originalData() already returns by value; pin currentData()
+// to the same contract so the miss path can never hand back a dangling ref.
+static_assert(!std::is_reference_v<decltype(std::declval<LModel &>().currentData(QString()))>,
+              "Settings::Model::Layouts::currentData must return Data::Layout by value");
 
 class LayoutsModelTest : public QObject
 {
@@ -516,6 +526,12 @@ void LayoutsModelTest::lookupsAndCurrentData()
     // currentData / originalData round-trip by id.
     QCOMPARE(model.currentData(QStringLiteral("/b.latte")).name, QStringLiteral("Beta"));
     QCOMPARE(model.originalData(QStringLiteral("/a.latte")).name, QStringLiteral("Alpha"));
+
+    // The miss path returns a default (empty) Layout by value, not a dangling
+    // reference to a destroyed temporary.
+    const Data::Layout missing = model.currentData(QStringLiteral("/nope.latte"));
+    QVERIFY(missing.id.isEmpty());
+    QVERIFY(missing.name.isEmpty());
 
     // containsCurrentName reflects the live table.
     QVERIFY(model.containsCurrentName(QStringLiteral("Beta")));

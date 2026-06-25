@@ -101,7 +101,7 @@ public:
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 
     const Latte::Data::Layout &at(const int &row);
-    const Latte::Data::Layout &currentData(const QString &id);
+    const Latte::Data::Layout currentData(const QString &id);
     const Latte::Data::Layout originalData(const QString &id);
 
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;

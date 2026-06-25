@@ -35,6 +35,7 @@ private Q_SLOTS:
     void lattePool_unknownConnectorIsNoScreenId();
     void lattePool_unknownIdHasEmptyConnector();
     void lattePool_hasScreenId();
+    void lattePool_removeScreensSkipsAbsentIdAndRemovesPresent();
 
     // Plasma-extended ScreenPool (app/plasma/extended/screenpool.cpp)
     void plasmaPool_loadsSeededConnectors();
@@ -117,6 +118,35 @@ void ScreenPoolTest::lattePool_hasScreenId()
     // negative ids are never valid screen ids
     QVERIFY(!pool.hasScreenId(-1));
     QVERIFY(!pool.hasScreenId(int(Latte::ScreenPool::NOSCREENID)));
+}
+
+void ScreenPoolTest::lattePool_removeScreensSkipsAbsentIdAndRemovesPresent()
+{
+    auto config = KSharedConfig::openConfig(m_configDir.filePath(QStringLiteral("lattepool_remove.rc")),
+                                            KConfig::SimpleConfig);
+    KConfigGroup group(config, QStringLiteral("ScreenConnectors"));
+    group.writeEntry(QStringLiteral("10"), QStringLiteral("DP-1:::0,0 1920x1080"));
+    group.writeEntry(QStringLiteral("11"), QStringLiteral("HDMI-1:::1920,0 1280x1024"));
+    group.sync();
+
+    Latte::ScreenPool pool(config);
+    pool.load();
+    QVERIFY(pool.hasScreenId(10));
+    QVERIFY(pool.hasScreenId(11));
+
+    // Obsolete list: an id that is NOT mapped, followed by one that IS. The
+    // absent id must not abort processing of the present one (the bug returned
+    // on the first miss, silently leaving later obsolete screens mapped).
+    Latte::Data::ScreensTable obsolete;
+    obsolete << Latte::Data::Screen(QStringLiteral("99"), QStringLiteral("ghost:::0,0 800x600"));
+    obsolete << Latte::Data::Screen(QStringLiteral("11"), QStringLiteral("HDMI-1:::1920,0 1280x1024"));
+
+    pool.removeScreens(obsolete);
+
+    // id 11 was present and listed obsolete -> gone, despite the earlier absent id 99
+    QVERIFY(!pool.hasScreenId(11));
+    // id 10 was never obsolete -> still mapped
+    QVERIFY(pool.hasScreenId(10));
 }
 
 // --- Latte::PlasmaExtended::ScreenPool --------------------------------------

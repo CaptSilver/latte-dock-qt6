@@ -857,7 +857,7 @@ void ContainmentInterface::setAppletInScheduledDestruction(const int &id, const 
 void ContainmentInterface::updateContainmentConfigProperty(const QString &key, const QVariant &value)
 {
     if (!m_configuration || !m_configuration->keys().contains(key)) {
-
+        return;
     }
 
     if (m_configuration->keys().contains(key)

@@ -149,7 +149,7 @@ void ScreenPool::removeScreens(const Latte::Data::ScreensTable &obsoleteScreens)
 {
     for (int i=0; i<obsoleteScreens.rowCount(); ++i) {
         if (!m_screensTable.containsId(obsoleteScreens[i].id)) {
-            return;
+            continue;
         }
 
         m_screensTable.remove(obsoleteScreens[i].id);

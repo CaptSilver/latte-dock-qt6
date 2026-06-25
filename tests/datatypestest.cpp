@@ -20,6 +20,9 @@
 #include <QDir>
 #include <QtTest>
 
+#include <cstring>
+#include <new>
+
 using namespace Latte;
 
 class DataTypesTest : public QObject
@@ -29,6 +32,7 @@ private Q_SLOTS:
     void generic_equality();
     void activity_isRunning_truthTable();
     void applet_visibleNameAndInstalled();
+    void applet_isSelectedDefaultsFalse();
     void table_insertSortLookupRemove();
     void table_insertBasedOnNameAndId_caseInsensitive();
     void table_operatorIndex_byIdAndIndex();
@@ -109,6 +113,20 @@ void DataTypesTest::applet_visibleNameAndInstalled()
 
     Data::Applet empty;
     QVERIFY(!empty.isValid());
+}
+
+void DataTypesTest::applet_isSelectedDefaultsFalse()
+{
+    // isSelected is read by the copy/move ctors and operator==, so a default
+    // Applet that never initialises it is read-of-uninitialised UB. Poison the
+    // storage first: a correct default ctor must produce isSelected==false
+    // regardless of what was in memory.
+    alignas(Data::Applet) unsigned char buf[sizeof(Data::Applet)];
+    std::memset(buf, 0xFF, sizeof(buf));
+
+    Data::Applet *applet = new (buf) Data::Applet();
+    QCOMPARE(applet->isSelected, false);
+    applet->~Applet();
 }
 
 void DataTypesTest::table_insertSortLookupRemove()

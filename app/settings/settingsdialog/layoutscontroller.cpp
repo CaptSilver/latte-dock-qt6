@@ -171,7 +171,7 @@ bool Layouts::layoutsAreChanged() const
 
 bool Layouts::modeIsChanged() const
 {
-    return m_model-modeIsChanged();
+    return m_model->modeIsChanged();
 }
 
 void Layouts::setOriginalInMultipleMode(const bool &inmultiple)

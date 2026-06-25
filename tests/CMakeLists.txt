@@ -127,6 +127,13 @@ ecm_add_test(alternativescreateapplettest.cpp
     LINK_LIBRARIES Qt6::Test Qt6::Core
 )
 
+ecm_add_test(sourceguardtest.cpp
+    TEST_NAME sourceguardtest
+    LINK_LIBRARIES Qt6::Test Qt6::Core
+)
+target_compile_definitions(sourceguardtest PRIVATE
+    REPO_ROOT="${CMAKE_SOURCE_DIR}")
+
 ecm_add_test(activitiesinfotest.cpp ../app/data/activitiesinfo.cpp
     TEST_NAME activitiesinfotest
     LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::DBus
@@ -511,7 +518,7 @@ set_tests_properties(editmodetooltipguard PROPERTIES TIMEOUT 30)
 if(LATTE_COVERAGE)
     set(_latte_cov_targets
         importernametest indicatorsknsrctest templatesnametest storageroundtriptest
-        abstractlayouttest bindingrestoremodetest alternativescreateapplettest
+        abstractlayouttest bindingrestoremodetest alternativescreateapplettest sourceguardtest
         activitiesinfotest syncedlaunchersclienttest layershellmappingtest
         windowinfowraptest visibilityrevealtest coretypesenumtest appletzoomsizetest
         panelbackgroundtest configcontrolstest contextmenudefaulttest
