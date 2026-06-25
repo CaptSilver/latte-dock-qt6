@@ -31,7 +31,12 @@ LatteComponents.IndicatorItem{
 
     property real textColorBrightness: colorBrightness(indicator.colorPalette.textColor)
 
-    property color isActiveColor: indicator.colorPalette.buttonFocusColor
+    //! buttonFocusColor is a Plasma color-group name; a Kirigami.Theme fallback palette
+    //! (used when no colorization is active) lacks it and would read undefined -> black.
+    //! Mirror the colorizer Manager and fall back to the palette's focusColor.
+    property color isActiveColor: indicator.colorPalette.buttonFocusColor !== undefined
+                                  ? indicator.colorPalette.buttonFocusColor
+                                  : indicator.colorPalette.focusColor
     property color minimizedColor: {
         if (minimizedTaskColoredDifferently) {
             return (textColorBrightness > 127.5 ? Qt.darker(indicator.colorPalette.textColor, 1.7) : Qt.lighter(indicator.colorPalette.textColor, 7));
