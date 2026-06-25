@@ -16,6 +16,19 @@ not on the host).
   tell executed from unexecuted code
 - `ratchet.py` — fails if coverage drops more than 0.5pp below the committed baseline
 
+## Live-dock capture (on demand, not gated)
+
+    distrobox enter fedora -- bash -lc 'cd ~/build/latte-dock && tests/coverage/cxx_coverage.sh && tests/coverage/live_capture.sh'
+
+`live_capture.sh` runs the **instrumented** dock under a nested `kwin_wayland`, drives it over
+DBus (add/query/remove a widget), and exits it with SIGINT so LLVM flushes profraw (a plain
+`kill` would skip the `atexit` write). It merges that with the headless test profraw and reports
+combined whole-app coverage. This is the **only** thing that exercises the live runtime core
+(`view`/`positioner`/`lattecorona`/`visibilitymanager`): one add/remove session takes whole-app C++
+from ~18% to ~34%. It is deliberately **not** part of `run.sh` — the nested compositor is too flaky
+to ratchet on — so it's an on-demand climb measurement, not a gate. Richer scripted interactions
+(edit mode, config, layout switch) cover more.
+
 ## Rebaseline (after intentionally changing coverage)
 
     distrobox enter fedora -- bash -lc 'cd ~/build/latte-dock && LATTE_COVERAGE_REFRESH=1 tests/coverage/run.sh'
