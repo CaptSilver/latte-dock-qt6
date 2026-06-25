@@ -5,9 +5,8 @@
 # profraw and reports combined whole-app coverage — the only thing that exercises
 # the live runtime core (view/positioner/lattecorona/visibilitymanager).
 #
-# Run inside the fedora distrobox, AFTER cxx_coverage.sh has built build-coverage
-# and produced the headless profraw:
-#   distrobox enter fedora -- bash -lc 'tests/coverage/cxx_coverage.sh && tests/coverage/live_capture.sh'
+# Run AFTER cxx_coverage.sh has built build-coverage and produced the headless profraw:
+#   tests/coverage/cxx_coverage.sh && tests/coverage/live_capture.sh
 #
 # This is NOT part of the ratcheted gate (run.sh) — the nested compositor is too
 # flaky to gate on. It is an on-demand measurement of how far the live run climbs

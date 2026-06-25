@@ -2,12 +2,11 @@
 
 Measures line-level coverage for C++ (Clang source-based) and QML (execution
 tracer), verifies the harness counts correctly, and ratchets against committed
-baselines. Everything runs in the `fedora` distrobox (clang + llvm-tools live there,
-not on the host).
+baselines. Needs clang + llvm-tools and the Qt6/KF6 build dependencies on the path.
 
 ## Run
 
-    distrobox enter fedora -- bash -lc '~/build/latte-dock/tests/coverage/run.sh'
+    tests/coverage/run.sh
 
 - `cxx_coverage.sh` — clang coverage build → ctest with profraw → `llvm-cov export` → `cxx-cov.json`
 - `qml_coverage.sh` — instrument a repo-relative mirror of the QML → run Qt Quick Test → `qml-cov.json`
@@ -18,7 +17,7 @@ not on the host).
 
 ## Live-dock capture (on demand, not gated)
 
-    distrobox enter fedora -- bash -lc 'cd ~/build/latte-dock && tests/coverage/cxx_coverage.sh && tests/coverage/live_capture.sh'
+    tests/coverage/cxx_coverage.sh && tests/coverage/live_capture.sh
 
 `live_capture.sh` runs the **instrumented** dock under a nested `kwin_wayland`, drives it over
 DBus (add/query/remove a widget), and exits it with SIGINT so LLVM flushes profraw (a plain
@@ -31,7 +30,7 @@ to ratchet on — so it's an on-demand climb measurement, not a gate. Richer scr
 
 ## Rebaseline (after intentionally changing coverage)
 
-    distrobox enter fedora -- bash -lc 'cd ~/build/latte-dock && LATTE_COVERAGE_REFRESH=1 tests/coverage/run.sh'
+    LATTE_COVERAGE_REFRESH=1 tests/coverage/run.sh
 
 Commit the updated `.cxx-baseline.json` / `.qml-baseline.json`.
 

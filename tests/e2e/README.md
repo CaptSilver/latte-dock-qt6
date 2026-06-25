@@ -12,5 +12,6 @@ applet changes lazily and not to the seeded legacy layout file in-session, so it
 not a reliable removal witness. On failure it prints which assertion failed and the dock log
 tail — the first failing assertion points at the broken chain link.
 
-Run inside the fedora distrobox: `tests/e2e/run.sh`. Override the widget with `WIDGET=…`.
-Prereqs: a built `latte-dock` and `latte-imgdiff`, and `python3-dbus` in the box.
+Run `tests/e2e/run.sh`. Override the widget with `WIDGET=…`. Prereqs: a built
+`latte-dock` and `latte-imgdiff`, `kwin_wayland` + a Vulkan ICD (lavapipe works), and
+`python3-dbus`.
