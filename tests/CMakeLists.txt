@@ -92,6 +92,18 @@ ecm_add_test(commontoolstest.cpp ${CMAKE_SOURCE_DIR}/app/tools/commontools.cpp
 )
 target_include_directories(commontoolstest PRIVATE ${CMAKE_SOURCE_DIR}/app)
 
+# generictools.cpp is a bag of Settings::Generic free helpers (QStyleOption/QPainter
+# painters + string/format/geometry helpers). Its header pulls in only Qt, so the
+# real source links directly. It calls QApplication::style()/QStyle, so it needs
+# Qt6::Widgets and a QApplication (QTEST_MAIN, offscreen QPA).
+ecm_add_test(generictoolstest.cpp ${CMAKE_SOURCE_DIR}/app/settings/generic/generictools.cpp
+    TEST_NAME generictoolstest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Widgets
+)
+target_include_directories(generictoolstest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/settings/generic)
+set_tests_properties(generictoolstest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 ecm_add_test(coretoolstest.cpp
     ${CMAKE_SOURCE_DIR}/declarativeimports/core/tools.cpp
     ${CMAKE_SOURCE_DIR}/declarativeimports/core/environment.cpp
@@ -371,6 +383,86 @@ target_include_directories(schemesmodeltest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/settings ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(schemesmodeltest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+# importer.cpp pulls in lattecorona.h (the full app object graph) through its
+# includes, so the prebuilt-objects trick links the real compiled
+# layouts/importer.cpp.o (minus main.cpp) and drives its static parser/path
+# helpers through the header. Genuine real-link against the shipped object.
+ecm_add_test(importerlogictest.cpp
+    TEST_NAME importerlogictest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::DBus Qt6::Network
+        Plasma::Activities KF6::Archive KF6::CoreAddons KF6::Crash KF6::DBusAddons
+        KF6::ConfigQml KF6::ConfigCore KF6::GuiAddons KF6::GlobalAccel KF6::I18n
+        KF6::IconThemes KF6::IconWidgets KF6::KIOWidgets KF6::Notifications
+        KF6::NewStuffWidgets Plasma::Plasma KF6::Svg KF6::Package Plasma::PlasmaQuick
+        Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
+        KF6::Service Wayland::Client
+)
+target_link_libraries(importerlogictest ${_latte_app_objs})
+add_dependencies(importerlogictest latte-dock)
+target_include_directories(importerlogictest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/layouts ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(importerlogictest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+# lastactivewindow.cpp's header pulls in the tracker graph and its .cpp includes
+# view/view.h -> the full Corona object graph, so the prebuilt-objects trick links
+# the real compiled wm/tracker/*.cpp.o (minus main.cpp) and drives the real
+# LastActiveWindow through a minimal concrete AbstractWindowInterface.
+ecm_add_test(lastactivewindowtest.cpp
+    TEST_NAME lastactivewindowtest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::DBus Qt6::Network
+        Plasma::Activities KF6::Archive KF6::CoreAddons KF6::Crash KF6::DBusAddons
+        KF6::ConfigQml KF6::ConfigCore KF6::GuiAddons KF6::GlobalAccel KF6::I18n
+        KF6::IconThemes KF6::IconWidgets KF6::KIOWidgets KF6::Notifications
+        KF6::NewStuffWidgets Plasma::Plasma KF6::Svg KF6::Package Plasma::PlasmaQuick
+        Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
+        KF6::Service Wayland::Client
+)
+target_link_libraries(lastactivewindowtest ${_latte_app_objs})
+add_dependencies(lastactivewindowtest latte-dock)
+target_include_directories(lastactivewindowtest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/wm ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(lastactivewindowtest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+# layoutsmodel.cpp's header pulls in lattecorona.h (the full app object graph),
+# so the prebuilt-objects trick links the real compiled layoutsmodel.cpp.o (minus
+# main.cpp) and drives the model through its header.
+ecm_add_test(layoutsmodeltest.cpp
+    TEST_NAME layoutsmodeltest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::DBus Qt6::Network
+        Plasma::Activities KF6::Archive KF6::CoreAddons KF6::Crash KF6::DBusAddons
+        KF6::ConfigQml KF6::ConfigCore KF6::GuiAddons KF6::GlobalAccel KF6::I18n
+        KF6::IconThemes KF6::IconWidgets KF6::KIOWidgets KF6::Notifications
+        KF6::NewStuffWidgets Plasma::Plasma KF6::Svg KF6::Package Plasma::PlasmaQuick
+        Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
+        KF6::Service Wayland::Client
+)
+target_link_libraries(layoutsmodeltest ${_latte_app_objs})
+add_dependencies(layoutsmodeltest latte-dock)
+target_include_directories(layoutsmodeltest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/settings
+    ${CMAKE_SOURCE_DIR}/app/settings/settingsdialog ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(layoutsmodeltest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+# viewsmodel.cpp's header pulls in lattecorona.h (the full app object graph), so
+# the prebuilt-objects trick links the real compiled viewsmodel.cpp.o (minus
+# main.cpp) and drives the model through its header.
+ecm_add_test(viewsmodeltest.cpp
+    TEST_NAME viewsmodeltest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::DBus Qt6::Network
+        Plasma::Activities KF6::Archive KF6::CoreAddons KF6::Crash KF6::DBusAddons
+        KF6::ConfigQml KF6::ConfigCore KF6::GuiAddons KF6::GlobalAccel KF6::I18n
+        KF6::IconThemes KF6::IconWidgets KF6::KIOWidgets KF6::Notifications
+        KF6::NewStuffWidgets Plasma::Plasma KF6::Svg KF6::Package Plasma::PlasmaQuick
+        Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
+        KF6::Service Wayland::Client
+)
+target_link_libraries(viewsmodeltest ${_latte_app_objs})
+add_dependencies(viewsmodeltest latte-dock)
+target_include_directories(viewsmodeltest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/settings
+    ${CMAKE_SOURCE_DIR}/app/settings/viewsdialog ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(viewsmodeltest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 ecm_add_test(smartlauncheritemtest.cpp
     ${CMAKE_SOURCE_DIR}/plasmoid/plugin/smartlauncheritem.cpp
     ${CMAKE_SOURCE_DIR}/plasmoid/plugin/smartlauncherbackend.cpp
@@ -425,7 +517,7 @@ if(LATTE_COVERAGE)
         panelbackgroundtest configcontrolstest contextmenudefaulttest
         editmodehandleactiontest smartlauncheritemtest tasksbackendtest covselftest
         datatypestest commontoolstest layoutmanagertest settingsmodelstest wmtoolstest
-        shortcutstest viewmodelstest screenpooltest coretoolstest)
+        shortcutstest viewmodelstest screenpooltest coretoolstest generictoolstest)
     foreach(_t ${_latte_cov_targets})
         target_compile_options(${_t} PRIVATE ${LATTE_COV_COMPILE_FLAGS})
         target_link_options(${_t} PRIVATE ${LATTE_COV_LINK_FLAGS})

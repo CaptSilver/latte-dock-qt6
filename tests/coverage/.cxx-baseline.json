@@ -1,5 +1,5 @@
 {
-  "overall_coverage": 0.418551606158525,
+  "overall_coverage": 0.42383988664541267,
   "by_file": {
     "/home/bazzite/build/latte-dock/app/data/activitiesinfo.cpp": {
       "lines_hit": 18,
@@ -185,6 +185,11 @@
       "lines_hit": 0,
       "lines_total": 0,
       "coverage": 1.0
+    },
+    "/home/bazzite/build/latte-dock/app/settings/generic/generictools.cpp": {
+      "lines_hit": 191,
+      "lines_total": 385,
+      "coverage": 0.4961038961038961
     },
     "/home/bazzite/build/latte-dock/app/settings/screensdialog/screensmodel.cpp": {
       "lines_hit": 145,
