@@ -1,5 +1,5 @@
 {
-  "overall_coverage": 0.6004618937644342,
+  "overall_coverage": 0.5875210792580101,
   "by_file": {
     "plasmoid/package/contents/ui/task/TaskItem.qml": {
       "loc_hit": 431,
@@ -43,19 +43,19 @@
       "units_total": 30,
       "coverage": 0.7056962025316456
     },
+    "containment/package/contents/ui/main.qml": {
+      "loc_hit": 0,
+      "loc_total": 284,
+      "units_hit": 0,
+      "units_total": 24,
+      "coverage": 0.0
+    },
     "containment/package/contents/ui/applet/AppletItem.qml": {
       "loc_hit": 135,
       "loc_total": 283,
       "units_hit": 11,
       "units_total": 20,
       "coverage": 0.47703180212014135
-    },
-    "containment/package/contents/ui/main.qml": {
-      "loc_hit": 0,
-      "loc_total": 276,
-      "units_hit": 0,
-      "units_total": 24,
-      "coverage": 0.0
     },
     "plasmoid/package/contents/ui/TasksExtendedManager.qml": {
       "loc_hit": 270,
@@ -114,11 +114,11 @@
       "coverage": 0.7446808510638298
     },
     "containment/package/contents/ui/editmode/ConfigOverlay.qml": {
-      "loc_hit": 130,
-      "loc_total": 130,
+      "loc_hit": 132,
+      "loc_total": 135,
       "units_hit": 12,
-      "units_total": 12,
-      "coverage": 1.0
+      "units_total": 15,
+      "coverage": 0.9777777777777777
     },
     "declarativeimports/abilities/client/ParabolicEffect.qml": {
       "loc_hit": 125,
@@ -232,6 +232,13 @@
       "units_total": 6,
       "coverage": 0.2647058823529412
     },
+    "indicators/default/package/config/config.qml": {
+      "loc_hit": 0,
+      "loc_total": 68,
+      "units_hit": 0,
+      "units_total": 17,
+      "coverage": 0.0
+    },
     "containment/package/contents/ui/abilities/privates/ParabolicEffectPrivate.qml": {
       "loc_hit": 67,
       "loc_total": 67,
@@ -287,6 +294,13 @@
       "units_hit": 7,
       "units_total": 7,
       "coverage": 1.0
+    },
+    "indicators/org.kde.latte.plasma/package/ui/FrontLayer.qml": {
+      "loc_hit": 0,
+      "loc_total": 61,
+      "units_hit": 0,
+      "units_total": 2,
+      "coverage": 0.0
     },
     "containment/package/contents/ui/layouts/LayoutsContainer.qml": {
       "loc_hit": 0,
@@ -421,11 +435,25 @@
       "units_total": 4,
       "coverage": 1.0
     },
+    "indicators/default/package/ui/main.qml": {
+      "loc_hit": 24,
+      "loc_total": 38,
+      "units_hit": 4,
+      "units_total": 5,
+      "coverage": 0.631578947368421
+    },
     "shell/package/contents/views/AppletDelegate.qml": {
       "loc_hit": 0,
       "loc_total": 37,
       "units_hit": 0,
       "units_total": 5,
+      "coverage": 0.0
+    },
+    "indicators/org.kde.latte.plasma/package/ui/main.qml": {
+      "loc_hit": 0,
+      "loc_total": 33,
+      "units_hit": 0,
+      "units_total": 2,
       "coverage": 0.0
     },
     "declarativeimports/abilities/bridge/PositionShortcuts.qml": {
@@ -505,6 +533,13 @@
       "units_total": 5,
       "coverage": 0.0
     },
+    "shell/package/contents/configuration/CanvasConfiguration.qml": {
+      "loc_hit": 0,
+      "loc_total": 19,
+      "units_hit": 0,
+      "units_total": 1,
+      "coverage": 0.0
+    },
     "containment/package/contents/ui/abilities/Layouter.qml": {
       "loc_hit": 0,
       "loc_total": 19,
@@ -518,6 +553,13 @@
       "units_hit": 2,
       "units_total": 3,
       "coverage": 0.8421052631578947
+    },
+    "indicators/org.kde.latte.plasma/package/config/config.qml": {
+      "loc_hit": 0,
+      "loc_total": 19,
+      "units_hit": 0,
+      "units_total": 5,
+      "coverage": 0.0
     },
     "plasmoid/package/contents/ui/task/TaskIcon.qml": {
       "loc_hit": 6,
@@ -567,13 +609,6 @@
       "units_hit": 1,
       "units_total": 2,
       "coverage": 0.5
-    },
-    "shell/package/contents/configuration/CanvasConfiguration.qml": {
-      "loc_hit": 0,
-      "loc_total": 16,
-      "units_hit": 0,
-      "units_total": 1,
-      "coverage": 0.0
     },
     "declarativeimports/abilities/client/Animations.qml": {
       "loc_hit": 0,

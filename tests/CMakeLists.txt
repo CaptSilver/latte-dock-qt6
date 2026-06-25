@@ -328,7 +328,8 @@ if(LATTE_COVERAGE)
         activitiesinfotest syncedlaunchersclienttest layershellmappingtest
         windowinfowraptest visibilityrevealtest coretypesenumtest appletzoomsizetest
         panelbackgroundtest configcontrolstest contextmenudefaulttest
-        editmodehandleactiontest smartlauncheritemtest tasksbackendtest covselftest)
+        editmodehandleactiontest smartlauncheritemtest tasksbackendtest covselftest
+        datatypestest commontoolstest layoutmanagertest settingsmodelstest wmtoolstest)
     foreach(_t ${_latte_cov_targets})
         target_compile_options(${_t} PRIVATE ${LATTE_COV_COMPILE_FLAGS})
         target_link_options(${_t} PRIVATE ${LATTE_COV_LINK_FLAGS})
