@@ -1151,21 +1151,33 @@ void GenericLayout::recreateView(Plasma::Containment *containment, bool delayed)
     int delay = delayed ? 350 : 0;
     m_viewsToRecreate << containment;
 
+    //! The deferred chain runs ~600ms later and dereferences the containment, so
+    //! hold a QPointer to bail if it is destroyed mid-flight. The raw pointer is
+    //! still used as the m_viewsToRecreate/m_latteViews identity key (compared, not
+    //! dereferenced), and the queue entry is always removed so the entry guard above
+    //! can never wedge future recreates for this containment.
+    QPointer<Plasma::Containment> safe = containment;
+
     //! give the time to config window to close itself first and then recreate the dock
     //! step:1 remove the latteview
-    QTimer::singleShot(delay, [this, containment]() {
+    QTimer::singleShot(delay, [this, containment, safe]() {
+        if (!safe || !m_latteViews.contains(containment)) {
+            m_viewsToRecreate.removeAll(containment);
+            return;
+        }
+
         auto view = m_latteViews[containment];
         view->disconnectSensitiveSignals();
 
         //! step:2 add the new latteview
-        connect(view, &QObject::destroyed, this, [this, containment]() {
-            auto view = m_latteViews.take(containment);
-            QTimer::singleShot(250, this, [this, containment]() {
-                if (!m_latteViews.contains(containment)) {
+        connect(view, &QObject::destroyed, this, [this, containment, safe]() {
+            m_latteViews.take(containment);
+            QTimer::singleShot(250, this, [this, containment, safe]() {
+                if (safe && !m_latteViews.contains(containment)) {
                     qDebug() << "recreate - step 2: adding dock for containment:" << containment->id();
                     addView(containment);
-                    m_viewsToRecreate.removeAll(containment);
                 }
+                m_viewsToRecreate.removeAll(containment);
             });
         });
 

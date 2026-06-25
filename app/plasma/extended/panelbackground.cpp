@@ -279,7 +279,7 @@ void PanelBackground::updateRoundnessFromMask(KSvg::Svg *svg)
                 int headLimitR = 0;
                 int tailLimitR = 0;
 
-                for (int r = baseRow+1; r<=corner.height(); ++r) {
+                for (int r = baseRow+1; r<corner.height(); ++r) {
                     QRgb *line = (QRgb *)corner.scanLine(r);
                     QRgb fpoint = line[baseCol];
                     if (qAlpha(fpoint) == 0) {
@@ -292,7 +292,7 @@ void PanelBackground::updateRoundnessFromMask(KSvg::Svg *svg)
 
                 int c = baseLineLength - 1;
 
-                for (int r = baseRow+1; r<=corner.height(); ++r) {
+                for (int r = baseRow+1; r<corner.height(); ++r) {
                     QRgb *line = (QRgb *)corner.scanLine(r);
                     QRgb point = line[c];
 
@@ -444,7 +444,7 @@ void PanelBackground::updateRoundnessFromShadows(KSvg::Svg *svg)
         qDebug() << " BOTTOM RIGHT CORNER SHADOW base line length :: " << baseLineLength << " with max shadow opacity : " << baseShadowMaxOpacity;
 
         if (baseLineLength>0) {
-            for (int r = baseRow+1; r<=corner.height(); ++r) {
+            for (int r = baseRow+1; r<corner.height(); ++r) {
                 QRgb *line = (QRgb *)corner.scanLine(r);
                 QRgb fpoint = line[baseCol];
                 if (qAlpha(fpoint) != 0) {
@@ -555,9 +555,19 @@ void PanelBackground::updateShadow(KSvg::Svg *svg)
         return;
     }
 
+    const int oldShadowSize = m_shadowSize;
+    const QColor oldShadowColor = m_shadowColor;
+
     if (!m_parentTheme->hasShadow()) {
         m_shadowSize = 0;
         m_shadowColor = Qt::black;
+
+        if (oldShadowSize != m_shadowSize) {
+            Q_EMIT shadowSizeChanged();
+        }
+        if (oldShadowColor != m_shadowColor) {
+            Q_EMIT shadowColorChanged();
+        }
         return;
     }
 
@@ -647,6 +657,13 @@ void PanelBackground::updateShadow(KSvg::Svg *svg)
                 m_shadowColor.setAlpha(qMin(255, maxopacity));
             }
         }
+    }
+
+    if (oldShadowSize != m_shadowSize) {
+        Q_EMIT shadowSizeChanged();
+    }
+    if (oldShadowColor != m_shadowColor) {
+        Q_EMIT shadowColorChanged();
     }
 }
 

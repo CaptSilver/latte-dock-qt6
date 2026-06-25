@@ -1178,6 +1178,7 @@ void Corona::importLayoutFile(const QString &filepath, const QString &suggestedL
 void Corona::showSettingsWindow(int page)
 {
     if (m_inStartup) {
+        qWarning() << "Latte: showSettingsWindow ignored, startup not finished (KActivities service not Running?)";
         return;
     }
 

@@ -515,13 +515,13 @@ void Synchronizer::pauseLayout(QString layoutName)
     if (m_manager->memoryUsage() == MemoryUsage::MultipleLayouts) {
         CentralLayout *layout = centralLayout(layoutName);
 
-        if (layout->isOnAllActivities()) {
+        if (!layout || layout->isOnAllActivities()) {
             return;
         }
 
         QStringList appliedactivities = layout->appliedActivities();
 
-        if (layout && !appliedactivities.isEmpty()) {
+        if (!appliedactivities.isEmpty()) {
             int i = 0;
 
             for (const auto &activityid : appliedactivities) {
@@ -882,7 +882,14 @@ bool Synchronizer::switchToLayoutInMultipleMode(QString layoutName)
 
     if (layout) {
         QStringList appliedActivities = layout->appliedActivities();
-        QString nextActivity = !layout->lastUsedActivity().isEmpty() ? layout->lastUsedActivity() : appliedActivities[0];
+        QString nextActivity = layout->lastUsedActivity();
+
+        if (nextActivity.isEmpty()) {
+            if (appliedActivities.isEmpty()) {
+                return true;
+            }
+            nextActivity = appliedActivities.first();
+        }
 
         if (!appliedActivities.contains(m_manager->corona()->activitiesConsumer()->currentActivity())) {
             //! it means we are at a foreign activity and we can switch to correct one
@@ -1054,8 +1061,8 @@ void Synchronizer::unloadLayouts(const QStringList &layoutNames, const QStringLi
                 layout->syncToLayoutFile(true);
             }
 
-            layout->unloadContainments();
             layout->unloadLatteViews();
+            layout->unloadContainments();
             if (!m_manager->corona()->inQuit()) {
                 m_manager->clearUnloadedContainmentsFromLinkedFile(layout->unloadedContainmentsIds());
             }

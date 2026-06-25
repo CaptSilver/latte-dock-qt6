@@ -69,6 +69,14 @@ private Q_SLOTS:
     void containmentInterface_updateContainmentConfigProperty_guardReturns();
     void primaryScreen_dereferencesAreNullGuarded();
     void layoutsController_selectedLayoutOriginalData_guardsNegativeRow();
+    void synchronizer_switchToLayoutInMultipleMode_guardsEmptyActivities();
+    void panelBackground_cornerLoopsUseExclusiveBound();
+    void genericLayout_recreateView_usesQPointerAndAlwaysDequeues();
+    void synchronizer_pauseLayout_guardsNullLayout();
+    void factory_reload_keepsIdNameListsLockstep();
+    void panelBackground_updateShadow_emitsNotify();
+    void synchronizer_unloadLayouts_unloadsViewsBeforeContainments();
+    void corona_showSettingsWindow_warnsWhenInStartup();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -135,6 +143,101 @@ void SourceGuardTest::layoutsController_selectedLayoutOriginalData_guardsNegativ
     // than building m_proxyModel->index(-1, ...) and reading from it.
     QVERIFY2(s.contains(QStringLiteral("if(selectedRow<0)")),
              "selectedLayoutOriginalData must guard selectedRow < 0");
+}
+
+void SourceGuardTest::synchronizer_switchToLayoutInMultipleMode_guardsEmptyActivities()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/layouts/synchronizer.cpp")),
+                                            QStringLiteral("bool Synchronizer::switchToLayoutInMultipleMode(QString layoutName)")));
+    QVERIFY2(!s.isEmpty(), "switchToLayoutInMultipleMode() not found");
+    // appliedActivities can be empty; indexing [0] is an OOB read.
+    QVERIFY2(!s.contains(QStringLiteral("appliedActivities[0]")),
+             "switchToLayoutInMultipleMode indexes a possibly-empty list");
+    QVERIFY2(s.contains(QStringLiteral("appliedActivities.isEmpty()")),
+             "switchToLayoutInMultipleMode must guard the empty-activities case");
+}
+
+void SourceGuardTest::panelBackground_cornerLoopsUseExclusiveBound()
+{
+    const QString s = stripped(readFile(QStringLiteral("app/plasma/extended/panelbackground.cpp")));
+    QVERIFY2(!s.isEmpty(), "panelbackground.cpp not found");
+    // scanLine(corner.height()) reads one row past the image buffer.
+    QVERIFY2(!s.contains(QStringLiteral("r<=corner.height()")),
+             "a corner roundness loop still uses the inclusive r<=corner.height() bound");
+}
+
+void SourceGuardTest::genericLayout_recreateView_usesQPointerAndAlwaysDequeues()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/layout/genericlayout.cpp")),
+                                            QStringLiteral("void GenericLayout::recreateView(Plasma::Containment *containment, bool delayed)")));
+    QVERIFY2(!s.isEmpty(), "recreateView() not found");
+    // The deferred chain dereferences the containment ~600ms later, so it must
+    // hold a QPointer, not a raw pointer that can dangle.
+    QVERIFY2(s.contains(QStringLiteral("QPointer")),
+             "recreateView must capture the containment via QPointer");
+    // The queue entry must always be removed, not only inside the addView branch.
+    QVERIFY2(s.contains(QStringLiteral("addView(containment);}m_viewsToRecreate.removeAll")),
+             "recreateView must dequeue m_viewsToRecreate unconditionally, not inside the addView guard");
+}
+
+void SourceGuardTest::synchronizer_pauseLayout_guardsNullLayout()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/layouts/synchronizer.cpp")),
+                                            QStringLiteral("void Synchronizer::pauseLayout(QString layoutName)")));
+    QVERIFY2(!s.isEmpty(), "pauseLayout() not found");
+    // centralLayout() can return null; the null check must precede the dereference.
+    QVERIFY2(s.contains(QStringLiteral("if(!layout||layout->isOnAllActivities())")),
+             "pauseLayout must null-check layout before dereferencing it");
+}
+
+void SourceGuardTest::factory_reload_keepsIdNameListsLockstep()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/indicator/factory.cpp")),
+                                            QStringLiteral("void Factory::reload(const QString &indicatorPath)")));
+    QVERIFY2(!s.isEmpty(), "Factory::reload() not found");
+    // The id and name lists are index-parallel, so the name must be inserted under
+    // the same id-uniqueness guard, never an independent name-contains guard that
+    // desyncs them.
+    QVERIFY2(!s.contains(QStringLiteral("m_customPluginNames.contains")),
+             "reload gates the name insert independently, desyncing the parallel lists");
+}
+
+void SourceGuardTest::panelBackground_updateShadow_emitsNotify()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/plasma/extended/panelbackground.cpp")),
+                                            QStringLiteral("void PanelBackground::updateShadow(KSvg::Svg *svg)")));
+    QVERIFY2(!s.isEmpty(), "updateShadow() not found");
+    // The shadowSize/shadowColor Q_PROPERTYs back reactive QML bindings; without
+    // their NOTIFY the drop-shadow goes stale on a theme switch.
+    QVERIFY2(s.contains(QStringLiteral("Q_EMITshadowSizeChanged()")),
+             "updateShadow must emit shadowSizeChanged when the size changes");
+    QVERIFY2(s.contains(QStringLiteral("Q_EMITshadowColorChanged()")),
+             "updateShadow must emit shadowColorChanged when the color changes");
+}
+
+void SourceGuardTest::synchronizer_unloadLayouts_unloadsViewsBeforeContainments()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/layouts/synchronizer.cpp")),
+                                            QStringLiteral("void Synchronizer::unloadLayouts(const QStringList &layoutNames, const QStringList &preloadedLayouts)")));
+    QVERIFY2(!s.isEmpty(), "unloadLayouts() not found");
+    const int views = s.indexOf(QStringLiteral("unloadLatteViews"));
+    const int containments = s.indexOf(QStringLiteral("unloadContainments"));
+    QVERIFY2(views >= 0 && containments >= 0, "unloadLayouts must unload both views and containments");
+    // Views first is the crash-safe order (containment delete re-enters
+    // containmentDestroyed, which tears down views); the reverse races.
+    QVERIFY2(views < containments,
+             "unloadLayouts must unload views before containments");
+}
+
+void SourceGuardTest::corona_showSettingsWindow_warnsWhenInStartup()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/lattecorona.cpp")),
+                                            QStringLiteral("void Corona::showSettingsWindow(int page)")));
+    QVERIFY2(!s.isEmpty(), "showSettingsWindow() not found");
+    // A degraded session where KActivities never reaches Running leaves m_inStartup
+    // true forever; the guard must log rather than silently swallow the request.
+    QVERIFY2(s.contains(QStringLiteral("if(m_inStartup){qWarning")),
+             "showSettingsWindow must warn, not silently return, while startup is blocked");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

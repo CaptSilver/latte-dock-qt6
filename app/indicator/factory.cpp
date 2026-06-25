@@ -136,30 +136,27 @@ void Factory::reload(const QString &indicatorPath)
                         && (metadata.pluginId() != QLatin1String("org.kde.latte.plasma"))
                         && (metadata.pluginId() != QLatin1String("org.kde.latte.plasmatabstyle"))) {
 
-                    //! find correct alphabetical position
-                    int newPos = -1;
-
+                    //! m_customPluginIds and m_customPluginNames are paired by index,
+                    //! so a new id and its name must be inserted together under the
+                    //! same id-uniqueness guard; gating the name on its own
+                    //! !contains(name) check desyncs the two lists when two custom
+                    //! indicators share a display name but have distinct ids.
                     if (!m_customPluginIds.contains(metadata.pluginId())) {
+                        //! find correct alphabetical position
+                        int newPos = -1;
+
                         for (int i=0; i<m_customPluginNames.count(); ++i) {
                             if (QString::compare(metadata.name(), m_customPluginNames[i], Qt::CaseInsensitive)<=0) {
                                 newPos = i;
                                 break;
                             }
                         }
-                    }
 
-                    if (!m_customPluginIds.contains(metadata.pluginId())) {
                         if (newPos == -1) {
                             m_customPluginIds << metadata.pluginId();
-                        } else {
-                            m_customPluginIds.insert(newPos, metadata.pluginId());
-                        }
-                    }
-
-                    if (!m_customPluginNames.contains(metadata.name())) {
-                        if (newPos == -1) {
                             m_customPluginNames << metadata.name();
                         } else {
+                            m_customPluginIds.insert(newPos, metadata.pluginId());
                             m_customPluginNames.insert(newPos, metadata.name());
                         }
                     }
