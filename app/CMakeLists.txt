@@ -3,6 +3,7 @@ set(lattedock-app_SRCS
     apptypes.cpp
     infoview.cpp
     lattecorona.cpp
+    screengeometrycalculator.cpp
     screenpool.cpp
     primaryoutputwatcher.cpp
     main.cpp    

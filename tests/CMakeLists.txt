@@ -87,6 +87,16 @@ ecm_add_test(commontoolstest.cpp ${CMAKE_SOURCE_DIR}/app/tools/commontools.cpp
 )
 target_include_directories(commontoolstest PRIVATE ${CMAKE_SOURCE_DIR}/app)
 
+# screengeometrycalculator.cpp is the pure available-screen geometry math lifted
+# out of Latte::Corona. Its header reaches only Qt + Plasma::Types enums, so the
+# real source links directly with no View/Corona graph.
+ecm_add_test(screengeometrycalculatortest.cpp ${CMAKE_SOURCE_DIR}/app/screengeometrycalculator.cpp
+    TEST_NAME screengeometrycalculatortest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Plasma::Plasma
+)
+target_include_directories(screengeometrycalculatortest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
+
 # generictools.cpp is a bag of Settings::Generic free helpers (QStyleOption/QPainter
 # painters + string/format/geometry helpers). Its header pulls in only Qt, so the
 # real source links directly. It calls QApplication::style()/QStyle, so it needs
