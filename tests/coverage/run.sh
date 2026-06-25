@@ -2,7 +2,7 @@
 # Full coverage gate: measure C++ + QML, verify the harness counts correctly,
 # then ratchet both against committed baselines. LATTE_COVERAGE_REFRESH=1
 # rewrites the baselines (after an intentional, coverage-affecting change).
-# Run inside the fedora distrobox.
+# Needs clang + llvm-tools and the Qt6/KF6 build deps.
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"

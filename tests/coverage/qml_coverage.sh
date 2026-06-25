@@ -5,7 +5,7 @@
 #   RUN 2 instruments the STAGED install tree (so org.kde.latte.* module imports
 #         resolve) and runs the package tests under tests/qml/pkg against it.
 # The two catalogs are remapped to repo-relative keys, merged, and reported as
-# build/_coverage/qml-cov.json. Run inside the fedora distrobox.
+# build/_coverage/qml-cov.json. Needs qmltestrunner + the Qt6/KF6 build deps.
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"

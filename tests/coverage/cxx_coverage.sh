@@ -2,7 +2,7 @@
 # Clang source-based C++ coverage for the latte-dock test suite. Configures a
 # dedicated clang coverage build, runs ctest with per-process profraw, merges,
 # exports per-file line coverage, and writes build/_coverage/cxx-cov.json.
-# Run inside the fedora distrobox.
+# Needs clang + llvm-tools and the Qt6/KF6 build deps.
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"

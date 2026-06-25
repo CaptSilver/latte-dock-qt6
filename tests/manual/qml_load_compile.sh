@@ -21,8 +21,8 @@
 #     newest variant is ever loaded (see ToolTipInstance.qml's selector); the
 #     older ones target removed Plasma 5 APIs and are dead here.
 #
-# Usage (inside the fedora distrobox):
-#   distrobox enter fedora -- bash -lc '~/build/latte-dock/tests/manual/qml_load_compile.sh'
+# Usage:
+#   tests/manual/qml_load_compile.sh
 set -u
 
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"

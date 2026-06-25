@@ -2,7 +2,7 @@
 # Live widget add/remove e2e: launches the real latte-dock in a nested kwin with a seeded
 # HOME and current-source-staged QML, adds then removes a widget through the real remove
 # action, and asserts the widget is gone from (1) the DBus applet list and (2) the rendered
-# pixels. The on-disk config group is logged informational only. Run inside the fedora distrobox.
+# pixels. The on-disk config group is logged informational only.
 set -u
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 HERE="$REPO/tests/e2e"

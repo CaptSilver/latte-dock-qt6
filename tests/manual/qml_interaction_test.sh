@@ -9,8 +9,8 @@
 # copies and are run by tests/coverage/qml_coverage.sh, not standalone here —
 # running them under a plain qmltestrunner fails on the missing Cov module.
 #
-# Usage (inside the fedora distrobox):
-#   distrobox enter fedora -- bash -lc '~/build/latte-dock/tests/manual/qml_interaction_test.sh'
+# Usage:
+#   tests/manual/qml_interaction_test.sh
 set -u
 
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"

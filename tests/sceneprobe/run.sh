@@ -4,7 +4,7 @@
 # real scene fails. It first runs a self-test — the known-good scene must pass and the
 # known-bad scene must fail — so a broken gate is caught before trusting its verdicts.
 #
-# Usage (inside the fedora distrobox):
+# Usage:
 #   tests/sceneprobe/run.sh [build-dir]   (default: build-asan if built, else build)
 set -u
 SCENEPROBE_DEVICE=lavapipe

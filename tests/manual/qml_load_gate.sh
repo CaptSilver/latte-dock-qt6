@@ -4,8 +4,8 @@
 # greps it for the QML-load error signatures. EXIT 124 from `timeout` is the
 # normal "survived the run" case (the dock keeps running until killed).
 #
-# Usage: run inside the fedora distrobox after `sudo cmake --install .`:
-#   distrobox enter fedora -- bash -lc '~/build/latte-dock/tests/manual/qml_load_gate.sh'
+# Usage: run after installing the package (cmake --install .):
+#   tests/manual/qml_load_gate.sh
 set -u
 LOG="${1:-/tmp/latte6-gate.log}"
 rm -f "$LOG"
