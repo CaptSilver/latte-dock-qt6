@@ -1,5 +1,5 @@
 {
-  "overall_coverage": 0.5875210792580101,
+  "overall_coverage": 0.6150646430578977,
   "by_file": {
     "plasmoid/package/contents/ui/task/TaskItem.qml": {
       "loc_hit": 431,
@@ -268,11 +268,11 @@
       "coverage": 0.0
     },
     "plasmoid/package/contents/ui/config/ConfigAppearance.qml": {
-      "loc_hit": 0,
+      "loc_hit": 65,
       "loc_total": 65,
-      "units_hit": 0,
+      "units_hit": 2,
       "units_total": 2,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "plasmoid/package/contents/ui/taskslayout/MouseHandler.qml": {
       "loc_hit": 65,
@@ -394,11 +394,11 @@
       "coverage": 0.13043478260869565
     },
     "shell/package/contents/configuration/canvas/maxlength/RulerMouseArea.qml": {
-      "loc_hit": 0,
+      "loc_hit": 46,
       "loc_total": 46,
-      "units_hit": 0,
+      "units_hit": 2,
       "units_total": 2,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "containment/package/contents/ui/abilities/Indexer.qml": {
       "loc_hit": 45,
@@ -422,11 +422,11 @@
       "coverage": 1.0
     },
     "declarativeimports/abilities/client/Requirements.qml": {
-      "loc_hit": 0,
+      "loc_hit": 40,
       "loc_total": 40,
-      "units_hit": 0,
+      "units_hit": 7,
       "units_total": 7,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "containment/package/contents/ui/applet/communicator/Actions.qml": {
       "loc_hit": 38,
@@ -527,11 +527,11 @@
       "coverage": 1.0
     },
     "declarativeimports/abilities/client/MyView.qml": {
-      "loc_hit": 0,
+      "loc_hit": 21,
       "loc_total": 21,
-      "units_hit": 0,
+      "units_hit": 5,
       "units_total": 5,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "shell/package/contents/configuration/CanvasConfiguration.qml": {
       "loc_hit": 0,
@@ -583,11 +583,11 @@
       "coverage": 0.0
     },
     "containment/package/contents/ui/abilities/privates/MyViewPrivate.qml": {
-      "loc_hit": 0,
+      "loc_hit": 17,
       "loc_total": 17,
-      "units_hit": 0,
+      "units_hit": 2,
       "units_total": 2,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "declarativeimports/abilities/bridge/ParabolicEffect.qml": {
       "loc_hit": 11,
@@ -597,11 +597,11 @@
       "coverage": 0.6875
     },
     "plasmoid/package/contents/ui/config/ConfigInteraction.qml": {
-      "loc_hit": 0,
+      "loc_hit": 16,
       "loc_total": 16,
-      "units_hit": 0,
+      "units_hit": 1,
       "units_total": 1,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "plasmoid/package/contents/ui/task/animations/launcher/BounceAnimation.qml": {
       "loc_hit": 8,
@@ -611,11 +611,11 @@
       "coverage": 0.5
     },
     "declarativeimports/abilities/client/Animations.qml": {
-      "loc_hit": 0,
+      "loc_hit": 15,
       "loc_total": 15,
-      "units_hit": 0,
+      "units_hit": 3,
       "units_total": 3,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "containment/package/contents/ui/applet/communicator/LatteBridge.qml": {
       "loc_hit": 0,
@@ -688,11 +688,11 @@
       "coverage": 0.0
     },
     "containment/package/contents/ui/abilities/privates/IndicatorsPrivate.qml": {
-      "loc_hit": 0,
+      "loc_hit": 10,
       "loc_total": 10,
-      "units_hit": 0,
+      "units_hit": 2,
       "units_total": 2,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "tests/qml/_covself/CovSelf.qml": {
       "loc_hit": 5,
@@ -744,11 +744,11 @@
       "coverage": 1.0
     },
     "containment/package/contents/ui/abilities/privates/layouter/AppletsContainer.qml": {
-      "loc_hit": 0,
+      "loc_hit": 7,
       "loc_total": 7,
-      "units_hit": 0,
+      "units_hit": 1,
       "units_total": 1,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "declarativeimports/abilities/items/indicators/LevelOptions.qml": {
       "loc_hit": 6,
@@ -786,11 +786,11 @@
       "coverage": 0.0
     },
     "containment/package/contents/ui/applet/HiddenSpacer.qml": {
-      "loc_hit": 0,
+      "loc_hit": 5,
       "loc_total": 5,
-      "units_hit": 0,
+      "units_hit": 1,
       "units_total": 1,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "plasmoid/package/contents/ui/previews/ToolTipWindowMouseArea.qml": {
       "loc_hit": 0,
@@ -807,11 +807,11 @@
       "coverage": 0.0
     },
     "containment/package/contents/ui/abilities/UserRequests.qml": {
-      "loc_hit": 0,
+      "loc_hit": 3,
       "loc_total": 3,
-      "units_hit": 0,
+      "units_hit": 1,
       "units_total": 1,
-      "coverage": 0.0
+      "coverage": 1.0
     },
     "containment/package/contents/ui/applet/EventsSinkOriginArea.qml": {
       "loc_hit": 0,
