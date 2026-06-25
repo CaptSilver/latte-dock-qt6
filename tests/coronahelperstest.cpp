@@ -28,6 +28,9 @@ private Q_SLOTS:
     void cleanLayoutFilePath_leavesPlainPath();
     void prune_removesObsoleteContainmentsAndApplets();
     void prune_noChangeWhenEverythingLive();
+    void contextMenu_marshalsFieldsAndOriginalView();
+    void contextMenu_encodesClonedViewAndMultipleLayouts();
+    void contextMenu_encodesNeitherWhenNoView();
 };
 
 void CoronaHelpersTest::isLayoutFilePath_acceptsAbsoluteAndFileUrls()
@@ -114,6 +117,73 @@ void CoronaHelpersTest::prune_noChangeWhenEverythingLive()
     QCOMPARE(containments.groupList(), QStringList({QStringLiteral("5")}));
     QCOMPARE(containments.group(QStringLiteral("5")).group(QStringLiteral("Applets")).groupList(),
              QStringList({QStringLiteral("50")}));
+}
+
+void CoronaHelpersTest::contextMenu_marshalsFieldsAndOriginalView()
+{
+    CoronaHelpers::ContextMenuInputs in;
+    in.memoryUsage = 1;
+    in.centralLayoutsNames = {QStringLiteral("Default"), QStringLiteral("Work")};
+    in.currentLayoutsNames = {QStringLiteral("Default")};
+    in.alwaysShownActions = {QStringLiteral("add"), QStringLiteral("remove")};
+    in.menuLayouts = {{QStringLiteral("Default"), true, QStringLiteral("sunset")}};
+    in.selectedViewLayoutName = QStringLiteral("Default");
+    in.viewType = 0;
+    in.viewIsOriginal = true;
+    in.viewClonesCount = 3;
+
+    const QStringList expected{
+        QStringLiteral("1"),
+        QStringLiteral("Default;;Work"),
+        QStringLiteral("Default"),
+        QStringLiteral("add;;remove"),
+        QStringLiteral("Default**1**sunset"),
+        QStringLiteral("Default"),
+        QStringLiteral("0;;0;;3")};
+
+    QCOMPARE(CoronaHelpers::buildContextMenuData(in), expected);
+}
+
+void CoronaHelpersTest::contextMenu_encodesClonedViewAndMultipleLayouts()
+{
+    CoronaHelpers::ContextMenuInputs in;
+    in.memoryUsage = 0;
+    in.centralLayoutsNames = {QStringLiteral("A")};
+    in.currentLayoutsNames = {QStringLiteral("A"), QStringLiteral("B")};
+    //! alwaysShownActions left empty -> joins to ""
+    in.menuLayouts = {{QStringLiteral("A"), false, QStringLiteral("blue")},
+                      {QStringLiteral("B"), true, QStringLiteral("red")}};
+    in.selectedViewLayoutName = QStringLiteral("A");
+    in.viewType = 2;
+    in.viewIsCloned = true;
+
+    const QStringList expected{
+        QStringLiteral("0"),
+        QStringLiteral("A"),
+        QStringLiteral("A;;B"),
+        QString(),
+        QStringLiteral("A**0**blue;;B**1**red"),
+        QStringLiteral("A"),
+        QStringLiteral("2;;1;;0")};
+
+    QCOMPARE(CoronaHelpers::buildContextMenuData(in), expected);
+}
+
+void CoronaHelpersTest::contextMenu_encodesNeitherWhenNoView()
+{
+    //! no view selected: empty layouts, empty selected name, neither original nor cloned
+    CoronaHelpers::ContextMenuInputs in;
+
+    const QStringList expected{
+        QStringLiteral("0"),
+        QString(),
+        QString(),
+        QString(),
+        QString(),
+        QString(),
+        QStringLiteral("0;;0;;0")};
+
+    QCOMPARE(CoronaHelpers::buildContextMenuData(in), expected);
 }
 
 QTEST_MAIN(CoronaHelpersTest)

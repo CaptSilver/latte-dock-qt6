@@ -56,6 +56,47 @@ bool pruneObsoleteContainmentConfig(KConfigGroup &containments,
     return changed;
 }
 
+QStringList buildContextMenuData(const ContextMenuInputs &inputs)
+{
+    QStringList data;
+
+    data << QString::number(inputs.memoryUsage);
+    data << inputs.centralLayoutsNames.join(QStringLiteral(";;"));
+    data << inputs.currentLayoutsNames.join(QStringLiteral(";;"));
+    data << inputs.alwaysShownActions.join(QStringLiteral(";;"));
+
+    QStringList layoutsmenu;
+
+    for (const auto &entry : inputs.menuLayouts) {
+        QStringList layoutdata;
+        layoutdata << entry.name;
+        layoutdata << (entry.isBackgroundFile ? QStringLiteral("1") : QStringLiteral("0"));
+        layoutdata << entry.iconName;
+        layoutsmenu << layoutdata.join(QStringLiteral("**"));
+    }
+
+    data << layoutsmenu.join(QStringLiteral(";;"));
+    data << inputs.selectedViewLayoutName;
+
+    QStringList viewtype;
+    viewtype << QString::number(inputs.viewType);
+
+    if (inputs.viewIsOriginal) {
+        viewtype << QStringLiteral("0");
+        viewtype << QString::number(inputs.viewClonesCount);
+    } else if (inputs.viewIsCloned) {
+        viewtype << QStringLiteral("1");
+        viewtype << QStringLiteral("0");
+    } else {
+        viewtype << QStringLiteral("0");
+        viewtype << QStringLiteral("0");
+    }
+
+    data << viewtype.join(QStringLiteral(";;"));
+
+    return data;
+}
+
 }
 
 }

@@ -9,8 +9,10 @@
 
 // Qt
 #include <QHash>
+#include <QList>
 #include <QSet>
 #include <QString>
+#include <QStringList>
 
 // KDE
 #include <KConfigGroup>
@@ -20,6 +22,30 @@ namespace Latte {
 //! Pure logic lifted out of Latte::Corona so it can be unit-tested without a
 //! live Corona/View graph.
 namespace CoronaHelpers {
+
+//! One entry of the layouts submenu: a layout name plus its icon descriptor.
+struct ContextMenuLayoutEntry
+{
+    QString name;
+    bool isBackgroundFile{false};
+    QString iconName;
+};
+
+//! Everything buildContextMenuData needs, gathered by Corona from the live
+//! layout managers and the selected view.
+struct ContextMenuInputs
+{
+    int memoryUsage{0};
+    QStringList centralLayoutsNames;
+    QStringList currentLayoutsNames;
+    QStringList alwaysShownActions;
+    QList<ContextMenuLayoutEntry> menuLayouts;
+    QString selectedViewLayoutName;
+    int viewType{0};
+    bool viewIsOriginal{false};
+    bool viewIsCloned{false};
+    int viewClonesCount{0};
+};
 
 //! True when path points to a Latte .layout.latte file, given either as an
 //! absolute filesystem path or a file: URL.
@@ -36,6 +62,12 @@ QString cleanLayoutFilePath(const QString &path);
 bool pruneObsoleteContainmentConfig(KConfigGroup &containments,
                                     const QSet<uint> &liveContainmentIds,
                                     const QHash<uint, QSet<uint>> &liveAppletIds);
+
+//! Marshal the context-menu payload that the menu QML parses: memory usage,
+//! the active/current layout name lists, the always-shown actions, the layouts
+//! submenu, the selected view's layout, and the view-type triple. Fields are
+//! ";;"-joined lists; each submenu entry is "name**isBackgroundFile**icon".
+QStringList buildContextMenuData(const ContextMenuInputs &inputs);
 
 }
 

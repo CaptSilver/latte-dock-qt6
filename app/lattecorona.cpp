@@ -941,54 +941,37 @@ void Corona::showSettingsWindow(int page)
 
 QStringList Corona::contextMenuData(const uint &containmentId)
 {
-    QStringList data;
-    Types::ViewType viewType{Types::DockView};
     auto view = m_layoutsManager->synchronizer()->viewForContainment(containmentId);
 
-    if (view) {
-        viewType = view->type();
-    }
+    CoronaHelpers::ContextMenuInputs inputs;
+    inputs.memoryUsage = (int)m_layoutsManager->memoryUsage();
+    inputs.centralLayoutsNames = m_layoutsManager->centralLayoutsNames();
+    inputs.currentLayoutsNames = m_layoutsManager->synchronizer()->currentLayoutsNames();
+    inputs.alwaysShownActions = m_universalSettings->contextMenuActionsAlwaysShown();
 
-    data << QString::number((int)m_layoutsManager->memoryUsage()); // Memory Usage
-    data << m_layoutsManager->centralLayoutsNames().join(QStringLiteral(";;")); // All Active layouts
-    data << m_layoutsManager->synchronizer()->currentLayoutsNames().join(QStringLiteral(";;")); // All Current layouts
-    data << m_universalSettings->contextMenuActionsAlwaysShown().join(QStringLiteral(";;"));
-
-    QStringList layoutsmenu;
-
-    for(const auto &layoutName : m_layoutsManager->synchronizer()->menuLayouts()) {
-        if (m_layoutsManager->synchronizer()->centralLayout(layoutName)
-                || m_layoutsManager->memoryUsage() == Latte::MemoryUsage::SingleLayout) {
-            QStringList layoutdata;
+    for (const auto &layoutName : m_layoutsManager->synchronizer()->menuLayouts()) {
+        if (m_layoutsManager->synchronizer()->centralLayout(layoutName) || m_layoutsManager->memoryUsage() == Latte::MemoryUsage::SingleLayout) {
             Data::LayoutIcon layouticon = m_layoutsManager->iconForLayout(layoutName);
-            layoutdata << layoutName;
-            layoutdata << QString::number(layouticon.isBackgroundFile);
-            layoutdata << layouticon.name;
-            layoutsmenu << layoutdata.join(QStringLiteral("**"));
+            CoronaHelpers::ContextMenuLayoutEntry entry;
+            entry.name = layoutName;
+            entry.isBackgroundFile = layouticon.isBackgroundFile;
+            entry.iconName = layouticon.name;
+            inputs.menuLayouts << entry;
         }
     }
 
-    data << layoutsmenu.join(QStringLiteral(";;"));
-    data << (view ? view->layout()->name() : QString());   //Selected View layout*/
+    inputs.selectedViewLayoutName = view ? view->layout()->name() : QString();
+    inputs.viewType = (int)(view ? view->type() : Types::DockView);
 
-    QStringList viewtype;
-    viewtype << QString::number((int)viewType); //Selected View type
-
-    if (view && view->isOriginal()) { /*View*/
+    if (view && view->isOriginal()) {
         auto originalview = qobject_cast<Latte::OriginalView *>(view);
-        viewtype << QStringLiteral("0");              //original view
-        viewtype <<  QString::number(originalview->clonesCount());
+        inputs.viewIsOriginal = true;
+        inputs.viewClonesCount = originalview->clonesCount();
     } else if (view && view->isCloned()) {
-        viewtype << QStringLiteral("1");              //cloned view
-        viewtype << QStringLiteral("0");              //has no clones
-    } else {
-        viewtype << QStringLiteral("0");              //original view
-        viewtype << QStringLiteral("0");              //has no clones
+        inputs.viewIsCloned = true;
     }
 
-    data << viewtype.join(QStringLiteral(";;"));
-
-    return data;
+    return CoronaHelpers::buildContextMenuData(inputs);
 }
 
 QStringList Corona::viewTemplatesData()
