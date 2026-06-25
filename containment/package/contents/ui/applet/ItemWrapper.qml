@@ -113,7 +113,7 @@ Item{
             return Infinity;
         }
 
-        root.isHorizontal ? appletMaximumWidth : appletMaximumHeight;
+        return root.isHorizontal ? appletMaximumWidth : appletMaximumHeight;
     }
 
     readonly property real appletMinimumThickness: root.isHorizontal ? appletMinimumHeight : appletMinimumWidth

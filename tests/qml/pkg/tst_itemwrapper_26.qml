@@ -365,13 +365,20 @@ TestCase {
         appletItem.isAutoFillApplet = false;
     }
 
-    // onAppletMaximumLengthChanged: the non-splitter branch of appletMaximumLength
-    // has no return so it stays undefined; flipping isInternalViewSplitter drives
-    // it undefined<->Infinity, which fires the handler -> updateAutoFillLength.
+    // onAppletMaximumLengthChanged: the non-splitter branch resolves to the applet's
+    // Layout maximum (horizontal => maximumWidth = 80) -- a finite number. (A QML
+    // script binding yields its last expression even without an explicit `return`,
+    // so this stays a real value, not NaN; the explicit return in the source just
+    // makes that robust against a later trailing statement.) Flipping
+    // isInternalViewSplitter drives it to Infinity, which fires the handler ->
+    // updateAutoFillLength.
     function test_k_onAppletMaximumLengthChanged() {
         const w = make();
         appletItem.isAutoFillApplet = true;
         root.isInternalViewSplitter = false;
+        // The non-splitter maximum length is the finite Layout.maximumWidth, never NaN.
+        verify(!isNaN(w.appletMaximumLength), "appletMaximumLength must not be NaN");
+        compare(w.appletMaximumLength, 80);
         const base = root.autoFillCalls;
         root.isInternalViewSplitter = true;   // appletMaximumLength -> Infinity
         compare(w.appletMaximumLength, Infinity);
