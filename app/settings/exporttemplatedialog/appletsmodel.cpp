@@ -260,7 +260,7 @@ QVariant Applets::data(const QModelIndex &index, int role) const
     const int row = index.row();
     int column = index.column();
 
-    if (row >= rowCount()) {
+    if (row < 0 || row >= rowCount()) {
         return QVariant{};
     }
 

@@ -38,6 +38,60 @@ target_include_directories(abstractlayouttest PRIVATE
 target_compile_definitions(indicatorsknsrctest PRIVATE
     INDICATORS_KNSRC_PATH="${CMAKE_SOURCE_DIR}/app/latte-indicators.knsrc")
 
+ecm_add_test(datatypestest.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/genericdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/activitydata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/appletdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layoutcolordata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layouticondata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/errorinformationdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/errordata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/generictable.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layoutdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/viewdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/screendata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/viewstable.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layoutstable.cpp
+    ${CMAKE_SOURCE_DIR}/app/tools/commontools.cpp
+    TEST_NAME datatypestest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui KF6::ConfigCore Plasma::Plasma
+)
+target_include_directories(datatypestest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/data ${CMAKE_BINARY_DIR}/app)
+
+ecm_add_test(settingsmodelstest.cpp
+    ${CMAKE_SOURCE_DIR}/app/settings/exporttemplatedialog/appletsmodel.cpp
+    ${CMAKE_SOURCE_DIR}/app/settings/screensdialog/screensmodel.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/genericdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/activitydata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/appletdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layoutcolordata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layouticondata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/errorinformationdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/errordata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/generictable.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layoutdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/viewdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/screendata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/viewstable.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layoutstable.cpp
+    ${CMAKE_SOURCE_DIR}/app/tools/commontools.cpp
+    TEST_NAME settingsmodelstest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui KF6::ConfigCore KF6::I18n Plasma::Plasma
+)
+target_include_directories(settingsmodelstest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app
+    ${CMAKE_SOURCE_DIR}/app/data
+    ${CMAKE_SOURCE_DIR}/app/settings/exporttemplatedialog
+    ${CMAKE_SOURCE_DIR}/app/settings/screensdialog
+    ${CMAKE_BINARY_DIR}/app)
+
+ecm_add_test(commontoolstest.cpp ${CMAKE_SOURCE_DIR}/app/tools/commontools.cpp
+    TEST_NAME commontoolstest
+    LINK_LIBRARIES Qt6::Test Qt6::Gui
+)
+target_include_directories(commontoolstest PRIVATE ${CMAKE_SOURCE_DIR}/app)
+
 ecm_add_test(bindingrestoremodetest.cpp
     TEST_NAME bindingrestoremodetest
     LINK_LIBRARIES Qt6::Test Qt6::Core
@@ -136,10 +190,91 @@ target_include_directories(appletremovaltest PRIVATE
     ${CMAKE_BINARY_DIR}/containment)
 set_tests_properties(appletremovaltest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+qt_wrap_cpp(layoutmanagertest_TYPES_MOC ${CMAKE_BINARY_DIR}/containment/plugin/lattetypes.h)
+ecm_add_test(layoutmanagertest.cpp
+    ${CMAKE_SOURCE_DIR}/containment/plugin/layoutmanager.cpp
+    ${layoutmanagertest_TYPES_MOC}
+    TEST_NAME layoutmanagertest
+    LINK_LIBRARIES Qt6::Test Qt6::Gui Qt6::Qml Qt6::Quick Plasma::Plasma Plasma::PlasmaQuick KF6::ConfigQml
+)
+target_include_directories(layoutmanagertest PRIVATE
+    ${CMAKE_SOURCE_DIR}/containment/plugin
+    ${CMAKE_BINARY_DIR}/containment)
+set_tests_properties(layoutmanagertest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 ecm_add_test(coverage/selftest/covselftest.cpp coverage/selftest/covself.cpp
     TEST_NAME covselftest
     LINK_LIBRARIES Qt6::Test
 )
+
+# UniversalSettings only casts its parent to Latte::Corona (null here) but that
+# qobject_cast odr-uses Corona's metaobject, which drags in the whole application
+# object graph. Rather than recompile half the app, link the real production
+# objects the latte-dock executable already built (everything except main.cpp),
+# and drive them through the header. This is a genuine real-link against the
+# shipped universalsettings.cpp.o.
+set(_latte_app_objdir ${CMAKE_BINARY_DIR}/app/CMakeFiles/latte-dock.dir)
+file(GLOB_RECURSE _latte_app_objs
+    "${_latte_app_objdir}/*.cpp.o"
+    "${_latte_app_objdir}/*.c.o")
+list(REMOVE_ITEM _latte_app_objs "${_latte_app_objdir}/main.cpp.o")
+
+ecm_add_test(universalsettingstest.cpp
+    TEST_NAME universalsettingstest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::DBus Qt6::Network
+        Plasma::Activities KF6::Archive KF6::CoreAddons KF6::Crash KF6::DBusAddons
+        KF6::ConfigQml KF6::ConfigCore KF6::GuiAddons KF6::GlobalAccel KF6::I18n
+        KF6::IconThemes KF6::IconWidgets KF6::KIOWidgets KF6::Notifications
+        KF6::NewStuffWidgets Plasma::Plasma KF6::Svg KF6::Package Plasma::PlasmaQuick
+        Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
+        Wayland::Client
+)
+# Pull in the prebuilt application objects (minus main) as a link dependency so the
+# test rebuilds whenever they change, and so the test only links after the app does.
+target_link_libraries(universalsettingstest ${_latte_app_objs})
+add_dependencies(universalsettingstest latte-dock)
+target_include_directories(universalsettingstest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/settings ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(universalsettingstest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+# storage.cpp pulls in Corona/View/Importer/Manager through its includes, so the
+# same prebuilt-objects trick as universalsettingstest links the real compiled
+# Storage::self() (minus main.cpp) and drives its file/KConfigGroup methods.
+ecm_add_test(storagetest.cpp
+    TEST_NAME storagetest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::DBus Qt6::Network
+        Plasma::Activities KF6::Archive KF6::CoreAddons KF6::Crash KF6::DBusAddons
+        KF6::ConfigQml KF6::ConfigCore KF6::GuiAddons KF6::GlobalAccel KF6::I18n
+        KF6::IconThemes KF6::IconWidgets KF6::KIOWidgets KF6::Notifications
+        KF6::NewStuffWidgets Plasma::Plasma KF6::Svg KF6::Package Plasma::PlasmaQuick
+        Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
+        Wayland::Client
+)
+target_link_libraries(storagetest ${_latte_app_objs})
+add_dependencies(storagetest latte-dock)
+target_include_directories(storagetest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/layouts ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(storagetest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+# tasktools.cpp / schemecolors.cpp drag in the whole app object graph through their
+# includes (Importer -> Corona -> ...), so the prebuilt-objects trick links the real
+# compiled wm/tasktools.cpp.o and wm/schemecolors.cpp.o (minus main.cpp) and drives
+# them through the headers. Genuine real-link against the shipped objects.
+ecm_add_test(wmtoolstest.cpp
+    TEST_NAME wmtoolstest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::DBus Qt6::Network
+        Plasma::Activities KF6::Archive KF6::CoreAddons KF6::Crash KF6::DBusAddons
+        KF6::ConfigQml KF6::ConfigCore KF6::GuiAddons KF6::GlobalAccel KF6::I18n
+        KF6::IconThemes KF6::IconWidgets KF6::KIOWidgets KF6::Notifications
+        KF6::NewStuffWidgets Plasma::Plasma KF6::Svg KF6::Package Plasma::PlasmaQuick
+        Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
+        KF6::Service Wayland::Client
+)
+target_link_libraries(wmtoolstest ${_latte_app_objs})
+add_dependencies(wmtoolstest latte-dock)
+target_include_directories(wmtoolstest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/wm ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(wmtoolstest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
 ecm_add_test(smartlauncheritemtest.cpp
     ${CMAKE_SOURCE_DIR}/plasmoid/plugin/smartlauncheritem.cpp
