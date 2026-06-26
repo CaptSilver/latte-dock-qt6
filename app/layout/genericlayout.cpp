@@ -12,6 +12,7 @@
 #include "iviewfactory.h"
 #include "realviewfactory.h"
 #include "validviewsmapbuilder.h"
+#include "viewcontainertransition.h"
 #include "viewpriority.h"
 #include "viewsyncplan.h"
 #include "../apptypes.h"
@@ -740,7 +741,7 @@ void GenericLayout::containmentDestroyed(QObject *cont)
         return;
     }
 
-    Plasma::Containment *containment = static_cast<Plasma::Containment *>(cont);
+    const Plasma::Containment *containment = static_cast<const Plasma::Containment *>(cont);
 
     if (containment) {
         int containmentIndex = m_containments.indexOf(containment);
@@ -750,11 +751,7 @@ void GenericLayout::containmentDestroyed(QObject *cont)
         }
 
         qDebug() << "Layout " << name() << " :: containment destroyed!!!!";
-        auto view = m_latteViews.take(containment);
-
-        if (!view) {
-            view = m_waitingLatteViews.take(containment);
-        }
+        auto view = Layout::ViewContainerTransition::takeFromEither(m_latteViews, m_waitingLatteViews, containment);
 
         if (view) {
             view->disconnectSensitiveSignals();
@@ -783,11 +780,11 @@ void GenericLayout::destroyedChanged(bool destroyed)
     Latte::View *view;
 
     if (destroyed) {
-        view = m_latteViews.take(static_cast<Plasma::Containment *>(sender));
-        m_waitingLatteViews[sender] = view;
+        view = Layout::ViewContainerTransition::moveBetween(m_latteViews, m_waitingLatteViews,
+                                                            static_cast<const Plasma::Containment *>(sender));
     } else {
-        view = m_waitingLatteViews.take(static_cast<Plasma::Containment *>(sender));
-        m_latteViews[sender] =view;
+        view = Layout::ViewContainerTransition::moveBetween(m_waitingLatteViews, m_latteViews,
+                                                            static_cast<const Plasma::Containment *>(sender));
     }
 
     if (view) {

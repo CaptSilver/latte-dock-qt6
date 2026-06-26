@@ -82,6 +82,7 @@ private Q_SLOTS:
     void synchronizer_runningActivities_usesStatesCache();
     void synchronizer_syncMultipleLayouts_invalidatesStatesCacheOnce();
     void waylandInterface_windowFor_usesIndexFastPath();
+    void genericLayout_viewTransitions_useTransitionHelpers();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -326,6 +327,23 @@ void SourceGuardTest::waylandInterface_windowFor_usesIndexFastPath()
     QVERIFY2(!untrack.isEmpty(), "untrackWindow() not found");
     QVERIFY2(untrack.contains(QStringLiteral("m_windowIndex.remove(idFor(w));")),
              "untrackWindow must drop the window from the index");
+}
+
+void SourceGuardTest::genericLayout_viewTransitions_useTransitionHelpers()
+{
+    const QString src = readFile(QStringLiteral("app/layout/genericlayout.cpp"));
+
+    const QString dc = stripped(functionBody(src, QStringLiteral("void GenericLayout::destroyedChanged(bool destroyed)")));
+    QVERIFY2(!dc.isEmpty(), "destroyedChanged() not found");
+    QVERIFY2(dc.contains(QStringLiteral("ViewContainerTransition::moveBetween(m_latteViews,m_waitingLatteViews")),
+             "destroyedChanged must move active->waiting via the transition helper");
+    QVERIFY2(dc.contains(QStringLiteral("ViewContainerTransition::moveBetween(m_waitingLatteViews,m_latteViews")),
+             "destroyedChanged must move waiting->active via the transition helper");
+
+    const QString cd = stripped(functionBody(src, QStringLiteral("void GenericLayout::containmentDestroyed(QObject *cont)")));
+    QVERIFY2(!cd.isEmpty(), "containmentDestroyed() not found");
+    QVERIFY2(cd.contains(QStringLiteral("ViewContainerTransition::takeFromEither(m_latteViews,m_waitingLatteViews,containment)")),
+             "containmentDestroyed must take from either map via the transition helper");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)
