@@ -16,6 +16,7 @@
 #include "lattedockadaptor.h"
 #include "screengeometrycalculator.h"
 #include "screenpool.h"
+#include "startuplayoutplanner.h"
 #include "data/generictable.h"
 #include "data/layouticondata.h"
 #include "declarativeimports/interfaces.h"
@@ -212,39 +213,39 @@ void Corona::load()
         connect(this, &Corona::availableScreenRegionChangedFrom, this, &Corona::onAvailableScreenRegionChangedFrom, Qt::UniqueConnection);
         connect(screenPool(), &ScreenPool::primaryScreenChanged, this, &Corona::onScreenCountChanged, Qt::UniqueConnection);
 
-        QString loadLayoutName;
+        StartupInputs inputs;
+        inputs.userSetMemoryUsage = m_userSetMemoryUsage;
+        inputs.currentMemoryUsage = universalSettings()->layoutsMemoryUsage();
+        inputs.singleModeLayoutName = universalSettings()->singleModeLayoutName();
+        inputs.defaultLayoutOnStartup = m_defaultLayoutOnStartup;
+        inputs.layoutNameOnStartUp = m_layoutNameOnStartUp;
+        inputs.defaultLayoutTemplateName = i18n(Templates::DEFAULTLAYOUTTEMPLATENAME);
 
-        if (m_userSetMemoryUsage != -1) {
-            MemoryUsage::LayoutsMemory usage = static_cast<MemoryUsage::LayoutsMemory>(m_userSetMemoryUsage);
-            universalSettings()->setLayoutsMemoryUsage(usage);
+        //! the planner only needs to know whether the chosen single layout and the Default
+        //! template already exist; layoutExists() is a side-effect-free query.
+        if (layoutsManager()->synchronizer()->layoutExists(inputs.singleModeLayoutName)) {
+            inputs.existingLayoutNames << inputs.singleModeLayoutName;
+        }
+        if (layoutsManager()->synchronizer()->layoutExists(inputs.defaultLayoutTemplateName)) {
+            inputs.existingLayoutNames << inputs.defaultLayoutTemplateName;
         }
 
-        if (!m_defaultLayoutOnStartup && m_layoutNameOnStartUp.isEmpty()) {
-            if (universalSettings()->layoutsMemoryUsage() == MemoryUsage::MultipleLayouts) {
-                loadLayoutName = QString();
-            } else {
-                loadLayoutName = universalSettings()->singleModeLayoutName();
+        const StartupPlan plan = StartupLayoutPlanner::plan(inputs);
 
-                if (!layoutsManager()->synchronizer()->layoutExists(loadLayoutName)) {
-                    //! If chosen layout does not exist, force Default layout loading
-                    QString defaultLayoutTemplateName = i18n(Templates::DEFAULTLAYOUTTEMPLATENAME);
-                    loadLayoutName = defaultLayoutTemplateName;
+        if (plan.memoryUsageToSet.has_value()) {
+            universalSettings()->setLayoutsMemoryUsage(plan.memoryUsageToSet.value());
+        }
 
-                    if (!layoutsManager()->synchronizer()->layoutExists(defaultLayoutTemplateName)) {
-                        //! If Default layout does not exist at all, create it
-                        QString path = templatesManager()->newLayout(QString(), defaultLayoutTemplateName);
-                        layoutsManager()->setOnAllActivities(Layout::AbstractLayout::layoutName(path));
-                    }
-                }
-            }
-        } else if (m_defaultLayoutOnStartup) {
-            //! force loading a NEW default layout even though a default layout may already exists
-            QString newDefaultLayoutPath = templatesManager()->newLayout(QString(), i18n(Templates::DEFAULTLAYOUTTEMPLATENAME));
+        QString loadLayoutName = plan.loadLayoutName;
+
+        if (plan.createFreshDefaultLayout) {
+            //! force loading a NEW default layout even though a default layout may already exist
+            const QString newDefaultLayoutPath = templatesManager()->newLayout(QString(), inputs.defaultLayoutTemplateName);
             loadLayoutName = Layout::AbstractLayout::layoutName(newDefaultLayoutPath);
-            universalSettings()->setLayoutsMemoryUsage(MemoryUsage::SingleLayout);
-        } else {
-            loadLayoutName = m_layoutNameOnStartUp;
-            universalSettings()->setLayoutsMemoryUsage(MemoryUsage::SingleLayout);
+        } else if (plan.ensureDefaultLayoutExists) {
+            //! the chosen single layout is gone; create the Default template if it is missing too
+            const QString path = templatesManager()->newLayout(QString(), inputs.defaultLayoutTemplateName);
+            layoutsManager()->setOnAllActivities(Layout::AbstractLayout::layoutName(path));
         }
 
         layoutsManager()->loadLayoutOnStartup(loadLayoutName);
