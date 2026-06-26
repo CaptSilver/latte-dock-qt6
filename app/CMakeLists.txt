@@ -5,6 +5,7 @@ set(lattedock-app_SRCS
     coronahelpers.cpp
     lattecorona.cpp
     screengeometrycalculator.cpp
+    startuplayoutplanner.cpp
     screenpool.cpp
     primaryoutputwatcher.cpp
     main.cpp    

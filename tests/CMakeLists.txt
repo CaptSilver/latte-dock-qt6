@@ -106,6 +106,16 @@ ecm_add_test(coronahelperstest.cpp ${CMAKE_SOURCE_DIR}/app/coronahelpers.cpp
 )
 target_include_directories(coronahelperstest PRIVATE ${CMAKE_SOURCE_DIR}/app)
 
+# startuplayoutplanner.cpp is the pure startup layout-selection decision lifted out of
+# Latte::Corona::load(). It depends only on the MemoryUsage enum in apptypes.h, so the
+# real source links directly with no Corona graph.
+ecm_add_test(startuplayoutplannertest.cpp ${CMAKE_SOURCE_DIR}/app/startuplayoutplanner.cpp
+    TEST_NAME startuplayoutplannertest
+    LINK_LIBRARIES Qt6::Test Qt6::Core
+)
+target_include_directories(startuplayoutplannertest PRIVATE ${CMAKE_SOURCE_DIR}/app)
+set_tests_properties(startuplayoutplannertest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 # generictools.cpp is a bag of Settings::Generic free helpers (QStyleOption/QPainter
 # painters + string/format/geometry helpers). Its header pulls in only Qt, so the
 # real source links directly. It calls QApplication::style()/QStyle, so it needs
