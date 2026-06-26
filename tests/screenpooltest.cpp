@@ -36,6 +36,8 @@ private Q_SLOTS:
     void lattePool_unknownIdHasEmptyConnector();
     void lattePool_hasScreenId();
     void lattePool_removeScreensSkipsAbsentIdAndRemovesPresent();
+    void lattePool_firstAvailableIdFillsGap();
+    void lattePool_firstAvailableIdAdvancesPastContiguousRun();
 
     // Plasma-extended ScreenPool (app/plasma/extended/screenpool.cpp)
     void plasmaPool_loadsSeededConnectors();
@@ -147,6 +149,62 @@ void ScreenPoolTest::lattePool_removeScreensSkipsAbsentIdAndRemovesPresent()
     QVERIFY(!pool.hasScreenId(11));
     // id 10 was never obsolete -> still mapped
     QVERIFY(pool.hasScreenId(10));
+}
+
+void ScreenPoolTest::lattePool_firstAvailableIdFillsGap()
+{
+    auto config = KSharedConfig::openConfig(m_configDir.filePath(QStringLiteral("lattepool_gap.rc")),
+                                            KConfig::SimpleConfig);
+    KConfigGroup group(config, QStringLiteral("ScreenConnectors"));
+    // Seed three connectors so the QGuiApp virtual screen (which load() auto-inserts
+    // for any QScreen not yet in the table) occupies id 13, leaving 10-12 under our control.
+    group.writeEntry(QStringLiteral("10"), QStringLiteral("DP-0:::0,0 1920x1080"));
+    group.writeEntry(QStringLiteral("11"), QStringLiteral("DP-1:::1920,0 1920x1080"));
+    group.writeEntry(QStringLiteral("12"), QStringLiteral("HDMI-1:::3840,0 1280x1024"));
+    group.sync();
+
+    Latte::ScreenPool pool(config);
+    pool.load();
+    // After load, ids 10-12 are ours; the virtual QScreen fills 13+.
+    QVERIFY(pool.hasScreenId(10));
+    QVERIFY(pool.hasScreenId(11));
+    QVERIFY(pool.hasScreenId(12));
+
+    // Punch a hole at 11 so there is a gap between 10 and 12.
+    Latte::Data::ScreensTable toRemove;
+    toRemove << Latte::Data::Screen(QStringLiteral("11"), QStringLiteral("DP-1:::1920,0 1920x1080"));
+    pool.removeScreens(toRemove);
+    QVERIFY(!pool.hasScreenId(11));
+
+    // A new connector must reuse the lowest free id -- the hole at 11, not 13+.
+    pool.insertScreenMapping(QStringLiteral("NEW-1"));
+
+    QCOMPARE(pool.id(QStringLiteral("NEW-1")), 11);
+    QCOMPARE(pool.connector(11), QStringLiteral("NEW-1"));
+}
+
+void ScreenPoolTest::lattePool_firstAvailableIdAdvancesPastContiguousRun()
+{
+    auto config = KSharedConfig::openConfig(m_configDir.filePath(QStringLiteral("lattepool_contig.rc")),
+                                            KConfig::SimpleConfig);
+    KConfigGroup group(config, QStringLiteral("ScreenConnectors"));
+    // Seed two connectors; load() will auto-insert the virtual QScreen at 12.
+    // insertScreenMapping("NEW-2") must then advance to 13.
+    group.writeEntry(QStringLiteral("10"), QStringLiteral("DP-1:::0,0 1920x1080"));
+    group.writeEntry(QStringLiteral("11"), QStringLiteral("HDMI-1:::1920,0 1280x1024"));
+    group.sync();
+
+    Latte::ScreenPool pool(config);
+    pool.load();
+    // ids 10 and 11 are ours; the QGuiApp virtual screen fills 12.
+    QVERIFY(pool.hasScreenId(10));
+    QVERIFY(pool.hasScreenId(11));
+    QVERIFY(pool.hasScreenId(12));
+
+    // The contiguous run 10,11,12 means the next new id is 13.
+    pool.insertScreenMapping(QStringLiteral("NEW-2"));
+
+    QCOMPARE(pool.id(QStringLiteral("NEW-2")), 13);
 }
 
 // --- Latte::PlasmaExtended::ScreenPool --------------------------------------
