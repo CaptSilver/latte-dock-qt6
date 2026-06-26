@@ -6,6 +6,7 @@
 #include "windowstracker.h"
 
 // local
+#include "extraviewhints.h"
 #include "lastactivewindow.h"
 #include "schemes.h"
 #include "trackedlayoutinfo.h"
@@ -850,37 +851,41 @@ void Windows::updateAllHints()
 
 void Windows::updateExtraViewHints()
 {
-    for (const auto horView : m_views.keys()) {
-        if (!m_views.contains(horView) || !m_views[horView]->enabled() || !m_views[horView]->isTrackingCurrentActivity()) {
-            continue;
-        }
+    QList<TrackedViewGeometry> geoList;
+    QHash<int, Latte::View *> keyToView;
+    int key = 0;
+    for (auto it = m_views.cbegin(); it != m_views.cend(); ++it) {
+        Latte::View *view = it.key();
+        auto *state = it.value();
+        if (!state) { ++key; continue; }
+        TrackedViewGeometry geo;
+        geo.viewKey = key;
+        geo.enabled = state->enabled();
+        geo.trackingCurrentActivity = state->isTrackingCurrentActivity();
+        geo.isHorizontal = (view->formFactor() == Plasma::Types::Horizontal);
+        geo.isVertical = (view->formFactor() == Plasma::Types::Vertical);
+        geo.screenId = view->positioner()->currentScreenId();
+        geo.location = view->location();
+        geo.isTouchingTopViewAndIsBusy = view->isTouchingTopViewAndIsBusy();
+        geo.isTouchingBottomViewAndIsBusy = view->isTouchingBottomViewAndIsBusy();
+        geo.absoluteGeometry = view->absoluteGeometry();
+        geoList.append(geo);
+        keyToView[key] = view;
+        ++key;
+    }
 
-        if (horView->formFactor() == Plasma::Types::Horizontal) {
-            bool touchingBusyVerticalView{false};
+    auto hasEdgeTouch = [this, &keyToView](const TrackedViewGeometry &hor,
+                                            const TrackedViewGeometry &ver) -> bool {
+        Latte::View *horView = keyToView.value(hor.viewKey, nullptr);
+        if (!horView) return false;
+        return isTouchingViewEdge(horView, ver.absoluteGeometry);
+    };
 
-            for (const auto verView : m_views.keys()) {
-                if (!m_views.contains(verView) || !m_views[verView]->enabled() || !m_views[verView]->isTrackingCurrentActivity()) {
-                    continue;
-                }
-
-                bool sameScreen = (verView->positioner()->currentScreenId() == horView->positioner()->currentScreenId());
-
-                if (verView->formFactor() == Plasma::Types::Vertical && sameScreen) {
-                    bool hasEdgeTouch = isTouchingViewEdge(horView, verView->absoluteGeometry());
-
-                    bool topTouch = horView->location() == Plasma::Types::TopEdge && verView->isTouchingTopViewAndIsBusy() && hasEdgeTouch;
-                    bool bottomTouch = horView->location() == Plasma::Types::BottomEdge && verView->isTouchingBottomViewAndIsBusy() && hasEdgeTouch;
-
-                    if (topTouch || bottomTouch) {
-                        touchingBusyVerticalView = true;
-                        break;
-                    }
-                }
-            }
-
-            //qDebug() << " Touching Busy Vertical View :: " << horView->location() << " - " << horView->positioner()->currentScreenId() << " :: " << touchingBusyVerticalView;
-
-            setIsTouchingBusyVerticalView(horView, touchingBusyVerticalView);
+    const auto results = ExtraViewHints::bucketHorizontalTouchingBusyVertical(geoList, hasEdgeTouch);
+    for (auto it = results.cbegin(); it != results.cend(); ++it) {
+        Latte::View *view = keyToView.value(it.key(), nullptr);
+        if (view) {
+            setIsTouchingBusyVerticalView(view, it.value());
         }
     }
 }

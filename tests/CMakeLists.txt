@@ -211,6 +211,12 @@ ecm_add_test(windowtrackingpredicatestest.cpp ../app/wm/windowinfowrap.cpp
 target_include_directories(windowtrackingpredicatestest PRIVATE ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(windowtrackingpredicatestest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+ecm_add_test(extraviewhintstest.cpp
+    TEST_NAME extraviewhintstest
+    LINK_LIBRARIES Qt6::Test Qt6::Gui Plasma::Plasma)
+target_include_directories(extraviewhintstest PRIVATE ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(extraviewhintstest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 ecm_add_test(visibilityrevealtest.cpp
     TEST_NAME visibilityrevealtest
     LINK_LIBRARIES Qt6::Test Qt6::Gui Plasma::Plasma Plasma::PlasmaQuick
@@ -678,7 +684,7 @@ if(LATTE_COVERAGE)
         datatypestest commontoolstest layoutmanagertest settingsmodelstest wmtoolstest
         shortcutstest viewmodelstest screenpooltest coretoolstest generictoolstest
         viewprioritytest addviewdecisiontest viewcontainertransitiontest activitysetalgebratest
-        settingsnameutilstest iconsourceclassifiertest windowtrackingpredicatestest
+        settingsnameutilstest iconsourceclassifiertest windowtrackingpredicatestest extraviewhintstest
         # GLOB-behavioral tests link the (now instrumented) app objects; listing them
         # gives their binaries the profile link flag and the export object set, which
         # is what makes the Corona-coupled core count toward whole-app coverage.

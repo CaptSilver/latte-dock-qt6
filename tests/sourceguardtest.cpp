@@ -100,6 +100,7 @@ private Q_SLOTS:
     void storage_newUniqueIdsFile_delegatesToRemapper();
     void windowstracker_predicatesDelegate();
     void abstractWindowInterface_classifiersDelegate();
+    void windowsTracker_updateExtraViewHints_delegatesToBucketing();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -537,6 +538,14 @@ void SourceGuardTest::windowstracker_predicatesDelegate()
              "isMaximizedInViewScreen must delegate to WindowTrackingPredicates");
     QVERIFY2(isMaxScreenBody.contains(QStringLiteral("devicePixelRatio")),
              "isMaximizedInViewScreen must keep X11 DPR scaling");
+}
+
+void SourceGuardTest::windowsTracker_updateExtraViewHints_delegatesToBucketing()
+{
+    const QString src = functionBody(readFile(QStringLiteral("app/wm/tracker/windowstracker.cpp")),
+                                     QStringLiteral("void Windows::updateExtraViewHints()"));
+    QVERIFY2(src.contains(QStringLiteral("ExtraViewHints::bucketHorizontalTouchingBusyVertical(")),
+             "updateExtraViewHints must delegate to ExtraViewHints::bucketHorizontalTouchingBusyVertical");
 }
 
 void SourceGuardTest::abstractWindowInterface_classifiersDelegate()
