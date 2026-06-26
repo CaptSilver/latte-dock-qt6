@@ -4,6 +4,7 @@ set(lattedock-app_SRCS
     infoview.cpp
     coronahelpers.cpp
     lattecorona.cpp
+    realscreeninfo.cpp
     screengeometrycalculator.cpp
     startuplayoutplanner.cpp
     screenpool.cpp
