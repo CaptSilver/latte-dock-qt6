@@ -9,6 +9,7 @@
 // local
 #include <coretypes.h>
 #include "abstractlayout.h"
+#include "viewsmap.h"
 #include "../data/errordata.h"
 #include "../data/viewdata.h"
 #include "../data/viewstable.h"
@@ -36,10 +37,6 @@ class View;
 
 namespace Latte {
 namespace Layout {
-
-//! This is  views map in the following structure:
-//! SCREEN_NAME -> EDGE -> VIEWID
-typedef QHash<QString, QHash<Plasma::Types::Location, QList<uint>>> ViewsMap;
 
 class GenericLayout : public AbstractLayout
 {

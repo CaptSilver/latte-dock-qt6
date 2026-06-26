@@ -8,6 +8,7 @@
 
 // local
 #include "abstractlayout.h"
+#include "validviewsmapbuilder.h"
 #include "viewpriority.h"
 #include "../apptypes.h"
 #include "../lattecorona.h"
@@ -1224,13 +1225,13 @@ QString GenericLayout::mapScreenName(const ViewsMap *map, uint viewId) const
 //! screen name, location, containmentId
 Layout::ViewsMap GenericLayout::validViewsMap()
 {
-    Layout::ViewsMap map;
-
     if (!m_corona) {
-        return map;
+        return Layout::ViewsMap();
     }
 
-    QString prmScreenName = m_corona->screenPool()->primaryScreen()->name();
+    const QString prmScreenName = m_corona->screenPool()->primaryScreen()->name();
+
+    QList<Layout::ViewPlacement> placements;
 
     for (const auto containment : m_containments) {
         if (Layouts::Storage::self()->isLatteContainment(containment)
@@ -1238,19 +1239,18 @@ Layout::ViewsMap GenericLayout::validViewsMap()
             Data::View view = hasLatteView(containment) ? m_latteViews[containment]->data() : Latte::Layouts::Storage::self()->view(this, containment);
             view.screen = Layouts::Storage::self()->expectedViewScreenId(m_corona, view);
 
-            if (view.onPrimary) {
-                map[prmScreenName][view.edge] << containment->id();
-            } else {
-                QString expScreenName = m_corona->screenPool()->connector(view.screen);
+            Layout::ViewPlacement placement;
+            placement.containmentId = containment->id();
+            placement.edge = view.edge;
+            placement.onPrimary = view.onPrimary;
+            placement.expectedScreenName = view.onPrimary ? QString() : m_corona->screenPool()->connector(view.screen);
+            placement.expectedScreenActive = view.onPrimary ? true : m_corona->screenPool()->isScreenActive(view.screen);
 
-                if (m_corona->screenPool()->isScreenActive(view.screen)) {
-                    map[expScreenName][view.edge] << containment->id();
-                }
-            }
+            placements << placement;
         }
     }
 
-    return map;
+    return Layout::ValidViewsMapBuilder::build(placements, prmScreenName);
 }
 
 

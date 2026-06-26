@@ -330,6 +330,15 @@ target_include_directories(viewprioritytest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/data ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(viewprioritytest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+ecm_add_test(validviewsmapbuildertest.cpp
+    ${CMAKE_SOURCE_DIR}/app/layout/validviewsmapbuilder.cpp
+    TEST_NAME validviewsmapbuildertest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Plasma::Plasma
+)
+target_include_directories(validviewsmapbuildertest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(validviewsmapbuildertest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 ecm_add_test(coverage/selftest/covselftest.cpp coverage/selftest/covself.cpp
     TEST_NAME covselftest
     LINK_LIBRARIES Qt6::Test
