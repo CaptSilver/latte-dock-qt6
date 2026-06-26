@@ -353,7 +353,7 @@ void BackgroundCache::updateImageCalculations(QString imageFile, Plasma::Types::
 
         qDebug() << "Hints for Background image | Brightness: " << brightness << ", Busy: " << areaBusy << ", minBright:" << minBrightness << ", maxBright:" << maxBrightness;
 
-        if (!m_hintsCache.keys().contains(imageFile)) {
+        if (!m_hintsCache.contains(imageFile)) {
             m_hintsCache[imageFile] = EdgesHash();
         }
 
@@ -370,8 +370,8 @@ void BackgroundCache::updateImageCalculations(QString imageFile, Plasma::Types::
 
 float BackgroundCache::brightnessForFile(QString imageFile, Plasma::Types::Location location)
 {
-    if (m_hintsCache.keys().contains(imageFile)) {
-        if (m_hintsCache[imageFile].keys().contains(location)) {
+    if (m_hintsCache.contains(imageFile)) {
+        if (m_hintsCache[imageFile].contains(location)) {
             return m_hintsCache[imageFile][location].brightness;
         }
     }
@@ -383,7 +383,7 @@ float BackgroundCache::brightnessForFile(QString imageFile, Plasma::Types::Locat
 
     updateImageCalculations(imageFile, location);
 
-    if (m_hintsCache.keys().contains(imageFile)) {
+    if (m_hintsCache.contains(imageFile)) {
         return m_hintsCache[imageFile][location].brightness;
     }
 
@@ -392,8 +392,8 @@ float BackgroundCache::brightnessForFile(QString imageFile, Plasma::Types::Locat
 
 bool BackgroundCache::busyForFile(QString imageFile, Plasma::Types::Location location)
 {
-    if (m_hintsCache.keys().contains(imageFile)) {
-        if (m_hintsCache[imageFile].keys().contains(location)) {
+    if (m_hintsCache.contains(imageFile)) {
+        if (m_hintsCache[imageFile].contains(location)) {
             return m_hintsCache[imageFile][location].busy;
         }
     }
@@ -405,7 +405,7 @@ bool BackgroundCache::busyForFile(QString imageFile, Plasma::Types::Location loc
 
     updateImageCalculations(imageFile, location);
 
-    if (m_hintsCache.keys().contains(imageFile)) {
+    if (m_hintsCache.contains(imageFile)) {
         return m_hintsCache[imageFile][location].busy;
     }
 

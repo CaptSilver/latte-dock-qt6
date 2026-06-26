@@ -83,6 +83,7 @@ private Q_SLOTS:
     void synchronizer_syncMultipleLayouts_invalidatesStatesCacheOnce();
     void waylandInterface_windowFor_usesIndexFastPath();
     void genericLayout_viewTransitions_useTransitionHelpers();
+    void hashLookupsAvoidKeysContains();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -344,6 +345,18 @@ void SourceGuardTest::genericLayout_viewTransitions_useTransitionHelpers()
     QVERIFY2(!cd.isEmpty(), "containmentDestroyed() not found");
     QVERIFY2(cd.contains(QStringLiteral("ViewContainerTransition::takeFromEither(m_latteViews,m_waitingLatteViews,containment)")),
              "containmentDestroyed must take from either map via the transition helper");
+}
+
+void SourceGuardTest::hashLookupsAvoidKeysContains()
+{
+    const QString bg = readFile(QStringLiteral("app/plasma/extended/backgroundcache.cpp"));
+    QVERIFY2(!bg.isEmpty(), "backgroundcache.cpp not found");
+    QVERIFY2(!bg.contains(QStringLiteral("keys().contains(")),
+             "backgroundcache.cpp must use contains(), not the allocating keys().contains()");
+    const QString gl = readFile(QStringLiteral("app/layout/genericlayout.cpp"));
+    QVERIFY2(!gl.isEmpty(), "genericlayout.cpp not found");
+    QVERIFY2(!gl.contains(QStringLiteral("keys().contains(")),
+             "genericlayout.cpp must use contains(), not keys().contains()");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

@@ -1131,7 +1131,7 @@ bool GenericLayout::hasLatteView(Plasma::Containment *containment)
         return false;
     }
 
-    return m_latteViews.keys().contains(containment);
+    return m_latteViews.contains(containment);
 }
 
 QList<Plasma::Types::Location> GenericLayout::availableEdgesForView(QScreen *scr, Latte::View *forView) const
