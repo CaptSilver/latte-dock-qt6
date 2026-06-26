@@ -88,6 +88,9 @@ private Q_SLOTS:
     void synchronizer_freeActivities_delegatesToHelper();
     void synchronizer_freeRunningActivities_delegatesToHelper();
     void synchronizer_validActivities_delegatesToHelper();
+    void iconItem_setSource_routesThroughClassifier();
+    void iconItem_setLastValidSourceName_usesFilter();
+    void iconItem_isValid_delegatesToClassifier();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -399,6 +402,37 @@ void SourceGuardTest::synchronizer_validActivities_delegatesToHelper()
     QVERIFY2(!s.isEmpty(), "validActivities() not found");
     QVERIFY2(s.contains(QStringLiteral("ActivitySetAlgebra::validActivities(layoutActivities,activities())")),
              "validActivities must delegate to ActivitySetAlgebra::validActivities");
+}
+
+void SourceGuardTest::iconItem_setSource_routesThroughClassifier()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("declarativeimports/core/iconitem.cpp")),
+                                            QStringLiteral("void IconItem::setSource(const QVariant &source)")));
+    QVERIFY2(!s.isEmpty(), "setSource() not found");
+    QVERIFY2(s.contains(QStringLiteral("IconSourceClassifier::classify(")),
+             "setSource must route through IconSourceClassifier::classify()");
+    QVERIFY2(s.contains(QStringLiteral("IconSourceClassifier::sourceName(")),
+             "setSource must derive the source string via IconSourceClassifier::sourceName()");
+}
+
+void SourceGuardTest::iconItem_setLastValidSourceName_usesFilter()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("declarativeimports/core/iconitem.cpp")),
+                                            QStringLiteral("void IconItem::setLastValidSourceName(QString name)")));
+    QVERIFY2(!s.isEmpty(), "setLastValidSourceName() not found");
+    QVERIFY2(s.contains(QStringLiteral("IconSourceClassifier::isFilteredSourceName(")),
+             "setLastValidSourceName must delegate the empty/executable guard to IconSourceClassifier::isFilteredSourceName()");
+    QVERIFY2(!s.contains(QStringLiteral("application-x-executable")),
+             "setLastValidSourceName must not inline the application-x-executable literal");
+}
+
+void SourceGuardTest::iconItem_isValid_delegatesToClassifier()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("declarativeimports/core/iconitem.cpp")),
+                                            QStringLiteral("bool IconItem::isValid() const")));
+    QVERIFY2(!s.isEmpty(), "isValid() not found");
+    QVERIFY2(s.contains(QStringLiteral("IconSourceClassifier::isValid(")),
+             "isValid must delegate to IconSourceClassifier::isValid()");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)
