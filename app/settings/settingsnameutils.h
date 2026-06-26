@@ -6,9 +6,6 @@
 #ifndef SETTINGSNAMEUTILS_H
 #define SETTINGSNAMEUTILS_H
 
-#include "../data/layoutdata.h"
-
-#include <QList>
 #include <QRegularExpression>
 #include <QString>
 #include <QStringList>
@@ -49,34 +46,6 @@ inline int rowForValue(const QStringList &columnValues, const QString &needle)
         }
     }
     return -1;
-}
-
-// Pure rename-decision slice for save()'s rename loop.
-struct LayoutRename {
-    QString oldId;
-    QString newName;
-    bool wasActive;
-};
-
-// A temporary id (path under /tmp) always triggers a rename so the layout leaves /tmp on save.
-inline bool needsRename(const Latte::Data::Layout &current, const Latte::Data::Layout &original)
-{
-    return (current.name != original.name) || current.isTemporary();
-}
-
-// Collect the renames for a pre-aligned (currents[i], originals[i]) pair list.
-// The caller resolves originals per current.id and computes activeFlags before calling.
-inline QList<LayoutRename> plannedRenames(const QList<Latte::Data::Layout> &currents,
-                                          const QList<Latte::Data::Layout> &originals,
-                                          const QList<bool> &activeFlags)
-{
-    QList<LayoutRename> out;
-    for (int i = 0; i < currents.count(); ++i) {
-        if (needsRename(currents[i], originals[i])) {
-            out.append({currents[i].id, currents[i].name, i < activeFlags.count() ? activeFlags[i] : false});
-        }
-    }
-    return out;
 }
 
 // Views::pasteSelectedViews decision helpers.

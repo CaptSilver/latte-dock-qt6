@@ -380,17 +380,10 @@ target_include_directories(activitysetalgebratest PRIVATE ${CMAKE_SOURCE_DIR}/ap
 set_tests_properties(activitysetalgebratest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
 ecm_add_test(settingsnameutilstest.cpp
-    ${CMAKE_SOURCE_DIR}/app/data/layoutdata.cpp ${CMAKE_SOURCE_DIR}/app/data/genericdata.cpp
-    ${CMAKE_SOURCE_DIR}/app/data/appletdata.cpp ${CMAKE_SOURCE_DIR}/app/data/activitydata.cpp
-    ${CMAKE_SOURCE_DIR}/app/data/errorinformationdata.cpp ${CMAKE_SOURCE_DIR}/app/data/errordata.cpp
-    ${CMAKE_SOURCE_DIR}/app/data/layoutcolordata.cpp ${CMAKE_SOURCE_DIR}/app/data/layouticondata.cpp
-    ${CMAKE_SOURCE_DIR}/app/data/viewdata.cpp ${CMAKE_SOURCE_DIR}/app/data/viewstable.cpp
-    ${CMAKE_SOURCE_DIR}/app/data/screendata.cpp ${CMAKE_SOURCE_DIR}/app/data/generictable.cpp
-    ${CMAKE_SOURCE_DIR}/app/tools/commontools.cpp
     TEST_NAME settingsnameutilstest
-    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui KF6::ConfigCore Plasma::Plasma)
+    LINK_LIBRARIES Qt6::Test Qt6::Core)
 target_include_directories(settingsnameutilstest PRIVATE
-    ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/data ${CMAKE_SOURCE_DIR}/app/settings ${CMAKE_BINARY_DIR}/app)
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/settings ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(settingsnameutilstest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
 ecm_add_test(iconsourceclassifiertest.cpp

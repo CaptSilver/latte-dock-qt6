@@ -27,12 +27,6 @@ private Q_SLOTS:
     void rowForValue_firstMatchWins();
     void rowForValue_missReturnsNegativeOne();
     void rowForValue_emptyListReturnsNegativeOne();
-    // needsRename / plannedRenames
-    void needsRename_nameChanged();
-    void needsRename_temporaryAlwaysRenames();
-    void needsRename_unchangedPersistentSkips();
-    void plannedRenames_picksOnlyAltered();
-    void plannedRenames_activeFlagsShorterDefaultsFalse();
     // pasteSkipsView / pasteTurnsCutIntoMove
     void pasteSkipsView_cutFromCurrentLayoutSkipped();
     void pasteSkipsView_copyNotSkipped();
@@ -108,72 +102,6 @@ void SettingsNameUtilsTest::rowForValue_missReturnsNegativeOne()
 void SettingsNameUtilsTest::rowForValue_emptyListReturnsNegativeOne()
 {
     QCOMPARE(rowForValue({}, QStringLiteral("x")), -1);
-}
-
-// ---------- needsRename / plannedRenames ----------
-
-static Latte::Data::Layout makeLayout(const QString &id, const QString &name)
-{
-    Latte::Data::Layout l;
-    l.id = id;
-    l.name = name;
-    return l;
-}
-
-void SettingsNameUtilsTest::needsRename_nameChanged()
-{
-    const auto current = makeLayout(QStringLiteral("/home/user/A.layout.latte"), QStringLiteral("B"));
-    const auto original = makeLayout(QStringLiteral("/home/user/A.layout.latte"), QStringLiteral("A"));
-    QVERIFY(needsRename(current, original));
-}
-
-void SettingsNameUtilsTest::needsRename_temporaryAlwaysRenames()
-{
-    // Same name, but the id lives under /tmp → isTemporary() == true → needs rename.
-    const auto current = makeLayout(QStringLiteral("/tmp/x.layout.latte"), QStringLiteral("MyLayout"));
-    const auto original = makeLayout(QStringLiteral("/tmp/x.layout.latte"), QStringLiteral("MyLayout"));
-    QVERIFY(needsRename(current, original));
-}
-
-void SettingsNameUtilsTest::needsRename_unchangedPersistentSkips()
-{
-    const auto current = makeLayout(QStringLiteral("/home/user/A.layout.latte"), QStringLiteral("A"));
-    const auto original = makeLayout(QStringLiteral("/home/user/A.layout.latte"), QStringLiteral("A"));
-    QVERIFY(!needsRename(current, original));
-}
-
-void SettingsNameUtilsTest::plannedRenames_picksOnlyAltered()
-{
-    // Two layouts: A unchanged, B renamed. Only B should appear in the output.
-    const auto aOld = makeLayout(QStringLiteral("/home/user/A.layout.latte"), QStringLiteral("A"));
-    const auto aNew = makeLayout(QStringLiteral("/home/user/A.layout.latte"), QStringLiteral("A"));
-    const auto bOld = makeLayout(QStringLiteral("/home/user/B.layout.latte"), QStringLiteral("B-old"));
-    const auto bNew = makeLayout(QStringLiteral("/home/user/B.layout.latte"), QStringLiteral("B-new"));
-
-    const QList<Latte::Data::Layout> currents = {aNew, bNew};
-    const QList<Latte::Data::Layout> originals = {aOld, bOld};
-    const QList<bool> activeFlags = {false, true};
-
-    const auto result = plannedRenames(currents, originals, activeFlags);
-    QCOMPARE(result.count(), 1);
-    QCOMPARE(result[0].oldId, QStringLiteral("/home/user/B.layout.latte"));
-    QCOMPARE(result[0].newName, QStringLiteral("B-new"));
-    QVERIFY(result[0].wasActive);
-}
-
-void SettingsNameUtilsTest::plannedRenames_activeFlagsShorterDefaultsFalse()
-{
-    // activeFlags shorter than currents → missing entries treated as wasActive=false.
-    const auto aOld = makeLayout(QStringLiteral("/home/user/A.layout.latte"), QStringLiteral("A-old"));
-    const auto aNew = makeLayout(QStringLiteral("/home/user/A.layout.latte"), QStringLiteral("A-new"));
-
-    const QList<Latte::Data::Layout> currents = {aNew};
-    const QList<Latte::Data::Layout> originals = {aOld};
-    const QList<bool> activeFlags = {}; // shorter
-
-    const auto result = plannedRenames(currents, originals, activeFlags);
-    QCOMPARE(result.count(), 1);
-    QVERIFY(!result[0].wasActive);
 }
 
 // ---------- pasteSkipsView / pasteTurnsCutIntoMove ----------
