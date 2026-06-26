@@ -164,6 +164,12 @@ ecm_add_test(activitiesinfotest.cpp ../app/data/activitiesinfo.cpp
 )
 target_include_directories(activitiesinfotest PRIVATE ${CMAKE_SOURCE_DIR}/app/data)
 
+ecm_add_test(activitystatescachetest.cpp ../app/data/activitiesinfo.cpp
+    TEST_NAME activitystatescachetest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::DBus
+)
+target_include_directories(activitystatescachetest PRIVATE ${CMAKE_SOURCE_DIR}/app/data)
+
 ecm_add_test(syncedlaunchersclienttest.cpp
     TEST_NAME syncedlaunchersclienttest
     LINK_LIBRARIES Qt6::Test Qt6::Gui Qt6::Quick
@@ -608,7 +614,7 @@ if(LATTE_COVERAGE)
     set(_latte_cov_targets
         indicatorsknsrctest templatesnametest storageroundtriptest
         abstractlayouttest bindingrestoremodetest alternativescreateapplettest sourceguardtest
-        activitiesinfotest syncedlaunchersclienttest layershellmappingtest
+        activitiesinfotest activitystatescachetest syncedlaunchersclienttest layershellmappingtest
         windowinfowraptest visibilityrevealtest coretypesenumtest appletzoomsizetest
         panelbackgroundtest configcontrolstest contextmenudefaulttest
         editmodehandleactiontest smartlauncheritemtest tasksbackendtest covselftest
