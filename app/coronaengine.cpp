@@ -7,9 +7,13 @@
 
 // local
 #include "lattecorona.h"
+#include "iscreeninfo.h"
+#include "realscreeninfo.h"
 #include "screenpool.h"
 #include "indicator/factory.h"
 #include "layouts/manager.h"
+#include "layouts/synchronizer.h"
+#include "view/view.h"
 #include "plasma/extended/screengeometries.h"
 #include "plasma/extended/screenpool.h"
 #include "plasma/extended/theme.h"
@@ -23,6 +27,8 @@
 
 // Qt
 #include <QDebug>
+#include <QGuiApplication>
+#include <QScreen>
 
 // KDE
 #include <PlasmaActivities/Consumer>
@@ -33,6 +39,30 @@
 #include <KWayland/Client/plasmawindowmanagement.h>
 
 namespace Latte {
+
+namespace {
+
+//! Capture the View properties that the available-screen geometry math reads,
+//! so the calculation can run against plain values instead of the live View.
+ViewFootprint footprintForView(const View *view)
+{
+    ViewFootprint footprint;
+    footprint.location = view->location();
+    footprint.formFactor = view->formFactor();
+    footprint.alignment = static_cast<Types::Alignment>(view->alignment());
+    footprint.hasVisibility = (view->visibility() != nullptr);
+    footprint.visibilityMode = footprint.hasVisibility ? view->visibility()->mode() : Types::None;
+    footprint.isOffScreen = view->positioner() && view->positioner()->isOffScreen();
+    footprint.behaveAsPlasmaPanel = view->behaveAsPlasmaPanel();
+    footprint.normalThickness = view->normalThickness();
+    footprint.screenEdgeMargin = view->screenEdgeMargin();
+    footprint.maxLength = view->maxLength();
+    footprint.offset = view->offset();
+    footprint.geometry = view->geometry();
+    return footprint;
+}
+
+}
 
 CoronaEngine::CoronaEngine(Latte::Corona *shell)
     : CoronaEngine(shell, Deps{})
@@ -55,6 +85,8 @@ CoronaEngine::CoronaEngine(Latte::Corona *shell, const Deps &deps)
 
     m_activitiesConsumer = new KActivities::Consumer(this);
     m_screenPool = new ScreenPool(config, this);
+    m_screenInfo = deps.screenInfo ? deps.screenInfo : new RealScreenInfo(m_screenPool);
+    m_ownsScreenInfo = (deps.screenInfo == nullptr);
     m_indicatorFactory = new Indicator::Factory(this);
     m_universalSettings = new UniversalSettings(config, m_shell, this);
     m_globalShortcuts = new GlobalShortcuts(m_shell, this);
@@ -84,6 +116,11 @@ CoronaEngine::~CoronaEngine()
     m_indicatorFactory->deleteLater();
 
     delete m_activitiesConsumer;
+
+    //! IScreenInfo is a plain (non-QObject) helper; an injected one belongs to the caller.
+    if (m_ownsScreenInfo) {
+        delete m_screenInfo;
+    }
 
     qDebug() << "Latte Corona engine - deleted...";
 }
@@ -212,6 +249,109 @@ PanelShadows *CoronaEngine::dialogShadows() const
 KWayland::Client::PlasmaShell *CoronaEngine::waylandCoronaInterface() const
 {
     return m_waylandCorona;
+}
+
+int CoronaEngine::numScreens() const
+{
+    return m_screenInfo->numScreens();
+}
+
+QRect CoronaEngine::screenGeometry(int id) const
+{
+    return m_screenInfo->screenGeometry(id);
+}
+
+QRegion CoronaEngine::availableScreenRegion(int id) const
+{
+    //! ignore modes are added in order for notifications to be placed
+    //! in better positioning and not overlap with sidebars or usually hidden views
+    QList<Types::Visibility> ignoremodes({Latte::Types::AutoHide,
+                                          Latte::Types::SidebarOnDemand,
+                                          Latte::Types::SidebarAutoHide});
+
+    return availableScreenRegionWithCriteria(id, QString(), ignoremodes);
+}
+
+QRegion CoronaEngine::availableScreenRegionWithCriteria(int id,
+                                                        QString activityid,
+                                                        QList<Types::Visibility> ignoreModes,
+                                                        QList<Plasma::Types::Location> ignoreEdges,
+                                                        bool ignoreExternalPanels,
+                                                        bool desktopUse) const
+{
+    if (!m_screenInfo->hasScreenForId(id)) {
+        return {};
+    }
+
+    const QRect screenGeom = m_screenInfo->geometryForId(id);
+    const QRect startRect = ignoreExternalPanels ? screenGeom : m_screenInfo->availableGeometryForId(id);
+
+    return ScreenGeometryCalculator::availableRegion(startRect,
+                                                     screenGeom,
+                                                     viewFootprintsOnScreen(id, activityid),
+                                                     ignoreModes,
+                                                     ignoreEdges,
+                                                     desktopUse);
+}
+
+QRect CoronaEngine::availableScreenRect(int id) const
+{
+    //! ignore modes are added in order for notifications to be placed
+    //! in better positioning and not overlap with sidebars or usually hidden views
+    QList<Types::Visibility> ignoremodes({Latte::Types::AutoHide,
+                                          Latte::Types::SidebarOnDemand,
+                                          Latte::Types::SidebarAutoHide});
+
+    return availableScreenRectWithCriteria(id, QString(), ignoremodes);
+}
+
+QRect CoronaEngine::availableScreenRectWithCriteria(int id,
+                                                    QString activityid,
+                                                    QList<Types::Visibility> ignoreModes,
+                                                    QList<Plasma::Types::Location> ignoreEdges,
+                                                    bool ignoreExternalPanels,
+                                                    bool desktopUse) const
+{
+    if (!m_screenInfo->hasScreenForId(id)) {
+        return {};
+    }
+
+    const QRect screenGeom = m_screenInfo->geometryForId(id);
+    const QRect startRect = ignoreExternalPanels ? screenGeom : m_screenInfo->availableGeometryForId(id);
+
+    return ScreenGeometryCalculator::availableRect(startRect,
+                                                   screenGeom,
+                                                   viewFootprintsOnScreen(id, activityid),
+                                                   ignoreModes,
+                                                   ignoreEdges,
+                                                   desktopUse);
+}
+
+QList<ViewFootprint> CoronaEngine::viewFootprintsOnScreen(int id, const QString &activityid) const
+{
+    //! resolving the live QScreen is the footprint-source's integration boundary: under a
+    //! headless test the pool has no mappings, so this returns no footprints and the math
+    //! runs against the bare screen rect.
+    const QScreen *screen = m_screenPool->screenForId(id);
+
+    if (!screen) {
+        return {};
+    }
+
+    const bool inCurrentActivity = activityid.isEmpty();
+
+    const QList<Latte::View *> views = m_layoutsManager->synchronizer()->viewsBasedOnActivityId(
+        inCurrentActivity ? m_activitiesConsumer->currentActivity() : activityid);
+
+    QList<ViewFootprint> footprints;
+
+    for (const auto *view : views) {
+        if (view && view->containment() && view->screen() == screen) {
+            footprints << footprintForView(view);
+        }
+    }
+
+    return footprints;
 }
 
 }

@@ -124,10 +124,10 @@ void SourceGuardTest::primaryScreen_dereferencesAreNullGuarded()
     QVERIFY2(screenPool.contains(QStringLiteral("if(!primary){returnNOSCREENID;}")),
              "primaryScreenId must null-check primaryScreen() before ->name()");
 
-    const QString corona = stripped(functionBody(readFile(QStringLiteral("app/lattecorona.cpp")),
-                                   QStringLiteral("QRect Corona::screenGeometry(int id) const")));
-    QVERIFY2(corona.contains(QStringLiteral("if(!screen){return")),
-             "screenGeometry must null-check the resolved screen before ->geometry()");
+    const QString screenInfo = stripped(functionBody(readFile(QStringLiteral("app/realscreeninfo.cpp")),
+                                   QStringLiteral("QRect RealScreenInfo::screenGeometry(int id) const")));
+    QVERIFY2(screenInfo.contains(QStringLiteral("if(!screen){return")),
+             "RealScreenInfo::screenGeometry must null-check the resolved screen before ->geometry()");
 
     const QString watcher = stripped(functionBody(readFile(QStringLiteral("app/primaryoutputwatcher.cpp")),
                                     QStringLiteral("void PrimaryOutputWatcher::setupRegistry()")));

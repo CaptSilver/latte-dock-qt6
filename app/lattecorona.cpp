@@ -86,30 +86,6 @@
 
 namespace Latte {
 
-namespace {
-
-//! Capture the View properties that the available-screen geometry math reads,
-//! so the calculation can run against plain values instead of the live View.
-ViewFootprint footprintForView(const View *view)
-{
-    ViewFootprint footprint;
-    footprint.location = view->location();
-    footprint.formFactor = view->formFactor();
-    footprint.alignment = static_cast<Types::Alignment>(view->alignment());
-    footprint.hasVisibility = (view->visibility() != nullptr);
-    footprint.visibilityMode = footprint.hasVisibility ? view->visibility()->mode() : Types::None;
-    footprint.isOffScreen = view->positioner() && view->positioner()->isOffScreen();
-    footprint.behaveAsPlasmaPanel = view->behaveAsPlasmaPanel();
-    footprint.normalThickness = view->normalThickness();
-    footprint.screenEdgeMargin = view->screenEdgeMargin();
-    footprint.maxLength = view->maxLength();
-    footprint.offset = view->offset();
-    footprint.geometry = view->geometry();
-    return footprint;
-}
-
-}
-
 Corona::Corona(bool defaultLayoutOnStartup, QString layoutNameOnStartUp, QString addViewTemplateName, int userSetMemoryUsage, QObject *parent)
     : Plasma::Corona(parent),
       m_defaultLayoutOnStartup(defaultLayoutOnStartup),
@@ -378,32 +354,12 @@ PlasmaExtended::Theme *Corona::themeExtended() const
 
 int Corona::numScreens() const
 {
-    return qGuiApp->screens().count();
+    return m_engine->numScreens();
 }
 
 QRect Corona::screenGeometry(int id) const
 {
-    const auto screens = qGuiApp->screens();
-    const QScreen *screen{screenPool()->primaryScreen()};
-
-    QString screenName;
-
-    if (screenPool()->hasScreenId(id)) {
-        screenName = screenPool()->connector(id);
-    }
-
-    for(const auto scr : screens) {
-        if (scr->name() == screenName) {
-            screen = scr;
-            break;
-        }
-    }
-
-    if (!screen) {
-        return {};
-    }
-
-    return screen->geometry();
+    return m_engine->screenGeometry(id);
 }
 
 CentralLayout *Corona::centralLayout(QString name) const
@@ -429,17 +385,8 @@ Layout::GenericLayout *Corona::layout(QString name) const
 }
 
 QRegion Corona::availableScreenRegion(int id) const
-{   
-    //! ignore modes are added in order for notifications to be placed
-    //! in better positioning and not overlap with sidebars or usually hidden views
-    QList<Types::Visibility> ignoremodes({Latte::Types::AutoHide,
-                                          Latte::Types::SidebarOnDemand,
-                                          Latte::Types::SidebarAutoHide});
-
-
-    return availableScreenRegionWithCriteria(id,
-                                             QString(),
-                                             ignoremodes);
+{
+    return m_engine->availableScreenRegion(id);
 }
 
 QRegion Corona::availableScreenRegionWithCriteria(int id,
@@ -449,33 +396,12 @@ QRegion Corona::availableScreenRegionWithCriteria(int id,
                                                   bool ignoreExternalPanels,
                                                   bool desktopUse) const
 {
-    const QScreen *screen = screenPool()->screenForId(id);
-
-    if (!screen) {
-        return {};
-    }
-
-    const QRect startRect = ignoreExternalPanels ? screen->geometry() : screen->availableGeometry();
-
-    return ScreenGeometryCalculator::availableRegion(startRect,
-                                                     screen->geometry(),
-                                                     viewFootprintsOnScreen(screen, activityid),
-                                                     ignoreModes,
-                                                     ignoreEdges,
-                                                     desktopUse);
+    return m_engine->availableScreenRegionWithCriteria(id, activityid, ignoreModes, ignoreEdges, ignoreExternalPanels, desktopUse);
 }
 
 QRect Corona::availableScreenRect(int id) const
 {
-    //! ignore modes are added in order for notifications to be placed
-    //! in better positioning and not overlap with sidebars or usually hidden views
-    QList<Types::Visibility> ignoremodes({Latte::Types::AutoHide,
-                                          Latte::Types::SidebarOnDemand,
-                                          Latte::Types::SidebarAutoHide});
-
-    return availableScreenRectWithCriteria(id,
-                                           QString(),
-                                           ignoremodes);
+    return m_engine->availableScreenRect(id);
 }
 
 QRect Corona::availableScreenRectWithCriteria(int id,
@@ -485,38 +411,7 @@ QRect Corona::availableScreenRectWithCriteria(int id,
                                               bool ignoreExternalPanels,
                                               bool desktopUse) const
 {
-    const QScreen *screen = screenPool()->screenForId(id);
-
-    if (!screen) {
-        return {};
-    }
-
-    const QRect startRect = ignoreExternalPanels ? screen->geometry() : screen->availableGeometry();
-
-    return ScreenGeometryCalculator::availableRect(startRect,
-                                                   screen->geometry(),
-                                                   viewFootprintsOnScreen(screen, activityid),
-                                                   ignoreModes,
-                                                   ignoreEdges,
-                                                   desktopUse);
-}
-
-QList<ViewFootprint> Corona::viewFootprintsOnScreen(const QScreen *screen, const QString &activityid) const
-{
-    const bool inCurrentActivity = activityid.isEmpty();
-
-    const QList<Latte::View *> views = layoutsManager()->synchronizer()->viewsBasedOnActivityId(
-        inCurrentActivity ? activitiesConsumer()->currentActivity() : activityid);
-
-    QList<ViewFootprint> footprints;
-
-    for (const auto *view : views) {
-        if (view && view->containment() && view->screen() == screen) {
-            footprints << footprintForView(view);
-        }
-    }
-
-    return footprints;
+    return m_engine->availableScreenRectWithCriteria(id, activityid, ignoreModes, ignoreEdges, ignoreExternalPanels, desktopUse);
 }
 
 void Corona::onScreenAdded(QScreen *screen)

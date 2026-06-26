@@ -6,13 +6,19 @@
 #ifndef CORONAENGINE_H
 #define CORONAENGINE_H
 
+// local
+#include "screengeometrycalculator.h"
+
 // Qt
 #include <QObject>
+#include <QRect>
+#include <QRegion>
 
 // KDE
 #include <KSharedConfig>
 
 class PanelShadows;
+class QScreen;
 
 namespace KActivities {
 class Consumer;
@@ -25,6 +31,7 @@ class PlasmaShell;
 
 namespace Latte {
 class Corona;
+class IScreenInfo;
 class ScreenPool;
 class UniversalSettings;
 class ViewSettingsFactory;
@@ -61,6 +68,7 @@ public:
     struct Deps
     {
         WindowSystem::AbstractWindowInterface *wm = nullptr;   //! null => new WaylandInterface
+        IScreenInfo *screenInfo = nullptr;                     //! null => RealScreenInfo(screenPool)
         KSharedConfig::Ptr config;                             //! null => KSharedConfig::openConfig()
     };
 
@@ -85,10 +93,35 @@ public:
     PanelShadows *dialogShadows() const;
     KWayland::Client::PlasmaShell *waylandCoronaInterface() const;
 
+    //! Available-screen geometry. The math runs against IScreenInfo rects and view
+    //! footprints, so it can be exercised without a live screen / View graph.
+    int numScreens() const;
+    QRect screenGeometry(int id) const;
+    QRegion availableScreenRegion(int id) const;
+    QRect availableScreenRect(int id) const;
+    QRegion availableScreenRegionWithCriteria(int id,
+                                              QString activityid = QString(),
+                                              QList<Types::Visibility> ignoreModes = QList<Types::Visibility>(),
+                                              QList<Plasma::Types::Location> ignoreEdges = QList<Plasma::Types::Location>(),
+                                              bool ignoreExternalPanels = true,
+                                              bool desktopUse = false) const;
+    QRect availableScreenRectWithCriteria(int id,
+                                          QString activityid = QString(),
+                                          QList<Types::Visibility> ignoreModes = QList<Types::Visibility>(),
+                                          QList<Plasma::Types::Location> ignoreEdges = QList<Plasma::Types::Location>(),
+                                          bool ignoreExternalPanels = true,
+                                          bool desktopUse = false) const;
+
 private:
     void setupWaylandIntegration();
 
+    //! Snapshot the views living on a screen as plain footprints, so the
+    //! available-screen geometry math can run without the live View graph.
+    QList<ViewFootprint> viewFootprintsOnScreen(int id, const QString &activityid) const;
+
     Latte::Corona *m_shell{nullptr};
+    IScreenInfo *m_screenInfo{nullptr};
+    bool m_ownsScreenInfo{false};
 
     KActivities::Consumer *m_activitiesConsumer{nullptr};
     ScreenPool *m_screenPool{nullptr};

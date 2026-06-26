@@ -56,7 +56,6 @@ class GlobalShortcuts;
 class UniversalSettings;
 class View;
 class ViewSettingsFactory;
-struct ViewFootprint;
 namespace Indicator{
 class Factory;
 }
@@ -214,10 +213,6 @@ private:
     void qmlRegisterTypes() const;
 
     int primaryScreenId() const;
-
-    //! Snapshot the views living on a screen as plain footprints, so the
-    //! available-screen geometry math can run without the live View graph.
-    QList<ViewFootprint> viewFootprintsOnScreen(const QScreen *screen, const QString &activityid) const;
 
     QStringList containmentsIds();
     QStringList appletsIds();
