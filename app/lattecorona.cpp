@@ -118,7 +118,7 @@ Corona::Corona(bool defaultLayoutOnStartup, QString layoutNameOnStartUp, QString
       m_screenPool(new ScreenPool(KSharedConfig::openConfig(), this)),
       m_indicatorFactory(new Indicator::Factory(this)),
       m_universalSettings(new UniversalSettings(KSharedConfig::openConfig(), this)),
-      m_globalShortcuts(new GlobalShortcuts(this)),
+      m_globalShortcuts(new GlobalShortcuts(this, this)),
       m_plasmaScreenPool(new PlasmaExtended::ScreenPool(this)),
       m_themeExtended(new PlasmaExtended::Theme(KSharedConfig::openConfig(), this)),
       m_viewSettingsFactory(new ViewSettingsFactory(this)),

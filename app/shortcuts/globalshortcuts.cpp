@@ -40,10 +40,10 @@
 
 namespace Latte {
 
-GlobalShortcuts::GlobalShortcuts(QObject *parent)
+GlobalShortcuts::GlobalShortcuts(Latte::Corona *corona, QObject *parent)
     : QObject(parent)
+    , m_corona(corona)
 {
-    m_corona = qobject_cast<Latte::Corona *>(parent);
     m_modifierTracker = new ShortcutsPart::ModifierTracker(this);
     m_shortcutsTracker = new ShortcutsPart::ShortcutsTracker(this);
 

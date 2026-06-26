@@ -41,7 +41,7 @@ class GlobalShortcuts : public QObject
 public:
     static constexpr const char* SHORTCUTBLOCKHIDINGTYPE  = "globalshortcuts::blockHiding()";
 
-    GlobalShortcuts(QObject *parent = nullptr);
+    GlobalShortcuts(Latte::Corona *corona, QObject *parent = nullptr);
     ~GlobalShortcuts() override;
 
     void activateLauncherMenu();
