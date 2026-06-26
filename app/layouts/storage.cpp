@@ -8,6 +8,7 @@
 // local
 #include <coretypes.h>
 #include "importer.h"
+#include "storageidremapper.h"
 #include "manager.h"
 #include "../lattecorona.h"
 #include "../screenpool.h"
@@ -266,25 +267,6 @@ void Storage::importToCorona(const Layout::GenericLayout *layout)
 }
 
 
-QString Storage::availableId(QStringList all, QStringList assigned, int base)
-{
-    bool found = false;
-
-    int i = base;
-
-    while (!found && i < 32000) {
-        QString iStr = QString::number(i);
-
-        if (!all.contains(iStr) && !assigned.contains(iStr)) {
-            return iStr;
-        }
-
-        i++;
-    }
-
-    return QStringLiteral("");
-}
-
 bool Storage::appletGroupIsValid(const KConfigGroup &appletGroup)
 {
     return !( appletGroup.keyList().count() == 0
@@ -369,9 +351,6 @@ QString Storage::newUniqueIdsFile(QString originFile, const Layout::GenericLayou
     //qDebug() << "to copy containments: " << toCopyContainmentIds;
     //qDebug() << "to copy applets: " << toCopyAppletIds;
 
-    QStringList assignedIds;
-    QHash<QString, QString> assigned;
-
     KSharedConfigPtr filePtr = KSharedConfig::openConfig(originFile);
     KConfigGroup investigate_conts = KConfigGroup(filePtr, QStringLiteral("Containments"));
 
@@ -397,64 +376,7 @@ QString Storage::newUniqueIdsFile(QString originFile, const Layout::GenericLayou
     }
 
     //! Reassign containment and applet ids to unique ones
-    for (const auto &contId : toInvestigateContainmentIds) {        
-        QString newId;
-
-        if (contId.toInt()>=12 && !allIds.contains(contId) && !assignedIds.contains(contId)) {
-            newId = contId;
-        } else {
-            newId = availableId(allIds, assignedIds, 12);
-        }
-
-        assignedIds << newId;
-        assigned[contId] = newId;
-    }
-
-    for (const auto &appId : toInvestigateAppletIds) {
-        QString newId;
-
-        if (appId.toInt()>=40 && !allIds.contains(appId) && !assignedIds.contains(appId)) {
-            newId = appId;
-        } else {
-            newId = availableId(allIds, assignedIds, 40);
-        }
-
-        assignedIds << newId;
-        assigned[appId] = newId;
-    }
-
-    qDebug() << "ALL CORONA IDS ::: " << allIds;
-    qDebug() << "FULL ASSIGNMENTS ::: " << assigned;
-
-    for (const auto &cId : toInvestigateContainmentIds) {
-        QString value = assigned[cId];
-
-        if (assigned.contains(value)) {
-            QString value2 = assigned[value];
-
-            if (cId != assigned[cId] && !value2.isEmpty() && cId == value2) {
-                qDebug() << "PROBLEM APPEARED !!!! FOR :::: " << cId << " .. fixed ..";
-                assigned[cId] = cId;
-                assigned[value] = value;
-            }
-        }
-    }
-
-    for (const auto &aId : toInvestigateAppletIds) {
-        QString value = assigned[aId];
-
-        if (assigned.contains(value)) {
-            QString value2 = assigned[value];
-
-            if (aId != assigned[aId] && !value2.isEmpty() && aId == value2) {
-                qDebug() << "PROBLEM APPEARED !!!! FOR :::: " << aId << " .. fixed ..";
-                assigned[aId] = aId;
-                assigned[value] = value;
-            }
-        }
-    }
-
-    qDebug() << "FIXED FULL ASSIGNMENTS ::: " << assigned;
+    IdRemap r = StorageIdRemapper::remap({allIds, toInvestigateContainmentIds, toInvestigateAppletIds});
 
     //! update applet ids in their containment order and in MultipleLayouts update also the layoutId
     for (const auto &cId : investigate_conts.groupList()) {
@@ -471,7 +393,11 @@ QString Storage::newUniqueIdsFile(QString originFile, const Layout::GenericLayou
                 QStringList fixedOrder1Ids;
 
                 for (int i = 0; i < order1Ids.count(); ++i) {
-                    fixedOrder1Ids.append(assigned[order1Ids[i]]);
+                    // Use value() not operator[] so unknown tokens produce "" (not a
+                    // side-effecting insert) — matches the original operator[] behaviour
+                    // since QHash::operator[] on a missing key also returns a
+                    // default-constructed (empty) QString.
+                    fixedOrder1Ids.append(r.assigned.value(order1Ids[i], QString()));
                 }
 
                 QString fixedOrder1 = fixedOrder1Ids.join(QLatin1Char(';'));
@@ -501,7 +427,7 @@ QString Storage::newUniqueIdsFile(QString originFile, const Layout::GenericLayou
             }
 
             if (!m_subIdentities[entityIndex].cfgProperty.isEmpty()) {
-                subAppletConfig.writeEntry(m_subIdentities[entityIndex].cfgProperty, assigned[subId]);
+                subAppletConfig.writeEntry(m_subIdentities[entityIndex].cfgProperty, r.assigned[subId]);
                 subParentContainment.sync();
             }
         }
@@ -517,14 +443,14 @@ QString Storage::newUniqueIdsFile(QString originFile, const Layout::GenericLayou
         QString pluginId = investigate_conts.group(contId).readEntry(QStringLiteral("plugin"), QString());
 
         if (pluginId != QLatin1String("org.kde.desktopcontainment")) { //!don't add ghost containments
-            KConfigGroup newContainmentGroup = fixedNewContainmets.group(assigned[contId]);
+            KConfigGroup newContainmentGroup = fixedNewContainmets.group(r.assigned[contId]);
             investigate_conts.group(contId).copyTo(&newContainmentGroup);
 
             newContainmentGroup.group(QStringLiteral("Applets")).deleteGroup();
 
             for (const auto &appId : investigate_conts.group(contId).group(QStringLiteral("Applets")).groupList()) {
                 KConfigGroup appletGroup = investigate_conts.group(contId).group(QStringLiteral("Applets")).group(appId);
-                KConfigGroup newAppletGroup = fixedNewContainmets.group(assigned[contId]).group(QStringLiteral("Applets")).group(assigned[appId]);
+                KConfigGroup newAppletGroup = fixedNewContainmets.group(r.assigned[contId]).group(QStringLiteral("Applets")).group(r.assigned[appId]);
                 appletGroup.copyTo(&newAppletGroup);
             }
         }

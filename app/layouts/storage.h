@@ -121,7 +121,6 @@ private:
     int subIdentityIndex(const KConfigGroup &appletGroup) const;
 
     //! STORAGE !////
-    QString availableId(QStringList all, QStringList assigned, int base);
     //! provides a new file path based the provided file. The new file
     //! has updated ids for containments and applets based on the corona
     //! loaded ones

@@ -97,6 +97,7 @@ private Q_SLOTS:
     void viewsController_uniqueViewName_delegatesToHelper();
     void viewsController_rowForId_delegatesToHelper();
     void viewsController_pasteSelectedViews_delegatesToHelper();
+    void storage_newUniqueIdsFile_delegatesToRemapper();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -493,6 +494,22 @@ void SourceGuardTest::viewsController_pasteSelectedViews_delegatesToHelper()
     QVERIFY2(!s.isEmpty(), "pasteSelectedViews() not found");
     QVERIFY2(s.contains(QStringLiteral("Settings::pasteSkipsView(")),
              "pasteSelectedViews must delegate the skip-decision to Settings::pasteSkipsView()");
+}
+
+void SourceGuardTest::storage_newUniqueIdsFile_delegatesToRemapper()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/layouts/storage.cpp")),
+                                            QStringLiteral("QString Storage::newUniqueIdsFile(")));
+    QVERIFY2(!s.isEmpty(), "newUniqueIdsFile() not found");
+    // The assignment algorithm was moved to StorageIdRemapper::remap; the adapter
+    // must call through it rather than inline the old loops.
+    QVERIFY2(s.contains(QStringLiteral("StorageIdRemapper::remap(")),
+             "newUniqueIdsFile must delegate id assignment to StorageIdRemapper::remap()");
+    // The old inline assignment loops and 2-cycle fix must not remain.
+    QVERIFY2(!s.contains(QStringLiteral("availableId(allIds,assignedIds,12)")),
+             "newUniqueIdsFile must not still contain the old inline containment availableId call");
+    QVERIFY2(!s.contains(QStringLiteral("PROBLEMAPPEARED")),
+             "newUniqueIdsFile must not still contain the old inline PROBLEM APPEARED 2-cycle fix");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)
