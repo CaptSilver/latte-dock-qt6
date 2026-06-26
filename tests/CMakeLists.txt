@@ -97,6 +97,17 @@ ecm_add_test(screengeometrycalculatortest.cpp ${CMAKE_SOURCE_DIR}/app/screengeom
 target_include_directories(screengeometrycalculatortest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
 
+# storageidremapper.cpp is the pure id-assignment algorithm lifted out of
+# Storage::newUniqueIdsFile. Header reaches only Qt, so the real source links
+# directly with no KConfig/Corona graph.
+ecm_add_test(storageidremappertest.cpp ${CMAKE_SOURCE_DIR}/app/layouts/storageidremapper.cpp
+    TEST_NAME storageidremappertest
+    LINK_LIBRARIES Qt6::Test Qt6::Core
+)
+target_include_directories(storageidremappertest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/layouts ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(storageidremappertest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 # coronahelpers.cpp is pure string/config logic lifted out of Latte::Corona
 # (layout-file path checks + obsolete-config pruning). Header reaches only Qt +
 # KConfigCore, so the real source links directly with no View/Corona graph.
@@ -652,7 +663,7 @@ set_tests_properties(editmodetooltipguard PROPERTIES TIMEOUT 30)
 # Add new test names here when adding tests.
 if(LATTE_COVERAGE)
     set(_latte_cov_targets
-        indicatorsknsrctest templatesnametest storageroundtriptest
+        indicatorsknsrctest templatesnametest storageroundtriptest storageidremappertest
         abstractlayouttest bindingrestoremodetest alternativescreateapplettest sourceguardtest
         activitiesinfotest activitystatescachetest syncedlaunchersclienttest layershellmappingtest
         windowinfowraptest windowindextest visibilityrevealtest coretypesenumtest appletzoomsizetest
