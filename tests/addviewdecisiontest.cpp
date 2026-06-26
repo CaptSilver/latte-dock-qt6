@@ -75,11 +75,16 @@ void AddViewDecisionTest::nonPrimaryInvalidScreenUsesPrimary()
 
 void AddViewDecisionTest::alwaysVisibleForcesByPassWmFalse()
 {
-    AddViewInputs in = base();
-    in.visibilityMode = Types::AlwaysVisible;
-    in.configByPassWM = true;       // overridden to false for always-visible family
-    const AddViewDecision d = AddViewDecisionMaker::decide(in);
-    QVERIFY(!d.byPassWM);
+    //! the whole always-visible family forces byPassWM false regardless of the config value
+    const QList<Types::Visibility> family{Types::AlwaysVisible, Types::WindowsGoBelow,
+                                          Types::WindowsCanCover, Types::WindowsAlwaysCover};
+    for (const Types::Visibility mode : family) {
+        AddViewInputs in = base();
+        in.visibilityMode = mode;
+        in.configByPassWM = true;
+        const AddViewDecision d = AddViewDecisionMaker::decide(in);
+        QVERIFY2(!d.byPassWM, "always-visible family must override byPassWM to false");
+    }
 }
 
 void AddViewDecisionTest::dodgeActiveHonoursConfigByPassWm()
