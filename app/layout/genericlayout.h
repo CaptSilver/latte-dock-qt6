@@ -172,6 +172,7 @@ protected:
 protected:
     Latte::Corona *m_corona{nullptr};
     IViewFactory *m_viewFactory{nullptr};
+    bool m_ownsViewFactory{false};   //! true only for the lazily-created default factory
 
     QList<Plasma::Containment *> m_containments;
 

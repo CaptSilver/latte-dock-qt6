@@ -50,6 +50,9 @@ GenericLayout::GenericLayout(QObject *parent, QString layoutFile, QString assign
 
 GenericLayout::~GenericLayout()
 {
+    if (m_ownsViewFactory) {
+        delete m_viewFactory;
+    }
 }
 
 Type GenericLayout::type() const
@@ -179,6 +182,12 @@ void GenericLayout::registerLatteView(Plasma::Containment *containment, Latte::V
 
 void GenericLayout::setViewFactory(Layout::IViewFactory *factory)
 {
+    //! an injected factory is owned by the caller; drop any default we created earlier
+    if (m_ownsViewFactory) {
+        delete m_viewFactory;
+        m_ownsViewFactory = false;
+    }
+
     m_viewFactory = factory;
 }
 
@@ -187,6 +196,7 @@ Layout::IViewFactory *GenericLayout::viewFactory()
     if (!m_viewFactory) {
         //! production default; tests inject their own before addView
         m_viewFactory = new Layout::RealViewFactory();
+        m_ownsViewFactory = true;
     }
 
     return m_viewFactory;
