@@ -444,6 +444,15 @@ KWayland::Client::PlasmaWindow *WaylandInterface::windowFor(WindowId wid)
         return nullptr;
     }
 
+    //! fast path: the id index resolves tracked windows in O(1)
+    if (auto *cached = m_windowIndex.lookup(wid)) {
+        if (cached->isValid()) {
+            return cached;
+        }
+    }
+
+    //! authoritative fallback: windows() stays the source of truth, so a not-yet-
+    //! indexed or untracked window is still found by scanning
     auto it = std::find_if(m_windowManagement->windows().constBegin(), m_windowManagement->windows().constEnd(), [&wid](PlasmaWindow * w) noexcept {
             return w->isValid() && idFor(w) == wid;
 });
@@ -774,6 +783,7 @@ void WaylandInterface::trackWindow(KWayland::Client::PlasmaWindow *w)
     connect(w, &PlasmaWindow::plasmaActivityEntered, this, &WaylandInterface::updateWindow);
     connect(w, &PlasmaWindow::plasmaActivityLeft, this, &WaylandInterface::updateWindow);
     connect(w, &PlasmaWindow::unmapped, this, &WaylandInterface::windowUnmapped);
+    m_windowIndex.insert(idFor(w), w);
 }
 
 void WaylandInterface::untrackWindow(KWayland::Client::PlasmaWindow *w)
@@ -797,6 +807,7 @@ void WaylandInterface::untrackWindow(KWayland::Client::PlasmaWindow *w)
     disconnect(w, &PlasmaWindow::plasmaActivityEntered, this, &WaylandInterface::updateWindow);
     disconnect(w, &PlasmaWindow::plasmaActivityLeft, this, &WaylandInterface::updateWindow);
     disconnect(w, &PlasmaWindow::unmapped, this, &WaylandInterface::windowUnmapped);
+    m_windowIndex.remove(idFor(w));
 }
 
 

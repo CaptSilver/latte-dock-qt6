@@ -11,6 +11,7 @@
 #include <config-latte.h>
 #include "abstractwindowinterface.h"
 #include "windowinfowrap.h"
+#include "windowindex.h"
 
 // Qt
 #include <QMap>
@@ -116,6 +117,7 @@ private:
 
 private:
     KWayland::Client::PlasmaWindowManagement *m_windowManagement{nullptr};
+    WindowIndex<KWayland::Client::PlasmaWindow> m_windowIndex;
 
     //! VirtualDesktopsSupport
     KWayland::Client::PlasmaVirtualDesktopManagement *m_virtualDesktopManagement{nullptr};

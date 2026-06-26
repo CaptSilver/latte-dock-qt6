@@ -81,6 +81,7 @@ private Q_SLOTS:
     void deadCompositingBranchesAreCollapsed();
     void synchronizer_runningActivities_usesStatesCache();
     void synchronizer_syncMultipleLayouts_invalidatesStatesCacheOnce();
+    void waylandInterface_windowFor_usesIndexFastPath();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -302,6 +303,29 @@ void SourceGuardTest::synchronizer_syncMultipleLayouts_invalidatesStatesCacheOnc
     QVERIFY2(!s.isEmpty(), "syncMultipleLayoutsToActivities() not found");
     QVERIFY2(s.contains(QStringLiteral("m_activityStates.invalidate();")),
              "each sync must refresh the activity-states cache exactly once");
+}
+
+void SourceGuardTest::waylandInterface_windowFor_usesIndexFastPath()
+{
+    const QString src = readFile(QStringLiteral("app/wm/waylandinterface.cpp"));
+
+    const QString wf = stripped(functionBody(src,
+                                QStringLiteral("KWayland::Client::PlasmaWindow *WaylandInterface::windowFor(WindowId wid)")));
+    QVERIFY2(!wf.isEmpty(), "windowFor() not found");
+    QVERIFY2(wf.contains(QStringLiteral("m_windowIndex.lookup(wid)")),
+             "windowFor must consult the id index before scanning");
+
+    const QString track = stripped(functionBody(src,
+                                QStringLiteral("void WaylandInterface::trackWindow(KWayland::Client::PlasmaWindow *w)")));
+    QVERIFY2(!track.isEmpty(), "trackWindow() not found");
+    QVERIFY2(track.contains(QStringLiteral("m_windowIndex.insert(idFor(w),w);")),
+             "trackWindow must index the window");
+
+    const QString untrack = stripped(functionBody(src,
+                                QStringLiteral("void WaylandInterface::untrackWindow(KWayland::Client::PlasmaWindow *w)")));
+    QVERIFY2(!untrack.isEmpty(), "untrackWindow() not found");
+    QVERIFY2(untrack.contains(QStringLiteral("m_windowIndex.remove(idFor(w));")),
+             "untrackWindow must drop the window from the index");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)
