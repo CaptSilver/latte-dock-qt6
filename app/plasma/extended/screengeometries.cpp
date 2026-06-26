@@ -27,9 +27,9 @@
 namespace Latte {
 namespace PlasmaExtended {
 
-ScreenGeometries::ScreenGeometries(Latte::Corona *parent)
+ScreenGeometries::ScreenGeometries(Latte::Corona *corona, QObject *parent)
     : QObject(parent),
-      m_corona(parent),
+      m_corona(corona),
       m_plasmaServiceWatcher(new QDBusServiceWatcher(this))
 {
     qDBusRegisterMetaType<QList<QRect>>();

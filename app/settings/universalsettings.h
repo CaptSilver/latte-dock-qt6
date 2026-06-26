@@ -62,7 +62,7 @@ class UniversalSettings : public QObject
     Q_PROPERTY(QQmlListProperty<QScreen> screens READ screens)
 
 public:
-    UniversalSettings(KSharedConfig::Ptr config, QObject *parent = nullptr);
+    UniversalSettings(KSharedConfig::Ptr config, Latte::Corona *corona, QObject *parent = nullptr);
     ~UniversalSettings() override;
 
     void load();

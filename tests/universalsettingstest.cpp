@@ -74,11 +74,11 @@ void UniversalSettingsTest::init()
 
 void UniversalSettingsTest::nullCoronaOnPlainParent()
 {
-    // The whole headless approach hinges on this: a plain QObject parent can't be
-    // cast to Latte::Corona, so corona-dependent code stays untouched. If this ever
-    // regressed, the corona-deref getters would no longer be the only unsafe ones.
+    // The whole headless approach hinges on this: passing a null corona keeps the
+    // corona-dependent code untouched. If a non-null corona ever leaked in here, the
+    // corona-deref getters would no longer be the only unsafe ones.
     QObject parent;
-    UniversalSettings settings(freshConfig(), &parent);
+    UniversalSettings settings(freshConfig(), nullptr, &parent);
 
     // Reaching any non-corona getter here must not crash.
     QCOMPARE(settings.showInfoWindow(), true);
@@ -89,7 +89,7 @@ void UniversalSettingsTest::defaultsBeforeLoad()
 {
     // Member initializers define the pre-load state. These come straight from the
     // class definition, independent of any config contents.
-    UniversalSettings settings(freshConfig(), this);
+    UniversalSettings settings(freshConfig(), nullptr, this);
 
     QCOMPARE(settings.showInfoWindow(), true);
     QCOMPARE(settings.metaPressAndHoldEnabled(), true);
@@ -107,7 +107,7 @@ void UniversalSettingsTest::defaultsBeforeLoad()
 
 void UniversalSettingsTest::settersEmitAndGuardNoOp()
 {
-    UniversalSettings settings(freshConfig(), this);
+    UniversalSettings settings(freshConfig(), nullptr, this);
 
     QSignalSpy showSpy(&settings, &UniversalSettings::showInfoWindowChanged);
     QSignalSpy spreadSpy(&settings, &UniversalSettings::parabolicSpreadChanged);
@@ -142,7 +142,7 @@ void UniversalSettingsTest::roundTripThroughConfig()
     // Each setter fires its change signal, which is wired to saveConfig: the whole
     // [UniversalSettings] group is rewritten and synced to disk.
     {
-        UniversalSettings settings(freshConfig(), this);
+        UniversalSettings settings(freshConfig(), nullptr, this);
         settings.setShowInfoWindow(false);
         settings.setBadges3DStyle(true);
         settings.setCanDisableBorders(true);
@@ -175,7 +175,7 @@ void UniversalSettingsTest::roundTripThroughConfig()
     }
 
     // A second instance loading the same config reproduces every persisted value.
-    UniversalSettings reloaded(freshConfig(), this);
+    UniversalSettings reloaded(freshConfig(), nullptr, this);
     reloaded.load();
 
     QCOMPARE(reloaded.showInfoWindow(), false);
@@ -204,7 +204,7 @@ void UniversalSettingsTest::enumAndDefaultsLoadFromEmptyConfig()
         seed.sync();
     }
 
-    UniversalSettings settings(freshConfig(), this);
+    UniversalSettings settings(freshConfig(), nullptr, this);
     settings.load();
 
     // Documented defaults, read back through loadConfig on an otherwise empty group.
@@ -231,7 +231,7 @@ void UniversalSettingsTest::screenScalesRoundTrip()
     }
 
     {
-        UniversalSettings settings(freshConfig(), this);
+        UniversalSettings settings(freshConfig(), nullptr, this);
         settings.load();
 
         // Unknown screen always reads back unity scale.
@@ -251,7 +251,7 @@ void UniversalSettingsTest::screenScalesRoundTrip()
 
     // Scales persist to the nested [UniversalSettings][ScreenScales] group and a
     // fresh load brings them back.
-    UniversalSettings reloaded(freshConfig(), this);
+    UniversalSettings reloaded(freshConfig(), nullptr, this);
     reloaded.load();
     QCOMPARE(reloaded.screenWidthScale(QStringLiteral("DP-1")), 1.25f);
     QCOMPARE(reloaded.screenHeightScale(QStringLiteral("DP-1")), 0.75f);
@@ -261,7 +261,7 @@ void UniversalSettingsTest::sensitivityAlwaysHigh()
 {
     // The port deliberately hard-returns HighMouseSensitivity regardless of stored
     // state (the setter updates the member but the getter ignores it).
-    UniversalSettings settings(freshConfig(), this);
+    UniversalSettings settings(freshConfig(), nullptr, this);
     QCOMPARE(settings.sensitivity(), Settings::HighMouseSensitivity);
 
     settings.setSensitivity(Settings::LowMouseSensitivity);

@@ -25,8 +25,8 @@
 namespace Latte {
 namespace Templates {
 
-Manager::Manager(Latte::Corona *corona)
-    : QObject(corona),
+Manager::Manager(Latte::Corona *corona, QObject *parent)
+    : QObject(parent),
       m_corona(corona)
 {
     KDirWatch::self()->addDir(Latte::configPath() + QStringLiteral("/latte/templates"), KDirWatch::WatchFiles);

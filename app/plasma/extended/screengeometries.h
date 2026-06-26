@@ -29,7 +29,7 @@ class ScreenGeometries: public QObject
     Q_OBJECT
 
 public:
-    ScreenGeometries(Latte::Corona *parent);
+    ScreenGeometries(Latte::Corona *corona, QObject *parent = nullptr);
     ~ScreenGeometries() override;
 
 private Q_SLOTS:

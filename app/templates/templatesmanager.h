@@ -35,7 +35,7 @@ class Manager : public QObject
     Q_OBJECT
 
 public:
-    Manager(Latte::Corona *corona = nullptr);
+    Manager(Latte::Corona *corona = nullptr, QObject *parent = nullptr);
     ~Manager() override;
 
     Latte::Corona *corona();

@@ -36,12 +36,12 @@
 
 namespace Latte {
 
-UniversalSettings::UniversalSettings(KSharedConfig::Ptr config, QObject *parent)
+UniversalSettings::UniversalSettings(KSharedConfig::Ptr config, Latte::Corona *corona, QObject *parent)
     : QObject(parent),
       m_config(config),
       m_universalGroup(KConfigGroup(config, QStringLiteral("UniversalSettings")))
 {
-    m_corona = qobject_cast<Latte::Corona *>(parent);
+    m_corona = corona;
 
     connect(this, &UniversalSettings::actionsChanged, this, &UniversalSettings::saveConfig);
     connect(this, &UniversalSettings::badges3DStyleChanged, this, &UniversalSettings::saveConfig);
