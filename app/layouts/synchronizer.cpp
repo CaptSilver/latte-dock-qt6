@@ -159,9 +159,9 @@ QStringList Synchronizer::freeActivities()
 
 QStringList Synchronizer::runningActivities()
 {
-    // KActivities 6 dropped Consumer::runningActivities(); read the running set
-    // from the activity manager instead of returning every activity.
-    return ActivitiesInfo::runningActivities();
+    // KActivities 6 dropped Consumer::runningActivities(); read the running set from
+    // the activity manager, memoized so one sync queries it once.
+    return m_activityStates.runningActivities();
 }
 
 QStringList Synchronizer::freeRunningActivities()
@@ -934,6 +934,9 @@ void Synchronizer::syncMultipleLayoutsToActivities(QStringList preloadedLayouts)
 {
     qDebug() << "   ----  --------- ------    syncMultipleLayoutsToActivities       -------   ";
     qDebug() << "   ----  --------- ------    -------------------------------       -------   ";
+
+    //! refresh the activity-states cache once; the discovery passes below reuse it
+    m_activityStates.invalidate();
 
     QStringList layoutNamesToUnload;
     QStringList layoutNamesToLoad;

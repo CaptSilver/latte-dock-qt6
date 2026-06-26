@@ -79,6 +79,8 @@ private Q_SLOTS:
     void synchronizer_unloadLayouts_unloadsViewsBeforeContainments();
     void corona_showSettingsWindow_warnsWhenInStartup();
     void deadCompositingBranchesAreCollapsed();
+    void synchronizer_runningActivities_usesStatesCache();
+    void synchronizer_syncMultipleLayouts_invalidatesStatesCacheOnce();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -280,6 +282,26 @@ void SourceGuardTest::addView_constructsViewsThroughFactory()
     QVERIFY2(factory.contains(QStringLiteral("layout->registerLatteView(")), "factory must register the view (store-before-wire)");
     QVERIFY2(factory.contains(QStringLiteral("->setupWaylandLayerShell();")) && factory.contains(QStringLiteral("->show();")),
              "factory must wire the view (layer shell + show)");
+}
+
+void SourceGuardTest::synchronizer_runningActivities_usesStatesCache()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/layouts/synchronizer.cpp")),
+                                            QStringLiteral("QStringList Synchronizer::runningActivities()")));
+    QVERIFY2(!s.isEmpty(), "Synchronizer::runningActivities() not found");
+    QVERIFY2(s.contains(QStringLiteral("m_activityStates.runningActivities()")),
+             "runningActivities must read through the memoizing cache");
+    QVERIFY2(!s.contains(QStringLiteral("ActivitiesInfo::runningActivities()")),
+             "runningActivities must not re-query the activity manager directly");
+}
+
+void SourceGuardTest::synchronizer_syncMultipleLayouts_invalidatesStatesCacheOnce()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/layouts/synchronizer.cpp")),
+                                            QStringLiteral("void Synchronizer::syncMultipleLayoutsToActivities(QStringList preloadedLayouts)")));
+    QVERIFY2(!s.isEmpty(), "syncMultipleLayoutsToActivities() not found");
+    QVERIFY2(s.contains(QStringLiteral("m_activityStates.invalidate();")),
+             "each sync must refresh the activity-states cache exactly once");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

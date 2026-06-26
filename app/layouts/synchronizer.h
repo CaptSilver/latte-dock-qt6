@@ -8,6 +8,7 @@
 
 // local
 #include "../apptypes.h"
+#include "../data/activitystatescache.h"
 #include "../data/layoutdata.h"
 #include "../data/layoutstable.h"
 
@@ -167,6 +168,9 @@ private:
 
     Layouts::Manager *m_manager;
     KActivities::Controller *m_activitiesController;
+
+    //! one activity-manager query per sync, reused by the discovery passes
+    ActivitiesInfo::StatesCache m_activityStates{&ActivitiesInfo::list};
 };
 
 }
