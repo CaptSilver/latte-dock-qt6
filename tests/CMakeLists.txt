@@ -379,6 +379,12 @@ ecm_add_test(activitysetalgebratest.cpp
 target_include_directories(activitysetalgebratest PRIVATE ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(activitysetalgebratest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+ecm_add_test(iconsourceclassifiertest.cpp
+    TEST_NAME iconsourceclassifiertest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui)
+target_include_directories(iconsourceclassifiertest PRIVATE ${CMAKE_SOURCE_DIR}/declarativeimports/core)
+set_tests_properties(iconsourceclassifiertest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 ecm_add_test(coverage/selftest/covselftest.cpp coverage/selftest/covself.cpp
     TEST_NAME covselftest
     LINK_LIBRARIES Qt6::Test
@@ -641,6 +647,7 @@ if(LATTE_COVERAGE)
         datatypestest commontoolstest layoutmanagertest settingsmodelstest wmtoolstest
         shortcutstest viewmodelstest screenpooltest coretoolstest generictoolstest
         viewprioritytest addviewdecisiontest viewcontainertransitiontest activitysetalgebratest
+        iconsourceclassifiertest
         # GLOB-behavioral tests link the (now instrumented) app objects; listing them
         # gives their binaries the profile link flag and the export object set, which
         # is what makes the Corona-coupled core count toward whole-app coverage.
