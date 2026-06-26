@@ -123,7 +123,7 @@ Corona::Corona(bool defaultLayoutOnStartup, QString layoutNameOnStartUp, QString
       m_themeExtended(new PlasmaExtended::Theme(KSharedConfig::openConfig(), this)),
       m_viewSettingsFactory(new ViewSettingsFactory(this)),
       m_templatesManager(new Templates::Manager(this)),
-      m_layoutsManager(new Layouts::Manager(this)),
+      m_layoutsManager(new Layouts::Manager(this, this)),
       m_plasmaGeometries(new PlasmaExtended::ScreenGeometries(this)),
       m_dialogShadows(new PanelShadows(this, QStringLiteral("dialogs/background")))
 {

@@ -36,12 +36,12 @@
 namespace Latte {
 namespace Layouts {
 
-Manager::Manager(QObject *parent)
+Manager::Manager(Latte::Corona *corona, QObject *parent)
     : QObject(parent),
+      m_corona(corona),
       m_importer(new Importer(this)),
       m_syncedLaunchers(new SyncedLaunchers(this))
 {
-    m_corona = qobject_cast<Latte::Corona *>(parent);
     //! needs to be created AFTER corona assignment
     m_synchronizer = new Synchronizer(this);
 

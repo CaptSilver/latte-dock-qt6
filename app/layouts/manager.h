@@ -61,7 +61,7 @@ class Manager : public QObject
     Q_PROPERTY(SyncedLaunchers *syncedLaunchers READ syncedLaunchers NOTIFY syncedLaunchersChanged)
 
 public:
-    Manager(QObject *parent = nullptr);
+    Manager(Latte::Corona *corona, QObject *parent = nullptr);
     ~Manager() override;
 
     Latte::Corona *corona();
