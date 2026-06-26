@@ -7,6 +7,7 @@
 
 //! local
 #include <config-latte.h>
+#include "activitysetalgebra.h"
 #include "importer.h"
 #include "manager.h"
 #include "../apptypes.h"
@@ -148,13 +149,7 @@ QStringList Synchronizer::activities()
 
 QStringList Synchronizer::freeActivities()
 {
-    QStringList frees = activities();
-
-    for(auto assigned : m_assignedLayouts.keys()) {
-        frees.removeAll(assigned);
-    }
-
-    return frees;
+    return ActivitySetAlgebra::freeActivities(activities(), m_assignedLayouts.keys());
 }
 
 QStringList Synchronizer::runningActivities()
@@ -166,29 +161,12 @@ QStringList Synchronizer::runningActivities()
 
 QStringList Synchronizer::freeRunningActivities()
 {
-    QStringList fActivities;
-
-    for (const auto &activity : runningActivities()) {
-        if (!m_assignedLayouts.contains(activity)) {
-            fActivities.append(activity);
-        }
-    }
-
-    return fActivities;
+    return ActivitySetAlgebra::freeRunningActivities(runningActivities(), m_assignedLayouts.keys());
 }
 
 QStringList Synchronizer::validActivities(const QStringList &layoutActivities)
 {
-    QStringList valids;
-    QStringList allactivities = activities();
-
-    for(auto activity : layoutActivities) {
-        if (allactivities.contains(activity)) {
-            valids << activity;
-        }
-    }
-
-    return valids;
+    return ActivitySetAlgebra::validActivities(layoutActivities, activities());
 }
 
 QStringList Synchronizer::centralLayoutsNames()

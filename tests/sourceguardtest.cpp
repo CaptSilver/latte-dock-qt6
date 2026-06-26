@@ -85,6 +85,9 @@ private Q_SLOTS:
     void genericLayout_viewTransitions_useTransitionHelpers();
     void hashLookupsAvoidKeysContains();
     void positioner_dropsDeadAvailableRegionMember();
+    void synchronizer_freeActivities_delegatesToHelper();
+    void synchronizer_freeRunningActivities_delegatesToHelper();
+    void synchronizer_validActivities_delegatesToHelper();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -369,6 +372,33 @@ void SourceGuardTest::hashLookupsAvoidKeysContains()
     QVERIFY2(!gl.isEmpty(), "genericlayout.cpp not found");
     QVERIFY2(!gl.contains(QStringLiteral("keys().contains(")),
              "genericlayout.cpp must use contains(), not keys().contains()");
+}
+
+void SourceGuardTest::synchronizer_freeActivities_delegatesToHelper()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/layouts/synchronizer.cpp")),
+                                            QStringLiteral("QStringList Synchronizer::freeActivities()")));
+    QVERIFY2(!s.isEmpty(), "freeActivities() not found");
+    QVERIFY2(s.contains(QStringLiteral("ActivitySetAlgebra::freeActivities(activities(),m_assignedLayouts.keys())")),
+             "freeActivities must delegate to ActivitySetAlgebra::freeActivities");
+}
+
+void SourceGuardTest::synchronizer_freeRunningActivities_delegatesToHelper()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/layouts/synchronizer.cpp")),
+                                            QStringLiteral("QStringList Synchronizer::freeRunningActivities()")));
+    QVERIFY2(!s.isEmpty(), "freeRunningActivities() not found");
+    QVERIFY2(s.contains(QStringLiteral("ActivitySetAlgebra::freeRunningActivities(runningActivities(),m_assignedLayouts.keys())")),
+             "freeRunningActivities must delegate to ActivitySetAlgebra::freeRunningActivities");
+}
+
+void SourceGuardTest::synchronizer_validActivities_delegatesToHelper()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/layouts/synchronizer.cpp")),
+                                            QStringLiteral("QStringList Synchronizer::validActivities(const QStringList &layoutActivities)")));
+    QVERIFY2(!s.isEmpty(), "validActivities() not found");
+    QVERIFY2(s.contains(QStringLiteral("ActivitySetAlgebra::validActivities(layoutActivities,activities())")),
+             "validActivities must delegate to ActivitySetAlgebra::validActivities");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)
