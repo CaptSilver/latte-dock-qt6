@@ -68,8 +68,13 @@ Theme::~Theme()
 {
     saveConfig();
 
-    m_defaultScheme->deleteLater();
-    m_reversedScheme->deleteLater();
+    //! the schemes are created in load(); guard in case the theme was built but never loaded
+    if (m_defaultScheme) {
+        m_defaultScheme->deleteLater();
+    }
+    if (m_reversedScheme) {
+        m_reversedScheme->deleteLater();
+    }
 }
 
 bool Theme::hasShadow() const

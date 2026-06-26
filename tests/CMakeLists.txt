@@ -354,6 +354,25 @@ target_include_directories(universalsettingstest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/settings ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(universalsettingstest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+# CoronaEngine drags in the whole application object graph, so it links the same
+# prebuilt objects (minus main.cpp) and builds a real engine headlessly to drive
+# its available-screen geometry against a fake IScreenInfo.
+ecm_add_test(coronaenginegeometrytest.cpp
+    TEST_NAME coronaenginegeometrytest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::DBus Qt6::Network
+        Plasma::Activities KF6::Archive KF6::CoreAddons KF6::Crash KF6::DBusAddons
+        KF6::ConfigQml KF6::ConfigCore KF6::GuiAddons KF6::GlobalAccel KF6::I18n
+        KF6::IconThemes KF6::IconWidgets KF6::KIOWidgets KF6::Notifications
+        KF6::NewStuffWidgets Plasma::Plasma KF6::Svg KF6::Package Plasma::PlasmaQuick
+        Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
+        Wayland::Client
+)
+target_link_libraries(coronaenginegeometrytest ${_latte_app_objs})
+add_dependencies(coronaenginegeometrytest latte-dock)
+target_include_directories(coronaenginegeometrytest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(coronaenginegeometrytest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 # storage.cpp pulls in Corona/View/Importer/Manager through its includes, so the
 # same prebuilt-objects trick as universalsettingstest links the real compiled
 # Storage::self() (minus main.cpp) and drives its file/KConfigGroup methods.

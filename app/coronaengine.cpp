@@ -94,7 +94,8 @@ CoronaEngine::CoronaEngine(Latte::Corona *shell, const Deps &deps)
     m_themeExtended = new PlasmaExtended::Theme(config, this);
     m_viewSettingsFactory = new ViewSettingsFactory(this);
     m_templatesManager = new Templates::Manager(m_shell, this);
-    m_layoutsManager = new Layouts::Manager(m_shell, this);
+    //! Layouts::Manager builds a Synchronizer that wires up to live corona signals in its
+    //! ctor, so it needs a real shell and belongs in init(), keeping construction headless-safe.
     m_plasmaGeometries = new PlasmaExtended::ScreenGeometries(m_shell, this);
     m_dialogShadows = new PanelShadows(this, QStringLiteral("dialogs/background"));
 
@@ -108,7 +109,9 @@ CoronaEngine::~CoronaEngine()
     m_wm->deleteLater();
     m_dialogShadows->deleteLater();
     m_globalShortcuts->deleteLater();
-    m_layoutsManager->deleteLater();
+    if (m_layoutsManager) {   //! created in init(); null when the engine was built headlessly
+        m_layoutsManager->deleteLater();
+    }
     m_screenPool->deleteLater();
     m_universalSettings->deleteLater();
     m_plasmaScreenPool->deleteLater();
@@ -127,6 +130,8 @@ CoronaEngine::~CoronaEngine()
 
 void CoronaEngine::init()
 {
+    m_layoutsManager = new Layouts::Manager(m_shell, this);
+
     setupWaylandIntegration();
 
     m_screenPool->load();
@@ -329,9 +334,13 @@ QRect CoronaEngine::availableScreenRectWithCriteria(int id,
 
 QList<ViewFootprint> CoronaEngine::viewFootprintsOnScreen(int id, const QString &activityid) const
 {
-    //! resolving the live QScreen is the footprint-source's integration boundary: under a
-    //! headless test the pool has no mappings, so this returns no footprints and the math
-    //! runs against the bare screen rect.
+    //! the layout manager (and the views it owns) is wired up in init(); without it there are
+    //! no Latte views, so the geometry math runs against the bare screen rect. This is the
+    //! footprint-source's integration boundary that keeps the math reachable headlessly.
+    if (!m_layoutsManager) {
+        return {};
+    }
+
     const QScreen *screen = m_screenPool->screenForId(id);
 
     if (!screen) {
