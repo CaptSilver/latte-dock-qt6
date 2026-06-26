@@ -372,6 +372,13 @@ ecm_add_test(viewcontainertransitiontest.cpp
 target_include_directories(viewcontainertransitiontest PRIVATE ${CMAKE_SOURCE_DIR}/app)
 set_tests_properties(viewcontainertransitiontest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+ecm_add_test(activitysetalgebratest.cpp
+    TEST_NAME activitysetalgebratest
+    LINK_LIBRARIES Qt6::Test Qt6::Core
+)
+target_include_directories(activitysetalgebratest PRIVATE ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(activitysetalgebratest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 ecm_add_test(coverage/selftest/covselftest.cpp coverage/selftest/covself.cpp
     TEST_NAME covselftest
     LINK_LIBRARIES Qt6::Test
@@ -633,7 +640,7 @@ if(LATTE_COVERAGE)
         editmodehandleactiontest smartlauncheritemtest tasksbackendtest covselftest
         datatypestest commontoolstest layoutmanagertest settingsmodelstest wmtoolstest
         shortcutstest viewmodelstest screenpooltest coretoolstest generictoolstest
-        viewprioritytest addviewdecisiontest viewcontainertransitiontest
+        viewprioritytest addviewdecisiontest viewcontainertransitiontest activitysetalgebratest
         # GLOB-behavioral tests link the (now instrumented) app objects; listing them
         # gives their binaries the profile link flag and the export object set, which
         # is what makes the Corona-coupled core count toward whole-app coverage.
