@@ -588,7 +588,6 @@ void Positioner::immediateSyncGeometry()
             }
 
             validateTopBottomBorders(availableScreenRect, freeRegion);
-            m_lastAvailableScreenRegion = freeRegion;
         } else {
             m_view->effects()->setForceTopBorder(false);
             m_view->effects()->setForceBottomBorder(false);

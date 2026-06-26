@@ -84,6 +84,7 @@ private Q_SLOTS:
     void waylandInterface_windowFor_usesIndexFastPath();
     void genericLayout_viewTransitions_useTransitionHelpers();
     void hashLookupsAvoidKeysContains();
+    void positioner_dropsDeadAvailableRegionMember();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -345,6 +346,17 @@ void SourceGuardTest::genericLayout_viewTransitions_useTransitionHelpers()
     QVERIFY2(!cd.isEmpty(), "containmentDestroyed() not found");
     QVERIFY2(cd.contains(QStringLiteral("ViewContainerTransition::takeFromEither(m_latteViews,m_waitingLatteViews,containment)")),
              "containmentDestroyed must take from either map via the transition helper");
+}
+
+void SourceGuardTest::positioner_dropsDeadAvailableRegionMember()
+{
+    const QString h = readFile(QStringLiteral("app/view/positioner.h"));
+    const QString cpp = readFile(QStringLiteral("app/view/positioner.cpp"));
+    QVERIFY2(!h.isEmpty() && !cpp.isEmpty(), "positioner sources not found");
+    QVERIFY2(!h.contains(QStringLiteral("m_lastAvailableScreenRegion")),
+             "the dead m_lastAvailableScreenRegion member must be removed from the header");
+    QVERIFY2(!cpp.contains(QStringLiteral("m_lastAvailableScreenRegion")),
+             "the dead m_lastAvailableScreenRegion write must be removed from positioner.cpp");
 }
 
 void SourceGuardTest::hashLookupsAvoidKeysContains()
