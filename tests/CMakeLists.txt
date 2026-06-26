@@ -270,6 +270,13 @@ ecm_add_test(panelbackgroundtest.cpp
 target_compile_definitions(panelbackgroundtest PRIVATE
     PANEL_QML_PATH="${CMAKE_SOURCE_DIR}/shell/package/contents/views/Panel.qml")
 
+# panelbackgroundscan.cpp is the pure pixel-loop math extracted from PanelBackground.
+# Its header reaches only Qt, so the real source links directly with no KSvg/Plasma graph.
+ecm_add_test(panelbackgroundscantest.cpp ${CMAKE_SOURCE_DIR}/app/plasma/extended/panelbackgroundscan.cpp
+    TEST_NAME panelbackgroundscantest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui)
+target_include_directories(panelbackgroundscantest PRIVATE ${CMAKE_SOURCE_DIR}/app/plasma/extended)
+
 ecm_add_test(configcontrolstest.cpp
     TEST_NAME configcontrolstest
     LINK_LIBRARIES Qt6::Test Qt6::Qml Qt6::Gui
@@ -649,7 +656,7 @@ if(LATTE_COVERAGE)
         abstractlayouttest bindingrestoremodetest alternativescreateapplettest sourceguardtest
         activitiesinfotest activitystatescachetest syncedlaunchersclienttest layershellmappingtest
         windowinfowraptest windowindextest visibilityrevealtest coretypesenumtest appletzoomsizetest
-        panelbackgroundtest configcontrolstest contextmenudefaulttest
+        panelbackgroundtest panelbackgroundscantest configcontrolstest contextmenudefaulttest
         editmodehandleactiontest smartlauncheritemtest tasksbackendtest covselftest
         datatypestest commontoolstest layoutmanagertest settingsmodelstest wmtoolstest
         shortcutstest viewmodelstest screenpooltest coretoolstest generictoolstest

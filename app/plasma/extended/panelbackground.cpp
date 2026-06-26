@@ -6,6 +6,7 @@
 #include "panelbackground.h"
 
 // local
+#include "panelbackgroundscan.h"
 #include "theme.h"
 
 // Qt
@@ -120,32 +121,7 @@ void PanelBackground::updateMaxOpacity(KSvg::Svg *svg)
     }
 
     QImage center = svg->image(QSize(CENTERWIDTH, CENTERHEIGHT), element(svg, QStringLiteral("center")));
-
-    if (center.format() != QImage::Format_ARGB32_Premultiplied) {
-        center.convertTo(QImage::Format_ARGB32_Premultiplied);
-    }
-
-    float alphasum{0};
-
-    //! calculating the mid opacity (this is needed in order to handle Oxygen
-    //! that has different opacity levels in the same center element)
-    for (int row=0; row<2; ++row) {
-        QRgb *line = (QRgb *)center.scanLine(row);
-
-        for (int col=0; col<CENTERWIDTH; ++col) {
-            QRgb pixelData = line[col];
-            alphasum += ((float)qAlpha(pixelData)/(float)255);
-        }
-    }
-
-    m_maxOpacity = alphasum / (float)(2 * CENTERWIDTH);
-
-    //! minimum acceptable panel background opacity is 1%. Such is a case is when
-    //! panel background is fully transparent but it provides a border. In such case
-    //! previous approach was identifying as background max opacity 0% and in such case
-    //! all the upcoming calculations where returning a fully transparent plasma svg to the user
-    m_maxOpacity = qMax(0.01f, m_maxOpacity);
-
+    m_maxOpacity = PanelBackgroundScan::maxOpacityFromCenter(center);
     Q_EMIT maxOpacityChanged();
 }
 
@@ -170,327 +146,22 @@ void PanelBackground::updateRoundnessFromMask(KSvg::Svg *svg)
     }
 
     bool topLeftCorner = (m_location == Plasma::Types::BottomEdge || m_location == Plasma::Types::RightEdge);
-
     QString cornerId = (topLeftCorner ? QStringLiteral("mask-topleft") : QStringLiteral("mask-bottomright"));
     QImage corner = svg->image(svg->elementSize(cornerId).toSize(), cornerId);
-
-    if (corner.format() != QImage::Format_ARGB32_Premultiplied) {
-        corner.convertTo(QImage::Format_ARGB32_Premultiplied);
-    }
-
-    int baseRow = (topLeftCorner ? corner.height()-1 : 0);
-    int baseCol = (topLeftCorner ? corner.width()-1 : 0);
-
-    int baseLineLength = 0;
-    int roundnessLines = 0;
-
-    if (topLeftCorner) {
-        //! TOPLEFT corner
-        QRgb *line = (QRgb *)corner.scanLine(baseRow);
-        QRgb basePoint = line[baseCol];
-
-        QRgb *isRoundedLine = (QRgb *)corner.scanLine(0);
-        QRgb isRoundedPoint = isRoundedLine[0];
-
-        //! If there is roundness, if that point is not fully transparent then
-        //! there is no roundness
-        if (qAlpha(isRoundedPoint) == 0) {
-
-            if (qAlpha(basePoint) > 0) {
-                //! calculate the mask baseLine length
-                for(int c = baseCol; c>=0; --c) {
-                    QRgb *l = (QRgb *)corner.scanLine(baseRow);
-                    QRgb point = line[c];
-
-                    if (qAlpha(point) > 0) {
-                        baseLineLength ++;
-                    } else {
-                        break;
-                    }
-                }
-            }
-
-            qDebug() << " TOP LEFT CORNER MASK base line length :: " << baseLineLength;
-
-            if (baseLineLength>0) {
-                int headLimitR = baseRow;
-                int tailLimitR = baseRow;
-
-                for (int r = baseRow-1; r>=0; --r) {
-                    QRgb *line = (QRgb *)corner.scanLine(r);
-                    QRgb fpoint = line[baseCol];
-                    if (qAlpha(fpoint) == 0) {
-                        //! a line that is not part of the roundness because its first pixel is fully transparent
-                        break;
-                    }
-
-                    headLimitR = r;
-                }
-
-                int c = qMax(0, corner.width() - baseLineLength);
-
-                for (int r = baseRow-1; r>=0; --r) {
-                    QRgb *line = (QRgb *)corner.scanLine(r);
-                    QRgb point = line[c];
-
-                    if (qAlpha(point) != 255) {
-                        tailLimitR = r;
-                        break;
-                    }
-                }
-
-                //qDebug() << "   -> calculations: " << ", tail row :" <<  tailLimitR << " | head row: " << headLimitR;
-
-                if (headLimitR != tailLimitR) {
-                    roundnessLines = tailLimitR - headLimitR + 1;
-                }
-            }
-        }
-    } else {
-        //! BOTTOMRIGHT CORNER
-        //! it should be TOPRIGHT corner in that case
-        QRgb *line = (QRgb *)corner.scanLine(baseRow);
-        QRgb basePoint = line[baseCol];
-
-        QRgb *isRoundedLine = (QRgb *)corner.scanLine(corner.height()-1);
-        QRgb isRoundedPoint = isRoundedLine[corner.width()-1];
-
-        //! If there is roundness, if that point is not fully transparent then
-        //! there is no roundness
-        if (qAlpha(isRoundedPoint) == 0) {
-
-            if (qAlpha(basePoint) > 0) {
-                //! calculate the mask baseLine length
-                for(int c = baseCol; c<corner.width(); ++c) {
-                    QRgb *l = (QRgb *)corner.scanLine(baseRow);
-                    QRgb point = line[c];
-
-                    if (qAlpha(point) > 0) {
-                        baseLineLength ++;
-                    } else {
-                        break;
-                    }
-                }
-            }
-
-            qDebug() << " BOTTOM RIGHT CORNER MASK base line length :: " << baseLineLength;
-
-            if (baseLineLength>0) {
-                int headLimitR = 0;
-                int tailLimitR = 0;
-
-                for (int r = baseRow+1; r<corner.height(); ++r) {
-                    QRgb *line = (QRgb *)corner.scanLine(r);
-                    QRgb fpoint = line[baseCol];
-                    if (qAlpha(fpoint) == 0) {
-                        //! a line that is not part of the roundness because its first pixel is not transparent
-                        break;
-                    }
-
-                    headLimitR = r;
-                }
-
-                int c = baseLineLength - 1;
-
-                for (int r = baseRow+1; r<corner.height(); ++r) {
-                    QRgb *line = (QRgb *)corner.scanLine(r);
-                    QRgb point = line[c];
-
-                    if (qAlpha(point) != 255) {
-                        tailLimitR = r;
-                        break;
-                    }
-                }
-
-                //qDebug() << "   -> calculations: " << ", tail row :" <<  tailLimitR << " | head row: " << headLimitR;
-
-                if (headLimitR != tailLimitR) {
-                    roundnessLines = headLimitR - tailLimitR + 1;
-                }
-            }
-        }
-    }
-
-    m_roundness = roundnessLines;
+    m_roundness = PanelBackgroundScan::roundnessFromMaskCorner(corner, topLeftCorner);
     Q_EMIT roundnessChanged();
 }
 
-
-
 void PanelBackground::updateRoundnessFromShadows(KSvg::Svg *svg)
 {
-    //! 1.  Algorithm is choosing which corner shadow based on panel location
-    //! 2.  For that corner discovers the maxOpacity (most solid shadow point) and
-    //!     how pixels (distance) is to the most solid point, that is called [baseLineLength]
-    //! 3.  After [2] the algorigthm for each next line calculates the maxOpacity
-    //!     for that line and how many points are needed to reach there. If the points
-    //!     to reach the line max opacity are shorter than baseLineLength then that line
-    //!     is considered part of the roundness
-    //! 3.1 Avoid zig-zag cases such as the Air plasma theme case. When the shadow is not
-    //!     following a straight line until reaching the rounded part the algorithm is
-    //!     considering as valid roundness only the last part of the discovered roundness and
-    //!     ignores all the previous.
-    //! 4.  Calculating the lines that are shorter than the baseline provides
-    //!     the discovered roundness
-
     if (!svg) {
         return;
     }
 
     bool topLeftCorner = (m_location == Plasma::Types::BottomEdge || m_location == Plasma::Types::RightEdge);
-
     QString cornerId = (topLeftCorner ? QStringLiteral("shadow-topleft") : QStringLiteral("shadow-bottomright"));
     QImage corner = svg->image(svg->elementSize(cornerId).toSize(), cornerId);
-
-    if (corner.format() != QImage::Format_ARGB32_Premultiplied) {
-        corner.convertTo(QImage::Format_ARGB32_Premultiplied);
-    }
-
-    int baseRow = (topLeftCorner ? corner.height()-1 : 0);
-    int baseCol = (topLeftCorner ? corner.width()-1 : 0);
-
-    int baseLineLength = 0;
-    int roundnessLines = 0;
-
-    if (topLeftCorner) {
-        //! TOPLEFT corner
-        QRgb *line = (QRgb *)corner.scanLine(baseRow);
-        QRgb basePoint = line[baseCol];
-
-        int baseShadowMaxOpacity = 0;
-
-        if (qAlpha(basePoint) == 0) {
-            //! calculate the shadow maxOpacity in the base line
-            //! and number of pixels to reach there
-            for(int c = baseCol; c>=0; --c) {
-                QRgb *l = (QRgb *)corner.scanLine(baseRow);
-                QRgb point = line[c];
-
-                if (qAlpha(point) > baseShadowMaxOpacity) {
-                    baseShadowMaxOpacity = qAlpha(point);
-                    baseLineLength = (baseCol - c + 1);
-                }
-            }
-        }
-
-        qDebug() << " TOP LEFT CORNER SHADOW base line length :: " << baseLineLength << " with max shadow opacity : " << baseShadowMaxOpacity;
-
-        if (baseLineLength>0) {
-            for (int r = baseRow-1; r>=0; --r) {
-                QRgb *line = (QRgb *)corner.scanLine(r);
-                QRgb fpoint = line[baseCol];
-                if (qAlpha(fpoint) != 0) {
-                    //! a line that is not part of the roundness because its first pixel is not transparent
-                    break;
-                }
-
-                int transPixels = 0;
-                int rowMaxOpacity = 0;
-
-                for(int c = baseCol; c>=0; --c) {
-                    QRgb *l = (QRgb *)corner.scanLine(r);
-                    QRgb point = line[c];
-
-                    if (qAlpha(point) > rowMaxOpacity) {
-                        rowMaxOpacity = qAlpha(point);
-                        continue;
-                    }
-                }
-
-                for(int c = baseCol; c>=(baseCol - baseLineLength + 1); --c) {
-                    QRgb *l = (QRgb *)corner.scanLine(r);
-                    QRgb point = line[c];
-
-                    if (qAlpha(point) != rowMaxOpacity) {
-                        transPixels++;
-                        continue;
-                    }
-
-                    if (transPixels != baseLineLength) {
-                        roundnessLines++;
-                        break;
-                    }
-                }
-
-                if (transPixels == baseLineLength) {
-                    //! 3.1 avoid zig-zag shadows Air plasma theme case
-                    roundnessLines = 0;
-                }
-
-                //qDebug() << "    -> line: " << r << ", low transparency pixels :" << transPixels << " | " << " rowMaxOpacity :"<< rowMaxOpacity << ", " << (transPixels != baseLineLength);
-            }
-        }
-    } else {
-        //! BOTTOMRIGHT CORNER
-        //! it should be TOPRIGHT corner in that case
-        QRgb *line = (QRgb *)corner.scanLine(baseRow);
-        QRgb basePoint = line[baseCol];
-
-        int baseShadowMaxOpacity = 0;
-
-        if (qAlpha(basePoint) == 0) {
-            //! calculate the base line transparent pixels
-            for(int c = baseCol; c<corner.width(); ++c) {
-                QRgb *l = (QRgb *)corner.scanLine(baseRow);
-                QRgb point = line[c];
-
-                if (qAlpha(point) > baseShadowMaxOpacity) {
-                    baseShadowMaxOpacity = qAlpha(point);
-                    baseLineLength = c + 1;
-                }
-            }
-        }
-
-        qDebug() << " BOTTOM RIGHT CORNER SHADOW base line length :: " << baseLineLength << " with max shadow opacity : " << baseShadowMaxOpacity;
-
-        if (baseLineLength>0) {
-            for (int r = baseRow+1; r<corner.height(); ++r) {
-                QRgb *line = (QRgb *)corner.scanLine(r);
-                QRgb fpoint = line[baseCol];
-                if (qAlpha(fpoint) != 0) {
-                    //! a line that is not part of the roundness because its first pixel is not transparent
-                    break;
-                }
-
-                int transPixels = 0;
-                int rowMaxOpacity = 0;
-
-                for(int c = baseCol; c<corner.width(); ++c) {
-                    QRgb *l = (QRgb *)corner.scanLine(r);
-                    QRgb point = line[c];
-
-                    if (qAlpha(point) > rowMaxOpacity) {
-                        rowMaxOpacity = qAlpha(point);
-                        baseLineLength = c + 1;
-                    }
-                }
-
-                for(int c = baseCol; c<baseLineLength; ++c) {
-                    QRgb *l = (QRgb *)corner.scanLine(r);
-                    QRgb point = line[c];
-
-                    if (qAlpha(point) != rowMaxOpacity) {
-                        transPixels++;
-                        continue;
-                    }
-
-                    if (transPixels != baseLineLength) {
-                        roundnessLines++;
-                        break;
-                    }
-                }
-
-                if (transPixels == baseLineLength) {
-                    //! 3.1 avoid zig-zag shadows Air plasma theme case
-                    roundnessLines = 0;
-                }
-
-                //qDebug() << "    -> line: " << r << ", low transparency pixels :" << transPixels << " | " << " rowMaxOpacity :"<< rowMaxOpacity << ", " << (transPixels != baseLineLength);
-            }
-        }
-    }
-
-    m_roundness = roundnessLines;
+    m_roundness = PanelBackgroundScan::roundnessFromShadowCorner(corner, topLeftCorner);
     Q_EMIT roundnessChanged();
 }
 
@@ -585,10 +256,6 @@ void PanelBackground::updateShadow(KSvg::Svg *svg)
 
     QImage border = svg->image(svg->elementSize(borderId).toSize(), borderId);
 
-    if (border.format() != QImage::Format_ARGB32_Premultiplied) {
-        border.convertTo(QImage::Format_ARGB32_Premultiplied);
-    }
-
     //! find shadow size through, plasma theme
     int themeshadowsize{0};
 
@@ -602,61 +269,10 @@ void PanelBackground::updateShadow(KSvg::Svg *svg)
         themeshadowsize = svg->elementSize(element(svg, QStringLiteral("shadow-hint-top-margin"))).height();
     }
 
-    //! find shadow size through heuristics, elementsize provided through svg may not be valid because it could contain
-    //! many fully transparent pixels in its edges
-    int discoveredshadowsize{0};
-    int firstPixel{-1};
-    int lastPixel{-1};
-
-    if (horizontal) {
-        for(int y = 0; y<border.height(); ++y) {
-            QRgb *line = (QRgb *)border.scanLine(y);
-            QRgb pixel = line[0];
-
-            if (qAlpha(pixel) > 0) {
-                if (firstPixel < 0) {
-                    firstPixel = y;
-                    lastPixel = y;
-                } else {
-                    lastPixel = y;
-                }
-            }
-        }
-    } else {
-        QRgb *line = (QRgb *)border.scanLine(0);
-        for(int x = 0; x<border.width(); ++x) {
-            QRgb pixel = line[x];
-
-            if (qAlpha(pixel) > 0) {
-                if (firstPixel < 0) {
-                    firstPixel = x;
-                    lastPixel = x;
-                } else {
-                    lastPixel = x;
-                }
-            }
-        }
-    }
-
-    discoveredshadowsize = (firstPixel>=0 ? qMax(0, lastPixel - firstPixel + 1) : 0);
-
-    m_shadowSize = qMax(themeshadowsize, discoveredshadowsize);
-
-    //! find maximum shadow color applied
-    int maxopacity{0};
-
-    for (int r=0; r<border.height(); ++r) {
-        QRgb *line = (QRgb *)border.scanLine(r);
-
-        for(int c = 0; c<border.width(); ++c) {
-            QRgb pixel = line[c];
-
-            if (qAlpha(pixel) > maxopacity) {
-                maxopacity = qAlpha(pixel);
-                m_shadowColor = QColor(pixel);
-                m_shadowColor.setAlpha(qMin(255, maxopacity));
-            }
-        }
+    auto s = PanelBackgroundScan::shadowFromBorder(border, horizontal);
+    m_shadowSize = qMax(themeshadowsize, s.discoveredSize);
+    if (s.color.isValid()) {
+        m_shadowColor = s.color;
     }
 
     if (oldShadowSize != m_shadowSize) {

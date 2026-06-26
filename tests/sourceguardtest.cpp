@@ -179,8 +179,8 @@ void SourceGuardTest::synchronizer_switchToLayoutInMultipleMode_guardsEmptyActiv
 
 void SourceGuardTest::panelBackground_cornerLoopsUseExclusiveBound()
 {
-    const QString s = stripped(readFile(QStringLiteral("app/plasma/extended/panelbackground.cpp")));
-    QVERIFY2(!s.isEmpty(), "panelbackground.cpp not found");
+    const QString s = stripped(readFile(QStringLiteral("app/plasma/extended/panelbackgroundscan.cpp")));
+    QVERIFY2(!s.isEmpty(), "panelbackgroundscan.cpp not found");
     // scanLine(corner.height()) reads one row past the image buffer.
     QVERIFY2(!s.contains(QStringLiteral("r<=corner.height()")),
              "a corner roundness loop still uses the inclusive r<=corner.height() bound");
