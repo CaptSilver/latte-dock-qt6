@@ -9,6 +9,8 @@
 // local
 #include "abstractlayout.h"
 #include "addviewdecision.h"
+#include "iviewfactory.h"
+#include "realviewfactory.h"
 #include "validviewsmapbuilder.h"
 #include "viewpriority.h"
 #include "viewsyncplan.h"
@@ -21,7 +23,6 @@
 #include "../layouts/synchronizer.h"
 #include "../shortcuts/shortcutstracker.h"
 #include "../templates/templatesmanager.h"
-#include "../view/clonedview.h"
 #include "../view/originalview.h"
 #include "../view/positioner.h"
 #include "../view/view.h"
@@ -169,6 +170,26 @@ bool GenericLayout::hasCorona() const
 void GenericLayout::setCorona(Latte::Corona *corona)
 {
     m_corona = corona;
+}
+
+void GenericLayout::registerLatteView(Plasma::Containment *containment, Latte::View *view)
+{
+    m_latteViews[containment] = view;
+}
+
+void GenericLayout::setViewFactory(Layout::IViewFactory *factory)
+{
+    m_viewFactory = factory;
+}
+
+Layout::IViewFactory *GenericLayout::viewFactory()
+{
+    if (!m_viewFactory) {
+        //! production default; tests inject their own before addView
+        m_viewFactory = new Layout::RealViewFactory();
+    }
+
+    return m_viewFactory;
 }
 
 QString GenericLayout::background() const
@@ -841,44 +862,29 @@ void GenericLayout::addView(Plasma::Containment *containment)
 
     const bool byPassWM = decision.byPassWM;
 
-    Latte::View *latteView;
+    Layout::AddViewRequest request;
+    request.containment = containment;
+    request.viewdata = viewdata;
+    request.nextScreen = nextScreen;
+    request.byPassWM = byPassWM;
+    request.isCloned = viewdata.isCloned();
 
-    if (!viewdata.isCloned()) {
-        latteView = new Latte::OriginalView(m_corona, nextScreen, byPassWM);
-    } else {
-        auto view = viewForContainment((uint)viewdata.isClonedFrom);
+    if (request.isCloned) {
+        auto sourceView = viewForContainment((uint)viewdata.isClonedFrom);
 
-        if (!containsView(viewdata.isClonedFrom) || !view) {
+        if (!containsView(viewdata.isClonedFrom) || !sourceView) {
             qDebug().noquote() << "Adding View:" << viewdata.id << "- Clone did not find OriginalView and as such was stopped!!!";
             return;
         }
 
-        auto originalview = qobject_cast<Latte::OriginalView *>(view);
-        latteView = new Latte::ClonedView(m_corona, originalview, nextScreen, byPassWM);
+        request.clonedFrom = qobject_cast<Latte::OriginalView *>(sourceView);
     }
 
-    qDebug().noquote() << "Adding View:" << viewdata.id << "- Passed ALL checks !!!";
-    m_latteViews[containment] = latteView;
+    Latte::View *latteView = viewFactory()->createView(this, request);
 
-    //! Plasma 6 no longer restores the containment location from its config group,
-    //! so apply the stored dock edge before the view initializes; otherwise the
-    //! location stays Desktop and the panel geometry and form factor are wrong.
-    containment->setLocation(viewdata.edge);
-
-    latteView->init(containment);
-    latteView->setContainment(containment);
-    latteView->setLocation(viewdata.edge);
-    latteView->setLayout(this);
-
-    //! Qt 5.9 creates a crash for this in wayland, that is why the check is used
-    //! but on the other hand we need this for copy to work correctly and show
-    //! the copied dock under X11
-    //if (!KWindowSystem::isPlatformWayland()) {
-    latteView->setupWaylandLayerShell();
-    latteView->show();
-    //}
-
-    Q_EMIT viewsCountChanged();
+    if (latteView) {
+        Q_EMIT viewsCountChanged();
+    }
 }
 
 void GenericLayout::toggleHiddenState(QString viewName, QString screenName, Plasma::Types::Location edge)

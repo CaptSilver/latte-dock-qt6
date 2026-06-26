@@ -72,6 +72,7 @@ private Q_SLOTS:
     void synchronizer_switchToLayoutInMultipleMode_guardsEmptyActivities();
     void panelBackground_cornerLoopsUseExclusiveBound();
     void genericLayout_recreateView_usesQPointerAndAlwaysDequeues();
+    void addView_constructsViewsThroughFactory();
     void synchronizer_pauseLayout_guardsNullLayout();
     void factory_reload_keepsIdNameListsLockstep();
     void panelBackground_updateShadow_emitsNotify();
@@ -262,6 +263,23 @@ void SourceGuardTest::deadCompositingBranchesAreCollapsed()
         QVERIFY2(!s.contains(QStringLiteral("!true")),
                  qPrintable(QStringLiteral("%1 still has a !true dead branch").arg(QString::fromUtf8(f))));
     }
+}
+
+void SourceGuardTest::addView_constructsViewsThroughFactory()
+{
+    const QString addView = stripped(functionBody(readFile(QStringLiteral("app/layout/genericlayout.cpp")),
+                                     QStringLiteral("void GenericLayout::addView(Plasma::Containment *containment)")));
+    QVERIFY2(!addView.isEmpty(), "addView() not found");
+    QVERIFY2(!addView.contains(QStringLiteral("newLatte::OriginalView(")) && !addView.contains(QStringLiteral("newLatte::ClonedView(")),
+             "addView must not construct views inline; it routes through the view factory");
+    QVERIFY2(addView.contains(QStringLiteral("viewFactory()->createView(")),
+             "addView must create views via viewFactory()->createView()");
+
+    const QString factory = stripped(functionBody(readFile(QStringLiteral("app/layout/realviewfactory.cpp")),
+                                     QStringLiteral("Latte::View *RealViewFactory::createView(GenericLayout *layout, const AddViewRequest &request)")));
+    QVERIFY2(factory.contains(QStringLiteral("layout->registerLatteView(")), "factory must register the view (store-before-wire)");
+    QVERIFY2(factory.contains(QStringLiteral("->setupWaylandLayerShell();")) && factory.contains(QStringLiteral("->show();")),
+             "factory must wire the view (layer shell + show)");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

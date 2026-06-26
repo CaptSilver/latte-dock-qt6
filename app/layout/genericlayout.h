@@ -38,6 +38,8 @@ class View;
 namespace Latte {
 namespace Layout {
 
+class IViewFactory;
+
 class GenericLayout : public AbstractLayout
 {
     Q_OBJECT
@@ -56,6 +58,11 @@ public:
     void importToCorona();
     bool initContainments();
     void setCorona(Latte::Corona *corona);
+
+    //! store-before-wire hook used by the view factory
+    void registerLatteView(Plasma::Containment *containment, Latte::View *view);
+    void setViewFactory(IViewFactory *factory);
+    IViewFactory *viewFactory();
 
     bool isActive() const; //! is loaded and running
     virtual bool isCurrent();
@@ -164,6 +171,7 @@ protected:
 
 protected:
     Latte::Corona *m_corona{nullptr};
+    IViewFactory *m_viewFactory{nullptr};
 
     QList<Plasma::Containment *> m_containments;
 
