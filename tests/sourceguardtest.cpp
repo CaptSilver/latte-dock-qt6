@@ -101,6 +101,7 @@ private Q_SLOTS:
     void windowstracker_predicatesDelegate();
     void abstractWindowInterface_classifiersDelegate();
     void windowsTracker_updateExtraViewHints_delegatesToBucketing();
+    void windowsTracker_perEventIterationAvoidsKeysCopy();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -571,6 +572,19 @@ void SourceGuardTest::abstractWindowInterface_classifiersDelegate()
     const QString registerBody = functionBody(file, QStringLiteral("AbstractWindowInterface::registerIgnoredWindow"));
     QVERIFY2(registerBody.contains(QStringLiteral("Q_EMIT windowChanged")),
              "registerIgnoredWindow must still emit windowChanged");
+}
+
+void SourceGuardTest::windowsTracker_perEventIterationAvoidsKeysCopy()
+{
+    const QString file = readFile(QStringLiteral("app/wm/tracker/windowstracker.cpp"));
+
+    // m_views.keys() must no longer appear in the file
+    QVERIFY2(!file.contains(QStringLiteral("m_views.keys()")),
+             "m_views.keys() must not appear — use cbegin/cend iterators");
+
+    // m_windows.keys() must still appear (cleanupFaultyWindows legitimately uses it for remove-during-iteration)
+    QVERIFY2(file.contains(QStringLiteral("m_windows.keys()")),
+             "cleanupFaultyWindows must still use m_windows.keys()");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

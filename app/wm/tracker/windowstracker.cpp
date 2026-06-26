@@ -101,8 +101,9 @@ void Windows::init()
     connect(m_wm, &AbstractWindowInterface::activeWindowChanged, this, [&](WindowId wid) {
         //! for some reason this is needed in order to update properly activeness values
         //! when the active window changes the previous active windows should be also updated
-        for (const auto view : m_views.keys()) {
-            WindowId lastWinId = m_views[view]->lastActiveWindow()->currentWinId();
+        for (auto it = m_views.cbegin(); it != m_views.cend(); ++it) {
+            const auto view = it.key();
+            WindowId lastWinId = it.value()->lastActiveWindow()->currentWinId();
             if ((lastWinId) != wid && m_windows.contains(lastWinId)) {
                 m_windows[lastWinId] = m_wm->requestInfo(lastWinId);
             }
@@ -815,12 +816,12 @@ void Windows::cleanupFaultyWindows()
 
 void Windows::updateScreenGeometries()
 {
-    for (const auto view : m_views.keys()) {
-        if (m_views[view]->screenGeometry() != view->screenGeometry()) {
-            m_views[view]->setScreenGeometry(view->screenGeometry());
+    for (auto it = m_views.cbegin(); it != m_views.cend(); ++it) {
+        if (it.value()->screenGeometry() != it.key()->screenGeometry()) {
+            it.value()->setScreenGeometry(it.key()->screenGeometry());
 
-            if (m_views[view]->enabled()) {
-                updateHints(view);
+            if (it.value()->enabled()) {
+                updateHints(it.key());
             }
         }
     }
@@ -836,12 +837,12 @@ void Windows::updateAllHintsAfterTimer()
 
 void Windows::updateAllHints()
 {
-    for (const auto view : m_views.keys()) {
-        updateHints(view);
+    for (auto it = m_views.cbegin(); it != m_views.cend(); ++it) {
+        updateHints(it.key());
     }
 
-    for (const auto layout : m_layouts.keys()) {
-        updateHints(layout);
+    for (auto it = m_layouts.cbegin(); it != m_layouts.cend(); ++it) {
+        updateHints(it.key());
     }
 
     if (!m_extraViewHintsTimer.isActive()) {
