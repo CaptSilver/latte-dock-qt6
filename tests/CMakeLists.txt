@@ -307,6 +307,29 @@ target_include_directories(layoutmanagertest PRIVATE
     ${CMAKE_BINARY_DIR}/containment)
 set_tests_properties(layoutmanagertest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+ecm_add_test(viewprioritytest.cpp
+    ${CMAKE_SOURCE_DIR}/app/layout/viewpriority.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/viewdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/genericdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/activitydata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/appletdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layoutcolordata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layouticondata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/errorinformationdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/errordata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/generictable.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layoutdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/screendata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/viewstable.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layoutstable.cpp
+    ${CMAKE_SOURCE_DIR}/app/tools/commontools.cpp
+    TEST_NAME viewprioritytest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui KF6::ConfigCore Plasma::Plasma
+)
+target_include_directories(viewprioritytest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/data ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(viewprioritytest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 ecm_add_test(coverage/selftest/covselftest.cpp coverage/selftest/covself.cpp
     TEST_NAME covselftest
     LINK_LIBRARIES Qt6::Test
@@ -568,6 +591,7 @@ if(LATTE_COVERAGE)
         editmodehandleactiontest smartlauncheritemtest tasksbackendtest covselftest
         datatypestest commontoolstest layoutmanagertest settingsmodelstest wmtoolstest
         shortcutstest viewmodelstest screenpooltest coretoolstest generictoolstest
+        viewprioritytest
         # GLOB-behavioral tests link the (now instrumented) app objects; listing them
         # gives their binaries the profile link flag and the export object set, which
         # is what makes the Corona-coupled core count toward whole-app coverage.

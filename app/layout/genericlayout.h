@@ -189,10 +189,6 @@ private:
     bool explicitDockOccupyEdge(int screen, Plasma::Types::Location location) const;
     bool primaryDockOccupyEdge(Plasma::Types::Location location) const;
 
-    bool viewDataAtLowerEdgePriority(const Latte::Data::View &test, const Latte::Data::View &base) const;
-    bool viewDataAtLowerScreenPriority(const Latte::Data::View &test, const Latte::Data::View &base) const;
-    bool viewDataAtLowerStatePriority(const Latte::Data::View &test, const Latte::Data::View &base) const;
-
     bool mapContainsId(const ViewsMap *map, uint viewId) const;
     QString mapScreenName(const ViewsMap *map, uint viewId) const;
 
