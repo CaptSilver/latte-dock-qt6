@@ -50,6 +50,7 @@ class PlasmaShell;
 
 namespace Latte {
 class CentralLayout;
+class CoronaEngine;
 class ScreenPool;
 class GlobalShortcuts;
 class UniversalSettings;
@@ -211,7 +212,6 @@ private Q_SLOTS:
 private:
     void cleanConfig();
     void qmlRegisterTypes() const;
-    void setupWaylandIntegration();
 
     int primaryScreenId() const;
 
@@ -244,31 +244,15 @@ private:
 
     QTimer m_viewsScreenSyncTimer;
 
-    KActivities::Consumer *m_activitiesConsumer;
     QPointer<KAboutApplicationDialog> aboutDialog;
 
-    ScreenPool *m_screenPool{nullptr};
-    UniversalSettings *m_universalSettings{nullptr};
-    ViewSettingsFactory *m_viewSettingsFactory{nullptr};
-    GlobalShortcuts *m_globalShortcuts{nullptr};
-
-    Indicator::Factory *m_indicatorFactory{nullptr};
-    Layouts::Manager *m_layoutsManager{nullptr};
-    Templates::Manager *m_templatesManager{nullptr};
-
-    PlasmaExtended::ScreenGeometries *m_plasmaGeometries{nullptr};
-    PlasmaExtended::ScreenPool *m_plasmaScreenPool{nullptr};
-    PlasmaExtended::Theme *m_themeExtended{nullptr};
-
-    WindowSystem::AbstractWindowInterface *m_wm{nullptr};
-
-    PanelShadows *m_dialogShadows{nullptr};
-
-    KWayland::Client::PlasmaShell *m_waylandCorona{nullptr};
+    //! Owns the collaborators and their loading; the shell forwards to it.
+    CoronaEngine *m_engine{nullptr};
 
     friend class GlobalShortcuts;
     friend class Layouts::Manager;
     friend class Layouts::Storage;
+    friend class CoronaEngine;
 };
 
 }
