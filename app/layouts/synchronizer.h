@@ -169,7 +169,11 @@ private:
     Layouts::Manager *m_manager;
     KActivities::Controller *m_activitiesController;
 
-    //! one activity-manager query per sync, reused by the discovery passes
+    //! one activity-manager query per sync, reused by the discovery passes.
+    //! Only invalidated at the top of syncMultipleLayoutsToActivities(), so it is
+    //! fresh only within a sync; today's other readers all run during a sync or
+    //! ride centralLayoutsChanged (which a sync emits). A new reader off that path
+    //! must invalidate first or read ActivitiesInfo::states() directly.
     ActivitiesInfo::StatesCache m_activityStates{&ActivitiesInfo::list};
 };
 
