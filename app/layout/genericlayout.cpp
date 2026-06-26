@@ -8,6 +8,7 @@
 
 // local
 #include "abstractlayout.h"
+#include "addviewdecision.h"
 #include "validviewsmapbuilder.h"
 #include "viewpriority.h"
 #include "viewsyncplan.h"
@@ -819,34 +820,26 @@ void GenericLayout::addView(Plasma::Containment *containment)
                        << ", OnPrimary:" << viewdata.onPrimary
                        << ", Edge:" << viewdata.edge;
 
-    if (!viewdata.onPrimary && Layouts::Storage::isValid(viewdata.screen)) {
-        bool foundNextExplicitScreen{false};
+    Layout::AddViewInputs decisionInputs;
+    decisionInputs.onPrimary = viewdata.onPrimary;
+    decisionInputs.screenId = viewdata.screen;
+    decisionInputs.screenIdValid = Layouts::Storage::isValid(viewdata.screen);
+    decisionInputs.screenActive = decisionInputs.screenIdValid && m_corona->screenPool()->isScreenActive(viewdata.screen);
+    decisionInputs.visibilityMode = static_cast<Types::Visibility>(containment->config().readEntry("visibility", static_cast<int>(Types::DodgeActive)));
+    decisionInputs.configByPassWM = containment->config().readEntry("byPassWM", false);
 
-        if (m_corona->screenPool()->isScreenActive(viewdata.screen)) {
-            foundNextExplicitScreen = true;
-            nextScreen = m_corona->screenPool()->screenForId(viewdata.screen);
-        }
+    const Layout::AddViewDecision decision = Layout::AddViewDecisionMaker::decide(decisionInputs);
 
-        if (!foundNextExplicitScreen) {
-            qDebug().noquote() << "Adding View:" << viewdata.id << "- Rejected because Screen is not available :: " << nextScreenName;
-            return;
-        }
+    if (decision.reject) {
+        qDebug().noquote() << "Adding View:" << viewdata.id << "- Rejected because Screen is not available :: " << nextScreenName;
+        return;
     }
 
-    //! it is used to set the correct flag during the creation
-    //! of the window... This of course is also used during
-    //! recreations of the window between different visibility modes
-    auto mode = static_cast<Types::Visibility>(containment->config().readEntry("visibility", static_cast<int>(Types::DodgeActive)));
-    bool byPassWM{false};
-
-    if (mode == Types::AlwaysVisible
-            || mode == Types::WindowsGoBelow
-            || mode == Types::WindowsCanCover
-            || mode == Types::WindowsAlwaysCover) {
-        byPassWM = false;
-    } else {
-        byPassWM = containment->config().readEntry("byPassWM", false);
+    if (decision.useExplicitScreen) {
+        nextScreen = m_corona->screenPool()->screenForId(viewdata.screen);
     }
+
+    const bool byPassWM = decision.byPassWM;
 
     Latte::View *latteView;
 

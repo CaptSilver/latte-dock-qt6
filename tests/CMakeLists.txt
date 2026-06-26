@@ -346,6 +346,13 @@ ecm_add_test(viewsyncplantest.cpp ${CMAKE_SOURCE_DIR}/app/layout/viewsyncplan.cp
 target_include_directories(viewsyncplantest PRIVATE ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(viewsyncplantest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+ecm_add_test(addviewdecisiontest.cpp ${CMAKE_SOURCE_DIR}/app/layout/addviewdecision.cpp
+    TEST_NAME addviewdecisiontest
+    LINK_LIBRARIES Qt6::Test Qt6::Core
+)
+target_include_directories(addviewdecisiontest PRIVATE ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(addviewdecisiontest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 ecm_add_test(coverage/selftest/covselftest.cpp coverage/selftest/covself.cpp
     TEST_NAME covselftest
     LINK_LIBRARIES Qt6::Test
@@ -607,7 +614,7 @@ if(LATTE_COVERAGE)
         editmodehandleactiontest smartlauncheritemtest tasksbackendtest covselftest
         datatypestest commontoolstest layoutmanagertest settingsmodelstest wmtoolstest
         shortcutstest viewmodelstest screenpooltest coretoolstest generictoolstest
-        viewprioritytest
+        viewprioritytest addviewdecisiontest
         # GLOB-behavioral tests link the (now instrumented) app objects; listing them
         # gives their binaries the profile link flag and the export object set, which
         # is what makes the Corona-coupled core count toward whole-app coverage.
