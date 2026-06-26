@@ -188,6 +188,12 @@ ecm_add_test(windowinfowraptest.cpp ../app/wm/windowinfowrap.cpp
 )
 target_include_directories(windowinfowraptest PRIVATE ${CMAKE_BINARY_DIR}/app)
 
+ecm_add_test(windowindextest.cpp ../app/wm/windowinfowrap.cpp
+    TEST_NAME windowindextest
+    LINK_LIBRARIES Qt6::Test Qt6::Gui Plasma::Plasma
+)
+target_include_directories(windowindextest PRIVATE ${CMAKE_BINARY_DIR}/app)
+
 ecm_add_test(visibilityrevealtest.cpp
     TEST_NAME visibilityrevealtest
     LINK_LIBRARIES Qt6::Test Qt6::Gui Plasma::Plasma Plasma::PlasmaQuick
@@ -615,7 +621,7 @@ if(LATTE_COVERAGE)
         indicatorsknsrctest templatesnametest storageroundtriptest
         abstractlayouttest bindingrestoremodetest alternativescreateapplettest sourceguardtest
         activitiesinfotest activitystatescachetest syncedlaunchersclienttest layershellmappingtest
-        windowinfowraptest visibilityrevealtest coretypesenumtest appletzoomsizetest
+        windowinfowraptest windowindextest visibilityrevealtest coretypesenumtest appletzoomsizetest
         panelbackgroundtest configcontrolstest contextmenudefaulttest
         editmodehandleactiontest smartlauncheritemtest tasksbackendtest covselftest
         datatypestest commontoolstest layoutmanagertest settingsmodelstest wmtoolstest
