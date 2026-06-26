@@ -10,6 +10,7 @@
 // local
 #include "tracker/schemes.h"
 #include "tracker/windowstracker.h"
+#include "windowtrackingpredicates.h"
 #include "../lattecorona.h"
 #include "../data/activitiesinfo.h"
 
@@ -134,7 +135,7 @@ Tracker::Windows *AbstractWindowInterface::windowsTracker() const
 
 bool AbstractWindowInterface::isIgnored(const WindowId &wid) const
 {
-    return m_ignoredWindows.contains(wid);
+    return WindowTrackingPredicates::isIgnored(m_ignoredWindows, wid);
 }
 
 bool AbstractWindowInterface::isFullScreenWindow(const QRect &wGeometry) const
@@ -244,17 +245,17 @@ bool AbstractWindowInterface::isSidepanel(const QRect &wGeometry) const
 
 bool AbstractWindowInterface::hasBlockedTracking(const WindowId &wid) const
 {
-    return (!isWhitelistedWindow(wid) && (isRegisteredPlasmaIgnoredWindow(wid) || isIgnored(wid)));
+    return WindowTrackingPredicates::hasBlockedTracking(m_ignoredWindows, m_plasmaIgnoredWindows, m_whitelistedWindows, wid);
 }
 
 bool AbstractWindowInterface::isRegisteredPlasmaIgnoredWindow(const WindowId &wid) const
 {
-    return m_plasmaIgnoredWindows.contains(wid);
+    return WindowTrackingPredicates::isRegisteredPlasmaIgnored(m_plasmaIgnoredWindows, wid);
 }
 
 bool AbstractWindowInterface::isWhitelistedWindow(const WindowId &wid) const
 {
-    return m_whitelistedWindows.contains(wid);
+    return WindowTrackingPredicates::isWhitelisted(m_whitelistedWindows, wid);
 }
 
 bool AbstractWindowInterface::inCurrentDesktopActivity(const WindowInfoWrap &winfo)
@@ -304,7 +305,7 @@ void AbstractWindowInterface::onVirtualDesktopNavigationWrappingAroundChanged(bo
 //! Register Latte Ignored Windows in order to NOT be tracked
 void AbstractWindowInterface::registerIgnoredWindow(WindowId wid)
 {
-    if (!wid.isNull() && !m_ignoredWindows.contains(wid)) {
+    if (WindowTrackingPredicates::shouldRegister(m_ignoredWindows, wid)) {
         m_ignoredWindows.append(wid);
         Q_EMIT windowChanged(wid);
     }

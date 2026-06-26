@@ -98,6 +98,8 @@ private Q_SLOTS:
     void viewsController_rowForId_delegatesToHelper();
     void viewsController_pasteSelectedViews_delegatesToHelper();
     void storage_newUniqueIdsFile_delegatesToRemapper();
+    void windowstracker_predicatesDelegate();
+    void abstractWindowInterface_classifiersDelegate();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -510,6 +512,56 @@ void SourceGuardTest::storage_newUniqueIdsFile_delegatesToRemapper()
              "newUniqueIdsFile must not still contain the old inline containment availableId call");
     QVERIFY2(!s.contains(QStringLiteral("PROBLEMAPPEARED")),
              "newUniqueIdsFile must not still contain the old inline PROBLEM APPEARED 2-cycle fix");
+}
+
+void SourceGuardTest::windowstracker_predicatesDelegate()
+{
+    const QString src = readFile(QStringLiteral("app/wm/tracker/windowstracker.cpp"));
+
+    const QString intersectsBody = functionBody(src, QStringLiteral("Windows::intersects"));
+    QVERIFY2(intersectsBody.contains(QStringLiteral("WindowTrackingPredicates::")),
+             "intersects must delegate to WindowTrackingPredicates");
+
+    const QString isActiveBody = functionBody(src, QStringLiteral("Windows::isActive"));
+    QVERIFY2(isActiveBody.contains(QStringLiteral("WindowTrackingPredicates::")),
+             "isActive must delegate to WindowTrackingPredicates");
+
+    const QString isActiveScreenBody = functionBody(src, QStringLiteral("Windows::isActiveInViewScreen"));
+    QVERIFY2(isActiveScreenBody.contains(QStringLiteral("WindowTrackingPredicates::")),
+             "isActiveInViewScreen must delegate to WindowTrackingPredicates");
+    QVERIFY2(isActiveScreenBody.contains(QStringLiteral("devicePixelRatio")),
+             "isActiveInViewScreen must keep X11 DPR scaling");
+
+    const QString isMaxScreenBody = functionBody(src, QStringLiteral("Windows::isMaximizedInViewScreen"));
+    QVERIFY2(isMaxScreenBody.contains(QStringLiteral("WindowTrackingPredicates::")),
+             "isMaximizedInViewScreen must delegate to WindowTrackingPredicates");
+    QVERIFY2(isMaxScreenBody.contains(QStringLiteral("devicePixelRatio")),
+             "isMaximizedInViewScreen must keep X11 DPR scaling");
+}
+
+void SourceGuardTest::abstractWindowInterface_classifiersDelegate()
+{
+    const QString file = readFile(QStringLiteral("app/wm/abstractwindowinterface.cpp"));
+
+    const QString isIgnoredBody = functionBody(file, QStringLiteral("AbstractWindowInterface::isIgnored"));
+    QVERIFY2(isIgnoredBody.contains(QStringLiteral("WindowTrackingPredicates::")),
+             "isIgnored must delegate to WindowTrackingPredicates");
+
+    const QString plasmaBody = functionBody(file, QStringLiteral("AbstractWindowInterface::isRegisteredPlasmaIgnoredWindow"));
+    QVERIFY2(plasmaBody.contains(QStringLiteral("WindowTrackingPredicates::")),
+             "isRegisteredPlasmaIgnoredWindow must delegate to WindowTrackingPredicates");
+
+    const QString whiteBody = functionBody(file, QStringLiteral("AbstractWindowInterface::isWhitelistedWindow"));
+    QVERIFY2(whiteBody.contains(QStringLiteral("WindowTrackingPredicates::")),
+             "isWhitelistedWindow must delegate to WindowTrackingPredicates");
+
+    const QString blockedBody = functionBody(file, QStringLiteral("AbstractWindowInterface::hasBlockedTracking"));
+    QVERIFY2(blockedBody.contains(QStringLiteral("WindowTrackingPredicates::")),
+             "hasBlockedTracking must delegate to WindowTrackingPredicates");
+
+    const QString registerBody = functionBody(file, QStringLiteral("AbstractWindowInterface::registerIgnoredWindow"));
+    QVERIFY2(registerBody.contains(QStringLiteral("Q_EMIT windowChanged")),
+             "registerIgnoredWindow must still emit windowChanged");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

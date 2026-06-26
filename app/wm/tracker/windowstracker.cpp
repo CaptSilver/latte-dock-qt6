@@ -11,6 +11,7 @@
 #include "trackedlayoutinfo.h"
 #include "trackedviewinfo.h"
 #include "../abstractwindowinterface.h"
+#include "../windowtrackingpredicates.h"
 #include "../schemecolors.h"
 #include "../../apptypes.h"
 #include "../../lattecorona.h"
@@ -683,12 +684,13 @@ WindowInfoWrap Windows::infoFor(const WindowId &wid) const
 //! Windows Criteria Functions
 bool Windows::intersects(Latte::View *view, const WindowInfoWrap &winfo)
 {
-    return (!winfo.isMinimized() && !winfo.isShaded() && winfo.geometry().intersects(view->absoluteGeometry()));
+    QRect viewAbsoluteGeometry = view->absoluteGeometry();
+    return WindowTrackingPredicates::intersects(winfo, viewAbsoluteGeometry);
 }
 
 bool Windows::isActive(const WindowInfoWrap &winfo)
 {
-    return (winfo.isValid() && winfo.isActive() && !winfo.isMinimized());
+    return WindowTrackingPredicates::isActive(winfo);
 }
 
 bool Windows::isActiveInViewScreen(Latte::View *view, const WindowInfoWrap &winfo)
@@ -704,10 +706,7 @@ bool Windows::isActiveInViewScreen(Latte::View *view, const WindowInfoWrap &winf
                                qRound(screenGeometry.height() * factor));
     }
 
-    return (winfo.isValid()
-            && winfo.isActive()
-            && !winfo.isMinimized()
-            && screenGeometry.intersects(winfo.geometry()));
+    return WindowTrackingPredicates::isActiveInViewScreen(winfo, screenGeometry);
 }
 
 bool Windows::isMaximizedInViewScreen(Latte::View *view, const WindowInfoWrap &winfo)
@@ -725,11 +724,7 @@ bool Windows::isMaximizedInViewScreen(Latte::View *view, const WindowInfoWrap &w
 
     //! updated implementation to identify the screen that the maximized window is present
     //! in order to avoid: https://bugs.kde.org/show_bug.cgi?id=397700
-    return (winfo.isValid()
-            && !winfo.isMinimized()
-            && !winfo.isShaded()
-            && winfo.isMaximized()
-            && screenGeometry.intersects(winfo.geometry()));
+    return WindowTrackingPredicates::isMaximizedInViewScreen(winfo, screenGeometry);
 }
 
 bool Windows::isTouchingView(Latte::View *view, const WindowSystem::WindowInfoWrap &winfo)
