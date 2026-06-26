@@ -10,6 +10,7 @@
 #include "abstractlayout.h"
 #include "validviewsmapbuilder.h"
 #include "viewpriority.h"
+#include "viewsyncplan.h"
 #include "../apptypes.h"
 #include "../lattecorona.h"
 #include "../screenpool.h"
@@ -1297,39 +1298,58 @@ void GenericLayout::syncLatteViewsToScreens()
     qDebug() << "PRIMARY SCREEN :: " << prmScreenName;
     qDebug() << "LATTEVIEWS MAP :: " << viewsMap;
 
-    //! add views
+    //! gather the id sets the planner needs from live state
+    Layout::ViewSyncInputs syncInputs;
+    QHash<uint, Plasma::Containment *> containmentById;
+
     for (const auto containment : m_containments) {
-        if (!hasLatteView(containment) && mapContainsId(&viewsMap, containment->id())) {
-            qDebug() << "syncLatteViewsToScreens: view must be added... for containment:" << containment->id() << " at screen:" << mapScreenName(&viewsMap, containment->id());
-            addView(containment);
+        syncInputs.containmentIds << containment->id();
+        containmentById[containment->id()] = containment;
+        if (mapContainsId(&viewsMap, containment->id())) {
+            syncInputs.mapIds << containment->id();
         }
     }
-
-    //! remove views
-    QList<Plasma::Containment *> viewsToDelete;
 
     for (auto view : m_latteViews) {
         auto containment = view->containment();
-        if (containment && view->isOriginal() && !mapContainsId(&viewsMap, containment->id())) {
-            viewsToDelete << containment;
+        if (containment) {
+            syncInputs.viewedContainmentIds << containment->id();
+            if (view->isOriginal()) {
+                syncInputs.originalViewContainmentIds << containment->id();
+            }
         }
     }
 
-    while(!viewsToDelete.isEmpty()) {
-        auto containment = viewsToDelete.takeFirst();
+    const Layout::ViewSyncPlan syncPlan = Layout::ViewSyncPlanner::plan(syncInputs);
+
+    //! add views
+    for (const uint id : syncPlan.toAdd) {
+        qDebug() << "syncLatteViewsToScreens: view must be added... for containment:" << id << " at screen:" << mapScreenName(&viewsMap, id);
+        addView(containmentById.value(id));
+    }
+
+    //! remove views
+    for (const uint id : syncPlan.toRemove) {
+        Plasma::Containment *containment = containmentById.value(id);
+        if (!containment) {
+            continue;
+        }
         auto view = m_latteViews.take(containment);
-        qDebug() << "syncLatteViewsToScreens: view must be deleted... for containment:" << containment->id() << " at screen:" << view->positioner()->currentScreenName();
-        view->disconnectSensitiveSignals();
-        view->deleteLater();
+        if (view) {
+            qDebug() << "syncLatteViewsToScreens: view must be deleted... for containment:" << containment->id() << " at screen:" << view->positioner()->currentScreenName();
+            view->disconnectSensitiveSignals();
+            view->deleteLater();
+        }
     }
 
     //! reconsider views
-    for (const auto view : m_latteViews) {
-        if (view->containment() && view->isOriginal() && mapContainsId(&viewsMap, view->containment()->id())) {
+    for (const uint id : syncPlan.toReconsider) {
+        Plasma::Containment *containment = containmentById.value(id);
+        if (containment && m_latteViews.contains(containment)) {
             //! if the dock will not be deleted its a very good point to reconsider
             //! if the screen in which is running is the correct one
-            qDebug() << "syncLatteViewsToScreens: view must consider its screen... for containment:" << view->containment()->id() << " at screen:" << view->positioner()->currentScreenName();
-            view->reconsiderScreen();
+            qDebug() << "syncLatteViewsToScreens: view must consider its screen... for containment:" << containment->id() << " at screen:" << m_latteViews[containment]->positioner()->currentScreenName();
+            m_latteViews[containment]->reconsiderScreen();
         }
     }
 

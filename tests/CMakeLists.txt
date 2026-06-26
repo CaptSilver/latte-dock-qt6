@@ -339,6 +339,13 @@ target_include_directories(validviewsmapbuildertest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(validviewsmapbuildertest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+ecm_add_test(viewsyncplantest.cpp ${CMAKE_SOURCE_DIR}/app/layout/viewsyncplan.cpp
+    TEST_NAME viewsyncplantest
+    LINK_LIBRARIES Qt6::Test Qt6::Core
+)
+target_include_directories(viewsyncplantest PRIVATE ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(viewsyncplantest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 ecm_add_test(coverage/selftest/covselftest.cpp coverage/selftest/covself.cpp
     TEST_NAME covselftest
     LINK_LIBRARIES Qt6::Test
