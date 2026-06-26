@@ -91,6 +91,12 @@ private Q_SLOTS:
     void iconItem_setSource_routesThroughClassifier();
     void iconItem_setLastValidSourceName_usesFilter();
     void iconItem_isValid_delegatesToClassifier();
+    void layoutsController_uniqueLayoutName_delegatesToHelper();
+    void layoutsController_rowForId_delegatesToHelper();
+    void layoutsController_rowForName_delegatesToHelper();
+    void viewsController_uniqueViewName_delegatesToHelper();
+    void viewsController_rowForId_delegatesToHelper();
+    void viewsController_pasteSelectedViews_delegatesToHelper();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -433,6 +439,60 @@ void SourceGuardTest::iconItem_isValid_delegatesToClassifier()
     QVERIFY2(!s.isEmpty(), "isValid() not found");
     QVERIFY2(s.contains(QStringLiteral("IconSourceClassifier::isValid(")),
              "isValid must delegate to IconSourceClassifier::isValid()");
+}
+
+void SourceGuardTest::layoutsController_uniqueLayoutName_delegatesToHelper()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/settings/settingsdialog/layoutscontroller.cpp")),
+                                            QStringLiteral("QString Layouts::uniqueLayoutName(")));
+    QVERIFY2(!s.isEmpty(), "uniqueLayoutName() not found");
+    QVERIFY2(s.contains(QStringLiteral("Settings::uniqueName(")),
+             "uniqueLayoutName must delegate to Settings::uniqueName()");
+}
+
+void SourceGuardTest::layoutsController_rowForId_delegatesToHelper()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/settings/settingsdialog/layoutscontroller.cpp")),
+                                            QStringLiteral("int Layouts::rowForId(")));
+    QVERIFY2(!s.isEmpty(), "Layouts::rowForId() not found");
+    QVERIFY2(s.contains(QStringLiteral("Settings::rowForValue(")),
+             "Layouts::rowForId must delegate to Settings::rowForValue()");
+}
+
+void SourceGuardTest::layoutsController_rowForName_delegatesToHelper()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/settings/settingsdialog/layoutscontroller.cpp")),
+                                            QStringLiteral("int Layouts::rowForName(")));
+    QVERIFY2(!s.isEmpty(), "Layouts::rowForName() not found");
+    QVERIFY2(s.contains(QStringLiteral("Settings::rowForValue(")),
+             "Layouts::rowForName must delegate to Settings::rowForValue()");
+}
+
+void SourceGuardTest::viewsController_uniqueViewName_delegatesToHelper()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/settings/viewsdialog/viewscontroller.cpp")),
+                                            QStringLiteral("QString Views::uniqueViewName(")));
+    QVERIFY2(!s.isEmpty(), "Views::uniqueViewName() not found");
+    QVERIFY2(s.contains(QStringLiteral("Settings::uniqueName(")),
+             "uniqueViewName must delegate to Settings::uniqueName()");
+}
+
+void SourceGuardTest::viewsController_rowForId_delegatesToHelper()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/settings/viewsdialog/viewscontroller.cpp")),
+                                            QStringLiteral("int Views::rowForId(")));
+    QVERIFY2(!s.isEmpty(), "Views::rowForId() not found");
+    QVERIFY2(s.contains(QStringLiteral("Settings::rowForValue(")),
+             "Views::rowForId must delegate to Settings::rowForValue()");
+}
+
+void SourceGuardTest::viewsController_pasteSelectedViews_delegatesToHelper()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/settings/viewsdialog/viewscontroller.cpp")),
+                                            QStringLiteral("void Views::pasteSelectedViews()")));
+    QVERIFY2(!s.isEmpty(), "pasteSelectedViews() not found");
+    QVERIFY2(s.contains(QStringLiteral("Settings::pasteSkipsView(")),
+             "pasteSelectedViews must delegate the skip-decision to Settings::pasteSkipsView()");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

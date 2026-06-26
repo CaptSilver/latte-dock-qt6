@@ -14,6 +14,7 @@
 #include "delegates/backgrounddelegate.h"
 #include "delegates/checkboxdelegate.h"
 #include "delegates/layoutnamedelegate.h"
+#include "../settingsnameutils.h"
 #include "../universalsettings.h"
 #include "../generic/generictools.h"
 #include "../../screenpool.h"
@@ -438,28 +439,20 @@ void Layouts::applyColumnWidths(bool storeValues)
 
 int Layouts::rowForId(QString id) const
 {
+    QStringList ids;
     for (int i = 0; i < m_proxyModel->rowCount(); ++i) {
-        QString rowId = m_proxyModel->data(m_proxyModel->index(i, Model::Layouts::IDCOLUMN), Qt::UserRole).toString();
-
-        if (rowId == id) {
-            return i;
-        }
+        ids << m_proxyModel->data(m_proxyModel->index(i, Model::Layouts::IDCOLUMN), Qt::UserRole).toString();
     }
-
-    return -1;
+    return Settings::rowForValue(ids, id);
 }
 
 int Layouts::rowForName(QString layoutName) const
 {
+    QStringList names;
     for (int i = 0; i < m_proxyModel->rowCount(); ++i) {
-        QString rowName = m_proxyModel->data(m_proxyModel->index(i, Model::Layouts::NAMECOLUMN), Qt::UserRole).toString();
-
-        if (rowName == layoutName) {
-            return i;
-        }
+        names << m_proxyModel->data(m_proxyModel->index(i, Model::Layouts::NAMECOLUMN), Qt::UserRole).toString();
     }
-
-    return -1;
+    return Settings::rowForValue(names, layoutName);
 }
 
 QString Layouts::uniqueTempDirectory()
@@ -473,22 +466,7 @@ QString Layouts::uniqueTempDirectory()
 
 QString Layouts::uniqueLayoutName(QString name)
 {
-    int pos_ = name.lastIndexOf(QRegularExpression(QStringLiteral(" - [0-9]+")));
-
-    if (m_model->containsCurrentName(name) && pos_ > 0) {
-        name = name.left(pos_);
-    }
-
-    int i = 2;
-
-    QString namePart = name;
-
-    while (m_model->containsCurrentName(name)) {
-        name = namePart + QStringLiteral(" - ") + QString::number(i);
-        i++;
-    }
-
-    return name;
+    return Settings::uniqueName(name, m_model->currentLayoutsData().names());
 }
 
 void Layouts::removeSelected()

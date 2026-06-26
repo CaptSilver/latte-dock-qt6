@@ -16,6 +16,7 @@
 #include "delegates/singleoptiondelegate.h"
 #include "delegates/singletextdelegate.h"
 #include "../generic/generictools.h"
+#include "../settingsnameutils.h"
 #include "../settingsdialog/templateskeeper.h"
 #include "../../data/errorinformationdata.h"
 #include "../../layout/genericlayout.h"
@@ -158,15 +159,11 @@ int Views::selectedViewsCount() const
 
 int Views::rowForId(QString id) const
 {
+    QStringList ids;
     for (int i = 0; i < m_proxyModel->rowCount(); ++i) {
-        QString rowId = m_proxyModel->data(m_proxyModel->index(i, Model::Views::IDCOLUMN), Qt::UserRole).toString();
-
-        if (rowId == id) {
-            return i;
-        }
+        ids << m_proxyModel->data(m_proxyModel->index(i, Model::Views::IDCOLUMN), Qt::UserRole).toString();
     }
-
-    return -1;
+    return Settings::rowForValue(ids, id);
 }
 
 const Data::ViewsTable Views::selectedViewsCurrentData() const
@@ -302,12 +299,12 @@ void Views::pasteSelectedViews()
     bool hascurrentlayoutcuttedviews{false};
 
     for(int i=0; i<clipboardviews.rowCount(); ++i) {
-        if (clipboardviews[i].isMoveOrigin && clipboardviews[i].originLayout() == currentlayout.id) {
+        if (Settings::pasteSkipsView(clipboardviews[i].isMoveOrigin, clipboardviews[i].originLayout(), currentlayout.id)) {
             hascurrentlayoutcuttedviews = true;
             continue;
         }
 
-        if (clipboardviews[i].isMoveOrigin) {
+        if (Settings::pasteTurnsCutIntoMove(clipboardviews[i].isMoveOrigin)) {
             //! update cut flags only for real cutted view and not for copied one
             clipboardviews[i].isMoveOrigin = false;
             clipboardviews[i].isMoveDestination = true;
@@ -1004,23 +1001,7 @@ QString Views::uniqueViewName(QString name)
     if (name.isEmpty()) {
         return name;
     }
-
-    int pos_ = name.lastIndexOf(QRegularExpression(QStringLiteral(" - [0-9]+")));
-
-    if (m_model->containsCurrentName(name) && pos_ > 0) {
-        name = name.left(pos_);
-    }
-
-    int i = 2;
-
-    QString namePart = name;
-
-    while (m_model->containsCurrentName(name)) {
-        name = namePart + QStringLiteral(" - ") + QString::number(i);
-        i++;
-    }
-
-    return name;
+    return Settings::uniqueName(name, m_model->currentViewsData().names());
 }
 
 QString Views::visibleViewName(const QString &id) const
