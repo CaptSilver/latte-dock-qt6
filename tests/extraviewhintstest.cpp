@@ -82,7 +82,7 @@ void ExtraViewHintsTest::differentScreen_false()
     auto ver = makeVer(2, 1, false, true); // different screen
     QList<TrackedViewGeometry> views = { hor, ver };
     auto r = ExtraViewHints::bucketHorizontalTouchingBusyVertical(views, alwaysTouch);
-    QVERIFY(!r.contains(1) || r.value(1) == false);
+    QCOMPARE(r.value(1, false), false);
 }
 
 void ExtraViewHintsTest::notBusy_false()
@@ -91,7 +91,7 @@ void ExtraViewHintsTest::notBusy_false()
     auto ver = makeVer(2, 0, false, false); // not busy
     QList<TrackedViewGeometry> views = { hor, ver };
     auto r = ExtraViewHints::bucketHorizontalTouchingBusyVertical(views, alwaysTouch);
-    QVERIFY(!r.contains(1) || r.value(1) == false);
+    QCOMPARE(r.value(1, false), false);
 }
 
 void ExtraViewHintsTest::wrongLocationPairing_false()

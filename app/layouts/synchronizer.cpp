@@ -161,6 +161,7 @@ QStringList Synchronizer::runningActivities()
 
 QStringList Synchronizer::freeRunningActivities()
 {
+    // keys() list rather than the hash: at the handful of activities in play the O(n) lookup + alloc is negligible, and it keeps the helper storage-agnostic.
     return ActivitySetAlgebra::freeRunningActivities(runningActivities(), m_assignedLayouts.keys());
 }
 

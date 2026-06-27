@@ -164,11 +164,7 @@ void PanelBackgroundScanTest::maskRoundness_steppedCorner_returnsLineCount()
     // Rows 5..7: transparent
 
     int result = PanelBackgroundScan::roundnessFromMaskCorner(img, false);
-    // Instrument-first: accept whatever the ported loop produces for this grid.
-    // The critical constraint is it must NOT crash (no scanLine OOB).
-    QVERIFY2(result >= 0, qPrintable(QStringLiteral("roundnessFromMaskCorner returned negative: %1").arg(result)));
-    // Pin the actual value after first run. For the staircase above the expected is 4
-    // (headLimitR=1, tailLimitR=4 → 4-1+1=4).  Verified by instrument.
+    // For the staircase above: headLimitR=1, tailLimitR=4 → 4-1+1=4.
     QCOMPARE(result, 4);
 }
 
@@ -196,12 +192,8 @@ void PanelBackgroundScanTest::maskRoundness_topLeft_mirrorsBottomRight()
     // Row 2: col 7 transparent → head scan breaks
 
     int result = PanelBackgroundScan::roundnessFromMaskCorner(img, true);
-    QVERIFY2(result >= 0, qPrintable(QStringLiteral("topleft roundnessFromMaskCorner returned negative: %1").arg(result)));
-    // Expected 4 (tailLimitR=3, headLimitR=6 → 3-6+1 = ... wait, let the instrument pin it).
-    // For the topleft branch: roundnessLines = tailLimitR - headLimitR + 1
-    // headLimitR starts at baseRow=7, walks r=6,5,4,3 while col 7 opaque → headLimitR=3
-    // tailLimitR starts at baseRow=7, walks r=6: col c=qMax(0,8-6)=2, alpha=200 ≠ 255 → tailLimitR=6, break
-    // roundnessLines = 6 - 3 + 1 = 4.
+    // For the topleft branch: headLimitR walks r=6,5,4,3 while col 7 opaque → headLimitR=3;
+    // tailLimitR walks r=6: col 2 alpha=200 ≠ 255 → tailLimitR=6; roundnessLines = 6-3+1 = 4.
     QCOMPARE(result, 4);
 }
 

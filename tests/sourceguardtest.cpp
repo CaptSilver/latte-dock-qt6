@@ -619,9 +619,18 @@ void SourceGuardTest::windowsTracker_perEventIterationAvoidsKeysCopy()
     QVERIFY2(!file.contains(QStringLiteral("m_views.keys()")),
              "m_views.keys() must not appear — use cbegin/cend iterators");
 
-    // m_windows.keys() must still appear (cleanupFaultyWindows legitimately uses it for remove-during-iteration)
-    QVERIFY2(file.contains(QStringLiteral("m_windows.keys()")),
-             "cleanupFaultyWindows must still use m_windows.keys()");
+    // m_layouts.keys() must also not appear (the layouts loop was de-keyed too)
+    QVERIFY2(!file.contains(QStringLiteral("m_layouts.keys()")),
+             "m_layouts.keys() must not appear — use cbegin/cend iterators");
+
+    // m_windows.keys() must appear exactly once, inside cleanupFaultyWindows, which
+    // legitimately snapshots keys before removing entries during iteration.
+    const int count = file.count(QStringLiteral("m_windows.keys()"));
+    QVERIFY2(count == 1, "m_windows.keys() must appear exactly once in windowstracker.cpp");
+    const QString cleanup = stripped(functionBody(file, QStringLiteral("void Windows::cleanupFaultyWindows()")));
+    QVERIFY2(!cleanup.isEmpty(), "cleanupFaultyWindows() not found");
+    QVERIFY2(cleanup.contains(QStringLiteral("m_windows.keys()")),
+             "m_windows.keys() must be inside cleanupFaultyWindows");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

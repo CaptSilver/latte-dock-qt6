@@ -56,24 +56,15 @@ void IconSourceClassifierTest::classify_relativeToken_isSvgOrIconName()
 
 void IconSourceClassifierTest::classify_qimage_isImage()
 {
-    // INSTRUMENT-FIRST: pin the actual Qt6 canConvert<QIcon>() / canConvert<QImage>()
-    // behavior for a non-null QImage variant before asserting expected.
     QImage img(4, 4, QImage::Format_ARGB32);
     img.fill(Qt::red);
     QVariant v(img);
-    qDebug() << "QImage variant canConvert<QIcon>()=" << v.canConvert<QIcon>()
-             << "canConvert<QImage>()=" << v.canConvert<QImage>()
-             << "toString()=" << v.toString();
     QCOMPARE(classify(v), SourceKind::Image);
 }
 
 void IconSourceClassifierTest::classify_emptyVariant_isClear()
 {
-    // INSTRUMENT-FIRST: verify default QVariant canConvert<QIcon/QImage> in Qt6.
     QVariant empty;
-    qDebug() << "Default QVariant canConvert<QIcon>()=" << empty.canConvert<QIcon>()
-             << "canConvert<QImage>()=" << empty.canConvert<QImage>()
-             << "toString()=" << empty.toString();
     QCOMPARE(classify(empty), SourceKind::Clear);
 }
 
