@@ -9,6 +9,7 @@
 #include <coretypes.h>
 #include "effects.h"
 #include "originalview.h"
+#include "positionergeometry.h"
 #include "view.h"
 #include "visibilitymanager.h"
 #include "../lattecorona.h"
@@ -297,27 +298,15 @@ QString Positioner::currentScreenName() const
 
 WindowSystem::AbstractWindowInterface::Slide Positioner::slideLocation(Plasma::Types::Location location)
 {
-    auto slideedge = WindowSystem::AbstractWindowInterface::Slide::None;
-
     if (location == Plasma::Types::Floating && m_view->containment()) {
         location = m_view->containment()->location();
     }
 
     switch (location) {
     case Plasma::Types::TopEdge:
-        slideedge = WindowSystem::AbstractWindowInterface::Slide::Top;
-        break;
-
     case Plasma::Types::RightEdge:
-        slideedge = WindowSystem::AbstractWindowInterface::Slide::Right;
-        break;
-
     case Plasma::Types::BottomEdge:
-        slideedge = WindowSystem::AbstractWindowInterface::Slide::Bottom;
-        break;
-
     case Plasma::Types::LeftEdge:
-        slideedge = WindowSystem::AbstractWindowInterface::Slide::Left;
         break;
 
     default:
@@ -325,7 +314,10 @@ WindowSystem::AbstractWindowInterface::Slide Positioner::slideLocation(Plasma::T
         break;
     }
 
-    return slideedge;
+    // Cast is safe: SlideEdge and AbstractWindowInterface::Slide share the same
+    // enumerators in the same order (None, Top, Left, Bottom, Right).
+    return static_cast<WindowSystem::AbstractWindowInterface::Slide>(
+        PositionerGeometry::slideEdge(location));
 }
 
 void Positioner::slideOutDuringExit(Plasma::Types::Location location)
@@ -633,77 +625,21 @@ void Positioner::setCanvasGeometry(const QRect &geometry)
 }
 
 
-//! this is used mainly from vertical panels in order to
-//! to get the maximum geometry that can be used from the dock
-//! based on their alignment type and the location dock
+//! used mainly from vertical panels to get the maximum geometry the dock can
+//! occupy based on its alignment type and screen edge.
 QRect Positioner::maximumNormalGeometry(QRect screenGeometry)
 {
     QRect currentScrGeometry = screenGeometry.isEmpty() ? m_view->screen()->geometry() : screenGeometry;
-
-    int xPos = 0;
-    int yPos = currentScrGeometry.y();;
-    int maxHeight = currentScrGeometry.height();
-    int maxWidth = m_view->maxNormalThickness();
-    QRect maxGeometry;
-    maxGeometry.setRect(0, 0, maxWidth, maxHeight);
-
-    switch (m_view->location()) {
-    case Plasma::Types::LeftEdge:
-        xPos = currentScrGeometry.x();
-        maxGeometry.setRect(xPos, yPos, maxWidth, maxHeight);
-        break;
-
-    case Plasma::Types::RightEdge:
-        xPos = currentScrGeometry.right() - maxWidth + 1;
-        maxGeometry.setRect(xPos, yPos, maxWidth, maxHeight);
-        break;
-
-    default:
-        //! bypass clang warnings
-        break;
-    }
-
-    return maxGeometry;
+    return PositionerGeometry::maximumNormalGeometry(m_view->location(), m_view->maxNormalThickness(), currentScrGeometry);
 }
 
 void Positioner::validateTopBottomBorders(QRect availableScreenRect, QRegion availableScreenRegion)
 {
-    //! Check if the the top/bottom borders must be drawn also
-    int edgeMargin = qMax(1, m_view->screenEdgeMargin());
-
-    if (availableScreenRect.top() != m_view->screenGeometry().top()) {
-        //! check top border
-        int x = m_view->location() == Plasma::Types::LeftEdge ? m_view->screenGeometry().x() : m_view->screenGeometry().right() - edgeMargin + 1;
-        QRegion fitInRegion = QRect(x, availableScreenRect.y()-1, edgeMargin, 1);
-        QRegion subtracted = fitInRegion.subtracted(availableScreenRegion);
-
-        if (subtracted.isNull()) {
-            //!FitIn rectangle fits TOTALLY in the free screen region and as such
-            //!the top border should be drawn
-            m_view->effects()->setForceTopBorder(true);
-        } else {
-            m_view->effects()->setForceTopBorder(false);
-        }
-    } else {
-        m_view->effects()->setForceTopBorder(false);
-    }
-
-    if (availableScreenRect.bottom() != m_view->screenGeometry().bottom()) {
-        //! check top border
-        int x = m_view->location() == Plasma::Types::LeftEdge ? m_view->screenGeometry().x() : m_view->screenGeometry().right()  - edgeMargin + 1;
-        QRegion fitInRegion = QRect(x, availableScreenRect.bottom()+1, edgeMargin, 1);
-        QRegion subtracted = fitInRegion.subtracted(availableScreenRegion);
-
-        if (subtracted.isNull()) {
-            //!FitIn rectangle fits TOTALLY in the free screen region and as such
-            //!the BOTTOM border should be drawn
-            m_view->effects()->setForceBottomBorder(true);
-        } else {
-            m_view->effects()->setForceBottomBorder(false);
-        }
-    } else {
-        m_view->effects()->setForceBottomBorder(false);
-    }
+    PositionerGeometry::ForcedBorders fb = PositionerGeometry::forcedBorders(
+        m_view->location(), m_view->screenEdgeMargin(),
+        m_view->screenGeometry(), availableScreenRect, availableScreenRegion);
+    m_view->effects()->setForceTopBorder(fb.top);
+    m_view->effects()->setForceBottomBorder(fb.bottom);
 }
 
 void Positioner::updateCanvasGeometry(QRect availableScreenRect)
@@ -712,141 +648,31 @@ void Positioner::updateCanvasGeometry(QRect availableScreenRect)
         return;
     }
 
-    QRect canvas;
-    QRect screenGeometry{m_view->screen()->geometry()};
-    int thickness{m_view->editThickness()};
-
-    if (m_view->formFactor() == Plasma::Types::Vertical) {
-        canvas.setWidth(thickness);
-        canvas.setHeight(availableScreenRect.height());
-    } else {
-        canvas.setWidth(screenGeometry.width());
-        canvas.setHeight(thickness);
-    }
-
-    switch (m_view->location()) {
-    case Plasma::Types::TopEdge:
-        canvas.moveLeft(screenGeometry.x());
-        canvas.moveTop(screenGeometry.y());
-        break;
-
-    case Plasma::Types::BottomEdge:
-        canvas.moveLeft(screenGeometry.x());
-        canvas.moveTop(screenGeometry.bottom() - thickness + 1);
-        break;
-
-    case Plasma::Types::RightEdge:
-        canvas.moveLeft(screenGeometry.right() - thickness + 1);
-        canvas.moveTop(availableScreenRect.y());
-        break;
-
-    case Plasma::Types::LeftEdge:
-        canvas.moveLeft(availableScreenRect.x());
-        canvas.moveTop(availableScreenRect.y());
-        break;
-
-    default:
-        qWarning() << "wrong location, couldn't update the canvas config window geometry " << m_view->location();
-    }
-
+    QRect canvas = PositionerGeometry::canvasGeometry(
+        m_view->location(), m_view->formFactor(), m_view->editThickness(),
+        m_view->screen()->geometry(), availableScreenRect);
     setCanvasGeometry(canvas);
 }
 
 void Positioner::updatePosition(QRect availableScreenRect)
 {
-    QRect screenGeometry{availableScreenRect};
-    QPoint position;
-    position = {0, 0};
+    PositionerGeometry::ViewGeometryInputs in;
+    in.location = m_view->location();
+    in.formFactor = m_view->formFactor();
+    in.alignment = static_cast<Latte::Types::Alignment>(m_view->alignment());
+    in.behaveAsPlasmaPanel = m_view->behaveAsPlasmaPanel();
+    in.normalThickness = m_view->normalThickness();
+    in.innerShadow = m_view->effects()->innerShadow();
+    in.screenEdgeMargin = m_view->screenEdgeMargin();
+    in.viewWidth = m_view->width();
+    in.viewHeight = m_view->height();
+    in.maxLength = m_view->maxLength();
+    in.offset = m_view->offset();
+    in.slideOffset = m_slideOffset;
 
-    const auto gap = [&](int scr_length) -> int {
-        return static_cast<int>(scr_length * m_view->offset());
-    };
-    const auto gapCentered = [&](int scr_length) -> int {
-        return static_cast<int>(scr_length * ((1 - m_view->maxLength()) / 2) + scr_length * m_view->offset());
-    };
-    const auto gapReversed = [&](int scr_length) -> int {
-        return static_cast<int>(scr_length - (scr_length * m_view->maxLength()) - gap(scr_length));
-    };
+    QPoint position = PositionerGeometry::dockPosition(in, availableScreenRect);
 
-    int cleanThickness = m_view->normalThickness() - m_view->effects()->innerShadow();
-
-    int screenEdgeMargin = m_view->behaveAsPlasmaPanel() ? m_view->screenEdgeMargin() - qAbs(m_slideOffset) : 0;
-
-    switch (m_view->location()) {
-    case Plasma::Types::TopEdge:
-        if (m_view->behaveAsPlasmaPanel()) {
-            int y = screenGeometry.y() + screenEdgeMargin;
-
-            if (m_view->alignment() == Latte::Types::Left) {
-                position = {screenGeometry.x() + gap(screenGeometry.width()), y};
-            } else if (m_view->alignment() == Latte::Types::Right) {
-                position = {screenGeometry.x() + gapReversed(screenGeometry.width()) + 1, y};
-            } else {
-                position = {screenGeometry.x() + gapCentered(screenGeometry.width()), y};
-            }
-        } else {
-            position = {screenGeometry.x(), screenGeometry.y()};
-        }
-
-        break;
-
-    case Plasma::Types::BottomEdge:
-        if (m_view->behaveAsPlasmaPanel()) {
-            int y = screenGeometry.y() + screenGeometry.height() - cleanThickness - screenEdgeMargin;
-
-            if (m_view->alignment() == Latte::Types::Left) {
-                position = {screenGeometry.x() + gap(screenGeometry.width()), y};
-            } else if (m_view->alignment() == Latte::Types::Right) {
-                position = {screenGeometry.x() + gapReversed(screenGeometry.width()) + 1, y};
-            } else {
-                position = {screenGeometry.x() + gapCentered(screenGeometry.width()), y};
-            }
-        } else {
-            position = {screenGeometry.x(), screenGeometry.y() + screenGeometry.height() - m_view->height()};
-        }
-
-        break;
-
-    case Plasma::Types::RightEdge:
-        if (m_view->behaveAsPlasmaPanel()) {
-            int x = availableScreenRect.right() - cleanThickness + 1 - screenEdgeMargin;
-
-            if (m_view->alignment() == Latte::Types::Top) {
-                position = {x, availableScreenRect.y() + gap(availableScreenRect.height())};
-            } else if (m_view->alignment() == Latte::Types::Bottom) {
-                position = {x, availableScreenRect.y() + gapReversed(availableScreenRect.height()) + 1};
-            } else {
-                position = {x, availableScreenRect.y() + gapCentered(availableScreenRect.height())};
-            }
-        } else {
-            position = {availableScreenRect.right() - m_view->width() + 1, availableScreenRect.y()};
-        }
-
-        break;
-
-    case Plasma::Types::LeftEdge:
-        if (m_view->behaveAsPlasmaPanel()) {
-            int x = availableScreenRect.x() + screenEdgeMargin;
-
-            if (m_view->alignment() == Latte::Types::Top) {
-                position = {x, availableScreenRect.y() + gap(availableScreenRect.height())};
-            } else if (m_view->alignment() == Latte::Types::Bottom) {
-                position = {x, availableScreenRect.y() + gapReversed(availableScreenRect.height()) + 1};
-            } else {
-                position = {x, availableScreenRect.y() + gapCentered(availableScreenRect.height())};
-            }
-        } else {
-            position = {availableScreenRect.x(), availableScreenRect.y()};
-        }
-
-        break;
-
-    default:
-        qWarning() << "wrong location, couldn't update the panel position"
-                   << m_view->location();
-    }
-
-    if (m_slideOffset == 0 || m_nextScreenEdge != Plasma::Types::Floating /*exactly after relocating and changing screen edge*/) {
+    if (m_slideOffset == 0 || m_nextScreenEdge != Plasma::Types::Floating) {
         //! update valid geometry in normal positioning
         m_validGeometry.moveTopLeft(position);
     } else {
@@ -861,9 +687,6 @@ void Positioner::updatePosition(QRect availableScreenRect)
     }
 
     m_view->setPosition(position);
-
-    //! Under wlr-layer-shell the surface position is governed by anchors + exclusive zone, not by an
-    //! explicit setPosition() on a plasma-shell surface, so QWindow::setPosition() above is enough.
 }
 
 int Positioner::slideOffset() const
@@ -884,25 +707,14 @@ void Positioner::setSlideOffset(int offset)
 
 void Positioner::resizeWindow(QRect availableScreenRect)
 {
-    QSize screenSize = m_view->screen()->size();
-    QSize size = (m_view->formFactor() == Plasma::Types::Vertical) ? QSize(m_view->maxThickness(), availableScreenRect.height()) : QSize(screenSize.width(), m_view->maxThickness());
+    PositionerGeometry::ViewGeometryInputs in;
+    in.formFactor = m_view->formFactor();
+    in.behaveAsPlasmaPanel = m_view->behaveAsPlasmaPanel();
+    in.maxThickness = m_view->maxThickness();
+    in.normalThickness = m_view->normalThickness();
+    in.maxLength = m_view->maxLength();
 
-    if (m_view->formFactor() == Plasma::Types::Vertical) {
-        //qDebug() << "MAXIMUM RECT :: " << maximumRect << " - AVAILABLE RECT :: " << availableRect;
-        if (m_view->behaveAsPlasmaPanel()) {
-            size.setWidth(m_view->normalThickness());
-            size.setHeight(static_cast<int>(m_view->maxLength() * availableScreenRect.height()));
-        }
-    } else {
-        if (m_view->behaveAsPlasmaPanel()) {
-            size.setWidth(static_cast<int>(m_view->maxLength() * screenSize.width()));
-            size.setHeight(m_view->normalThickness());
-        }
-    }
-
-    //! protect from invalid window size under wayland
-    size.setWidth(qMax(1, size.width()));
-    size.setHeight(qMax(1, size.height()));
+    QSize size = PositionerGeometry::windowSize(in, availableScreenRect, m_view->screen()->size());
 
     m_validGeometry.setSize(size);
 

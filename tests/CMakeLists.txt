@@ -97,6 +97,16 @@ ecm_add_test(screengeometrycalculatortest.cpp ${CMAKE_SOURCE_DIR}/app/screengeom
 target_include_directories(screengeometrycalculatortest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
 
+# positionergeometry.h is the pure dock-window sizing/placement math lifted out
+# of Positioner. Header-only: it reaches Qt, Plasma::Types, Latte::Types, and
+# AbstractWindowInterface::Slide, but nothing from the View/Corona graph.
+ecm_add_test(positionergeometrytest.cpp
+    TEST_NAME positionergeometrytest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Plasma::Plasma)
+target_include_directories(positionergeometrytest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/view ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(positionergeometrytest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 # storageidremapper.cpp is the pure id-assignment algorithm lifted out of
 # Storage::newUniqueIdsFile. Header reaches only Qt, so the real source links
 # directly with no KConfig/Corona graph.
@@ -685,6 +695,7 @@ if(LATTE_COVERAGE)
         shortcutstest viewmodelstest screenpooltest coretoolstest generictoolstest
         viewprioritytest addviewdecisiontest viewcontainertransitiontest activitysetalgebratest
         settingsnameutilstest iconsourceclassifiertest windowtrackingpredicatestest extraviewhintstest
+        positionergeometrytest
         # GLOB-behavioral tests link the (now instrumented) app objects; listing them
         # gives their binaries the profile link flag and the export object set, which
         # is what makes the Corona-coupled core count toward whole-app coverage.

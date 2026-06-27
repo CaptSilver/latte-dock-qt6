@@ -85,6 +85,7 @@ private Q_SLOTS:
     void genericLayout_viewTransitions_useTransitionHelpers();
     void hashLookupsAvoidKeysContains();
     void positioner_dropsDeadAvailableRegionMember();
+    void positioner_geometryMethodsDelegateToPureUnit();
     void synchronizer_freeActivities_delegatesToHelper();
     void synchronizer_freeRunningActivities_delegatesToHelper();
     void synchronizer_validActivities_delegatesToHelper();
@@ -386,6 +387,42 @@ void SourceGuardTest::hashLookupsAvoidKeysContains()
     QVERIFY2(!gl.isEmpty(), "genericlayout.cpp not found");
     QVERIFY2(!gl.contains(QStringLiteral("keys().contains(")),
              "genericlayout.cpp must use contains(), not keys().contains()");
+}
+
+void SourceGuardTest::positioner_geometryMethodsDelegateToPureUnit()
+{
+    const QString cpp = readFile(QStringLiteral("app/view/positioner.cpp"));
+    QVERIFY2(!cpp.isEmpty(), "positioner.cpp not found");
+
+    // updatePosition must call dockPosition
+    const QString updatePos = stripped(functionBody(cpp, QStringLiteral("void Positioner::updatePosition")));
+    QVERIFY2(updatePos.contains(QStringLiteral("PositionerGeometry::dockPosition(")),
+             "updatePosition must delegate to PositionerGeometry::dockPosition");
+
+    // resizeWindow must call windowSize
+    const QString resize = stripped(functionBody(cpp, QStringLiteral("void Positioner::resizeWindow")));
+    QVERIFY2(resize.contains(QStringLiteral("PositionerGeometry::windowSize(")),
+             "resizeWindow must delegate to PositionerGeometry::windowSize");
+
+    // maximumNormalGeometry must call the pure function
+    const QString maxNorm = stripped(functionBody(cpp, QStringLiteral("QRect Positioner::maximumNormalGeometry")));
+    QVERIFY2(maxNorm.contains(QStringLiteral("PositionerGeometry::maximumNormalGeometry(")),
+             "maximumNormalGeometry must delegate to PositionerGeometry::maximumNormalGeometry");
+
+    // updateCanvasGeometry must call canvasGeometry
+    const QString canvas = stripped(functionBody(cpp, QStringLiteral("void Positioner::updateCanvasGeometry")));
+    QVERIFY2(canvas.contains(QStringLiteral("PositionerGeometry::canvasGeometry(")),
+             "updateCanvasGeometry must delegate to PositionerGeometry::canvasGeometry");
+
+    // slideLocation must call slideEdge (via static_cast of PositionerGeometry::slideEdge)
+    const QString slide = stripped(functionBody(cpp, QStringLiteral("WindowSystem::AbstractWindowInterface::Slide Positioner::slideLocation")));
+    QVERIFY2(slide.contains(QStringLiteral("PositionerGeometry::slideEdge(")),
+             "slideLocation must delegate to PositionerGeometry::slideEdge");
+
+    // validateTopBottomBorders must call forcedBorders
+    const QString borders = stripped(functionBody(cpp, QStringLiteral("void Positioner::validateTopBottomBorders")));
+    QVERIFY2(borders.contains(QStringLiteral("PositionerGeometry::forcedBorders(")),
+             "validateTopBottomBorders must delegate to PositionerGeometry::forcedBorders");
 }
 
 void SourceGuardTest::synchronizer_freeActivities_delegatesToHelper()
