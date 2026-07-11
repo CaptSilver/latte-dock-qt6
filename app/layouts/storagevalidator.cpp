@@ -79,6 +79,54 @@ bool differentAppletsWithSameId(const LayoutModel &model, const MetadataResolver
     return !error.information.isEmpty();
 }
 
+bool appletsAndContainmentsWithSameId(const LayoutModel &model, const MetadataResolver &resolve, Data::Warning &warning)
+{
+    QStringList registeredcontainments;
+    QStringList conflicted;
+
+    for (const auto &c : model.containments) {
+        if (registeredcontainments.contains(c.id)) {
+            continue;
+        }
+        registeredcontainments << c.id;
+    }
+
+    for (const auto &c : model.containments) {
+        for (const auto &a : c.applets) {
+            if (!registeredcontainments.contains(a.id)) {
+                continue;
+            } else if (!conflicted.contains(a.id)) {
+                conflicted << a.id;
+            }
+        }
+    }
+
+    for (const auto &c : model.containments) {
+        if (conflicted.contains(c.id)) {
+            Data::WarningInformation warninginfo;
+            warninginfo.id = QString::number(warning.information.rowCount());
+            warninginfo.containment = resolve(c.pluginId);
+            warninginfo.containment.storageId = c.id;
+            warning.information << warninginfo;
+        }
+
+        for (const auto &a : c.applets) {
+            if (!conflicted.contains(a.id)) {
+                continue;
+            }
+            Data::WarningInformation warninginfo;
+            warninginfo.id = QString::number(warning.information.rowCount());
+            warninginfo.containment = resolve(c.pluginId);
+            warninginfo.containment.storageId = c.id;
+            warninginfo.applet = resolve(a.pluginId);
+            warninginfo.applet.storageId = a.id;
+            warning.information << warninginfo;
+        }
+    }
+
+    return !warning.information.isEmpty();
+}
+
 }
 }
 }

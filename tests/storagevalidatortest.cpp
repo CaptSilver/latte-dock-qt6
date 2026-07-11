@@ -56,6 +56,7 @@ private Q_SLOTS:
     void initTestCase();
     void buildFromConfigParsesContainmentsAppletsAndSubIds();
     void differentAppletsWithSameIdFlagsDuplicates();
+    void appletCollidingWithContainmentIdFlagged();
 };
 
 void StorageValidatorTest::initTestCase()
@@ -175,6 +176,45 @@ void StorageValidatorTest::differentAppletsWithSameIdFlagsDuplicates()
     Latte::Data::Error none;
     QVERIFY(!StorageValidator::differentAppletsWithSameId(clean, resolver(), none));
     QVERIFY(none.information.isEmpty());
+}
+
+void StorageValidatorTest::appletCollidingWithContainmentIdFlagged()
+{
+    // Containment id "2" also appears as an applet id under containment "1".
+    StorageValidator::LayoutModel model;
+
+    StorageValidator::ContainmentModel c1;
+    c1.id = QStringLiteral("1");
+    c1.pluginId = QStringLiteral("org.kde.latte.containment");
+    c1.applets << StorageValidator::AppletModel{QStringLiteral("2"), QStringLiteral("plasmoidA"), -1};
+
+    StorageValidator::ContainmentModel c2;
+    c2.id = QStringLiteral("2");
+    c2.pluginId = QStringLiteral("org.kde.plasma.private.systemtray");
+
+    model.containments << c1 << c2;
+
+    Latte::Data::Warning warning;
+    const bool found = StorageValidator::appletsAndContainmentsWithSameId(model, resolver(), warning);
+
+    QVERIFY(found);
+    // One row for the applet "2", one for the containment "2" (containment first
+    // in the second loop iteration order): the containment row carries no applet.
+    QVERIFY(warning.information.rowCount() >= 2);
+
+    bool sawContainmentOnly = false;
+    bool sawAppletRow = false;
+    for (int i = 0; i < warning.information.rowCount(); ++i) {
+        const auto &row = warning.information[(uint)i];
+        if (row.containment.storageId == QStringLiteral("2") && row.applet.storageId.isEmpty()) {
+            sawContainmentOnly = true;
+        }
+        if (row.applet.storageId == QStringLiteral("2")) {
+            sawAppletRow = true;
+        }
+    }
+    QVERIFY(sawContainmentOnly);
+    QVERIFY(sawAppletRow);
 }
 
 QTEST_MAIN(StorageValidatorTest)
