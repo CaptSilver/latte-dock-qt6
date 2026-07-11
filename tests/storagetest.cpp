@@ -104,6 +104,9 @@ private Q_SLOTS:
     void importContainmentsCopiesGroups();
     void metadataFallsBackToPluginId();
     void removeAllClonedViewsDropsClones();
+    void newUniqueIdsFileRemapsInactiveLayout();
+    void storedViewInactiveWritesTempFile();
+    void viewsFromInactiveLayoutDelegatesToFile();
 };
 
 void StorageTest::initTestCase()
@@ -537,6 +540,64 @@ void StorageTest::removeAllClonedViewsDropsClones()
     KConfigGroup conts = fresh.group(QStringLiteral("Containments"));
     QVERIFY(conts.hasGroup(QStringLiteral("1")));   // original kept
     QVERIFY(!conts.hasGroup(QStringLiteral("10"))); // clone removed
+}
+
+void StorageTest::newUniqueIdsFileRemapsInactiveLayout()
+{
+    // Destination inactive layout already owns id "1"; the origin template also uses "1".
+    // newView() calls newUniqueIdsFile() internally and imports the remapped containments
+    // into the destination file. The returned view must carry a fresh id (not "1"),
+    // and the destination file must now contain a second Latte containment with that id.
+    const QString destPath = writeLayout(QStringLiteral("dest.latte"));
+    Latte::CentralLayout dest(nullptr, destPath, QStringLiteral("dest"));
+    QVERIFY(!dest.isActive());
+
+    const QString originPath = writeLayout(QStringLiteral("origin.latte"));
+
+    Latte::Data::View nextViewData;
+    nextViewData.setState(Latte::Data::View::IsCreated, originPath);
+
+    Latte::Data::View added = Storage::self()->newView(&dest, nextViewData);
+    QVERIFY(added.isValid());
+    QVERIFY(!added.id.isEmpty());
+    QVERIFY(added.id != QStringLiteral("1")); // remapped away from the collision
+
+    // The destination file now holds two Latte views (the original "1" and the remapped one).
+    Latte::Data::ViewsTable table = Storage::self()->views(destPath);
+    QCOMPARE(table.rowCount(), 2);
+    QVERIFY(table.containsId(QStringLiteral("1")));
+    QVERIFY(table.containsId(added.id));
+}
+
+void StorageTest::storedViewInactiveWritesTempFile()
+{
+    const QString path = writeLayout(QStringLiteral("storedview.latte"));
+    Latte::CentralLayout layout(nullptr, path, QStringLiteral("storedview"));
+    QVERIFY(!layout.isActive());
+
+    const QString stored = Storage::self()->storedView(&layout, 1);
+    QVERIFY(!stored.isEmpty());
+    QVERIFY(QFile(stored).exists());
+
+    // The stored file carries the view containment (1) and its subcontainment (99).
+    KConfig cfg(stored);
+    KConfigGroup conts = cfg.group(QStringLiteral("Containments"));
+    QVERIFY(conts.hasGroup(QStringLiteral("1")));
+    QVERIFY(conts.hasGroup(QStringLiteral("99")));
+
+    // A non-existent containment id yields an empty path.
+    QVERIFY(Storage::self()->storedView(&layout, 4242).isEmpty());
+}
+
+void StorageTest::viewsFromInactiveLayoutDelegatesToFile()
+{
+    const QString path = writeLayout(QStringLiteral("viewslayout.latte"));
+    Latte::CentralLayout layout(nullptr, path, QStringLiteral("viewslayout"));
+    QVERIFY(!layout.isActive());
+
+    Latte::Data::ViewsTable table = Storage::self()->views(&layout);
+    QCOMPARE(table.rowCount(), 1);
+    QVERIFY(table.containsId(QStringLiteral("1")));
 }
 
 QTEST_MAIN(StorageTest)
