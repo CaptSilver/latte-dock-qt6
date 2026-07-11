@@ -142,6 +142,7 @@ private:
     //! model builders
     StorageValidator::LayoutModel modelFromLive(const Layout::GenericLayout *layout);
     StorageValidator::LayoutModel modelFromFile(const QString &file);
+
 private:
     QTemporaryDir m_storageTmpDir;
 

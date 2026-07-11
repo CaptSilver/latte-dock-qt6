@@ -836,7 +836,7 @@ StorageValidator::LayoutModel Storage::modelFromLive(const Layout::GenericLayout
 
 bool Storage::hasDifferentAppletsWithSameId(const Layout::GenericLayout *layout, Data::Error &error)
 {
-    if (!layout  || layout->file().isEmpty() || !QFile(layout->file()).exists()) {
+    if (!layout || layout->file().isEmpty() || !QFile(layout->file()).exists()) {
         return false;
     }
 
