@@ -1,1317 +1,1467 @@
 {
-  "overall_coverage": 0.1797404669141332,
+  "overall_coverage": 0.21946057087566523,
   "by_file": {
-    "/home/bazzite/build/latte-dock/app/alternativeshelper.cpp": {
+    "/var/home/bazzite/build/latte-dock/app/alternativeshelper.cpp": {
       "lines_hit": 0,
       "lines_total": 58,
       "coverage": 0.0
     },
-    "/home/bazzite/build/latte-dock/app/alternativeshelper.h": {
+    "/var/home/bazzite/build/latte-dock/app/alternativeshelper.h": {
       "lines_hit": 0,
       "lines_total": 0,
       "coverage": 1.0
     },
-    "/home/bazzite/build/latte-dock/app/apptypes.h": {
+    "/var/home/bazzite/build/latte-dock/app/apptypes.h": {
       "lines_hit": 0,
       "lines_total": 0,
       "coverage": 1.0
     },
-    "/home/bazzite/build/latte-dock/app/data/activitiesinfo.cpp": {
-      "lines_hit": 53,
-      "lines_total": 55,
-      "coverage": 0.9636363636363636
-    },
-    "/home/bazzite/build/latte-dock/app/data/activitydata.cpp": {
-      "lines_hit": 21,
-      "lines_total": 37,
-      "coverage": 0.5675675675675675
-    },
-    "/home/bazzite/build/latte-dock/app/data/activitydata.h": {
+    "/var/home/bazzite/build/latte-dock/app/coretypes.h": {
       "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/data/appletdata.cpp": {
-      "lines_hit": 40,
-      "lines_total": 60,
-      "coverage": 0.6666666666666666
-    },
-    "/home/bazzite/build/latte-dock/app/data/appletdata.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/data/errordata.cpp": {
-      "lines_hit": 18,
-      "lines_total": 34,
-      "coverage": 0.5294117647058824
-    },
-    "/home/bazzite/build/latte-dock/app/data/errordata.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/data/errorinformationdata.cpp": {
-      "lines_hit": 25,
-      "lines_total": 39,
-      "coverage": 0.6410256410256411
-    },
-    "/home/bazzite/build/latte-dock/app/data/errorinformationdata.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/data/genericbasictable.cpp": {
-      "lines_hit": 3,
-      "lines_total": 9,
-      "coverage": 0.3333333333333333
-    },
-    "/home/bazzite/build/latte-dock/app/data/genericbasictable.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/data/genericdata.cpp": {
-      "lines_hit": 29,
-      "lines_total": 29,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/data/genericdata.h": {
-      "lines_hit": 1,
       "lines_total": 1,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/data/generictable.cpp": {
-      "lines_hit": 181,
-      "lines_total": 181,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/data/layoutcolordata.cpp": {
-      "lines_hit": 23,
-      "lines_total": 42,
-      "coverage": 0.5476190476190477
-    },
-    "/home/bazzite/build/latte-dock/app/data/layoutcolordata.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/data/layoutdata.cpp": {
-      "lines_hit": 135,
-      "lines_total": 135,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/data/layoutdata.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/data/layouticondata.cpp": {
-      "lines_hit": 18,
-      "lines_total": 34,
-      "coverage": 0.5294117647058824
-    },
-    "/home/bazzite/build/latte-dock/app/data/layouticondata.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/data/layoutstable.cpp": {
-      "lines_hit": 23,
-      "lines_total": 35,
-      "coverage": 0.6571428571428571
-    },
-    "/home/bazzite/build/latte-dock/app/data/layoutstable.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/data/preferencesdata.cpp": {
-      "lines_hit": 0,
-      "lines_total": 105,
       "coverage": 0.0
     },
-    "/home/bazzite/build/latte-dock/app/data/screendata.cpp": {
-      "lines_hit": 59,
-      "lines_total": 79,
-      "coverage": 0.7468354430379747
-    },
-    "/home/bazzite/build/latte-dock/app/data/uniqueidinfo.cpp": {
-      "lines_hit": 0,
-      "lines_total": 37,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/data/uniqueidinfo.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/data/viewdata.cpp": {
-      "lines_hit": 136,
-      "lines_total": 231,
-      "coverage": 0.5887445887445888
-    },
-    "/home/bazzite/build/latte-dock/app/data/viewstable.cpp": {
-      "lines_hit": 71,
-      "lines_total": 82,
-      "coverage": 0.8658536585365854
-    },
-    "/home/bazzite/build/latte-dock/app/declarativeimports/contextmenulayerquickitem.cpp": {
-      "lines_hit": 0,
-      "lines_total": 304,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/declarativeimports/contextmenulayerquickitem.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/declarativeimports/interfaces.cpp": {
-      "lines_hit": 0,
-      "lines_total": 143,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/declarativeimports/interfaces.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/indicator/factory.cpp": {
-      "lines_hit": 75,
-      "lines_total": 312,
-      "coverage": 0.2403846153846154
-    },
-    "/home/bazzite/build/latte-dock/app/indicator/factory.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/infoview.cpp": {
-      "lines_hit": 0,
-      "lines_total": 82,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/infoview.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/lattecorona.cpp": {
-      "lines_hit": 77,
-      "lines_total": 952,
-      "coverage": 0.08088235294117647
-    },
-    "/home/bazzite/build/latte-dock/app/lattecorona.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/layout/abstractlayout.cpp": {
-      "lines_hit": 148,
-      "lines_total": 286,
-      "coverage": 0.5174825174825175
-    },
-    "/home/bazzite/build/latte-dock/app/layout/abstractlayout.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/layout/centrallayout.cpp": {
-      "lines_hit": 0,
-      "lines_total": 135,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/layout/centrallayout.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/layout/genericlayout.cpp": {
-      "lines_hit": 0,
-      "lines_total": 1163,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/layout/genericlayout.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/layouts/importer.cpp": {
-      "lines_hit": 161,
-      "lines_total": 527,
-      "coverage": 0.3055028462998102
-    },
-    "/home/bazzite/build/latte-dock/app/layouts/importer.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/layouts/manager.cpp": {
-      "lines_hit": 17,
-      "lines_total": 260,
-      "coverage": 0.06538461538461539
-    },
-    "/home/bazzite/build/latte-dock/app/layouts/manager.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/layouts/storage.cpp": {
-      "lines_hit": 145,
-      "lines_total": 1268,
-      "coverage": 0.11435331230283911
-    },
-    "/home/bazzite/build/latte-dock/app/layouts/syncedlaunchers.cpp": {
-      "lines_hit": 4,
-      "lines_total": 151,
-      "coverage": 0.026490066225165563
-    },
-    "/home/bazzite/build/latte-dock/app/layouts/syncedlaunchers.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/layouts/synchronizer.cpp": {
+    "/var/home/bazzite/build/latte-dock/app/coronaengine.cpp": {
       "lines_hit": 48,
-      "lines_total": 774,
-      "coverage": 0.06201550387596899
+      "lines_total": 219,
+      "coverage": 0.2191780821917808
     },
-    "/home/bazzite/build/latte-dock/app/layouts/synchronizer.h": {
+    "/var/home/bazzite/build/latte-dock/app/coronaengine.h": {
       "lines_hit": 0,
       "lines_total": 0,
       "coverage": 1.0
     },
-    "/home/bazzite/build/latte-dock/app/package/lattepackage.cpp": {
-      "lines_hit": 39,
-      "lines_total": 44,
-      "coverage": 0.8863636363636364
-    },
-    "/home/bazzite/build/latte-dock/app/package/lattepackage.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/plasma/extended/backgroundcache.cpp": {
-      "lines_hit": 0,
-      "lines_total": 287,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/plasma/extended/backgroundcache.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/plasma/extended/backgroundtracker.cpp": {
-      "lines_hit": 0,
-      "lines_total": 60,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/plasma/extended/backgroundtracker.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/plasma/extended/panelbackground.cpp": {
-      "lines_hit": 101,
-      "lines_total": 456,
-      "coverage": 0.22149122807017543
-    },
-    "/home/bazzite/build/latte-dock/app/plasma/extended/panelbackground.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/plasma/extended/screengeometries.cpp": {
-      "lines_hit": 19,
-      "lines_total": 187,
-      "coverage": 0.10160427807486631
-    },
-    "/home/bazzite/build/latte-dock/app/plasma/extended/screengeometries.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/plasma/extended/screenpool.cpp": {
-      "lines_hit": 67,
-      "lines_total": 79,
-      "coverage": 0.8481012658227848
-    },
-    "/home/bazzite/build/latte-dock/app/plasma/extended/screenpool.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/plasma/extended/theme.cpp": {
-      "lines_hit": 191,
-      "lines_total": 340,
-      "coverage": 0.5617647058823529
-    },
-    "/home/bazzite/build/latte-dock/app/plasma/extended/theme.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/plasma/quick/configview.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/plasma/quick/containmentview.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/primaryoutputwatcher.cpp": {
-      "lines_hit": 17,
-      "lines_total": 85,
-      "coverage": 0.2
-    },
-    "/home/bazzite/build/latte-dock/app/primaryoutputwatcher.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/screenpool.cpp": {
-      "lines_hit": 123,
-      "lines_total": 182,
-      "coverage": 0.6758241758241759
-    },
-    "/home/bazzite/build/latte-dock/app/screenpool.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/actionsdialog/actionlistwidgetitem.cpp": {
-      "lines_hit": 0,
-      "lines_total": 10,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/actionsdialog/actionsdialog.cpp": {
-      "lines_hit": 0,
-      "lines_total": 30,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/actionsdialog/actionsdialog.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/actionsdialog/actionshandler.cpp": {
-      "lines_hit": 0,
-      "lines_total": 151,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/actionsdialog/actionshandler.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/detailsdialog/colorsmodel.cpp": {
-      "lines_hit": 0,
-      "lines_total": 64,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/detailsdialog/colorsmodel.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/detailsdialog/delegates/colorcmbitemdelegate.cpp": {
-      "lines_hit": 0,
-      "lines_total": 32,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/detailsdialog/delegates/colorcmbitemdelegate.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/detailsdialog/delegates/schemecmbitemdelegate.cpp": {
-      "lines_hit": 0,
-      "lines_total": 13,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/detailsdialog/delegates/schemecmbitemdelegate.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/detailsdialog/detailsdialog.cpp": {
-      "lines_hit": 0,
-      "lines_total": 64,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/detailsdialog/detailsdialog.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/detailsdialog/detailshandler.cpp": {
-      "lines_hit": 0,
-      "lines_total": 314,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/detailsdialog/detailshandler.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/detailsdialog/patternwidget.cpp": {
-      "lines_hit": 0,
-      "lines_total": 84,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/detailsdialog/patternwidget.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/detailsdialog/schemescombobox.cpp": {
-      "lines_hit": 0,
-      "lines_total": 42,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/detailsdialog/schemescombobox.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/detailsdialog/schemesmodel.cpp": {
-      "lines_hit": 73,
-      "lines_total": 79,
-      "coverage": 0.9240506329113924
-    },
-    "/home/bazzite/build/latte-dock/app/settings/detailsdialog/schemesmodel.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/exporttemplatedialog/appletsmodel.cpp": {
-      "lines_hit": 139,
-      "lines_total": 193,
-      "coverage": 0.7202072538860104
-    },
-    "/home/bazzite/build/latte-dock/app/settings/exporttemplatedialog/appletsmodel.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/exporttemplatedialog/delegates/normalcheckboxdelegate.cpp": {
-      "lines_hit": 0,
-      "lines_total": 24,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/exporttemplatedialog/exporttemplatedialog.cpp": {
-      "lines_hit": 0,
-      "lines_total": 84,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/exporttemplatedialog/exporttemplatedialog.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/exporttemplatedialog/exporttemplatehandler.cpp": {
-      "lines_hit": 0,
-      "lines_total": 216,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/exporttemplatedialog/exporttemplatehandler.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/generic/genericdialog.cpp": {
-      "lines_hit": 0,
-      "lines_total": 80,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/generic/genericdialog.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/generic/generichandler.cpp": {
-      "lines_hit": 0,
-      "lines_total": 36,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/generic/generichandler.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/generic/generictools.cpp": {
-      "lines_hit": 191,
-      "lines_total": 385,
-      "coverage": 0.4961038961038961
-    },
-    "/home/bazzite/build/latte-dock/app/settings/generic/genericviewtools.cpp": {
-      "lines_hit": 0,
-      "lines_total": 60,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/generic/layoutscombobox.cpp": {
-      "lines_hit": 0,
-      "lines_total": 32,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/generic/layoutscombobox.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/generic/persistentmenu.cpp": {
-      "lines_hit": 0,
-      "lines_total": 28,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/generic/persistentmenu.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/screensdialog/delegates/checkboxdelegate.cpp": {
-      "lines_hit": 0,
-      "lines_total": 77,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/screensdialog/screensdialog.cpp": {
-      "lines_hit": 0,
-      "lines_total": 54,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/screensdialog/screensdialog.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/screensdialog/screenshandler.cpp": {
-      "lines_hit": 0,
-      "lines_total": 71,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/screensdialog/screenshandler.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/screensdialog/screensmodel.cpp": {
-      "lines_hit": 145,
-      "lines_total": 209,
-      "coverage": 0.69377990430622
-    },
-    "/home/bazzite/build/latte-dock/app/settings/screensdialog/screensmodel.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/settingsdialog/delegates/activitiesdelegate.cpp": {
-      "lines_hit": 0,
-      "lines_total": 315,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/settingsdialog/delegates/activitiesdelegate.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/settingsdialog/delegates/backgrounddelegate.cpp": {
-      "lines_hit": 0,
-      "lines_total": 9,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/settingsdialog/delegates/backgrounddelegate.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/settingsdialog/delegates/checkboxdelegate.cpp": {
-      "lines_hit": 0,
-      "lines_total": 44,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/settingsdialog/delegates/layoutcmbitemdelegate.cpp": {
-      "lines_hit": 0,
-      "lines_total": 12,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/settingsdialog/delegates/layoutcmbitemdelegate.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/settingsdialog/delegates/layoutnamedelegate.cpp": {
-      "lines_hit": 0,
-      "lines_total": 71,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/settingsdialog/layoutscontroller.cpp": {
-      "lines_hit": 0,
-      "lines_total": 759,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/settingsdialog/layoutscontroller.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/settingsdialog/layoutsheaderview.cpp": {
-      "lines_hit": 0,
-      "lines_total": 22,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/settingsdialog/layoutsmodel.cpp": {
-      "lines_hit": 466,
-      "lines_total": 762,
-      "coverage": 0.6115485564304461
-    },
-    "/home/bazzite/build/latte-dock/app/settings/settingsdialog/layoutsmodel.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/settingsdialog/layoutstableview.cpp": {
-      "lines_hit": 0,
-      "lines_total": 44,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/settingsdialog/layoutstableview.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/settingsdialog/settingsdialog.cpp": {
-      "lines_hit": 0,
-      "lines_total": 470,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/settingsdialog/settingsdialog.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/settingsdialog/tablayoutshandler.cpp": {
-      "lines_hit": 0,
-      "lines_total": 723,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/settingsdialog/tablayoutshandler.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/settingsdialog/tabpreferenceshandler.cpp": {
-      "lines_hit": 0,
-      "lines_total": 206,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/settingsdialog/tabpreferenceshandler.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/settingsdialog/templateskeeper.cpp": {
-      "lines_hit": 0,
-      "lines_total": 54,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/settingsdialog/templateskeeper.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/universalsettings.cpp": {
-      "lines_hit": 288,
-      "lines_total": 425,
-      "coverage": 0.6776470588235294
-    },
-    "/home/bazzite/build/latte-dock/app/settings/universalsettings.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/viewsdialog/delegates/custommenuitemwidget.cpp": {
-      "lines_hit": 0,
-      "lines_total": 67,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/viewsdialog/delegates/custommenuitemwidget.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/viewsdialog/delegates/namedelegate.cpp": {
-      "lines_hit": 0,
-      "lines_total": 55,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/viewsdialog/delegates/namedelegate.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/viewsdialog/delegates/singleoptiondelegate.cpp": {
-      "lines_hit": 0,
-      "lines_total": 109,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/viewsdialog/delegates/singleoptiondelegate.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/viewsdialog/delegates/singletextdelegate.cpp": {
-      "lines_hit": 0,
-      "lines_total": 21,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/viewsdialog/delegates/singletextdelegate.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/viewsdialog/viewscontroller.cpp": {
-      "lines_hit": 0,
-      "lines_total": 760,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/viewsdialog/viewscontroller.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/viewsdialog/viewsdialog.cpp": {
-      "lines_hit": 0,
-      "lines_total": 65,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/viewsdialog/viewsdialog.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/viewsdialog/viewshandler.cpp": {
-      "lines_hit": 0,
-      "lines_total": 409,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/viewsdialog/viewshandler.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/viewsdialog/viewsmodel.cpp": {
-      "lines_hit": 493,
-      "lines_total": 753,
-      "coverage": 0.6547144754316069
-    },
-    "/home/bazzite/build/latte-dock/app/settings/viewsdialog/viewsmodel.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/viewsdialog/viewstableview.cpp": {
-      "lines_hit": 0,
-      "lines_total": 14,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/settings/viewsdialog/viewstableview.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/shortcuts/globalshortcuts.cpp": {
-      "lines_hit": 103,
-      "lines_total": 441,
-      "coverage": 0.23356009070294784
-    },
-    "/home/bazzite/build/latte-dock/app/shortcuts/globalshortcuts.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/shortcuts/modifiertracker.cpp": {
-      "lines_hit": 71,
-      "lines_total": 103,
-      "coverage": 0.6893203883495146
-    },
-    "/home/bazzite/build/latte-dock/app/shortcuts/modifiertracker.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/shortcuts/shortcutstracker.cpp": {
-      "lines_hit": 92,
-      "lines_total": 99,
-      "coverage": 0.9292929292929293
-    },
-    "/home/bazzite/build/latte-dock/app/shortcuts/shortcutstracker.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/templates/templatesmanager.cpp": {
-      "lines_hit": 7,
-      "lines_total": 217,
-      "coverage": 0.03225806451612903
-    },
-    "/home/bazzite/build/latte-dock/app/templates/templatesmanager.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/tools/commontools.cpp": {
-      "lines_hit": 44,
-      "lines_total": 69,
-      "coverage": 0.6376811594202898
-    },
-    "/home/bazzite/build/latte-dock/app/view/clonedview.cpp": {
-      "lines_hit": 0,
-      "lines_total": 264,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/clonedview.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/containmentinterface.cpp": {
-      "lines_hit": 0,
-      "lines_total": 753,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/containmentinterface.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/effects.cpp": {
-      "lines_hit": 0,
-      "lines_total": 535,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/effects.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/eventssink.cpp": {
-      "lines_hit": 0,
-      "lines_total": 170,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/eventssink.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/helpers/floatinggapwindow.cpp": {
-      "lines_hit": 0,
-      "lines_total": 97,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/helpers/floatinggapwindow.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/helpers/screenedgeghostwindow.cpp": {
-      "lines_hit": 0,
-      "lines_total": 114,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/helpers/screenedgeghostwindow.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/helpers/subwindow.cpp": {
-      "lines_hit": 0,
-      "lines_total": 186,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/helpers/subwindow.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/indicator/indicator.cpp": {
-      "lines_hit": 0,
-      "lines_total": 228,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/indicator/indicator.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/indicator/indicatorinfo.cpp": {
-      "lines_hit": 107,
-      "lines_total": 125,
-      "coverage": 0.856
-    },
-    "/home/bazzite/build/latte-dock/app/view/indicator/indicatorinfo.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/indicator/indicatorresources.cpp": {
-      "lines_hit": 0,
-      "lines_total": 32,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/indicator/indicatorresources.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/originalview.cpp": {
-      "lines_hit": 0,
-      "lines_total": 185,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/originalview.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/panelshadows.cpp": {
-      "lines_hit": 11,
-      "lines_total": 197,
-      "coverage": 0.05583756345177665
-    },
-    "/home/bazzite/build/latte-dock/app/view/panelshadows_p.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/parabolic.cpp": {
+    "/var/home/bazzite/build/latte-dock/app/coronahelpers.cpp": {
       "lines_hit": 0,
       "lines_total": 72,
       "coverage": 0.0
     },
-    "/home/bazzite/build/latte-dock/app/view/parabolic.h": {
+    "/var/home/bazzite/build/latte-dock/app/data/activitiesinfo.cpp": {
+      "lines_hit": 50,
+      "lines_total": 55,
+      "coverage": 0.9090909090909091
+    },
+    "/var/home/bazzite/build/latte-dock/app/data/activitydata.cpp": {
+      "lines_hit": 21,
+      "lines_total": 37,
+      "coverage": 0.5675675675675675
+    },
+    "/var/home/bazzite/build/latte-dock/app/data/activitydata.h": {
       "lines_hit": 0,
       "lines_total": 0,
       "coverage": 1.0
     },
-    "/home/bazzite/build/latte-dock/app/view/positioner.cpp": {
-      "lines_hit": 0,
-      "lines_total": 1030,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/positioner.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/settings/canvasconfigview.cpp": {
-      "lines_hit": 0,
-      "lines_total": 162,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/settings/canvasconfigview.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/settings/indicatoruimanager.cpp": {
-      "lines_hit": 0,
-      "lines_total": 136,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/settings/indicatoruimanager.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/settings/primaryconfigview.cpp": {
-      "lines_hit": 0,
-      "lines_total": 470,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/settings/primaryconfigview.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/settings/secondaryconfigview.cpp": {
-      "lines_hit": 0,
-      "lines_total": 188,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/settings/secondaryconfigview.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/settings/subconfigview.cpp": {
-      "lines_hit": 0,
-      "lines_total": 185,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/settings/subconfigview.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/settings/viewsettingsfactory.cpp": {
-      "lines_hit": 3,
-      "lines_total": 40,
-      "coverage": 0.075
-    },
-    "/home/bazzite/build/latte-dock/app/view/settings/viewsettingsfactory.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/settings/widgetexplorerview.cpp": {
-      "lines_hit": 0,
-      "lines_total": 158,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/settings/widgetexplorerview.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/tasksmodel.cpp": {
-      "lines_hit": 58,
-      "lines_total": 91,
-      "coverage": 0.6373626373626373
-    },
-    "/home/bazzite/build/latte-dock/app/view/tasksmodel.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/view.cpp": {
-      "lines_hit": 0,
-      "lines_total": 1352,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/view.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/visibilitymanager.cpp": {
-      "lines_hit": 0,
-      "lines_total": 945,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/visibilitymanager.h": {
-      "lines_hit": 6,
-      "lines_total": 6,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/windowstracker/allscreenstracker.cpp": {
-      "lines_hit": 0,
-      "lines_total": 99,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/windowstracker/allscreenstracker.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/windowstracker/currentscreentracker.cpp": {
-      "lines_hit": 0,
-      "lines_total": 182,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/windowstracker/currentscreentracker.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/windowstracker/windowstracker.cpp": {
-      "lines_hit": 0,
-      "lines_total": 61,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/view/windowstracker/windowstracker.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/wm/abstractwindowinterface.cpp": {
-      "lines_hit": 72,
-      "lines_total": 295,
-      "coverage": 0.2440677966101695
-    },
-    "/home/bazzite/build/latte-dock/app/wm/abstractwindowinterface.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/wm/schemecolors.cpp": {
-      "lines_hit": 157,
-      "lines_total": 173,
-      "coverage": 0.9075144508670521
-    },
-    "/home/bazzite/build/latte-dock/app/wm/schemecolors.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/wm/tasktools.cpp": {
-      "lines_hit": 51,
-      "lines_total": 452,
-      "coverage": 0.11283185840707964
-    },
-    "/home/bazzite/build/latte-dock/app/wm/tracker/lastactivewindow.cpp": {
-      "lines_hit": 285,
-      "lines_total": 420,
-      "coverage": 0.6785714285714286
-    },
-    "/home/bazzite/build/latte-dock/app/wm/tracker/lastactivewindow.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/wm/tracker/schemes.cpp": {
-      "lines_hit": 51,
-      "lines_total": 96,
-      "coverage": 0.53125
-    },
-    "/home/bazzite/build/latte-dock/app/wm/tracker/schemes.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/wm/tracker/trackedgeneralinfo.cpp": {
-      "lines_hit": 42,
-      "lines_total": 95,
-      "coverage": 0.4421052631578947
-    },
-    "/home/bazzite/build/latte-dock/app/wm/tracker/trackedgeneralinfo.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/wm/tracker/trackedlayoutinfo.cpp": {
-      "lines_hit": 0,
-      "lines_total": 18,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/wm/tracker/trackedlayoutinfo.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/wm/tracker/trackedviewinfo.cpp": {
-      "lines_hit": 0,
-      "lines_total": 85,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/app/wm/tracker/trackedviewinfo.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/wm/tracker/windowstracker.cpp": {
-      "lines_hit": 100,
-      "lines_total": 777,
-      "coverage": 0.1287001287001287
-    },
-    "/home/bazzite/build/latte-dock/app/wm/tracker/windowstracker.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/wm/waylandinterface.cpp": {
-      "lines_hit": 4,
-      "lines_total": 573,
-      "coverage": 0.006980802792321117
-    },
-    "/home/bazzite/build/latte-dock/app/wm/waylandinterface.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/app/wm/waylandlayershell.cpp": {
-      "lines_hit": 103,
-      "lines_total": 168,
-      "coverage": 0.6130952380952381
-    },
-    "/home/bazzite/build/latte-dock/app/wm/windowinfowrap.cpp": {
-      "lines_hit": 213,
-      "lines_total": 332,
-      "coverage": 0.641566265060241
-    },
-    "/home/bazzite/build/latte-dock/app/wm/windowinfowrap.h": {
-      "lines_hit": 3,
-      "lines_total": 3,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/containment/plugin/layoutmanager.cpp": {
-      "lines_hit": 154,
-      "lines_total": 1197,
-      "coverage": 0.1286549707602339
-    },
-    "/home/bazzite/build/latte-dock/containment/plugin/layoutmanager.h": {
-      "lines_hit": 0,
-      "lines_total": 0,
-      "coverage": 1.0
-    },
-    "/home/bazzite/build/latte-dock/declarativeimports/core/environment.cpp": {
+    "/var/home/bazzite/build/latte-dock/app/data/activitystatescache.h": {
       "lines_hit": 17,
-      "lines_total": 43,
-      "coverage": 0.3953488372093023
+      "lines_total": 17,
+      "coverage": 1.0
     },
-    "/home/bazzite/build/latte-dock/declarativeimports/core/environment.h": {
-      "lines_hit": 0,
-      "lines_total": 7,
-      "coverage": 0.0
+    "/var/home/bazzite/build/latte-dock/app/data/appletdata.cpp": {
+      "lines_hit": 50,
+      "lines_total": 60,
+      "coverage": 0.8333333333333334
     },
-    "/home/bazzite/build/latte-dock/declarativeimports/core/extras.h": {
-      "lines_hit": 12,
-      "lines_total": 16,
-      "coverage": 0.75
-    },
-    "/home/bazzite/build/latte-dock/declarativeimports/core/tools.cpp": {
-      "lines_hit": 20,
-      "lines_total": 29,
-      "coverage": 0.6896551724137931
-    },
-    "/home/bazzite/build/latte-dock/declarativeimports/core/tools.h": {
-      "lines_hit": 0,
-      "lines_total": 7,
-      "coverage": 0.0
-    },
-    "/home/bazzite/build/latte-dock/plasmoid/plugin/backend.cpp": {
-      "lines_hit": 94,
-      "lines_total": 479,
-      "coverage": 0.19624217118997914
-    },
-    "/home/bazzite/build/latte-dock/plasmoid/plugin/backend.h": {
+    "/var/home/bazzite/build/latte-dock/app/data/appletdata.h": {
       "lines_hit": 0,
       "lines_total": 0,
       "coverage": 1.0
     },
-    "/home/bazzite/build/latte-dock/plasmoid/plugin/smartlauncherbackend.cpp": {
-      "lines_hit": 42,
-      "lines_total": 163,
-      "coverage": 0.25766871165644173
+    "/var/home/bazzite/build/latte-dock/app/data/errordata.cpp": {
+      "lines_hit": 22,
+      "lines_total": 34,
+      "coverage": 0.6470588235294118
     },
-    "/home/bazzite/build/latte-dock/plasmoid/plugin/smartlauncherbackend.h": {
+    "/var/home/bazzite/build/latte-dock/app/data/errordata.h": {
       "lines_hit": 0,
-      "lines_total": 12,
-      "coverage": 0.0
+      "lines_total": 0,
+      "coverage": 1.0
     },
-    "/home/bazzite/build/latte-dock/plasmoid/plugin/smartlauncheritem.cpp": {
-      "lines_hit": 66,
-      "lines_total": 189,
-      "coverage": 0.3492063492063492
+    "/var/home/bazzite/build/latte-dock/app/data/errorinformationdata.cpp": {
+      "lines_hit": 25,
+      "lines_total": 39,
+      "coverage": 0.6410256410256411
     },
-    "/home/bazzite/build/latte-dock/plasmoid/plugin/smartlauncheritem.h": {
+    "/var/home/bazzite/build/latte-dock/app/data/errorinformationdata.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/data/genericbasictable.cpp": {
+      "lines_hit": 3,
+      "lines_total": 9,
+      "coverage": 0.3333333333333333
+    },
+    "/var/home/bazzite/build/latte-dock/app/data/genericbasictable.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/data/genericdata.cpp": {
+      "lines_hit": 29,
+      "lines_total": 29,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/data/genericdata.h": {
       "lines_hit": 1,
       "lines_total": 1,
       "coverage": 1.0
     },
-    "/home/bazzite/build/latte-dock/tests/coverage/selftest/covself.cpp": {
+    "/var/home/bazzite/build/latte-dock/app/data/generictable.cpp": {
+      "lines_hit": 197,
+      "lines_total": 197,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/data/layoutcolordata.cpp": {
+      "lines_hit": 23,
+      "lines_total": 42,
+      "coverage": 0.5476190476190477
+    },
+    "/var/home/bazzite/build/latte-dock/app/data/layoutcolordata.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/data/layoutdata.cpp": {
+      "lines_hit": 135,
+      "lines_total": 135,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/data/layoutdata.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/data/layouticondata.cpp": {
+      "lines_hit": 18,
+      "lines_total": 34,
+      "coverage": 0.5294117647058824
+    },
+    "/var/home/bazzite/build/latte-dock/app/data/layouticondata.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/data/layoutstable.cpp": {
+      "lines_hit": 23,
+      "lines_total": 35,
+      "coverage": 0.6571428571428571
+    },
+    "/var/home/bazzite/build/latte-dock/app/data/layoutstable.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/data/preferencesdata.cpp": {
+      "lines_hit": 0,
+      "lines_total": 105,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/data/screendata.cpp": {
+      "lines_hit": 69,
+      "lines_total": 79,
+      "coverage": 0.8734177215189873
+    },
+    "/var/home/bazzite/build/latte-dock/app/data/uniqueidinfo.cpp": {
+      "lines_hit": 0,
+      "lines_total": 37,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/data/uniqueidinfo.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/data/viewdata.cpp": {
+      "lines_hit": 202,
+      "lines_total": 230,
+      "coverage": 0.8782608695652174
+    },
+    "/var/home/bazzite/build/latte-dock/app/data/viewstable.cpp": {
+      "lines_hit": 71,
+      "lines_total": 82,
+      "coverage": 0.8658536585365854
+    },
+    "/var/home/bazzite/build/latte-dock/app/declarativeimports/contextmenulayerquickitem.cpp": {
+      "lines_hit": 0,
+      "lines_total": 304,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/declarativeimports/contextmenulayerquickitem.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/declarativeimports/interfaces.cpp": {
+      "lines_hit": 0,
+      "lines_total": 143,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/declarativeimports/interfaces.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/indicator/factory.cpp": {
+      "lines_hit": 75,
+      "lines_total": 305,
+      "coverage": 0.2459016393442623
+    },
+    "/var/home/bazzite/build/latte-dock/app/indicator/factory.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/infoview.cpp": {
+      "lines_hit": 0,
+      "lines_total": 82,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/infoview.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/iscreeninfo.h": {
+      "lines_hit": 0,
+      "lines_total": 1,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/lattecorona.cpp": {
+      "lines_hit": 58,
+      "lines_total": 608,
+      "coverage": 0.09539473684210527
+    },
+    "/var/home/bazzite/build/latte-dock/app/lattecorona.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/lattedockadaptor.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/layout/abstractlayout.cpp": {
+      "lines_hit": 151,
+      "lines_total": 277,
+      "coverage": 0.5451263537906137
+    },
+    "/var/home/bazzite/build/latte-dock/app/layout/abstractlayout.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/layout/addviewdecision.cpp": {
+      "lines_hit": 19,
+      "lines_total": 19,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/layout/centrallayout.cpp": {
+      "lines_hit": 20,
+      "lines_total": 135,
+      "coverage": 0.14814814814814814
+    },
+    "/var/home/bazzite/build/latte-dock/app/layout/centrallayout.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/layout/genericlayout.cpp": {
+      "lines_hit": 12,
+      "lines_total": 1142,
+      "coverage": 0.010507880910683012
+    },
+    "/var/home/bazzite/build/latte-dock/app/layout/genericlayout.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/layout/iviewfactory.h": {
+      "lines_hit": 0,
+      "lines_total": 1,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/layout/realviewfactory.cpp": {
+      "lines_hit": 0,
+      "lines_total": 26,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/layout/validviewsmapbuilder.cpp": {
+      "lines_hit": 0,
+      "lines_total": 11,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/layout/viewcontainertransition.h": {
+      "lines_hit": 11,
+      "lines_total": 11,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/layout/viewpriority.cpp": {
+      "lines_hit": 55,
+      "lines_total": 56,
+      "coverage": 0.9821428571428571
+    },
+    "/var/home/bazzite/build/latte-dock/app/layout/viewsyncplan.cpp": {
+      "lines_hit": 0,
+      "lines_total": 16,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/layouts/activitysetalgebra.h": {
+      "lines_hit": 25,
+      "lines_total": 25,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/layouts/importer.cpp": {
+      "lines_hit": 161,
+      "lines_total": 527,
+      "coverage": 0.3055028462998102
+    },
+    "/var/home/bazzite/build/latte-dock/app/layouts/importer.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/layouts/manager.cpp": {
+      "lines_hit": 17,
+      "lines_total": 260,
+      "coverage": 0.06538461538461539
+    },
+    "/var/home/bazzite/build/latte-dock/app/layouts/manager.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/layouts/storage.cpp": {
+      "lines_hit": 528,
+      "lines_total": 1057,
+      "coverage": 0.49952696310312206
+    },
+    "/var/home/bazzite/build/latte-dock/app/layouts/storageidremapper.cpp": {
+      "lines_hit": 53,
+      "lines_total": 59,
+      "coverage": 0.8983050847457628
+    },
+    "/var/home/bazzite/build/latte-dock/app/layouts/storageidremapper.h": {
+      "lines_hit": 1,
+      "lines_total": 1,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/layouts/storagevalidator.cpp": {
+      "lines_hit": 120,
+      "lines_total": 125,
+      "coverage": 0.96
+    },
+    "/var/home/bazzite/build/latte-dock/app/layouts/syncedlaunchers.cpp": {
+      "lines_hit": 4,
+      "lines_total": 151,
+      "coverage": 0.026490066225165563
+    },
+    "/var/home/bazzite/build/latte-dock/app/layouts/syncedlaunchers.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/layouts/synchronizer.cpp": {
+      "lines_hit": 42,
+      "lines_total": 764,
+      "coverage": 0.0549738219895288
+    },
+    "/var/home/bazzite/build/latte-dock/app/layouts/synchronizer.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/package/lattepackage.cpp": {
+      "lines_hit": 39,
+      "lines_total": 44,
+      "coverage": 0.8863636363636364
+    },
+    "/var/home/bazzite/build/latte-dock/app/package/lattepackage.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/plasma/extended/backgroundcache.cpp": {
+      "lines_hit": 0,
+      "lines_total": 287,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/plasma/extended/backgroundcache.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/plasma/extended/backgroundtracker.cpp": {
+      "lines_hit": 0,
+      "lines_total": 60,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/plasma/extended/backgroundtracker.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/plasma/extended/panelbackground.cpp": {
+      "lines_hit": 97,
+      "lines_total": 216,
+      "coverage": 0.44907407407407407
+    },
+    "/var/home/bazzite/build/latte-dock/app/plasma/extended/panelbackground.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/plasma/extended/panelbackgroundscan.cpp": {
+      "lines_hit": 252,
+      "lines_total": 262,
+      "coverage": 0.9618320610687023
+    },
+    "/var/home/bazzite/build/latte-dock/app/plasma/extended/screengeometries.cpp": {
+      "lines_hit": 19,
+      "lines_total": 187,
+      "coverage": 0.10160427807486631
+    },
+    "/var/home/bazzite/build/latte-dock/app/plasma/extended/screengeometries.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/plasma/extended/screenpool.cpp": {
+      "lines_hit": 67,
+      "lines_total": 79,
+      "coverage": 0.8481012658227848
+    },
+    "/var/home/bazzite/build/latte-dock/app/plasma/extended/screenpool.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/plasma/extended/theme.cpp": {
+      "lines_hit": 191,
+      "lines_total": 344,
+      "coverage": 0.5552325581395349
+    },
+    "/var/home/bazzite/build/latte-dock/app/plasma/extended/theme.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/plasma/quick/configview.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/plasma/quick/containmentview.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/primaryoutputwatcher.cpp": {
+      "lines_hit": 17,
+      "lines_total": 87,
+      "coverage": 0.19540229885057472
+    },
+    "/var/home/bazzite/build/latte-dock/app/primaryoutputwatcher.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/qwayland-kde-primary-output-v1.h": {
+      "lines_hit": 0,
+      "lines_total": 2,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/realscreeninfo.cpp": {
+      "lines_hit": 3,
+      "lines_total": 34,
+      "coverage": 0.08823529411764706
+    },
+    "/var/home/bazzite/build/latte-dock/app/screengeometrycalculator.cpp": {
+      "lines_hit": 0,
+      "lines_total": 182,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/screenpool.cpp": {
+      "lines_hit": 134,
+      "lines_total": 186,
+      "coverage": 0.7204301075268817
+    },
+    "/var/home/bazzite/build/latte-dock/app/screenpool.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/actionsdialog/actionlistwidgetitem.cpp": {
+      "lines_hit": 0,
+      "lines_total": 10,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/actionsdialog/actionsdialog.cpp": {
+      "lines_hit": 0,
+      "lines_total": 30,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/actionsdialog/actionsdialog.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/actionsdialog/actionshandler.cpp": {
+      "lines_hit": 0,
+      "lines_total": 151,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/actionsdialog/actionshandler.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/detailsdialog/colorsmodel.cpp": {
+      "lines_hit": 0,
+      "lines_total": 64,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/detailsdialog/colorsmodel.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/detailsdialog/delegates/colorcmbitemdelegate.cpp": {
+      "lines_hit": 0,
+      "lines_total": 32,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/detailsdialog/delegates/colorcmbitemdelegate.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/detailsdialog/delegates/schemecmbitemdelegate.cpp": {
+      "lines_hit": 0,
+      "lines_total": 13,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/detailsdialog/delegates/schemecmbitemdelegate.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/detailsdialog/detailsdialog.cpp": {
+      "lines_hit": 0,
+      "lines_total": 64,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/detailsdialog/detailsdialog.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/detailsdialog/detailshandler.cpp": {
+      "lines_hit": 0,
+      "lines_total": 314,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/detailsdialog/detailshandler.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/detailsdialog/patternwidget.cpp": {
+      "lines_hit": 0,
+      "lines_total": 84,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/detailsdialog/patternwidget.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/detailsdialog/schemescombobox.cpp": {
+      "lines_hit": 0,
+      "lines_total": 42,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/detailsdialog/schemescombobox.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/detailsdialog/schemesmodel.cpp": {
+      "lines_hit": 73,
+      "lines_total": 79,
+      "coverage": 0.9240506329113924
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/detailsdialog/schemesmodel.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/exporttemplatedialog/appletsmodel.cpp": {
+      "lines_hit": 139,
+      "lines_total": 193,
+      "coverage": 0.7202072538860104
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/exporttemplatedialog/appletsmodel.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/exporttemplatedialog/delegates/normalcheckboxdelegate.cpp": {
+      "lines_hit": 0,
+      "lines_total": 24,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/exporttemplatedialog/exporttemplatedialog.cpp": {
+      "lines_hit": 0,
+      "lines_total": 84,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/exporttemplatedialog/exporttemplatedialog.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/exporttemplatedialog/exporttemplatehandler.cpp": {
+      "lines_hit": 0,
+      "lines_total": 216,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/exporttemplatedialog/exporttemplatehandler.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/generic/genericdialog.cpp": {
+      "lines_hit": 0,
+      "lines_total": 80,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/generic/genericdialog.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/generic/generichandler.cpp": {
+      "lines_hit": 0,
+      "lines_total": 36,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/generic/generichandler.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/generic/generictools.cpp": {
+      "lines_hit": 191,
+      "lines_total": 385,
+      "coverage": 0.4961038961038961
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/generic/genericviewtools.cpp": {
+      "lines_hit": 0,
+      "lines_total": 60,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/generic/layoutscombobox.cpp": {
+      "lines_hit": 0,
+      "lines_total": 32,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/generic/layoutscombobox.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/generic/persistentmenu.cpp": {
+      "lines_hit": 0,
+      "lines_total": 28,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/generic/persistentmenu.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/screensdialog/delegates/checkboxdelegate.cpp": {
+      "lines_hit": 0,
+      "lines_total": 77,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/screensdialog/screensdialog.cpp": {
+      "lines_hit": 0,
+      "lines_total": 54,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/screensdialog/screensdialog.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/screensdialog/screenshandler.cpp": {
+      "lines_hit": 0,
+      "lines_total": 71,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/screensdialog/screenshandler.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/screensdialog/screensmodel.cpp": {
+      "lines_hit": 145,
+      "lines_total": 209,
+      "coverage": 0.69377990430622
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/screensdialog/screensmodel.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/settingsdialog/delegates/activitiesdelegate.cpp": {
+      "lines_hit": 0,
+      "lines_total": 315,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/settingsdialog/delegates/activitiesdelegate.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/settingsdialog/delegates/backgrounddelegate.cpp": {
+      "lines_hit": 0,
+      "lines_total": 9,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/settingsdialog/delegates/backgrounddelegate.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/settingsdialog/delegates/checkboxdelegate.cpp": {
+      "lines_hit": 0,
+      "lines_total": 44,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/settingsdialog/delegates/layoutcmbitemdelegate.cpp": {
+      "lines_hit": 0,
+      "lines_total": 12,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/settingsdialog/delegates/layoutcmbitemdelegate.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/settingsdialog/delegates/layoutnamedelegate.cpp": {
+      "lines_hit": 0,
+      "lines_total": 71,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/settingsdialog/layoutscontroller.cpp": {
+      "lines_hit": 0,
+      "lines_total": 748,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/settingsdialog/layoutscontroller.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/settingsdialog/layoutsheaderview.cpp": {
+      "lines_hit": 0,
+      "lines_total": 22,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/settingsdialog/layoutsmodel.cpp": {
+      "lines_hit": 467,
+      "lines_total": 762,
+      "coverage": 0.6128608923884514
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/settingsdialog/layoutsmodel.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/settingsdialog/layoutstableview.cpp": {
+      "lines_hit": 0,
+      "lines_total": 44,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/settingsdialog/layoutstableview.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/settingsdialog/settingsdialog.cpp": {
+      "lines_hit": 0,
+      "lines_total": 470,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/settingsdialog/settingsdialog.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/settingsdialog/tablayoutshandler.cpp": {
+      "lines_hit": 0,
+      "lines_total": 723,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/settingsdialog/tablayoutshandler.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/settingsdialog/tabpreferenceshandler.cpp": {
+      "lines_hit": 0,
+      "lines_total": 206,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/settingsdialog/tabpreferenceshandler.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/settingsdialog/templateskeeper.cpp": {
+      "lines_hit": 0,
+      "lines_total": 54,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/settingsdialog/templateskeeper.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/settingsnameutils.h": {
+      "lines_hit": 29,
+      "lines_total": 29,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/universalsettings.cpp": {
+      "lines_hit": 288,
+      "lines_total": 425,
+      "coverage": 0.6776470588235294
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/universalsettings.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/viewsdialog/delegates/custommenuitemwidget.cpp": {
+      "lines_hit": 0,
+      "lines_total": 67,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/viewsdialog/delegates/custommenuitemwidget.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/viewsdialog/delegates/namedelegate.cpp": {
+      "lines_hit": 0,
+      "lines_total": 55,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/viewsdialog/delegates/namedelegate.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/viewsdialog/delegates/singleoptiondelegate.cpp": {
+      "lines_hit": 0,
+      "lines_total": 109,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/viewsdialog/delegates/singleoptiondelegate.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/viewsdialog/delegates/singletextdelegate.cpp": {
+      "lines_hit": 0,
+      "lines_total": 21,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/viewsdialog/delegates/singletextdelegate.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/viewsdialog/viewscontroller.cpp": {
+      "lines_hit": 0,
+      "lines_total": 748,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/viewsdialog/viewscontroller.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/viewsdialog/viewsdialog.cpp": {
+      "lines_hit": 0,
+      "lines_total": 65,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/viewsdialog/viewsdialog.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/viewsdialog/viewshandler.cpp": {
+      "lines_hit": 0,
+      "lines_total": 409,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/viewsdialog/viewshandler.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/viewsdialog/viewsmodel.cpp": {
+      "lines_hit": 493,
+      "lines_total": 753,
+      "coverage": 0.6547144754316069
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/viewsdialog/viewsmodel.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/viewsdialog/viewstableview.cpp": {
+      "lines_hit": 0,
+      "lines_total": 14,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/settings/viewsdialog/viewstableview.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/shortcuts/globalshortcuts.cpp": {
+      "lines_hit": 103,
+      "lines_total": 441,
+      "coverage": 0.23356009070294784
+    },
+    "/var/home/bazzite/build/latte-dock/app/shortcuts/globalshortcuts.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/shortcuts/modifiertracker.cpp": {
+      "lines_hit": 71,
+      "lines_total": 103,
+      "coverage": 0.6893203883495146
+    },
+    "/var/home/bazzite/build/latte-dock/app/shortcuts/modifiertracker.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/shortcuts/shortcutstracker.cpp": {
+      "lines_hit": 92,
+      "lines_total": 99,
+      "coverage": 0.9292929292929293
+    },
+    "/var/home/bazzite/build/latte-dock/app/shortcuts/shortcutstracker.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/startuplayoutplanner.cpp": {
+      "lines_hit": 0,
+      "lines_total": 29,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/templates/templatesmanager.cpp": {
+      "lines_hit": 7,
+      "lines_total": 217,
+      "coverage": 0.03225806451612903
+    },
+    "/var/home/bazzite/build/latte-dock/app/templates/templatesmanager.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/tools/commontools.cpp": {
+      "lines_hit": 44,
+      "lines_total": 69,
+      "coverage": 0.6376811594202898
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/clonedview.cpp": {
+      "lines_hit": 0,
+      "lines_total": 264,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/clonedview.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/containmentinterface.cpp": {
+      "lines_hit": 0,
+      "lines_total": 754,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/containmentinterface.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/effects.cpp": {
+      "lines_hit": 0,
+      "lines_total": 498,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/effects.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/eventssink.cpp": {
+      "lines_hit": 0,
+      "lines_total": 170,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/eventssink.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/helpers/floatinggapwindow.cpp": {
+      "lines_hit": 0,
+      "lines_total": 97,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/helpers/floatinggapwindow.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/helpers/screenedgeghostwindow.cpp": {
+      "lines_hit": 0,
+      "lines_total": 110,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/helpers/screenedgeghostwindow.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/helpers/subwindow.cpp": {
+      "lines_hit": 0,
+      "lines_total": 186,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/helpers/subwindow.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/indicator/indicator.cpp": {
+      "lines_hit": 0,
+      "lines_total": 228,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/indicator/indicator.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/indicator/indicatorinfo.cpp": {
+      "lines_hit": 107,
+      "lines_total": 125,
+      "coverage": 0.856
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/indicator/indicatorinfo.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/indicator/indicatorresources.cpp": {
+      "lines_hit": 0,
+      "lines_total": 32,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/indicator/indicatorresources.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/originalview.cpp": {
+      "lines_hit": 0,
+      "lines_total": 185,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/originalview.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/panelshadows.cpp": {
+      "lines_hit": 11,
+      "lines_total": 197,
+      "coverage": 0.05583756345177665
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/panelshadows_p.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/parabolic.cpp": {
+      "lines_hit": 0,
+      "lines_total": 72,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/parabolic.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/positioner.cpp": {
+      "lines_hit": 0,
+      "lines_total": 879,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/positioner.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/positionergeometry.h": {
+      "lines_hit": 168,
+      "lines_total": 196,
+      "coverage": 0.8571428571428571
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/settings/canvasconfigview.cpp": {
+      "lines_hit": 0,
+      "lines_total": 162,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/settings/canvasconfigview.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/settings/indicatoruimanager.cpp": {
+      "lines_hit": 0,
+      "lines_total": 136,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/settings/indicatoruimanager.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/settings/primaryconfigview.cpp": {
+      "lines_hit": 0,
+      "lines_total": 466,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/settings/primaryconfigview.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/settings/secondaryconfigview.cpp": {
+      "lines_hit": 0,
+      "lines_total": 184,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/settings/secondaryconfigview.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/settings/subconfigview.cpp": {
+      "lines_hit": 0,
+      "lines_total": 185,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/settings/subconfigview.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/settings/viewsettingsfactory.cpp": {
+      "lines_hit": 3,
+      "lines_total": 40,
+      "coverage": 0.075
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/settings/viewsettingsfactory.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/settings/widgetexplorerview.cpp": {
+      "lines_hit": 0,
+      "lines_total": 154,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/settings/widgetexplorerview.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/tasksmodel.cpp": {
+      "lines_hit": 58,
+      "lines_total": 91,
+      "coverage": 0.6373626373626373
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/tasksmodel.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/view.cpp": {
+      "lines_hit": 0,
+      "lines_total": 1352,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/view.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/visibilitymanager.cpp": {
+      "lines_hit": 0,
+      "lines_total": 942,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/visibilitymanager.h": {
+      "lines_hit": 6,
+      "lines_total": 6,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/windowstracker/allscreenstracker.cpp": {
+      "lines_hit": 0,
+      "lines_total": 99,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/windowstracker/allscreenstracker.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/windowstracker/currentscreentracker.cpp": {
+      "lines_hit": 0,
+      "lines_total": 182,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/windowstracker/currentscreentracker.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/windowstracker/windowstracker.cpp": {
+      "lines_hit": 0,
+      "lines_total": 61,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/view/windowstracker/windowstracker.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/wayland-kde-primary-output-v1-client-protocol.h": {
+      "lines_hit": 0,
+      "lines_total": 17,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/wm/abstractwindowinterface.cpp": {
+      "lines_hit": 72,
+      "lines_total": 295,
+      "coverage": 0.2440677966101695
+    },
+    "/var/home/bazzite/build/latte-dock/app/wm/abstractwindowinterface.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/wm/schemecolors.cpp": {
+      "lines_hit": 157,
+      "lines_total": 173,
+      "coverage": 0.9075144508670521
+    },
+    "/var/home/bazzite/build/latte-dock/app/wm/schemecolors.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/wm/tasktools.cpp": {
+      "lines_hit": 51,
+      "lines_total": 452,
+      "coverage": 0.11283185840707964
+    },
+    "/var/home/bazzite/build/latte-dock/app/wm/tracker/extraviewhints.h": {
+      "lines_hit": 29,
+      "lines_total": 29,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/wm/tracker/lastactivewindow.cpp": {
+      "lines_hit": 285,
+      "lines_total": 420,
+      "coverage": 0.6785714285714286
+    },
+    "/var/home/bazzite/build/latte-dock/app/wm/tracker/lastactivewindow.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/wm/tracker/schemes.cpp": {
+      "lines_hit": 51,
+      "lines_total": 96,
+      "coverage": 0.53125
+    },
+    "/var/home/bazzite/build/latte-dock/app/wm/tracker/schemes.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/wm/tracker/trackedgeneralinfo.cpp": {
+      "lines_hit": 42,
+      "lines_total": 95,
+      "coverage": 0.4421052631578947
+    },
+    "/var/home/bazzite/build/latte-dock/app/wm/tracker/trackedgeneralinfo.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/wm/tracker/trackedlayoutinfo.cpp": {
+      "lines_hit": 0,
+      "lines_total": 18,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/wm/tracker/trackedlayoutinfo.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/wm/tracker/trackedviewinfo.cpp": {
+      "lines_hit": 0,
+      "lines_total": 85,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/wm/tracker/trackedviewinfo.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/wm/tracker/windowstracker.cpp": {
+      "lines_hit": 101,
+      "lines_total": 789,
+      "coverage": 0.12801013941698353
+    },
+    "/var/home/bazzite/build/latte-dock/app/wm/tracker/windowstracker.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/wm/waylandinterface.cpp": {
+      "lines_hit": 4,
+      "lines_total": 580,
+      "coverage": 0.006896551724137931
+    },
+    "/var/home/bazzite/build/latte-dock/app/wm/waylandinterface.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/wm/waylandlayershell.cpp": {
+      "lines_hit": 103,
+      "lines_total": 168,
+      "coverage": 0.6130952380952381
+    },
+    "/var/home/bazzite/build/latte-dock/app/wm/windowindex.h": {
+      "lines_hit": 14,
+      "lines_total": 14,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/wm/windowinfowrap.cpp": {
+      "lines_hit": 219,
+      "lines_total": 332,
+      "coverage": 0.6596385542168675
+    },
+    "/var/home/bazzite/build/latte-dock/app/wm/windowinfowrap.h": {
+      "lines_hit": 3,
+      "lines_total": 3,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/wm/windowtrackingpredicates.h": {
+      "lines_hit": 28,
+      "lines_total": 28,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/containment/plugin/layoutmanager.cpp": {
+      "lines_hit": 154,
+      "lines_total": 1197,
+      "coverage": 0.1286549707602339
+    },
+    "/var/home/bazzite/build/latte-dock/containment/plugin/layoutmanager.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/declarativeimports/core/environment.cpp": {
+      "lines_hit": 17,
+      "lines_total": 43,
+      "coverage": 0.3953488372093023
+    },
+    "/var/home/bazzite/build/latte-dock/declarativeimports/core/environment.h": {
+      "lines_hit": 0,
+      "lines_total": 7,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/declarativeimports/core/extras.h": {
+      "lines_hit": 12,
+      "lines_total": 16,
+      "coverage": 0.75
+    },
+    "/var/home/bazzite/build/latte-dock/declarativeimports/core/iconsourceclassifier.h": {
+      "lines_hit": 18,
+      "lines_total": 20,
+      "coverage": 0.9
+    },
+    "/var/home/bazzite/build/latte-dock/declarativeimports/core/tools.cpp": {
+      "lines_hit": 20,
+      "lines_total": 29,
+      "coverage": 0.6896551724137931
+    },
+    "/var/home/bazzite/build/latte-dock/declarativeimports/core/tools.h": {
+      "lines_hit": 0,
+      "lines_total": 7,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/plasmoid/plugin/backend.cpp": {
+      "lines_hit": 94,
+      "lines_total": 479,
+      "coverage": 0.19624217118997914
+    },
+    "/var/home/bazzite/build/latte-dock/plasmoid/plugin/backend.h": {
+      "lines_hit": 0,
+      "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/plasmoid/plugin/smartlauncherbackend.cpp": {
+      "lines_hit": 40,
+      "lines_total": 163,
+      "coverage": 0.24539877300613497
+    },
+    "/var/home/bazzite/build/latte-dock/plasmoid/plugin/smartlauncherbackend.h": {
+      "lines_hit": 0,
+      "lines_total": 12,
+      "coverage": 0.0
+    },
+    "/var/home/bazzite/build/latte-dock/plasmoid/plugin/smartlauncheritem.cpp": {
+      "lines_hit": 66,
+      "lines_total": 189,
+      "coverage": 0.3492063492063492
+    },
+    "/var/home/bazzite/build/latte-dock/plasmoid/plugin/smartlauncheritem.h": {
+      "lines_hit": 1,
+      "lines_total": 1,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/tests/coverage/selftest/covself.cpp": {
       "lines_hit": 7,
       "lines_total": 14,
       "coverage": 0.5
