@@ -107,6 +107,32 @@ target_include_directories(positionergeometrytest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/view ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(positionergeometrytest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+# storagevalidator.cpp is the pure layout-integrity model and config builder lifted
+# out of Storage. Its header reaches only Qt + KConfigCore + Data value types, so
+# the real source links directly with no Corona/View graph.
+ecm_add_test(storagevalidatortest.cpp
+    ${CMAKE_SOURCE_DIR}/app/layouts/storagevalidator.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/genericdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/activitydata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/appletdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layoutcolordata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layouticondata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/errorinformationdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/errordata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/generictable.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layoutdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/viewdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/screendata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/viewstable.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layoutstable.cpp
+    ${CMAKE_SOURCE_DIR}/app/tools/commontools.cpp
+    TEST_NAME storagevalidatortest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui KF6::ConfigCore Plasma::Plasma
+)
+target_include_directories(storagevalidatortest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/data ${CMAKE_SOURCE_DIR}/app/layouts ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(storagevalidatortest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 # storageidremapper.cpp is the pure id-assignment algorithm lifted out of
 # Storage::newUniqueIdsFile. Header reaches only Qt, so the real source links
 # directly with no KConfig/Corona graph.
@@ -695,7 +721,7 @@ if(LATTE_COVERAGE)
         shortcutstest viewmodelstest screenpooltest coretoolstest generictoolstest
         viewprioritytest addviewdecisiontest viewcontainertransitiontest activitysetalgebratest
         settingsnameutilstest iconsourceclassifiertest windowtrackingpredicatestest extraviewhintstest
-        positionergeometrytest
+        positionergeometrytest storagevalidatortest
         # GLOB-behavioral tests link the (now instrumented) app objects; listing them
         # gives their binaries the profile link flag and the export object set, which
         # is what makes the Corona-coupled core count toward whole-app coverage.
