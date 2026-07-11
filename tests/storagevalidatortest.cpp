@@ -57,6 +57,7 @@ private Q_SLOTS:
     void buildFromConfigParsesContainmentsAppletsAndSubIds();
     void differentAppletsWithSameIdFlagsDuplicates();
     void appletCollidingWithContainmentIdFlagged();
+    void orphanedParentAppletFlaggedWhenSubMissing();
 };
 
 void StorageValidatorTest::initTestCase()
@@ -215,6 +216,32 @@ void StorageValidatorTest::appletCollidingWithContainmentIdFlagged()
     }
     QVERIFY(sawContainmentOnly);
     QVERIFY(sawAppletRow);
+}
+
+void StorageValidatorTest::orphanedParentAppletFlaggedWhenSubMissing()
+{
+    // Applet "3" hosts subcontainment 99, but no containment 99 exists -> orphan.
+    StorageValidator::LayoutModel model;
+    StorageValidator::ContainmentModel c1;
+    c1.id = QStringLiteral("1");
+    c1.pluginId = QStringLiteral("org.kde.latte.containment");
+    c1.applets << StorageValidator::AppletModel{QStringLiteral("3"), QStringLiteral("systray"), 99};
+    model.containments << c1;
+
+    Latte::Data::Error error;
+    QVERIFY(StorageValidator::orphanedParentApplets(model, resolver(), error));
+    QCOMPARE(error.information.rowCount(), 1);
+    QCOMPARE(error.information[(uint)0].applet.storageId, QStringLiteral("3"));
+    QCOMPARE(error.information[(uint)0].applet.subcontainmentId, QStringLiteral("99"));
+
+    // Add the missing containment 99 -> no longer orphaned.
+    StorageValidator::ContainmentModel c99;
+    c99.id = QStringLiteral("99");
+    c99.pluginId = QStringLiteral("org.kde.plasma.private.systemtray");
+    model.containments << c99;
+
+    Latte::Data::Error none;
+    QVERIFY(!StorageValidator::orphanedParentApplets(model, resolver(), none));
 }
 
 QTEST_MAIN(StorageValidatorTest)

@@ -127,6 +127,36 @@ bool appletsAndContainmentsWithSameId(const LayoutModel &model, const MetadataRe
     return !warning.information.isEmpty();
 }
 
+bool orphanedParentApplets(const LayoutModel &model, const MetadataResolver &resolve, Data::Error &error)
+{
+    QSet<int> presentContainmentIds;
+    for (const auto &c : model.containments) {
+        presentContainmentIds.insert(c.id.toInt());
+    }
+
+    for (const auto &c : model.containments) {
+        for (const auto &a : c.applets) {
+            const int subid = a.subContainmentId;
+
+            if (subid == IDNULL || presentContainmentIds.contains(subid)) {
+                continue;
+            }
+
+            Data::ErrorInformation errorinfo;
+            errorinfo.id = QString::number(error.information.rowCount());
+            errorinfo.containment = resolve(c.pluginId);
+            errorinfo.containment.storageId = c.id;
+            errorinfo.applet = resolve(a.pluginId);
+            errorinfo.applet.storageId = a.id;
+            errorinfo.applet.subcontainmentId = QString::number(subid);
+
+            error.information << errorinfo;
+        }
+    }
+
+    return !error.information.isEmpty();
+}
+
 }
 }
 }
