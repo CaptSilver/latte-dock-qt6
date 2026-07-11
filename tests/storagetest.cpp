@@ -15,6 +15,7 @@
 // compiled Storage so a divergence between the mirror and production surfaces.
 
 #include "layouts/storage.h"
+#include "layout/centrallayout.h"
 #include "data/viewdata.h"
 #include "data/viewstable.h"
 #include "data/generictable.h"
@@ -95,6 +96,8 @@ private Q_SLOTS:
     void removeContainmentDeletesGroup();
     void removeViewDropsViewAndSubs();
     void expectedViewScreenIdNullCorona();
+    void errorsReportDuplicateAppletIds();
+    void warningsReportOrphanedSubcontainment();
 };
 
 void StorageTest::initTestCase()
@@ -357,6 +360,67 @@ void StorageTest::expectedViewScreenIdNullCorona()
     v.onPrimary = true;
     QCOMPARE(Storage::self()->expectedViewScreenId((Latte::Corona *)nullptr, v),
              Latte::ScreenPool::NOSCREENID);
+}
+
+void StorageTest::errorsReportDuplicateAppletIds()
+{
+    // Two Latte containments each carry applet id "7" -> APPLETSWITHSAMEID error.
+    const QString path = m_dir.filePath(QStringLiteral("dupapplets.latte"));
+    {
+        KSharedConfigPtr ptr = KSharedConfig::openConfig(path);
+        KConfigGroup conts(ptr, QStringLiteral("Containments"));
+        for (const QString &cid : {QStringLiteral("1"), QStringLiteral("2")}) {
+            KConfigGroup c = conts.group(cid);
+            c.writeEntry(QStringLiteral("plugin"), QStringLiteral("org.kde.latte.containment"));
+            KConfigGroup a = c.group(QStringLiteral("Applets")).group(QStringLiteral("7"));
+            a.writeEntry(QStringLiteral("plugin"), QStringLiteral("org.kde.latte.plasmoid"));
+        }
+        ptr->sync();
+    }
+
+    Latte::CentralLayout layout(nullptr, path, QStringLiteral("dupapplets"));
+    QVERIFY(!layout.isActive()); // no corona -> inactive branch
+
+    Latte::Data::ErrorsList errs = Storage::self()->errors(&layout);
+
+    bool sawSameId = false;
+    for (const auto &e : errs) {
+        if (e.id == QString(QLatin1String(Latte::Data::Error::APPLETSWITHSAMEID))) {
+            sawSameId = true;
+            QCOMPARE(e.information.rowCount(), 2); // both occurrences of "7"
+        }
+    }
+    QVERIFY(sawSameId);
+}
+
+void StorageTest::warningsReportOrphanedSubcontainment()
+{
+    // A non-Latte containment "5" reachable from no view -> ORPHANEDSUBCONTAINMENT.
+    const QString path = m_dir.filePath(QStringLiteral("orphansub.latte"));
+    {
+        KSharedConfigPtr ptr = KSharedConfig::openConfig(path);
+        KConfigGroup conts(ptr, QStringLiteral("Containments"));
+
+        KConfigGroup c1 = conts.group(QStringLiteral("1"));
+        c1.writeEntry(QStringLiteral("plugin"), QStringLiteral("org.kde.latte.containment"));
+
+        KConfigGroup c5 = conts.group(QStringLiteral("5"));
+        c5.writeEntry(QStringLiteral("plugin"), QStringLiteral("org.kde.plasma.private.systemtray"));
+        ptr->sync();
+    }
+
+    Latte::CentralLayout layout(nullptr, path, QStringLiteral("orphansub"));
+    QVERIFY(!layout.isActive());
+
+    Latte::Data::WarningsList warns = Storage::self()->warnings(&layout);
+
+    bool sawOrphan = false;
+    for (const auto &w : warns) {
+        if (w.id == QString(QLatin1String(Latte::Data::Warning::ORPHANEDSUBCONTAINMENT))) {
+            sawOrphan = true;
+        }
+    }
+    QVERIFY(sawOrphan);
 }
 
 QTEST_MAIN(StorageTest)

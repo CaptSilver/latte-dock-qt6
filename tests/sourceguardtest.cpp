@@ -103,6 +103,7 @@ private Q_SLOTS:
     void abstractWindowInterface_classifiersDelegate();
     void windowsTracker_updateExtraViewHints_delegatesToBucketing();
     void windowsTracker_perEventIterationAvoidsKeysCopy();
+    void storageValidationDelegatesToValidator();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -631,6 +632,22 @@ void SourceGuardTest::windowsTracker_perEventIterationAvoidsKeysCopy()
     QVERIFY2(!cleanup.isEmpty(), "cleanupFaultyWindows() not found");
     QVERIFY2(cleanup.contains(QStringLiteral("m_windows.keys()")),
              "m_windows.keys() must be inside cleanupFaultyWindows");
+}
+
+void SourceGuardTest::storageValidationDelegatesToValidator()
+{
+    const QString src = readFile(QStringLiteral("app/layouts/storage.cpp"));
+    const QString body = functionBody(src, QStringLiteral("Storage::hasDifferentAppletsWithSameId"));
+    QVERIFY2(body.contains(QStringLiteral("StorageValidator::differentAppletsWithSameId")),
+             "hasDifferentAppletsWithSameId must delegate to the shared validator");
+    QVERIFY2(body.contains(QStringLiteral("modelFromLive")) && body.contains(QStringLiteral("modelFromFile")),
+             "hasDifferentAppletsWithSameId must build the model from live or file source");
+
+    const QString orphanSub = functionBody(src, QStringLiteral("Storage::hasOrphanedSubContainments"));
+    QVERIFY2(orphanSub.contains(QStringLiteral("StorageValidator::orphanedSubcontainments")),
+             "hasOrphanedSubContainments inactive branch must delegate to the shared validator");
+    QVERIFY2(orphanSub.contains(QStringLiteral("qobject_cast<Plasma::Applet")),
+             "hasOrphanedSubContainments active branch must keep its live parent-walk");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

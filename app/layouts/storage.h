@@ -12,6 +12,7 @@
 #include "../data/genericdata.h"
 #include "../data/generictable.h"
 #include "../data/viewstable.h"
+#include "storagevalidator.h"
 
 // Qt
 #include <QTemporaryDir>
@@ -137,6 +138,10 @@ private:
     //! warnings checkers
     bool hasAppletsAndContainmentsWithSameId(const Layout::GenericLayout *layout, Data::Warning &warning);
     bool hasOrphanedSubContainments(const Layout::GenericLayout *layout, Data::Warning &warning);
+
+    //! model builders
+    StorageValidator::LayoutModel modelFromLive(const Layout::GenericLayout *layout);
+    StorageValidator::LayoutModel modelFromFile(const QString &file);
 private:
     QTemporaryDir m_storageTmpDir;
 

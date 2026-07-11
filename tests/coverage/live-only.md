@@ -87,3 +87,11 @@ curation/expansion instead of gaming a headless test.
 ## Added 2026-06-25
 
 - declarativeimports/components/SpriteRectangle.qml — the file's only instrumented unit is onPaint@56, a Canvas paint handler that never fires offscreen (no requestPaint/grabToImage forces it). Everything else is readonly property bindings, which the instrumenter does not tick. A headless test can assert the binding math but earns zero counted coverage, so this file is live-only until the sprite is rendered in a live view. (An exact-value binding test was written and rejected for claiming units it cannot earn.)
+
+## Added 2026-07-11
+
+- `Storage::modelFromLive` and the active branches of the four validation methods
+  (`hasDifferentAppletsWithSameId`, `hasAppletsAndContainmentsWithSameId`,
+  `hasOrphanedParentAppletOfSubContainment`, `hasOrphanedSubContainments`) — the active
+  path walks live `Plasma::Containment`/`Plasma::Applet` objects from a running Corona.
+  No headless test can construct these; exercised only under live capture.

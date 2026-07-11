@@ -9,6 +9,7 @@
 #include <coretypes.h>
 #include "importer.h"
 #include "storageidremapper.h"
+#include "storagevalidator.h"
 #include "manager.h"
 #include "../lattecorona.h"
 #include "../screenpool.h"
@@ -800,6 +801,39 @@ bool Storage::exportTemplate(const Layout::GenericLayout *layout, Plasma::Contai
     return true;
 }
 
+StorageValidator::LayoutModel Storage::modelFromFile(const QString &file)
+{
+    KSharedConfigPtr lfile = KSharedConfig::openConfig(file);
+    KConfigGroup containments = KConfigGroup(lfile, QStringLiteral("Containments"));
+    return StorageValidator::buildFromConfig(containments, [this](const KConfigGroup &g) {
+        return subContainmentId(g);
+    });
+}
+
+StorageValidator::LayoutModel Storage::modelFromLive(const Layout::GenericLayout *layout)
+{
+    StorageValidator::LayoutModel model;
+
+    for (const auto containment : *layout->containments()) {
+        StorageValidator::ContainmentModel cm;
+        cm.id = QString::number(containment->id());
+        cm.pluginId = containment->pluginMetaData().pluginId();
+        cm.isLatte = isLatteContainment(containment);
+
+        for (const auto applet : containment->applets()) {
+            StorageValidator::AppletModel am;
+            am.id = QString::number(applet->id());
+            am.pluginId = applet->pluginMetaData().pluginId();
+            am.subContainmentId = subContainmentId(applet->config());
+            cm.applets << am;
+        }
+
+        model.containments << cm;
+    }
+
+    return model;
+}
+
 bool Storage::hasDifferentAppletsWithSameId(const Layout::GenericLayout *layout, Data::Error &error)
 {
     if (!layout  || layout->file().isEmpty() || !QFile(layout->file()).exists()) {
@@ -809,84 +843,11 @@ bool Storage::hasDifferentAppletsWithSameId(const Layout::GenericLayout *layout,
     error.id = s_knownErrors[QLatin1String(Data::Error::APPLETSWITHSAMEID)].id;
     error.name = s_knownErrors[QLatin1String(Data::Error::APPLETSWITHSAMEID)].name;
 
-    if (layout->isActive()) { // active layout
-        QStringList registeredapplets;
-        QStringList conflictedapplets;
+    auto resolve = [this](const QString &pluginId) { return metadata(pluginId); };
+    StorageValidator::LayoutModel model = layout->isActive() ? modelFromLive(layout)
+                                                             : modelFromFile(layout->file());
 
-        //! split ids to normal registered and conflicted
-        for (const auto containment : *layout->containments()) {
-            QString cid = QString::number(containment->id());
-
-            for (const auto applet : containment->applets()) {
-                QString aid = QString::number(applet->id());
-
-                if (!registeredapplets.contains(aid)) {
-                    registeredapplets << aid;
-                } else if (!conflictedapplets.contains(aid)) {
-                    conflictedapplets << aid;
-                }
-            }
-        }
-
-        //! create error data
-        for (const auto containment : *layout->containments()) {
-            QString cid = QString::number(containment->id());
-
-            for (const auto applet : containment->applets()) {
-                QString aid = QString::number(applet->id());
-
-                if (!conflictedapplets.contains(aid)) {
-                   continue;
-                }
-
-                Data::ErrorInformation errorinfo;
-                errorinfo.id = QString::number(error.information.rowCount());
-                errorinfo.containment = metadata(containment->pluginMetaData().pluginId());
-                errorinfo.containment.storageId = cid;
-                errorinfo.applet = metadata(applet->pluginMetaData().pluginId());
-                errorinfo.applet.storageId = aid;
-
-                error.information << errorinfo;
-            }
-        }
-    } else { // inactive layout
-        KSharedConfigPtr lfile = KSharedConfig::openConfig(layout->file());
-        KConfigGroup containmentsEntries = KConfigGroup(lfile, QStringLiteral("Containments"));
-
-        QStringList registeredapplets;
-        QStringList conflictedapplets;
-
-        //! split ids to normal registered and conflicted
-        for (const auto &cid : containmentsEntries.groupList()) {
-            for (const auto &aid : containmentsEntries.group(cid).group(QStringLiteral("Applets")).groupList()) {
-                if (!registeredapplets.contains(aid)) {
-                    registeredapplets << aid;
-                } else if (!conflictedapplets.contains(aid)) {
-                    conflictedapplets << aid;
-                }
-            }
-        }
-
-        //! create error data
-        for (const auto &cid : containmentsEntries.groupList()) {
-            for (const auto &aid : containmentsEntries.group(cid).group(QStringLiteral("Applets")).groupList()) {
-                if (!conflictedapplets.contains(aid)) {
-                   continue;
-                }
-
-                Data::ErrorInformation errorinfo;
-                errorinfo.id = QString::number(error.information.rowCount());
-                errorinfo.containment = metadata(containmentsEntries.group(cid).readEntry(QStringLiteral("plugin"), QString()));
-                errorinfo.containment.storageId = cid;
-                errorinfo.applet = metadata(containmentsEntries.group(cid).group(QStringLiteral("Applets")).group(aid).readEntry(QStringLiteral("plugin"), QString()));
-                errorinfo.applet.storageId = aid;
-
-                error.information << errorinfo;
-            }
-        }
-    }
-
-    return !error.information.isEmpty();
+    return StorageValidator::differentAppletsWithSameId(model, resolve, error);
 }
 
 bool Storage::hasAppletsAndContainmentsWithSameId(const Layout::GenericLayout *layout, Data::Warning &warning)
@@ -898,122 +859,11 @@ bool Storage::hasAppletsAndContainmentsWithSameId(const Layout::GenericLayout *l
     warning.id = s_knownErrors[QLatin1String(Data::Error::APPLETANDCONTAINMENTWITHSAMEID)].id;
     warning.name = s_knownErrors[QLatin1String(Data::Error::APPLETANDCONTAINMENTWITHSAMEID)].name;
 
-    if (layout->isActive()) { // active layout
-        QStringList registeredcontainments;
-        QStringList conflicted;
+    auto resolve = [this](const QString &pluginId) { return metadata(pluginId); };
+    StorageValidator::LayoutModel model = layout->isActive() ? modelFromLive(layout)
+                                                             : modelFromFile(layout->file());
 
-        //! discover normal containment ids
-        for (const auto containment : *layout->containments()) {
-            QString cid = QString::number(containment->id());
-
-            if (registeredcontainments.contains(cid)) {
-                continue;
-            }
-
-            registeredcontainments << cid;
-        }
-
-        //! discover conflicted ids between containments and applets
-        for (const auto containment : *layout->containments()) {
-            QString cid = QString::number(containment->id());
-
-            for (const auto applet : containment->applets()) {
-                QString aid = QString::number(applet->id());
-
-                if (!registeredcontainments.contains(aid)) {
-                    continue;
-                } else if (!conflicted.contains(aid)) {
-                    conflicted << aid;
-                }
-            }
-        }
-
-        //! create warning data
-        for (const auto containment : *layout->containments()) {
-            QString cid = QString::number(containment->id());
-
-            if (conflicted.contains(cid)) {
-                Data::WarningInformation warninginfo;
-                warninginfo.id = QString::number(warning.information.rowCount());
-                warninginfo.containment = metadata(containment->pluginMetaData().pluginId());
-                warninginfo.containment.storageId = cid;
-
-                warning.information << warninginfo;
-            }
-
-            for (const auto applet : containment->applets()) {
-                QString aid = QString::number(applet->id());
-
-                if (!conflicted.contains(aid)) {
-                   continue;
-                }
-
-                Data::WarningInformation warninginfo;
-                warninginfo.id = QString::number(warning.information.rowCount());
-                warninginfo.containment = metadata(containment->pluginMetaData().pluginId());
-                warninginfo.containment.storageId = cid;
-                warninginfo.applet = metadata(applet->pluginMetaData().pluginId());
-                warninginfo.applet.storageId = aid;
-
-                warning.information << warninginfo;
-            }
-        }
-    } else { // inactive layout
-        KSharedConfigPtr lfile = KSharedConfig::openConfig(layout->file());
-        KConfigGroup containmentsEntries = KConfigGroup(lfile, QStringLiteral("Containments"));
-
-        QStringList registeredcontainments;
-        QStringList conflicted;
-
-        //! discover normal containment ids
-        for (const auto &cid : containmentsEntries.groupList()) {
-            if (registeredcontainments.contains(cid)) {
-                continue;
-            }
-
-            registeredcontainments << cid;
-        }
-
-        //! discover conflicted ids between containments and applets
-        for (const auto &cid : containmentsEntries.groupList()) {
-            for (const auto &aid : containmentsEntries.group(cid).group(QStringLiteral("Applets")).groupList()) {
-                if (!registeredcontainments.contains(aid)) {
-                    continue;
-                } else if (!conflicted.contains(aid)) {
-                    conflicted << aid;
-                }
-            }
-        }
-
-        //! create warning data
-        for (const auto &cid : containmentsEntries.groupList()) {
-            if (conflicted.contains(cid)) {
-                Data::WarningInformation warninginfo;
-                warninginfo.id = QString::number(warning.information.rowCount());
-                warninginfo.containment = metadata(containmentsEntries.group(cid).readEntry(QStringLiteral("plugin"), QString()));
-                warninginfo.containment.storageId = cid;
-
-                warning.information << warninginfo;
-            }
-
-            for (const auto &aid : containmentsEntries.group(cid).group(QStringLiteral("Applets")).groupList()) {
-                if (!conflicted.contains(aid)) {
-                   continue;
-                }
-
-                Data::WarningInformation warninginfo;
-                warninginfo.id = QString::number(warning.information.rowCount());
-                warninginfo.containment = metadata(containmentsEntries.group(cid).readEntry(QStringLiteral("plugin"), QString()));
-                warninginfo.containment.storageId = cid;
-                warninginfo.applet = metadata(containmentsEntries.group(cid).group(QStringLiteral("Applets")).group(aid).readEntry(QStringLiteral("plugin"), QString()));
-                warninginfo.applet.storageId = aid;
-
-                warning.information << warninginfo;
-            }
-        }
-    }
-
-    return !warning.information.isEmpty();
+    return StorageValidator::appletsAndContainmentsWithSameId(model, resolve, warning);
 }
 
 bool Storage::hasOrphanedParentAppletOfSubContainment(const Layout::GenericLayout *layout, Data::Error &error)
@@ -1025,59 +875,11 @@ bool Storage::hasOrphanedParentAppletOfSubContainment(const Layout::GenericLayou
     error.id = s_knownErrors[QLatin1String(Data::Error::ORPHANEDPARENTAPPLETOFSUBCONTAINMENT)].id;
     error.name = s_knownErrors[QLatin1String(Data::Error::ORPHANEDPARENTAPPLETOFSUBCONTAINMENT)].name;
 
-    Data::ViewsTable views = Layouts::Storage::self()->views(layout);
+    auto resolve = [this](const QString &pluginId) { return metadata(pluginId); };
+    StorageValidator::LayoutModel model = layout->isActive() ? modelFromLive(layout)
+                                                             : modelFromFile(layout->file());
 
-    if (layout->isActive()) { // active layout
-
-        //! create error data
-        for (const auto containment : *layout->containments()) {
-            QString cid = QString::number(containment->id());
-
-            for (const auto applet : containment->applets()) {
-                QString aid = QString::number(applet->id());
-
-                int subid = subContainmentId(applet->config());
-
-                if (subid == IDNULL || hasContainment(layout, subid)) {
-                    continue;
-                }
-
-                Data::ErrorInformation errorinfo;
-                errorinfo.id = QString::number(error.information.rowCount());
-                errorinfo.containment = metadata(containment->pluginMetaData().pluginId());
-                errorinfo.containment.storageId = cid;
-                errorinfo.applet = metadata(applet->pluginMetaData().pluginId());
-                errorinfo.applet.storageId = aid;
-                errorinfo.applet.subcontainmentId = QString::number(subid);
-
-                error.information << errorinfo;
-            }
-        }
-    } else {
-        KSharedConfigPtr lfile = KSharedConfig::openConfig(layout->file());
-        KConfigGroup containmentsEntries = KConfigGroup(lfile, QStringLiteral("Containments"));
-
-        //! create error data
-        for (const auto &cid : containmentsEntries.groupList()) {
-            for (const auto &aid : containmentsEntries.group(cid).group(QStringLiteral("Applets")).groupList()) {
-                int subid = subContainmentId(containmentsEntries.group(cid).group(QStringLiteral("Applets")).group(aid));
-
-                if (subid == IDNULL || hasContainment(layout, subid)) {
-                    continue;
-                }
-
-                Data::ErrorInformation errorinfo;
-                errorinfo.id = QString::number(error.information.rowCount());
-                errorinfo.containment = metadata(containmentsEntries.group(cid).readEntry(QStringLiteral("plugin"), QString()));
-                errorinfo.containment.storageId = cid;
-                errorinfo.applet = metadata(containmentsEntries.group(cid).group(QStringLiteral("Applets")).group(aid).readEntry(QStringLiteral("plugin"), QString()));
-                errorinfo.applet.storageId = aid;
-                errorinfo.applet.subcontainmentId = QString::number(subid);
-
-                error.information << errorinfo;
-            }
-        }
-    }
+    StorageValidator::orphanedParentApplets(model, resolve, error);
 
     Data::Warning warning1;
     if (!error.information.isEmpty() && hasOrphanedSubContainments(layout, warning1)) {
@@ -1098,8 +900,7 @@ bool Storage::hasOrphanedSubContainments(const Layout::GenericLayout *layout, Da
 
     Data::ViewsTable views = Layouts::Storage::self()->views(layout);
 
-    if (layout->isActive()) { // active layout
-        //! create warning data
+    if (layout->isActive()) { // active layout — live parent-walk, unchanged
         for (const auto containment : *layout->containments()) {
             QString cid = QString::number(containment->id());
 
@@ -1117,22 +918,10 @@ bool Storage::hasOrphanedSubContainments(const Layout::GenericLayout *layout, Da
             warninginfo.containment.storageId = cid;
             warning.information << warninginfo;
         }
-    } else { // inactive layout
-        KSharedConfigPtr lfile = KSharedConfig::openConfig(layout->file());
-        KConfigGroup containmentsEntries = KConfigGroup(lfile, QStringLiteral("Containments"));
-
-        //! create warning data
-        for (const auto &cid : containmentsEntries.groupList()) {
-            if (views.hasContainmentId(cid)) {
-                continue;
-            }
-
-            Data::WarningInformation warninginfo;
-            warninginfo.id = QString::number(warning.information.rowCount());
-            warninginfo.containment = metadata(containmentsEntries.group(cid).readEntry(QStringLiteral("plugin"), QString()));
-            warninginfo.containment.storageId = cid;
-            warning.information << warninginfo;
-        }
+    } else { // inactive layout — shared config-based detector
+        auto resolve = [this](const QString &pluginId) { return metadata(pluginId); };
+        StorageValidator::LayoutModel model = modelFromFile(layout->file());
+        StorageValidator::orphanedSubcontainments(model, views, resolve, warning);
     }
 
     return !warning.information.isEmpty();
