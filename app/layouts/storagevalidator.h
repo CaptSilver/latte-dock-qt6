@@ -43,7 +43,7 @@ struct ContainmentModel
 {
     QString id;
     QString pluginId;
-    bool isLatte = false;
+    bool isLatte = false; //! populated for parity with the source; no detector reads it yet
     QList<AppletModel> applets;
 };
 
