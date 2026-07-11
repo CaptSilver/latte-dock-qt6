@@ -55,6 +55,7 @@ private:
 private Q_SLOTS:
     void initTestCase();
     void buildFromConfigParsesContainmentsAppletsAndSubIds();
+    void differentAppletsWithSameIdFlagsDuplicates();
 };
 
 void StorageValidatorTest::initTestCase()
@@ -137,6 +138,43 @@ void StorageValidatorTest::buildFromConfigParsesContainmentsAppletsAndSubIds()
     QCOMPARE(m5.id, QStringLiteral("5"));
     QVERIFY(!m5.isLatte);
     QVERIFY(m5.applets.isEmpty());
+}
+
+void StorageValidatorTest::differentAppletsWithSameIdFlagsDuplicates()
+{
+    // Two containments each carry an applet with id "7" -> conflict on "7".
+    StorageValidator::LayoutModel model;
+
+    StorageValidator::ContainmentModel c1;
+    c1.id = QStringLiteral("1");
+    c1.pluginId = QStringLiteral("org.kde.latte.containment");
+    c1.applets << StorageValidator::AppletModel{QStringLiteral("7"), QStringLiteral("plasmoidA"), -1};
+    c1.applets << StorageValidator::AppletModel{QStringLiteral("8"), QStringLiteral("plasmoidB"), -1};
+
+    StorageValidator::ContainmentModel c2;
+    c2.id = QStringLiteral("2");
+    c2.pluginId = QStringLiteral("org.kde.latte.containment");
+    c2.applets << StorageValidator::AppletModel{QStringLiteral("7"), QStringLiteral("plasmoidC"), -1};
+
+    model.containments << c1 << c2;
+
+    Latte::Data::Error error;
+    const bool found = StorageValidator::differentAppletsWithSameId(model, resolver(), error);
+
+    QVERIFY(found);
+    // Both occurrences of id "7" are reported, id "8" is not.
+    QCOMPARE(error.information.rowCount(), 2);
+    QCOMPARE(error.information[(uint)0].applet.storageId, QStringLiteral("7"));
+    QCOMPARE(error.information[(uint)0].id, QStringLiteral("0"));
+    QCOMPARE(error.information[(uint)1].applet.storageId, QStringLiteral("7"));
+    QCOMPARE(error.information[(uint)1].id, QStringLiteral("1"));
+
+    // No duplicates -> empty, returns false.
+    StorageValidator::LayoutModel clean;
+    clean.containments << c1;
+    Latte::Data::Error none;
+    QVERIFY(!StorageValidator::differentAppletsWithSameId(clean, resolver(), none));
+    QVERIFY(none.information.isEmpty());
 }
 
 QTEST_MAIN(StorageValidatorTest)

@@ -44,6 +44,41 @@ LayoutModel buildFromConfig(const KConfigGroup &containments,
     return model;
 }
 
+bool differentAppletsWithSameId(const LayoutModel &model, const MetadataResolver &resolve, Data::Error &error)
+{
+    QStringList registeredapplets;
+    QStringList conflictedapplets;
+
+    for (const auto &c : model.containments) {
+        for (const auto &a : c.applets) {
+            if (!registeredapplets.contains(a.id)) {
+                registeredapplets << a.id;
+            } else if (!conflictedapplets.contains(a.id)) {
+                conflictedapplets << a.id;
+            }
+        }
+    }
+
+    for (const auto &c : model.containments) {
+        for (const auto &a : c.applets) {
+            if (!conflictedapplets.contains(a.id)) {
+                continue;
+            }
+
+            Data::ErrorInformation errorinfo;
+            errorinfo.id = QString::number(error.information.rowCount());
+            errorinfo.containment = resolve(c.pluginId);
+            errorinfo.containment.storageId = c.id;
+            errorinfo.applet = resolve(a.pluginId);
+            errorinfo.applet.storageId = a.id;
+
+            error.information << errorinfo;
+        }
+    }
+
+    return !error.information.isEmpty();
+}
+
 }
 }
 }
