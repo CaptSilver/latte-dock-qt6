@@ -157,6 +157,23 @@ bool orphanedParentApplets(const LayoutModel &model, const MetadataResolver &res
     return !error.information.isEmpty();
 }
 
+bool orphanedSubcontainments(const LayoutModel &model, const Data::ViewsTable &views, const MetadataResolver &resolve, Data::Warning &warning)
+{
+    for (const auto &c : model.containments) {
+        if (views.hasContainmentId(c.id)) {
+            continue;
+        }
+
+        Data::WarningInformation warninginfo;
+        warninginfo.id = QString::number(warning.information.rowCount());
+        warninginfo.containment = resolve(c.pluginId);
+        warninginfo.containment.storageId = c.id;
+        warning.information << warninginfo;
+    }
+
+    return !warning.information.isEmpty();
+}
+
 }
 }
 }

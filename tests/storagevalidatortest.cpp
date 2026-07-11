@@ -9,6 +9,7 @@
 #include "layouts/storagevalidator.h"
 #include "data/errordata.h"
 #include "data/appletdata.h"
+#include "data/genericdata.h"
 #include "data/viewstable.h"
 #include "data/viewdata.h"
 
@@ -58,6 +59,7 @@ private Q_SLOTS:
     void differentAppletsWithSameIdFlagsDuplicates();
     void appletCollidingWithContainmentIdFlagged();
     void orphanedParentAppletFlaggedWhenSubMissing();
+    void orphanedSubcontainmentFlaggedWhenUnreachable();
 };
 
 void StorageValidatorTest::initTestCase()
@@ -242,6 +244,33 @@ void StorageValidatorTest::orphanedParentAppletFlaggedWhenSubMissing()
 
     Latte::Data::Error none;
     QVERIFY(!StorageValidator::orphanedParentApplets(model, resolver(), none));
+}
+
+void StorageValidatorTest::orphanedSubcontainmentFlaggedWhenUnreachable()
+{
+    // Views reach containment "1" (and its sub "99"); containment "5" is reachable
+    // by nothing -> orphan warning.
+    StorageValidator::LayoutModel model;
+    for (const QString &id : {QStringLiteral("1"), QStringLiteral("5"), QStringLiteral("99")}) {
+        StorageValidator::ContainmentModel c;
+        c.id = id;
+        c.pluginId = QStringLiteral("org.kde.plasma.private.systemtray");
+        model.containments << c;
+    }
+
+    // Build a ViewsTable whose single view (containment 1) has subcontainment 99.
+    Latte::Data::ViewsTable views;
+    Latte::Data::View v;
+    v.id = QStringLiteral("1");
+    Latte::Data::Generic sub;
+    sub.id = QStringLiteral("99");
+    v.subcontainments << sub;
+    views << v;
+
+    Latte::Data::Warning warning;
+    QVERIFY(StorageValidator::orphanedSubcontainments(model, views, resolver(), warning));
+    QCOMPARE(warning.information.rowCount(), 1);
+    QCOMPARE(warning.information[(uint)0].containment.storageId, QStringLiteral("5"));
 }
 
 QTEST_MAIN(StorageValidatorTest)
