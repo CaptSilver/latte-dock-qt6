@@ -16,6 +16,7 @@
 
 #include "layouts/storage.h"
 #include "layout/centrallayout.h"
+#include "data/appletdata.h"
 #include "data/viewdata.h"
 #include "data/viewstable.h"
 #include "data/generictable.h"
@@ -98,6 +99,11 @@ private Q_SLOTS:
     void expectedViewScreenIdNullCorona();
     void errorsReportDuplicateAppletIds();
     void warningsReportOrphanedSubcontainment();
+    void exportTemplateStripsUnapprovedApplets();
+    void pluginsFromFileListsAppletMetadata();
+    void importContainmentsCopiesGroups();
+    void metadataFallsBackToPluginId();
+    void removeAllClonedViewsDropsClones();
 };
 
 void StorageTest::initTestCase()
@@ -421,6 +427,116 @@ void StorageTest::warningsReportOrphanedSubcontainment()
         }
     }
     QVERIFY(sawOrphan);
+}
+
+void StorageTest::exportTemplateStripsUnapprovedApplets()
+{
+    // writeLayout marks containment 1 with isClonedFrom=5, so exportTemplate's
+    // removeAllClonedViews pass would remove it. Use a dedicated non-clone fixture.
+    // Both applets carry a [Configuration] subgroup so the strip is observable:
+    // exportTemplate deletes the config subgroups of UNAPPROVED, non-subcontainment
+    // applets, leaving the applet's own plugin key and the approved applet intact.
+    const QString origin = m_dir.filePath(QStringLiteral("exportsrc.latte"));
+    {
+        KSharedConfigPtr ptr = KSharedConfig::openConfig(origin);
+        KConfigGroup conts(ptr, QStringLiteral("Containments"));
+        KConfigGroup c1 = conts.group(QStringLiteral("1"));
+        c1.writeEntry(QStringLiteral("plugin"), QStringLiteral("org.kde.latte.containment"));
+        c1.writeEntry(QStringLiteral("layoutId"), QStringLiteral("SomeLayout"));
+        KConfigGroup applets = c1.group(QStringLiteral("Applets"));
+
+        KConfigGroup a2 = applets.group(QStringLiteral("2"));
+        a2.writeEntry(QStringLiteral("plugin"), QStringLiteral("org.kde.latte.plasmoid"));
+        a2.group(QStringLiteral("Configuration")).writeEntry(QStringLiteral("keep"), QStringLiteral("yes"));
+
+        KConfigGroup a3 = applets.group(QStringLiteral("3"));
+        a3.writeEntry(QStringLiteral("plugin"), QStringLiteral("org.kde.plasma.private.systemtray"));
+        a3.group(QStringLiteral("Configuration")).writeEntry(QStringLiteral("gone"), QStringLiteral("soon"));
+        ptr->sync();
+    }
+    const QString dest = m_dir.filePath(QStringLiteral("exported.latte"));
+
+    // Approve only the plasmoid (applet "2"); the systray applet "3" is not approved.
+    Latte::Data::AppletsTable approved;
+    Latte::Data::Applet a;
+    a.id = QStringLiteral("org.kde.latte.plasmoid");
+    approved << a;
+
+    QVERIFY(Storage::self()->exportTemplate(origin, dest, approved));
+    QVERIFY(QFile(dest).exists());
+
+    KConfig cfg(dest);
+    KConfigGroup exportedApplets =
+        cfg.group(QStringLiteral("Containments")).group(QStringLiteral("1")).group(QStringLiteral("Applets"));
+
+    // Unapproved applet 3: its configuration subgroup is stripped, but the applet's
+    // own plugin key survives (exportTemplate deletes config subgroups, not the applet).
+    QVERIFY(exportedApplets.group(QStringLiteral("3")).groupList().isEmpty());
+    QCOMPARE(exportedApplets.group(QStringLiteral("3")).readEntry(QStringLiteral("plugin"), QString()),
+             QStringLiteral("org.kde.plasma.private.systemtray"));
+
+    // Approved applet 2: its configuration subgroup and plugin survive untouched.
+    QVERIFY(exportedApplets.group(QStringLiteral("2")).hasGroup(QStringLiteral("Configuration")));
+    QCOMPARE(exportedApplets.group(QStringLiteral("2")).group(QStringLiteral("Configuration")).readEntry(QStringLiteral("keep"), QString()),
+             QStringLiteral("yes"));
+
+    // layoutId is cleared on every containment.
+    QCOMPARE(cfg.group(QStringLiteral("Containments")).group(QStringLiteral("1")).readEntry(QStringLiteral("layoutId"), QStringLiteral("x")),
+             QString());
+}
+
+void StorageTest::pluginsFromFileListsAppletMetadata()
+{
+    const QString path = writeLayout(QStringLiteral("pluginsfile.latte"));
+    // -1 (IDNULL) means "all containments": every applet plugin id is gathered.
+    Latte::Data::AppletsTable table = Storage::self()->plugins(path, -1);
+    QVERIFY(table.rowCount() >= 1);
+}
+
+void StorageTest::importContainmentsCopiesGroups()
+{
+    const QString origin = writeLayout(QStringLiteral("impsrc.latte"));
+    const QString dest = m_dir.filePath(QStringLiteral("impdst.latte"));
+
+    Storage::self()->importContainments(origin, dest);
+
+    KConfig cfg(dest);
+    KConfigGroup conts = cfg.group(QStringLiteral("Containments"));
+    QVERIFY(conts.hasGroup(QStringLiteral("1")));
+    QVERIFY(conts.hasGroup(QStringLiteral("5")));
+
+    // Empty paths are a no-op and must not throw.
+    Storage::self()->importContainments(QString(), dest);
+}
+
+void StorageTest::metadataFallsBackToPluginId()
+{
+    // An unknown plugin id yields data whose name is the id itself.
+    Latte::Data::Applet data = Storage::self()->metadata(QStringLiteral("org.kde.nonexistent.applet.xyz"));
+    QCOMPARE(data.id, QStringLiteral("org.kde.nonexistent.applet.xyz"));
+    QCOMPARE(data.name, QStringLiteral("org.kde.nonexistent.applet.xyz"));
+}
+
+void StorageTest::removeAllClonedViewsDropsClones()
+{
+    const QString path = m_dir.filePath(QStringLiteral("clonesremove.latte"));
+    {
+        KSharedConfigPtr ptr = KSharedConfig::openConfig(path);
+        KConfigGroup conts(ptr, QStringLiteral("Containments"));
+        KConfigGroup c1 = conts.group(QStringLiteral("1"));
+        c1.writeEntry(QStringLiteral("plugin"), QStringLiteral("org.kde.latte.containment"));
+        KConfigGroup c10 = conts.group(QStringLiteral("10"));
+        c10.writeEntry(QStringLiteral("plugin"), QStringLiteral("org.kde.latte.containment"));
+        c10.writeEntry(QStringLiteral("isClonedFrom"), 1);
+        ptr->sync();
+    }
+
+    Storage::self()->removeAllClonedViews(path);
+
+    KConfig fresh(path);
+    KConfigGroup conts = fresh.group(QStringLiteral("Containments"));
+    QVERIFY(conts.hasGroup(QStringLiteral("1")));   // original kept
+    QVERIFY(!conts.hasGroup(QStringLiteral("10"))); // clone removed
 }
 
 QTEST_MAIN(StorageTest)

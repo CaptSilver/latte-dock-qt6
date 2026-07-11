@@ -82,6 +82,7 @@ public:
     QStringList storedLayoutsInMultipleFile();
 
     void removeContainment(const QString &filepath, const QString &containmentId);
+    void importContainments(const QString &originFile, const QString &destinationFile);
 
     bool exportTemplate(const QString &originFile, const QString &destinationFile, const Data::AppletsTable &approvedApplets);
     bool exportTemplate(const Layout::GenericLayout *layout, Plasma::Containment *containment, const QString &destinationFile, const Data::AppletsTable &approvedApplets);
@@ -115,7 +116,6 @@ private:
     Storage();
 
     void clearExportedLayoutSettings(KConfigGroup &layoutSettingsGroup);
-    void importContainments(const QString &originFile, const QString &destinationFile);
     void syncContainmentConfig(Plasma::Containment *containment);
 
     bool isSubContainment(const KConfigGroup &appletGroup) const;
