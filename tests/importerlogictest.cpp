@@ -24,9 +24,12 @@
 
 #include <KConfig>
 #include <KConfigGroup>
+#include <KSharedConfig>
 #include <KTar>
 #include <QDir>
 #include <QFile>
+#include <QFileInfo>
+#include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QtTest>
 
@@ -37,8 +40,8 @@ class ImporterLogicTest : public QObject
     Q_OBJECT
 
 private:
-    QTemporaryDir m_configHome;  // XDG_CONFIG_HOME -> Latte::configPath()
-    QTemporaryDir m_dataDir;     // XDG_DATA_DIRS    -> system data root
+    QTemporaryDir m_configHome; // XDG_CONFIG_HOME -> Latte::configPath()
+    QTemporaryDir m_dataDir;    // XDG_DATA_DIRS    -> system data root
 
     QString configPath() const { return m_configHome.path(); }
     QString latteDir() const { return m_configHome.path() + QStringLiteral("/latte"); }
@@ -57,8 +60,8 @@ private:
     // matching what fileVersion() peeks at: lattedockrc[UniversalSettings/version]
     // and lattedock-appletsrc[LayoutSettings/version].
     QString writeArchive(const QString &path,
-                         int rcVersion,        // -1 = omit lattedockrc
-                         int appletsVersion,   // -1 = omit lattedock-appletsrc
+                         int rcVersion,      // -1 = omit lattedockrc
+                         int appletsVersion, // -1 = omit lattedock-appletsrc
                          bool withLatteDir)
     {
         KTar archive(path, QStringLiteral("application/x-tar"));
@@ -68,12 +71,14 @@ private:
 
         if (rcVersion >= 0) {
             const QByteArray rc = QStringLiteral("[UniversalSettings]\nversion=%1\n")
-                                      .arg(rcVersion).toUtf8();
+                                      .arg(rcVersion)
+                                      .toUtf8();
             archive.writeFile(QStringLiteral("lattedockrc"), rc);
         }
         if (appletsVersion >= 0) {
             const QByteArray applets = QStringLiteral("[LayoutSettings]\nversion=%1\n")
-                                           .arg(appletsVersion).toUtf8();
+                                           .arg(appletsVersion)
+                                           .toUtf8();
             archive.writeFile(QStringLiteral("lattedock-appletsrc"), applets);
         }
         if (withLatteDir) {
@@ -101,6 +106,15 @@ private Q_SLOTS:
     void systemPaths();
     void standardPathsOrdering();
     void multipleLayoutsStatusRoundTrip();
+
+    void importLayoutHelperCopiesV2();
+    void importLayoutHelperRejectsNonV2();
+    void importLayoutHelperDedupsName();
+    void availableTemplatesScanAndDedup();
+    void autostartEnableDisableRoundTrip();
+    void checkRepairMovesLinkedContainments();
+    void importLayoutInstanceEmitsSignal();
+    void importHelperExtractsConfigArchive();
 };
 
 void ImporterLogicTest::initTestCase()
@@ -150,7 +164,7 @@ void ImporterLogicTest::fileVersionArchiveConfigV1()
 {
     // version-1 rc + version-1 applets => ConfigVersion1.
     const QString arc = writeArchive(configPath() + QStringLiteral("/old.latterc"),
-                                     /*rc*/1, /*applets*/1, /*latteDir*/false);
+                                     /*rc*/ 1, /*applets*/ 1, /*latteDir*/ false);
     QVERIFY(!arc.isEmpty());
     QCOMPARE(Importer::fileVersion(arc), Importer::ConfigVersion1);
 }
@@ -159,7 +173,7 @@ void ImporterLogicTest::fileVersionArchiveConfigV2()
 {
     // version-2 rc + a latte/ directory => ConfigVersion2.
     const QString arc = writeArchive(configPath() + QStringLiteral("/new.latterc"),
-                                     /*rc*/2, /*applets*/-1, /*latteDir*/true);
+                                     /*rc*/ 2, /*applets*/ -1, /*latteDir*/ true);
     QVERIFY(!arc.isEmpty());
     QCOMPARE(Importer::fileVersion(arc), Importer::ConfigVersion2);
 }
@@ -168,7 +182,7 @@ void ImporterLogicTest::fileVersionArchiveUnknown()
 {
     // version-2 rc but no latte/ dir: neither v1 nor a complete v2 => Unknown.
     const QString arc = writeArchive(configPath() + QStringLiteral("/partial.latterc"),
-                                     /*rc*/2, /*applets*/-1, /*latteDir*/false);
+                                     /*rc*/ 2, /*applets*/ -1, /*latteDir*/ false);
     QVERIFY(!arc.isEmpty());
     QCOMPARE(Importer::fileVersion(arc), Importer::UnknownFileType);
 
@@ -186,13 +200,13 @@ void ImporterLogicTest::nameOfConfigFile_data()
     QTest::addColumn<QString>("path");
     QTest::addColumn<QString>("expected");
 
-    QTest::newRow("strips latterc")    << QStringLiteral("/home/u/My Config.latterc") << QStringLiteral("My Config");
-    QTest::newRow("bare latterc")      << QStringLiteral("foo.latterc")                << QStringLiteral("foo");
-    QTest::newRow("non-latterc kept")  << QStringLiteral("/p/lattedockrc")             << QStringLiteral("lattedockrc");
+    QTest::newRow("strips latterc") << QStringLiteral("/home/u/My Config.latterc") << QStringLiteral("My Config");
+    QTest::newRow("bare latterc") << QStringLiteral("foo.latterc") << QStringLiteral("foo");
+    QTest::newRow("non-latterc kept") << QStringLiteral("/p/lattedockrc") << QStringLiteral("lattedockrc");
     // The -1 lastIndexOf miss must NOT chop the trailing character (the Qt6
     // remove(-1,8) bug the chop()/endsWith() rewrite fixed).
-    QTest::newRow("no extension kept") << QStringLiteral("/p/Plasma")                  << QStringLiteral("Plasma");
-    QTest::newRow("single char kept")  << QStringLiteral("/p/A")                       << QStringLiteral("A");
+    QTest::newRow("no extension kept") << QStringLiteral("/p/Plasma") << QStringLiteral("Plasma");
+    QTest::newRow("single char kept") << QStringLiteral("/p/A") << QStringLiteral("A");
 }
 
 void ImporterLogicTest::nameOfConfigFile()
@@ -242,8 +256,7 @@ void ImporterLogicTest::uniqueLayoutNameDedups()
 
 void ImporterLogicTest::systemPaths()
 {
-    const QString sysData = m_dataDir.path()
-                            + QStringLiteral("/plasma/shells/org.kde.latte.shell");
+    const QString sysData = m_dataDir.path() + QStringLiteral("/plasma/shells/org.kde.latte.shell");
     QCOMPARE(Importer::systemShellDataPath(), sysData);
     QCOMPARE(Importer::layoutTemplateSystemFilePath(QStringLiteral("Default")),
              sysData + QStringLiteral("/contents/templates/Default.layout.latte"));
@@ -291,6 +304,152 @@ void ImporterLogicTest::multipleLayoutsStatusRoundTrip()
 
     Importer::setMultipleLayoutsStatus(Latte::MultipleLayouts::Paused);
     QCOMPARE(Importer::multipleLayoutsStatus(), Latte::MultipleLayouts::Paused);
+}
+
+void ImporterLogicTest::importLayoutHelperCopiesV2()
+{
+    // A version-2 layout file outside the latte dir is copied in under the given name.
+    const QString src = writeLayoutFile(configPath() + QStringLiteral("/import-source.layout.latte"), 2);
+    const QString name = Importer::importLayoutHelper(src, QStringLiteral("Imported"));
+    QCOMPARE(name, QStringLiteral("Imported"));
+    QVERIFY(Importer::layoutExists(QStringLiteral("Imported")));
+    QCOMPARE(Importer::fileVersion(Importer::layoutUserFilePath(QStringLiteral("Imported"))), Importer::LayoutVersion2);
+}
+
+void ImporterLogicTest::importLayoutHelperRejectsNonV2()
+{
+    // A version-1 file is not a modern layout, so nothing is imported.
+    const QString bad = writeLayoutFile(configPath() + QStringLiteral("/bad-source.layout.latte"), 1);
+    QVERIFY(Importer::importLayoutHelper(bad, QStringLiteral("Bad")).isEmpty());
+    QVERIFY(!Importer::layoutExists(QStringLiteral("Bad")));
+}
+
+void ImporterLogicTest::importLayoutHelperDedupsName()
+{
+    // Importing the same source twice yields a "- 2" copy; with no suggested name the
+    // source file's base name is used.
+    const QString src = writeLayoutFile(configPath() + QStringLiteral("/Dup.layout.latte"), 2);
+    QCOMPARE(Importer::importLayoutHelper(src), QStringLiteral("Dup"));
+    QCOMPARE(Importer::importLayoutHelper(src), QStringLiteral("Dup - 2"));
+    QVERIFY(Importer::layoutExists(QStringLiteral("Dup")));
+    QVERIFY(Importer::layoutExists(QStringLiteral("Dup - 2")));
+}
+
+void ImporterLogicTest::availableTemplatesScanAndDedup()
+{
+    const QString userTemplates = latteDir() + QStringLiteral("/templates");
+    QVERIFY(QDir().mkpath(userTemplates));
+    writeLayoutFile(userTemplates + QStringLiteral("/UserView.view.latte"), 2);
+    writeLayoutFile(userTemplates + QStringLiteral("/UserLayout.layout.latte"), 2);
+
+    const QString sysTemplates = m_dataDir.path() + QStringLiteral("/plasma/shells/org.kde.latte.shell/contents/templates");
+    QVERIFY(QDir().mkpath(sysTemplates));
+    writeLayoutFile(sysTemplates + QStringLiteral("/SysView.view.latte"), 2);
+    // Same name in both trees must appear once (the system entry is deduped).
+    writeLayoutFile(sysTemplates + QStringLiteral("/UserView.view.latte"), 2);
+
+    const QStringList views = Importer::availableViewTemplates();
+    QVERIFY(views.contains(QStringLiteral("UserView")));
+    QVERIFY(views.contains(QStringLiteral("SysView")));
+    QCOMPARE(views.count(QStringLiteral("UserView")), 1);
+
+    QVERIFY(Importer::hasViewTemplate(QStringLiteral("UserView")));
+    QVERIFY(!Importer::hasViewTemplate(QStringLiteral("NoSuchTemplate")));
+
+    QVERIFY(Importer::availableLayoutTemplates().contains(QStringLiteral("UserLayout")));
+}
+
+void ImporterLogicTest::autostartEnableDisableRoundTrip()
+{
+    // enableAutostart copies the shipped .desktop from a data dir into the config
+    // autostart dir and drops the deprecated file; disableAutostart removes it.
+    const QString apps = m_dataDir.path() + QStringLiteral("/applications");
+    QVERIFY(QDir().mkpath(apps));
+    QFile meta(apps + QStringLiteral("/org.kde.latte-dock.desktop"));
+    QVERIFY(meta.open(QIODevice::WriteOnly | QIODevice::Text));
+    meta.write("[Desktop Entry]\nType=Application\nName=Latte\n");
+    meta.close();
+
+    // Seed the deprecated autostart file so its removal branch runs.
+    QVERIFY(QDir().mkpath(configPath() + QStringLiteral("/autostart")));
+    QFile old(configPath() + QStringLiteral("/autostart/latte-dock.desktop"));
+    QVERIFY(old.open(QIODevice::WriteOnly));
+    old.write("x");
+    old.close();
+
+    QVERIFY(!Importer::isAutostartEnabled());
+    Importer::enableAutostart();
+    QVERIFY(Importer::isAutostartEnabled());
+    QVERIFY(!QFile::exists(configPath() + QStringLiteral("/autostart/latte-dock.desktop")));
+
+    // A second enable with the file already present is a no-op.
+    Importer::enableAutostart();
+    QVERIFY(Importer::isAutostartEnabled());
+
+    Importer::disableAutostart();
+    QVERIFY(!Importer::isAutostartEnabled());
+}
+
+void ImporterLogicTest::checkRepairMovesLinkedContainments()
+{
+    writeLayoutFile(Importer::layoutUserFilePath(QStringLiteral("Work")), 2);
+
+    const QString linkedPath = Importer::layoutUserFilePath(QString::fromLatin1(Latte::Layout::MULTIPLELAYOUTSHIDDENNAME));
+    KSharedConfigPtr linkedPtr = KSharedConfig::openConfig(linkedPath);
+    KConfigGroup linkedContainments(linkedPtr, QStringLiteral("Containments"));
+    linkedContainments.group(QStringLiteral("101")).writeEntry(QStringLiteral("layoutId"), QStringLiteral("Work"));
+    // A containment pointing at a non-existent layout is left unmoved and cleared as a ghost.
+    linkedContainments.group(QStringLiteral("102")).writeEntry(QStringLiteral("layoutId"), QStringLiteral("GhostLayout"));
+    linkedPtr->sync();
+
+    const QStringList updated = Importer::checkRepairMultipleLayoutsLinkedFile();
+    QVERIFY(updated.contains(QStringLiteral("Work")));
+    QVERIFY(!updated.contains(QStringLiteral("GhostLayout")));
+
+    // Containment 101 now lives in Work's file...
+    KSharedConfigPtr workPtr = KSharedConfig::openConfig(Importer::layoutUserFilePath(QStringLiteral("Work")));
+    QVERIFY(KConfigGroup(workPtr, QStringLiteral("Containments")).hasGroup(QStringLiteral("101")));
+
+    // ...and the linked file's containments are emptied.
+    KSharedConfigPtr linkedAfter = KSharedConfig::openConfig(linkedPath);
+    QVERIFY(KConfigGroup(linkedAfter, QStringLiteral("Containments")).groupList().isEmpty());
+}
+
+void ImporterLogicTest::importLayoutInstanceEmitsSignal()
+{
+    // The instance importLayout wraps the static helper and announces the new path.
+    // A null parent means no Manager, which importLayout never dereferences.
+    Importer imp(nullptr);
+    QVERIFY(!imp.storageTmpDir().isEmpty());
+
+    const QString src = writeLayoutFile(configPath() + QStringLiteral("/InstanceSrc.layout.latte"), 2);
+    QSignalSpy spy(&imp, &Importer::newLayoutAdded);
+
+    const QString name = imp.importLayout(src, QStringLiteral("InstanceImported"));
+    QCOMPARE(name, QStringLiteral("InstanceImported"));
+    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.first().first().toString(), Importer::layoutUserFilePath(QStringLiteral("InstanceImported")));
+
+    // A rejected import emits nothing.
+    const QString bad = writeLayoutFile(configPath() + QStringLiteral("/InstanceBad.layout.latte"), 1);
+    QVERIFY(imp.importLayout(bad, QStringLiteral("InstanceBad")).isEmpty());
+    QCOMPARE(spy.count(), 1);
+}
+
+void ImporterLogicTest::importHelperExtractsConfigArchive()
+{
+    // A ConfigVersion2 .latterc archive is unpacked into the config dir; this wipes
+    // and recreates the latte/ dir, so it runs last.
+    const QString arc = writeArchive(configPath() + QStringLiteral("/toimport.latterc"),
+                                     /*rc*/ 2, /*applets*/ -1, /*latteDir*/ true);
+    QVERIFY(!arc.isEmpty());
+
+    // A plain layout file is not a config archive and is rejected.
+    const QString layout = writeLayoutFile(configPath() + QStringLiteral("/plain.layout.latte"), 2);
+    QVERIFY(!Importer::importHelper(layout));
+
+    QVERIFY(Importer::importHelper(arc));
+    QVERIFY(QFile::exists(latteDir() + QStringLiteral("/dummy")));
 }
 
 QTEST_GUILESS_MAIN(ImporterLogicTest)
