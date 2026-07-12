@@ -1,5 +1,5 @@
 {
-  "overall_coverage": 0.24003143988633271,
+  "overall_coverage": 0.24311413454270597,
   "by_file": {
     "/var/home/bazzite/build/latte-dock/app/alternativeshelper.cpp": {
       "lines_hit": 0,
@@ -202,9 +202,9 @@
       "coverage": 1.0
     },
     "/var/home/bazzite/build/latte-dock/app/indicator/factory.cpp": {
-      "lines_hit": 75,
+      "lines_hit": 128,
       "lines_total": 305,
-      "coverage": 0.2459016393442623
+      "coverage": 0.419672131147541
     },
     "/var/home/bazzite/build/latte-dock/app/indicator/factory.h": {
       "lines_hit": 0,
@@ -1273,8 +1273,8 @@
     },
     "/var/home/bazzite/build/latte-dock/app/wm/abstractwindowinterface.cpp": {
       "lines_hit": 72,
-      "lines_total": 295,
-      "coverage": 0.2440677966101695
+      "lines_total": 243,
+      "coverage": 0.2962962962962963
     },
     "/var/home/bazzite/build/latte-dock/app/wm/abstractwindowinterface.h": {
       "lines_hit": 0,
@@ -1375,6 +1375,11 @@
       "lines_hit": 103,
       "lines_total": 168,
       "coverage": 0.6130952380952381
+    },
+    "/var/home/bazzite/build/latte-dock/app/wm/windowgeometrypredicates.h": {
+      "lines_hit": 48,
+      "lines_total": 48,
+      "coverage": 1.0
     },
     "/var/home/bazzite/build/latte-dock/app/wm/windowindex.h": {
       "lines_hit": 14,
