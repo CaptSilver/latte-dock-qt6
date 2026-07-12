@@ -1,5 +1,5 @@
 {
-  "overall_coverage": 0.21946057087566523,
+  "overall_coverage": 0.23555730221590737,
   "by_file": {
     "/var/home/bazzite/build/latte-dock/app/alternativeshelper.cpp": {
       "lines_hit": 0,
@@ -383,12 +383,17 @@
     },
     "/var/home/bazzite/build/latte-dock/app/plasma/extended/backgroundcache.cpp": {
       "lines_hit": 0,
-      "lines_total": 287,
+      "lines_total": 201,
       "coverage": 0.0
     },
     "/var/home/bazzite/build/latte-dock/app/plasma/extended/backgroundcache.h": {
       "lines_hit": 0,
       "lines_total": 0,
+      "coverage": 1.0
+    },
+    "/var/home/bazzite/build/latte-dock/app/plasma/extended/backgroundimageinfo.cpp": {
+      "lines_hit": 93,
+      "lines_total": 93,
       "coverage": 1.0
     },
     "/var/home/bazzite/build/latte-dock/app/plasma/extended/backgroundtracker.cpp": {
@@ -652,9 +657,9 @@
       "coverage": 1.0
     },
     "/var/home/bazzite/build/latte-dock/app/settings/generic/generictools.cpp": {
-      "lines_hit": 191,
+      "lines_hit": 385,
       "lines_total": 385,
-      "coverage": 0.4961038961038961
+      "coverage": 1.0
     },
     "/var/home/bazzite/build/latte-dock/app/settings/generic/genericviewtools.cpp": {
       "lines_hit": 0,
@@ -1287,9 +1292,9 @@
       "coverage": 1.0
     },
     "/var/home/bazzite/build/latte-dock/app/wm/tasktools.cpp": {
-      "lines_hit": 51,
+      "lines_hit": 296,
       "lines_total": 452,
-      "coverage": 0.11283185840707964
+      "coverage": 0.6548672566371682
     },
     "/var/home/bazzite/build/latte-dock/app/wm/tracker/extraviewhints.h": {
       "lines_hit": 29,
@@ -1442,9 +1447,9 @@
       "coverage": 1.0
     },
     "/var/home/bazzite/build/latte-dock/plasmoid/plugin/smartlauncherbackend.cpp": {
-      "lines_hit": 40,
+      "lines_hit": 42,
       "lines_total": 163,
-      "coverage": 0.24539877300613497
+      "coverage": 0.25766871165644173
     },
     "/var/home/bazzite/build/latte-dock/plasmoid/plugin/smartlauncherbackend.h": {
       "lines_hit": 0,
