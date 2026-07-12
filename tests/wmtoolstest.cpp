@@ -12,10 +12,19 @@
 #include "wm/tasktools.h"
 #include "wm/schemecolors.h"
 
+#include <KConfig>
+#include <KConfigGroup>
+#include <KService>
+#include <KSharedConfig>
+
+#include <QBuffer>
 #include <QColor>
+#include <QCoreApplication>
 #include <QDir>
 #include <QFile>
+#include <QImage>
 #include <QSignalSpy>
+#include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QTextStream>
 #include <QUrl>
@@ -43,6 +52,7 @@ private Q_SLOTS:
     void appDataFromUrl_nameFallsBackToFileName();
     void appDataFromUrl_localDesktopFileReadsName();
     void appDataFromUrl_preferredEmptyHostHasNoId();
+    void appDataFromUrl_iconDataQueryDecodesPixmap();
 
     // schemecolors
     void schemeColors_parsesWmAndSelectionColors();
@@ -51,8 +61,38 @@ private Q_SLOTS:
     void schemeColors_missingFileYieldsEmptyFileAndInvalidColors();
     void schemeColors_possibleSchemeFileAcceptsAbsoluteColors();
 
+    // tasktools - windowUrlFromMetadata (rules-config driven, no service DB needed)
+    void windowUrl_nullConfigReturnsEmpty();
+    void windowUrl_mappingAppIdAndClass();
+    void windowUrl_mappingAppIdOnly();
+    void windowUrl_manualOnlyReturnsEmpty();
+    void windowUrl_appIdIsDesktopPath();
+    void windowUrl_appIdPathPlusExtension();
+    void windowUrl_skipTaskbarAddsQuery();
+    void windowUrl_matchCommandLineFirstAppId();
+    void windowUrl_matchCommandLineFirstWmClass();
+
+    // tasktools - servicesFromCmdLine / servicesFromPid
+    void servicesFromCmdLine_nullConfigEmpty();
+    void servicesFromCmdLine_syntheticFromRealBinary();
+    void servicesFromCmdLine_stripsArgumentsThenSynthesizes();
+    void servicesFromCmdLine_tryIgnoreRuntimesRecurses();
+    void servicesFromPid_zeroPidEmpty();
+    void servicesFromPid_nullConfigEmpty();
+    void servicesFromPid_selfPidReadsProc();
+
+    // tasktools - defaultApplication scheme branches (isolated via test mode)
+    void defaultApplication_terminalReadsConfig();
+    void defaultApplication_browserStripsBang();
+    void defaultApplication_browserEmptyFallsThrough();
+    void defaultApplication_filemanagerNoServiceEmpty();
+    void defaultApplication_mailerEmptyConfigEmpty();
+    void defaultApplication_genericUnknownEmpty();
+
 private:
     QString writeColorsFile(const QString &name, const QString &body);
+    QString writeDesktopFile(const QString &name);
+    KSharedConfig::Ptr rulesConfig(const QString &name);
 
     QTemporaryDir m_dir;
 };
@@ -70,9 +110,31 @@ QString WmToolsTest::writeColorsFile(const QString &name, const QString &body)
     return path;
 }
 
+QString WmToolsTest::writeDesktopFile(const QString &name)
+{
+    const QString path = m_dir.filePath(name);
+    QFile f(path);
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        return QString();
+    }
+    QTextStream(&f) << QStringLiteral("[Desktop Entry]\nType=Application\nName=Probe\nExec=/bin/true\n");
+    f.close();
+    return path;
+}
+
+KSharedConfig::Ptr WmToolsTest::rulesConfig(const QString &name)
+{
+    return KSharedConfig::openConfig(m_dir.filePath(name), KConfig::SimpleConfig);
+}
+
 void WmToolsTest::initTestCase()
 {
     QVERIFY(m_dir.isValid());
+    // Redirect config/data/cache to a throwaway location so defaultApplication's
+    // reads of the global config are deterministic and can't pollute the real one,
+    // and so the service database the trader queries is empty (which the
+    // windowUrlFromMetadata assertions below rely on).
+    QStandardPaths::setTestModeEnabled(true);
 }
 
 void WmToolsTest::defaultApplication_nonPreferredScheme_returnsEmpty()
@@ -132,13 +194,14 @@ void WmToolsTest::appDataFromUrl_localDesktopFileReadsName()
     QVERIFY2(!shell.isEmpty(), "no /bin/sh available to use as TryExec");
 
     const QString body = QStringLiteral(
-        "[Desktop Entry]\n"
-        "Type=Application\n"
-        "Name=Latte WmTools Probe\n"
-        "GenericName=Probe Generic\n"
-        "Icon=utilities-terminal\n"
-        "Exec=%1\n"
-        "TryExec=%1\n").arg(shell);
+                             "[Desktop Entry]\n"
+                             "Type=Application\n"
+                             "Name=Latte WmTools Probe\n"
+                             "GenericName=Probe Generic\n"
+                             "Icon=utilities-terminal\n"
+                             "Exec=%1\n"
+                             "TryExec=%1\n")
+                             .arg(shell);
 
     const QString path = m_dir.filePath(QStringLiteral("lattewmtoolsprobe.desktop"));
     {
@@ -286,6 +349,228 @@ void WmToolsTest::schemeColors_possibleSchemeFileAcceptsAbsoluteColors()
 
     // A non-existent absolute .colors path resolves to nothing.
     QVERIFY(SchemeColors::possibleSchemeFile(m_dir.filePath(QStringLiteral("Nope.colors"))).isEmpty());
+}
+
+void WmToolsTest::appDataFromUrl_iconDataQueryDecodesPixmap()
+{
+    // A base64url iconData query is decoded straight into the AppData icon.
+    QImage im(4, 4, QImage::Format_ARGB32);
+    im.fill(Qt::red);
+    QByteArray png;
+    QBuffer buf(&png);
+    QVERIFY(buf.open(QIODevice::WriteOnly));
+    QVERIFY(im.save(&buf, "PNG"));
+    buf.close();
+
+    QUrl url(QStringLiteral("file:///tmp/iconprobe"));
+    QUrlQuery q;
+    q.addQueryItem(QStringLiteral("iconData"), QString::fromLatin1(png.toBase64(QByteArray::Base64UrlEncoding)));
+    url.setQuery(q);
+
+    const AppData data = appDataFromUrl(url);
+    QVERIFY(!data.icon.isNull());
+    QVERIFY(!data.icon.availableSizes().isEmpty());
+}
+
+void WmToolsTest::windowUrl_nullConfigReturnsEmpty()
+{
+    QVERIFY(windowUrlFromMetadata(QStringLiteral("anyapp"), 0, KSharedConfig::Ptr(), QStringLiteral("cls")).isEmpty());
+}
+
+void WmToolsTest::windowUrl_mappingAppIdAndClass()
+{
+    // A [Mapping] entry keyed "appId::wmClass" pointing at a .desktop wins outright.
+    auto cfg = rulesConfig(QStringLiteral("map-ac"));
+    KConfigGroup(cfg, QStringLiteral("Mapping")).writeEntry(QStringLiteral("myapp::myclass"), QStringLiteral("mapped-ac.desktop"));
+    cfg->sync();
+
+    QCOMPARE(windowUrlFromMetadata(QStringLiteral("myapp"), 0, cfg, QStringLiteral("myclass")), QUrl(QStringLiteral("mapped-ac.desktop")));
+}
+
+void WmToolsTest::windowUrl_mappingAppIdOnly()
+{
+    // With no wmClass the "appId::" key misses and the bare-appId mapping is used.
+    auto cfg = rulesConfig(QStringLiteral("map-a"));
+    KConfigGroup(cfg, QStringLiteral("Mapping")).writeEntry(QStringLiteral("myapp"), QStringLiteral("mapped-a.desktop"));
+    cfg->sync();
+
+    QCOMPARE(windowUrlFromMetadata(QStringLiteral("myapp"), 0, cfg, QString()), QUrl(QStringLiteral("mapped-a.desktop")));
+}
+
+void WmToolsTest::windowUrl_manualOnlyReturnsEmpty()
+{
+    // [Settings]ManualOnly listing the appId short-circuits to an empty URL.
+    auto cfg = rulesConfig(QStringLiteral("manual"));
+    KConfigGroup(cfg, QStringLiteral("Settings")).writeEntry(QStringLiteral("ManualOnly"), QStringList{QStringLiteral("myapp")});
+    cfg->sync();
+
+    QVERIFY(windowUrlFromMetadata(QStringLiteral("myapp"), 0, cfg, QString()).isEmpty());
+}
+
+void WmToolsTest::windowUrl_appIdIsDesktopPath()
+{
+    // An appId that is itself an absolute path to an existing .desktop resolves to it.
+    const QString path = writeDesktopFile(QStringLiteral("directpath.desktop"));
+    QVERIFY(!path.isEmpty());
+    auto cfg = rulesConfig(QStringLiteral("path"));
+
+    QCOMPARE(windowUrlFromMetadata(path, 0, cfg, QString()), QUrl::fromLocalFile(path));
+}
+
+void WmToolsTest::windowUrl_appIdPathPlusExtension()
+{
+    // An appId path missing the .desktop suffix still matches once the suffix is added.
+    const QString full = writeDesktopFile(QStringLiteral("withext.desktop"));
+    QVERIFY(!full.isEmpty());
+    const QString base = full.left(full.length() - QStringLiteral(".desktop").length());
+    auto cfg = rulesConfig(QStringLiteral("pathext"));
+
+    QCOMPARE(windowUrlFromMetadata(base, 0, cfg, QString()), QUrl::fromLocalFile(full));
+}
+
+void WmToolsTest::windowUrl_skipTaskbarAddsQuery()
+{
+    // With no mapping and no DB match, a [Settings]SkipTaskbar entry tags the
+    // (otherwise empty) URL with skipTaskbar=true.
+    const QString nonsense = QStringLiteral("latteNoSuchApp9x8y7z");
+    auto cfg = rulesConfig(QStringLiteral("skip"));
+    KConfigGroup(cfg, QStringLiteral("Settings")).writeEntry(QStringLiteral("SkipTaskbar"), QStringList{nonsense});
+    cfg->sync();
+
+    const QUrl url = windowUrlFromMetadata(nonsense, 0, cfg, QString());
+    QCOMPARE(QUrlQuery(url).queryItemValue(QStringLiteral("skipTaskbar")), QStringLiteral("true"));
+}
+
+void WmToolsTest::windowUrl_matchCommandLineFirstAppId()
+{
+    // MatchCommandLineFirst listing the appId forces the pid path first; with pid 0
+    // that yields nothing and (triedPid set) the later pid retry is skipped.
+    const QString nonsense = QStringLiteral("latteMclfNoApp123");
+    auto cfg = rulesConfig(QStringLiteral("mclf"));
+    KConfigGroup(cfg, QStringLiteral("Settings")).writeEntry(QStringLiteral("MatchCommandLineFirst"), QStringList{nonsense});
+    cfg->sync();
+
+    QVERIFY(windowUrlFromMetadata(nonsense, 0, cfg, QString()).isEmpty());
+}
+
+void WmToolsTest::windowUrl_matchCommandLineFirstWmClass()
+{
+    // The "::wmClass" form of MatchCommandLineFirst triggers the same pid-first path.
+    auto cfg = rulesConfig(QStringLiteral("mclf2"));
+    KConfigGroup(cfg, QStringLiteral("Settings")).writeEntry(QStringLiteral("MatchCommandLineFirst"), QStringList{QStringLiteral("::myclass")});
+    cfg->sync();
+
+    QVERIFY(windowUrlFromMetadata(QString(), 0, cfg, QStringLiteral("myclass")).isEmpty());
+}
+
+void WmToolsTest::servicesFromCmdLine_nullConfigEmpty()
+{
+    QVERIFY(servicesFromCmdLine(QStringLiteral("anything"), QStringLiteral("proc"), KSharedConfig::Ptr()).isEmpty());
+}
+
+void WmToolsTest::servicesFromCmdLine_syntheticFromRealBinary()
+{
+    // No service matches the test binary, so the from-binary synthetic KService fires.
+    const QString selfBin = QCoreApplication::applicationFilePath();
+    auto cfg = rulesConfig(QStringLiteral("cmd"));
+
+    const KService::List svcs = servicesFromCmdLine(selfBin, QStringLiteral("wmtoolstest"), cfg);
+    QCOMPARE(svcs.count(), 1);
+    QCOMPARE(svcs.first()->exec(), selfBin);
+}
+
+void WmToolsTest::servicesFromCmdLine_stripsArgumentsThenSynthesizes()
+{
+    // Arguments are stripped before the executable is resolved into the synthetic.
+    const QString selfBin = QCoreApplication::applicationFilePath();
+    auto cfg = rulesConfig(QStringLiteral("cmd-args"));
+
+    const KService::List svcs = servicesFromCmdLine(selfBin + QStringLiteral(" --flag value"), QStringLiteral("wmtoolstest"), cfg);
+    QCOMPARE(svcs.count(), 1);
+    QCOMPARE(svcs.first()->exec(), selfBin);
+}
+
+void WmToolsTest::servicesFromCmdLine_tryIgnoreRuntimesRecurses()
+{
+    // A runtime prefix listed in TryIgnoreRuntimes is dropped and the remainder
+    // re-evaluated; the bogus remainder resolves to nothing.
+    auto cfg = rulesConfig(QStringLiteral("cmd-runtime"));
+    KConfigGroup(cfg, QStringLiteral("Settings")).writeEntry(QStringLiteral("TryIgnoreRuntimes"), QStringList{QStringLiteral("wine")});
+    cfg->sync();
+
+    QVERIFY(servicesFromCmdLine(QStringLiteral("wine /nonexistent/app.exe"), QStringLiteral("wine"), cfg).isEmpty());
+}
+
+void WmToolsTest::servicesFromPid_zeroPidEmpty()
+{
+    auto cfg = rulesConfig(QStringLiteral("pid"));
+    QVERIFY(servicesFromPid(0, cfg).isEmpty());
+}
+
+void WmToolsTest::servicesFromPid_nullConfigEmpty()
+{
+    QVERIFY(servicesFromPid(1234, KSharedConfig::Ptr()).isEmpty());
+}
+
+void WmToolsTest::servicesFromPid_selfPidReadsProc()
+{
+    // Drives the real /proc/<pid>/environ read and the KProcessList fallback for a
+    // live pid (this process). No BAMF hint is present, so it delegates to the
+    // command-line resolver; whatever comes back must at least be well-formed.
+    auto cfg = rulesConfig(QStringLiteral("pid-self"));
+    const quint32 self = static_cast<quint32>(QCoreApplication::applicationPid());
+
+    const KService::List svcs = servicesFromPid(self, cfg);
+    for (const auto &service : svcs) {
+        QVERIFY(service);
+    }
+}
+
+void WmToolsTest::defaultApplication_terminalReadsConfig()
+{
+    KConfigGroup general(KSharedConfig::openConfig(), QStringLiteral("General"));
+    general.writeEntry(QStringLiteral("TerminalApplication"), QStringLiteral("xterm"));
+    general.sync();
+
+    QCOMPARE(defaultApplication(QUrl(QStringLiteral("preferred://terminal"))), QStringLiteral("xterm"));
+}
+
+void WmToolsTest::defaultApplication_browserStripsBang()
+{
+    KConfigGroup general(KSharedConfig::openConfig(), QStringLiteral("General"));
+    general.writeEntry(QStringLiteral("BrowserApplication"), QStringLiteral("!mybrowser"));
+    general.sync();
+
+    // The leading '!' (a "run this exact command" marker) is stripped from the id.
+    QCOMPARE(defaultApplication(QUrl(QStringLiteral("preferred://browser"))), QStringLiteral("mybrowser"));
+}
+
+void WmToolsTest::defaultApplication_browserEmptyFallsThrough()
+{
+    KConfigGroup general(KSharedConfig::openConfig(), QStringLiteral("General"));
+    general.deleteEntry(QStringLiteral("BrowserApplication"));
+    general.sync();
+
+    // No configured browser and an empty service DB -> empty id.
+    QCOMPARE(defaultApplication(QUrl(QStringLiteral("preferred://browser"))), QString());
+}
+
+void WmToolsTest::defaultApplication_filemanagerNoServiceEmpty()
+{
+    // No inode/directory handler in the empty test DB -> empty id.
+    QCOMPARE(defaultApplication(QUrl(QStringLiteral("preferred://filemanager"))), QString());
+}
+
+void WmToolsTest::defaultApplication_mailerEmptyConfigEmpty()
+{
+    // No email client configured and no kontact/kmail in the DB -> empty id.
+    QCOMPARE(defaultApplication(QUrl(QStringLiteral("preferred://mailer"))), QString());
+}
+
+void WmToolsTest::defaultApplication_genericUnknownEmpty()
+{
+    // An unrecognized host falls to the generic trader lookup, which is empty here.
+    QCOMPARE(defaultApplication(QUrl(QStringLiteral("preferred://somethingunknown"))), QString());
 }
 
 QTEST_MAIN(WmToolsTest)
