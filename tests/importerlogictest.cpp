@@ -91,6 +91,40 @@ private:
         return path;
     }
 
+    // Build an old-style lattedock-appletsrc: one Latte containment for the given
+    // session (DefaultSession=0 / AlternativeSession=1) whose applet references a
+    // systray containment, the systray containment itself, and the per-session
+    // global launchers. No LayoutSettings/version, so it reads as pre-v2 and is
+    // eligible for old-format import.
+    QString writeOldAppletsrc(const QString &path, int session, int systrayId,
+                              const QStringList &defaultLaunchers,
+                              const QStringList &alternativeLaunchers)
+    {
+        KConfig config(path);
+        KConfigGroup containments = config.group(QStringLiteral("Containments"));
+
+        KConfigGroup latteContainment = containments.group(QStringLiteral("1"));
+        latteContainment.writeEntry(QStringLiteral("plugin"), QStringLiteral("org.kde.latte.containment"));
+        latteContainment.writeEntry(QStringLiteral("session"), session);
+
+        KConfigGroup appletConfig = latteContainment.group(QStringLiteral("Applets"))
+                                        .group(QStringLiteral("10"))
+                                        .group(QStringLiteral("Configuration"));
+        appletConfig.writeEntry(QStringLiteral("SystrayContainmentId"), QString::number(systrayId));
+
+        if (systrayId != -1) {
+            KConfigGroup systray = containments.group(QString::number(systrayId));
+            systray.writeEntry(QStringLiteral("plugin"), QStringLiteral("org.kde.plasma.private.systemtray"));
+        }
+
+        KConfigGroup general = config.group(QStringLiteral("General"));
+        general.writeEntry(QStringLiteral("globalLaunchers_default"), defaultLaunchers);
+        general.writeEntry(QStringLiteral("globalLaunchers_alternative"), alternativeLaunchers);
+
+        config.sync();
+        return path;
+    }
+
 private Q_SLOTS:
     void initTestCase();
 
@@ -117,6 +151,12 @@ private Q_SLOTS:
     void importLayoutInstanceEmitsSignal();
     void storageTmpDirExists();
     void exportFullConfigurationArchivesTree();
+    void importOldLayoutDefaultSession();
+    void importOldLayoutAlternativeSession();
+    void importOldLayoutRejectsWhenNoLatteContainment();
+    void importOldConfigurationExtractsAndImports();
+    void importOldConfigurationRejectsMissingAndWrongFormat();
+    void importOldConfigurationDerivesNameFromArchive();
     void importHelperExtractsConfigArchive();
 };
 
@@ -491,6 +531,132 @@ void ImporterLogicTest::exportFullConfigurationArchivesTree()
 
     // Exporting again over the existing file exercises the remove-then-rewrite path.
     QVERIFY(imp.exportFullConfiguration(archivePath));
+}
+
+void ImporterLogicTest::importOldLayoutDefaultSession()
+{
+    const QString oldPath = configPath() + QStringLiteral("/default-appletsrc");
+    writeOldAppletsrc(oldPath, /*DefaultSession*/ 0, /*systrayId*/ 2,
+                      {QStringLiteral("a.desktop"), QStringLiteral("b.desktop")}, {});
+
+    Importer imp(nullptr);
+    QVERIFY(imp.importOldLayout(oldPath, QStringLiteral("ImportedDefault"), false, QString()));
+
+    const QString newPath = latteDir() + QStringLiteral("/ImportedDefault.layout.latte");
+    QVERIFY(QFile::exists(newPath));
+
+    // The Latte containment and the systray it referenced were both carried over.
+    KSharedConfigPtr newFile = KSharedConfig::openConfig(newPath);
+    KConfigGroup newContainments = KConfigGroup(newFile, QStringLiteral("Containments"));
+    QVERIFY(newContainments.hasGroup(QStringLiteral("1")));
+    QVERIFY(newContainments.hasGroup(QStringLiteral("2")));
+
+    // A default-session import is version 2, blue, with the default launchers.
+    Latte::Layout::AbstractLayout imported(nullptr, newPath, QStringLiteral("ImportedDefault"));
+    QCOMPARE(imported.version(), 2);
+    QCOMPARE(imported.color(), QStringLiteral("blue"));
+    QCOMPARE(imported.launchers(),
+             QStringList({QStringLiteral("a.desktop"), QStringLiteral("b.desktop")}));
+}
+
+void ImporterLogicTest::importOldLayoutAlternativeSession()
+{
+    const QString oldPath = configPath() + QStringLiteral("/alt-appletsrc");
+    writeOldAppletsrc(oldPath, /*AlternativeSession*/ 1, -1, {}, {QStringLiteral("x.desktop")});
+
+    Importer imp(nullptr);
+    QVERIFY(imp.importOldLayout(oldPath, QStringLiteral("ImportedAlt"), true, QString()));
+
+    const QString newPath = latteDir() + QStringLiteral("/ImportedAlt.layout.latte");
+    QVERIFY(QFile::exists(newPath));
+
+    // An alternative-session import is purple, with the alternative launchers.
+    Latte::Layout::AbstractLayout imported(nullptr, newPath, QStringLiteral("ImportedAlt"));
+    QCOMPARE(imported.color(), QStringLiteral("purple"));
+    QCOMPARE(imported.launchers(), QStringList({QStringLiteral("x.desktop")}));
+}
+
+void ImporterLogicTest::importOldLayoutRejectsWhenNoLatteContainment()
+{
+    const QString oldPath = configPath() + QStringLiteral("/nolatte-appletsrc");
+    {
+        KConfig config(oldPath);
+        KConfigGroup containment = config.group(QStringLiteral("Containments")).group(QStringLiteral("1"));
+        containment.writeEntry(QStringLiteral("plugin"), QStringLiteral("org.kde.plasma.desktopcontainment"));
+        config.sync();
+    }
+
+    Importer imp(nullptr);
+    QVERIFY(!imp.importOldLayout(oldPath, QStringLiteral("ShouldFail"), false, QString()));
+    QVERIFY(!QFile::exists(latteDir() + QStringLiteral("/ShouldFail.layout.latte")));
+}
+
+// Wrap an old appletsrc into a .latterc archive next to a (content-irrelevant)
+// lattedockrc, the pair importOldConfiguration() expects.
+static QString buildOldLatterc(const QString &arcPath, const QString &appletsrcPath)
+{
+    QFile appletsFile(appletsrcPath);
+    if (!appletsFile.open(QIODevice::ReadOnly)) {
+        return QString();
+    }
+    const QByteArray appletsBytes = appletsFile.readAll();
+    appletsFile.close();
+
+    KTar archive(arcPath, QStringLiteral("application/x-tar"));
+    if (!archive.open(QIODevice::WriteOnly)) {
+        return QString();
+    }
+    archive.writeFile(QStringLiteral("lattedockrc"), QByteArray("[ScreenConnectors]\n"));
+    archive.writeFile(QStringLiteral("lattedock-appletsrc"), appletsBytes);
+    archive.close();
+    return arcPath;
+}
+
+void ImporterLogicTest::importOldConfigurationExtractsAndImports()
+{
+    const QString srcApplets = configPath() + QStringLiteral("/config-appletsrc");
+    writeOldAppletsrc(srcApplets, /*DefaultSession*/ 0, -1, {QStringLiteral("k.desktop")}, {});
+
+    const QString arc = configPath() + QStringLiteral("/oldconfig.latterc");
+    QVERIFY(!buildOldLatterc(arc, srcApplets).isEmpty());
+
+    Importer imp(nullptr);
+    QVERIFY(imp.importOldConfiguration(arc, QStringLiteral("ArchiveImport")));
+    QVERIFY(QFile::exists(latteDir() + QStringLiteral("/ArchiveImport.layout.latte")));
+}
+
+void ImporterLogicTest::importOldConfigurationRejectsMissingAndWrongFormat()
+{
+    Importer imp(nullptr);
+
+    // A .latterc that does not exist.
+    QVERIFY(!imp.importOldConfiguration(configPath() + QStringLiteral("/ghost.latterc"),
+                                        QStringLiteral("x")));
+
+    // A tar that holds an unexpected member is rejected as the wrong format.
+    const QString badArc = configPath() + QStringLiteral("/badformat.latterc");
+    {
+        KTar archive(badArc, QStringLiteral("application/x-tar"));
+        QVERIFY(archive.open(QIODevice::WriteOnly));
+        archive.writeFile(QStringLiteral("lattedockrc"), QByteArray("[X]\n"));
+        archive.writeFile(QStringLiteral("junk.txt"), QByteArray("nope"));
+        archive.close();
+    }
+    QVERIFY(!imp.importOldConfiguration(badArc, QStringLiteral("x")));
+}
+
+void ImporterLogicTest::importOldConfigurationDerivesNameFromArchive()
+{
+    const QString srcApplets = configPath() + QStringLiteral("/derive-appletsrc");
+    writeOldAppletsrc(srcApplets, /*DefaultSession*/ 0, -1, {}, {});
+
+    // An empty target name falls back to the archive's base name.
+    const QString arc = configPath() + QStringLiteral("/DerivedName.latterc");
+    QVERIFY(!buildOldLatterc(arc, srcApplets).isEmpty());
+
+    Importer imp(nullptr);
+    QVERIFY(imp.importOldConfiguration(arc, QString()));
+    QVERIFY(QFile::exists(latteDir() + QStringLiteral("/DerivedName.layout.latte")));
 }
 
 void ImporterLogicTest::importHelperExtractsConfigArchive()
