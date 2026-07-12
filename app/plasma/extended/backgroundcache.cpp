@@ -7,6 +7,7 @@
 
 // local
 #include "../../tools/commontools.h"
+#include "backgroundimageinfo.h"
 
 // Qt
 #include <QDebug>
@@ -207,48 +208,8 @@ float BackgroundCache::brightnessFor(QString activity, QString screen, Plasma::T
     return -1000;
 }
 
-float BackgroundCache::brightnessFromArea(QImage &image, int firstRow, int firstColumn, int endRow, int endColumn)
-{
-    float areaBrightness = -1000;
-
-    if (image.format() != QImage::Format_Invalid) {
-        for (int row = firstRow; row < endRow; ++row) {
-            QRgb *line = (QRgb *)image.scanLine(row);
-
-            for (int col = firstColumn; col < endColumn ; ++col) {
-                QRgb pixelData = line[col];
-                float pixelBrightness = Latte::colorBrightness(pixelData);
-
-                areaBrightness = (areaBrightness == -1000) ? pixelBrightness : (areaBrightness + pixelBrightness);
-            }
-        }
-
-        float areaSize = (endRow - firstRow) * (endColumn - firstColumn);
-        areaBrightness = areaBrightness / areaSize;
-    }
-
-    return areaBrightness;
-}
-
-bool BackgroundCache::areaIsBusy(float bright1, float bright2) const
-{
-    bool bright1IsLight = bright1>=123;
-    bool bright2IsLight = bright2>=123;
-
-    bool inBounds = bright1>=0 && bright2<=255 && bright2>=0 && bright2<=255;
-
-    return !inBounds || bright1IsLight != bright2IsLight;
-}
-
-//! In order to calculate the brightness and busy hints for specific image
-//! the code is doing the following. It is not needed to calculate these values
-//! for the entire image that would also be cpu costly. The function takes
-//! the location of the area in the image for which we are interested.
-//! The area is split in ten different Tiles and for each one its brightness
-//! is computed. The brightness average from these tiles provides the entire
-//! area brightness. In order to indicate if this area is busy or not we
-//! compare the minimum and the maximum values of brightness from these
-//! tiles. If the difference it too big then the area is busy
+//! Loads the image and delegates the tiling/brightness maths to the pure
+//! BackgroundImageInfo helper, then caches the resulting hints per edge.
 void BackgroundCache::updateImageCalculations(QString imageFile, Plasma::Types::Location location)
 {
     if (m_hintsCache.size() > MAXHASHSIZE) {
@@ -258,113 +219,24 @@ void BackgroundCache::updateImageCalculations(QString imageFile, Plasma::Types::
     //! if it is a local image
     QImage image(imageFile);
 
-    if (image.format() != QImage::Format_Invalid) {
-        float brightness{-1000};
-        float maxBrightness{0};
-        float minBrightness{255};
+    if (image.format() == QImage::Format_Invalid) {
+        return;
+    }
 
-        bool vertical = (location == Plasma::Types::LeftEdge || location == Plasma::Types::RightEdge) ? true : false;
-        int imageLength = !vertical ? image.width() : image.height();
-        int tiles{qMin(10,imageLength)};
+    const BackgroundImageInfo::EdgeHints hints = BackgroundImageInfo::edgeHints(image, location);
 
-        //! 24px. should be enough because the views are always snapped to edges
-        int tileThickness = !vertical ? qMin(24,image.height()) : qMin(24,image.width());
-        int tileLength = imageLength / tiles ;
+    if (!m_hintsCache.contains(imageFile)) {
+        m_hintsCache[imageFile] = EdgesHash();
+    }
 
-        int tileWidth = !vertical ? tileLength : tileThickness;
-        int tileHeight = !vertical ? tileThickness : tileLength;
-
-        float factor = ((float)100/tiles)/100;
-
-        QList<float> subBrightness;
-
-        qDebug() << "------------   -- Image Calculations --  --------------" ;
-        qDebug() << "Hints for Background image | " << imageFile;
-        qDebug() << "Hints for Background image | Edge: " << location << ", Image size: " << image.width() << "x" << image.height() << ", Tiles: " << tiles << ", subsize: " << tileWidth << "x" << tileHeight;
-
-        //! Iterating algorigthm
-        int firstRow = 0; int firstColumn = 0; int endRow = 0; int endColumn = 0;
-
-        //! horizontal tiles calculations
-        if (location == Plasma::Types::TopEdge) {
-            firstRow = 0; endRow = tileThickness;
-        } else if (location == Plasma::Types::BottomEdge) {
-            firstRow = image.height() - tileThickness - 1; endRow = image.height() - 1;
-        }
-
-        if (!vertical) {
-            for (int i=1; i<=tiles; ++i) {
-                float subFactor = ((float)i) * factor;
-                firstColumn = endColumn+1; endColumn = (subFactor*imageLength) - 1;
-                endColumn = qMin(endColumn, imageLength-1);
-
-                int tempBrightness = brightnessFromArea(image, firstRow, firstColumn, endRow, endColumn);
-                qDebug() << " Tile considering horizontal << (" << firstColumn << "," << firstRow << ") - (" << endColumn << "," << endRow << "), subfactor: " << subFactor
-                         << ", brightness: " << tempBrightness;
-
-                subBrightness.append(tempBrightness);
-
-                if (tempBrightness > maxBrightness) {
-                    maxBrightness = tempBrightness;
-                }
-                if (tempBrightness < minBrightness) {
-                    minBrightness = tempBrightness;
-                }
-            }
-        }
-
-        //! vertical tiles calculations
-        if (location == Plasma::Types::LeftEdge) {
-            firstColumn = 0; endColumn = tileThickness;
-        } else if (location == Plasma::Types::RightEdge) {
-            firstColumn = image.width() - 1 - tileThickness; endColumn = image.width() - 1;
-        }
-
-        if (vertical) {
-            for (int i=1; i<=tiles; ++i) {
-                float subFactor = ((float)i) * factor;
-                firstRow = endRow+1; endRow = (subFactor*imageLength) - 1;
-                endRow = qMin(endRow, imageLength-1);
-
-                int tempBrightness = brightnessFromArea(image, firstRow, firstColumn, endRow, endColumn);
-                qDebug() << " Tile considering vertical << (" << firstColumn << "," << firstRow << ") - (" << endColumn << "," << endRow << "), subfactor: " << subFactor
-                         << ", brightness: " << tempBrightness;
-
-                subBrightness.append(tempBrightness);
-
-                if (tempBrightness > maxBrightness) {
-                    maxBrightness = tempBrightness;
-                }
-                if (tempBrightness < minBrightness) {
-                    minBrightness = tempBrightness;
-                }
-            }
-        }
-        //! compute total brightness for this area
-        float subBrightnessSum = 0;
-
-        for (int i=0; i<subBrightness.count(); ++i) {
-            subBrightnessSum = subBrightnessSum + subBrightness[i];
-        }
-
-        brightness = subBrightnessSum / subBrightness.count();
-
-        bool areaBusy = areaIsBusy(minBrightness, maxBrightness);
-
-        qDebug() << "Hints for Background image | Brightness: " << brightness << ", Busy: " << areaBusy << ", minBright:" << minBrightness << ", maxBright:" << maxBrightness;
-
-        if (!m_hintsCache.contains(imageFile)) {
-            m_hintsCache[imageFile] = EdgesHash();
-        }
-
-        if (!m_hintsCache[imageFile].contains(location)) {
-            imageHints iHints;
-            iHints.brightness = brightness; iHints.busy = areaBusy;
-            m_hintsCache[imageFile].insert(location, iHints);
-        } else {
-            m_hintsCache[imageFile][location].brightness = brightness;
-            m_hintsCache[imageFile][location].busy = areaBusy;
-        }
+    if (!m_hintsCache[imageFile].contains(location)) {
+        imageHints iHints;
+        iHints.brightness = hints.brightness;
+        iHints.busy = hints.busy;
+        m_hintsCache[imageFile].insert(location, iHints);
+    } else {
+        m_hintsCache[imageFile][location].brightness = hints.brightness;
+        m_hintsCache[imageFile][location].busy = hints.busy;
     }
 }
 

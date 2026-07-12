@@ -336,6 +336,17 @@ ecm_add_test(panelbackgroundscantest.cpp ${CMAKE_SOURCE_DIR}/app/plasma/extended
     LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui)
 target_include_directories(panelbackgroundscantest PRIVATE ${CMAKE_SOURCE_DIR}/app/plasma/extended)
 
+# backgroundimageinfo.cpp is the pure tiling/brightness maths extracted out of
+# BackgroundCache; direct-link it plus commontools (for colorBrightness).
+ecm_add_test(backgroundimageinfotest.cpp
+    ${CMAKE_SOURCE_DIR}/app/plasma/extended/backgroundimageinfo.cpp
+    ${CMAKE_SOURCE_DIR}/app/tools/commontools.cpp
+    TEST_NAME backgroundimageinfotest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Plasma::Plasma)
+target_include_directories(backgroundimageinfotest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/plasma/extended)
+set_tests_properties(backgroundimageinfotest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 ecm_add_test(configcontrolstest.cpp
     TEST_NAME configcontrolstest
     LINK_LIBRARIES Qt6::Test Qt6::Qml Qt6::Gui
@@ -721,7 +732,7 @@ if(LATTE_COVERAGE)
         shortcutstest viewmodelstest screenpooltest coretoolstest generictoolstest
         viewprioritytest addviewdecisiontest viewcontainertransitiontest activitysetalgebratest
         settingsnameutilstest iconsourceclassifiertest windowtrackingpredicatestest extraviewhintstest
-        positionergeometrytest storagevalidatortest
+        positionergeometrytest storagevalidatortest backgroundimageinfotest
         # GLOB-behavioral tests link the (now instrumented) app objects; listing them
         # gives their binaries the profile link flag and the export object set, which
         # is what makes the Corona-coupled core count toward whole-app coverage.

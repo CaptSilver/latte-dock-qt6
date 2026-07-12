@@ -58,12 +58,10 @@ private:
 
     bool backgroundIsBroadcasted(QString activity, QString screenName) const;
     bool pluginExistsFor(QString activity, QString screenName) const;
-    bool areaIsBusy(float bright1, float bright2) const;
     bool busyForFile(QString imageFile, Plasma::Types::Location location);
     bool isDesktopContainment(const KConfigGroup &containment) const;
 
     float brightnessForFile(QString imageFile, Plasma::Types::Location location);
-    float brightnessFromArea(QImage &image, int firstRow, int firstColumn, int endRow, int endColumn);
     QString backgroundFromConfig(const KConfigGroup &config, QString wallpaperPlugin) const;
 
     void cleanupHashes();
