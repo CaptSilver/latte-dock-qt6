@@ -1,5 +1,5 @@
 {
-  "overall_coverage": 0.26671704957678355,
+  "overall_coverage": 0.26750302297460704,
   "by_file": {
     "app/alternativeshelper.cpp": {
       "lines_hit": 0,
@@ -312,9 +312,9 @@
       "coverage": 1.0
     },
     "app/layouts/importer.cpp": {
-      "lines_hit": 300,
+      "lines_hit": 326,
       "lines_total": 527,
-      "coverage": 0.5692599620493358
+      "coverage": 0.618595825426945
     },
     "app/layouts/importer.h": {
       "lines_hit": 0,

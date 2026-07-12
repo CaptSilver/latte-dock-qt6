@@ -25,6 +25,7 @@
 #include <KConfig>
 #include <KConfigGroup>
 #include <KSharedConfig>
+#include <KArchiveDirectory>
 #include <KTar>
 #include <QDir>
 #include <QFile>
@@ -114,6 +115,8 @@ private Q_SLOTS:
     void autostartEnableDisableRoundTrip();
     void checkRepairMovesLinkedContainments();
     void importLayoutInstanceEmitsSignal();
+    void storageTmpDirExists();
+    void exportFullConfigurationArchivesTree();
     void importHelperExtractsConfigArchive();
 };
 
@@ -434,6 +437,60 @@ void ImporterLogicTest::importLayoutInstanceEmitsSignal()
     const QString bad = writeLayoutFile(configPath() + QStringLiteral("/InstanceBad.layout.latte"), 1);
     QVERIFY(imp.importLayout(bad, QStringLiteral("InstanceBad")).isEmpty());
     QCOMPARE(spy.count(), 1);
+}
+
+void ImporterLogicTest::storageTmpDirExists()
+{
+    Importer imp(nullptr);
+    const QString tmp = imp.storageTmpDir();
+    QVERIFY(!tmp.isEmpty());
+    QVERIFY(QDir(tmp).exists());
+}
+
+void ImporterLogicTest::exportFullConfigurationArchivesTree()
+{
+    // Lay down a small config tree: the rc file, one user layout, and two custom
+    // templates.
+    const QString rc = configPath() + QStringLiteral("/lattedockrc");
+    QFile rcFile(rc);
+    QVERIFY(rcFile.open(QIODevice::WriteOnly));
+    rcFile.write("[UniversalSettings]\nversion=2\n");
+    rcFile.close();
+
+    writeLayoutFile(latteDir() + QStringLiteral("/MyLayout.layout.latte"), 2);
+
+    QVERIFY(QDir(latteDir()).mkpath(QStringLiteral("templates")));
+    const QString templatesDir = latteDir() + QStringLiteral("/templates");
+    writeLayoutFile(templatesDir + QStringLiteral("/Custom.layout.latte"), 2);
+    QFile viewTemplate(templatesDir + QStringLiteral("/Custom.view.latte"));
+    QVERIFY(viewTemplate.open(QIODevice::WriteOnly));
+    viewTemplate.write("[ViewTemplateSettings]\nversion=2\n");
+    viewTemplate.close();
+
+    const QString archivePath = configPath() + QStringLiteral("/full-export.latterc");
+
+    Importer imp(nullptr);
+    QVERIFY(imp.exportFullConfiguration(archivePath));
+    QVERIFY(QFile::exists(archivePath));
+
+    // The archive holds the rc at the root and the layouts + templates under latte/.
+    KTar archive(archivePath, QStringLiteral("application/x-tar"));
+    QVERIFY(archive.open(QIODevice::ReadOnly));
+    const KArchiveDirectory *root = archive.directory();
+    QVERIFY(root->entries().contains(QStringLiteral("lattedockrc")));
+
+    const auto *latte = dynamic_cast<const KArchiveDirectory *>(root->entry(QStringLiteral("latte")));
+    QVERIFY(latte);
+    QVERIFY(latte->entries().contains(QStringLiteral("MyLayout.layout.latte")));
+
+    const auto *templates = dynamic_cast<const KArchiveDirectory *>(latte->entry(QStringLiteral("templates")));
+    QVERIFY(templates);
+    QVERIFY(templates->entries().contains(QStringLiteral("Custom.layout.latte")));
+    QVERIFY(templates->entries().contains(QStringLiteral("Custom.view.latte")));
+    archive.close();
+
+    // Exporting again over the existing file exercises the remove-then-rewrite path.
+    QVERIFY(imp.exportFullConfiguration(archivePath));
 }
 
 void ImporterLogicTest::importHelperExtractsConfigArchive()
