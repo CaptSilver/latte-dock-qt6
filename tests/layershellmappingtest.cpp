@@ -52,11 +52,21 @@ void LayerShellMappingTest::anchors_left_alignments()
 
 void LayerShellMappingTest::layer_byMode()
 {
+    //! Only the three modes that let windows overlap the dock sit on the bottom layer.
     QCOMPARE(LayerShell::layerFor(Latte::Types::WindowsCanCover), LSW::LayerBottom);
     QCOMPARE(LayerShell::layerFor(Latte::Types::WindowsAlwaysCover), LSW::LayerBottom);
     QCOMPARE(LayerShell::layerFor(Latte::Types::WindowsGoBelow), LSW::LayerBottom);
+
+    //! Every other mode wants the dock above windows. setViewOnFrontLayer() drives all of these
+    //! through layerFor(m_mode); if it instead defaults the mode to WindowsGoBelow they wrongly
+    //! land on the bottom layer -- an always-visible dock rendered underneath every window.
     QCOMPARE(LayerShell::layerFor(Latte::Types::AlwaysVisible), LSW::LayerTop);
     QCOMPARE(LayerShell::layerFor(Latte::Types::AutoHide), LSW::LayerTop);
+    QCOMPARE(LayerShell::layerFor(Latte::Types::DodgeActive), LSW::LayerTop);
+    QCOMPARE(LayerShell::layerFor(Latte::Types::DodgeMaximized), LSW::LayerTop);
+    QCOMPARE(LayerShell::layerFor(Latte::Types::DodgeAllWindows), LSW::LayerTop);
+    QCOMPARE(LayerShell::layerFor(Latte::Types::SidebarOnDemand), LSW::LayerTop);
+    QCOMPARE(LayerShell::layerFor(Latte::Types::SidebarAutoHide), LSW::LayerTop);
     QCOMPARE(LayerShell::layerFor(Latte::Types::NormalWindow), LSW::LayerTop);
 }
 

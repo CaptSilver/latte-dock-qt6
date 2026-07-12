@@ -117,7 +117,10 @@ void InfoView::showEvent(QShowEvent *ev)
 {
     QQuickWindow::showEvent(ev);
 
-    m_corona->wm()->setViewExtraFlags(this);
+    //! setupWaylandIntegration() put this message popup on the top layer so it shows above windows.
+    //! Pass an explicit above-windows mode here too; the mode-less overload defaults to
+    //! WindowsGoBelow -> LayerBottom and would bury the popup behind windows.
+    m_corona->wm()->setViewExtraFlags(this, true, Latte::Types::AlwaysVisible);
     setFlags(wFlags());
 
     m_corona->wm()->enableBlurBehind(*this);

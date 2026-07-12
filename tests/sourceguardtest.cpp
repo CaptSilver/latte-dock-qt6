@@ -104,6 +104,9 @@ private Q_SLOTS:
     void windowsTracker_updateExtraViewHints_delegatesToBucketing();
     void windowsTracker_perEventIterationAvoidsKeysCopy();
     void storageValidationDelegatesToValidator();
+    void visibilityManager_setViewOnFrontLayer_appliesConfiguredMode();
+    void infoView_showEvent_keepsPopupOnTopLayer();
+    void canvasConfigView_showEvent_staysAboveTheDock();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -648,6 +651,52 @@ void SourceGuardTest::storageValidationDelegatesToValidator()
              "hasOrphanedSubContainments inactive branch must delegate to the shared validator");
     QVERIFY2(orphanSub.contains(QStringLiteral("qobject_cast<Plasma::Applet")),
              "hasOrphanedSubContainments active branch must keep its live parent-walk");
+}
+
+void SourceGuardTest::visibilityManager_setViewOnFrontLayer_appliesConfiguredMode()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/view/visibilitymanager.cpp")),
+                                            QStringLiteral("void VisibilityManager::setViewOnFrontLayer()")));
+    QVERIFY2(!s.isEmpty(), "setViewOnFrontLayer() not found");
+    // The front-layer path must hand the view's ACTUAL visibility mode to the window system so
+    // layerFor(mode) resolves it -- AlwaysVisible/AutoHide/Dodge* -> LayerTop (above windows),
+    // WindowsGoBelow -> LayerBottom. Omitting the mode falls back to the setViewExtraFlags default
+    // (Types::WindowsGoBelow), which layerFor maps to LayerBottom, dropping an always-visible dock
+    // underneath every window (the reported bug).
+    QVERIFY2(s.contains(QStringLiteral("setViewExtraFlags(m_latteView,true,m_mode)")),
+             "setViewOnFrontLayer must pass the configured m_mode, not rely on the WindowsGoBelow default");
+    QVERIFY2(!s.contains(QStringLiteral("setViewExtraFlags(m_latteView,true);")),
+             "setViewOnFrontLayer must not call the 2-arg form that defaults the layer to WindowsGoBelow/LayerBottom");
+}
+
+void SourceGuardTest::infoView_showEvent_keepsPopupOnTopLayer()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/infoview.cpp")),
+                                            QStringLiteral("void InfoView::showEvent(QShowEvent *ev)")));
+    QVERIFY2(!s.isEmpty(), "InfoView::showEvent() not found");
+    // setupWaylandIntegration() puts the message popup on LayerTop so it is visible above windows.
+    // showEvent must not clobber that with the mode-less setViewExtraFlags(this) whose default
+    // (WindowsGoBelow) maps to LayerBottom, hiding the popup behind windows. Pass an explicit
+    // above-windows mode instead.
+    QVERIFY2(!s.contains(QStringLiteral("setViewExtraFlags(this);")),
+             "InfoView::showEvent must not call the mode-less setViewExtraFlags(this) that defaults the popup to LayerBottom");
+    QVERIFY2(s.contains(QStringLiteral("setViewExtraFlags(this,true,Latte::Types::AlwaysVisible)")),
+             "InfoView::showEvent must keep the popup on the top layer via an explicit above-windows mode");
+}
+
+void SourceGuardTest::canvasConfigView_showEvent_staysAboveTheDock()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/view/settings/canvasconfigview.cpp")),
+                                            QStringLiteral("void CanvasConfigView::showEvent(QShowEvent *ev)")));
+    QVERIFY2(!s.isEmpty(), "CanvasConfigView::showEvent() not found");
+    // The edit canvas overlays the dock -- its input region is click-through so events reach the widgets
+    // beneath -- so it must sit on the top layer, above the dock. The dock now takes LayerTop in edit mode
+    // (setViewOnFrontLayer passes the real mode), so the mode-less setViewExtraFlags(this,true) here,
+    // defaulting to WindowsGoBelow -> LayerBottom, would leave the canvas stranded behind the dock.
+    QVERIFY2(!s.contains(QStringLiteral("setViewExtraFlags(this,true);")),
+             "CanvasConfigView::showEvent must not default the canvas to LayerBottom");
+    QVERIFY2(s.contains(QStringLiteral("setViewExtraFlags(this,true,Latte::Types::AlwaysVisible)")),
+             "CanvasConfigView::showEvent must keep the canvas on the top layer, above the dock");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

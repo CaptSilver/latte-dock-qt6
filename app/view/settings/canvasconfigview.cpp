@@ -187,9 +187,11 @@ void CanvasConfigView::showEvent(QShowEvent *ev)
     //! surface is up.
     updateInputRegion();
 
-    //! show Canvas on top of all other panels/docks and show
-    //! its parent view on top afterwards
-    m_corona->wm()->setViewExtraFlags(this, true);
+    //! show Canvas on top of all other panels/docks and show its parent view on top afterwards.
+    //! An explicit above-windows mode is required: the mode-less overload defaults to WindowsGoBelow
+    //! -> LayerBottom, which would drop the canvas below the dock (the dock takes LayerTop in edit
+    //! mode) and hide the edit overlay behind it.
+    m_corona->wm()->setViewExtraFlags(this, true, Latte::Types::AlwaysVisible);
 
     QTimer::singleShot(100, [this]() {
         //! delay execution in order to take influence after last Canvas on top call

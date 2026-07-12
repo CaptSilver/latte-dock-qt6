@@ -206,7 +206,11 @@ void VisibilityManager::setViewOnBackLayer()
 
 void VisibilityManager::setViewOnFrontLayer()
 {
-    m_wm->setViewExtraFlags(m_latteView, true);
+    //! Hand the view's real visibility mode to the window system so the layer-shell layer is
+    //! layerFor(m_mode): AlwaysVisible/AutoHide/Dodge* land on LayerTop (above windows), while
+    //! WindowsGoBelow stays on LayerBottom. Omitting the mode defaults it to WindowsGoBelow, which
+    //! maps to LayerBottom and drops the dock underneath every window even when set to always show.
+    m_wm->setViewExtraFlags(m_latteView, true, m_mode);
     setIsBelowLayer(false);
     if (KWindowSystem::isPlatformX11()) {
         m_latteView->raise();
