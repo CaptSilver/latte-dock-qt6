@@ -1,5 +1,5 @@
 {
-  "overall_coverage": 0.23555730221590737,
+  "overall_coverage": 0.24003143988633271,
   "by_file": {
     "/var/home/bazzite/build/latte-dock/app/alternativeshelper.cpp": {
       "lines_hit": 0,
@@ -312,9 +312,9 @@
       "coverage": 1.0
     },
     "/var/home/bazzite/build/latte-dock/app/layouts/importer.cpp": {
-      "lines_hit": 161,
+      "lines_hit": 297,
       "lines_total": 527,
-      "coverage": 0.3055028462998102
+      "coverage": 0.5635673624288425
     },
     "/var/home/bazzite/build/latte-dock/app/layouts/importer.h": {
       "lines_hit": 0,
@@ -977,9 +977,9 @@
       "coverage": 0.0
     },
     "/var/home/bazzite/build/latte-dock/app/templates/templatesmanager.cpp": {
-      "lines_hit": 7,
+      "lines_hit": 19,
       "lines_total": 217,
-      "coverage": 0.03225806451612903
+      "coverage": 0.08755760368663594
     },
     "/var/home/bazzite/build/latte-dock/app/templates/templatesmanager.h": {
       "lines_hit": 0,
