@@ -623,6 +623,24 @@ target_include_directories(importerlogictest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/layouts ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(importerlogictest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+# factory.cpp includes layouts/importer.h, dragging in the Corona graph, so it uses
+# the same prebuilt-objects real-link and builds a real Factory over a temp XDG tree.
+ecm_add_test(indicatorfactorytest.cpp
+    TEST_NAME indicatorfactorytest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Qml Qt6::Quick Qt6::DBus Qt6::Network
+        Plasma::Activities KF6::Archive KF6::CoreAddons KF6::Crash KF6::DBusAddons
+        KF6::ConfigQml KF6::ConfigCore KF6::GuiAddons KF6::GlobalAccel KF6::I18n
+        KF6::IconThemes KF6::IconWidgets KF6::KIOWidgets KF6::Notifications
+        KF6::NewStuffWidgets KF6::WidgetsAddons Plasma::Plasma KF6::Svg KF6::Package Plasma::PlasmaQuick
+        Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
+        KF6::Service Wayland::Client
+)
+target_link_libraries(indicatorfactorytest ${_latte_app_objs})
+add_dependencies(indicatorfactorytest latte-dock)
+target_include_directories(indicatorfactorytest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/indicator ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(indicatorfactorytest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 # lastactivewindow.cpp's header pulls in the tracker graph and its .cpp includes
 # view/view.h -> the full Corona object graph, so the prebuilt-objects trick links
 # the real compiled wm/tracker/*.cpp.o (minus main.cpp) and drives the real
@@ -741,7 +759,7 @@ if(LATTE_COVERAGE)
         viewprioritytest addviewdecisiontest viewcontainertransitiontest activitysetalgebratest
         settingsnameutilstest iconsourceclassifiertest windowtrackingpredicatestest extraviewhintstest
         positionergeometrytest storagevalidatortest backgroundimageinfotest
-        windowgeometrypredicatestest
+        windowgeometrypredicatestest indicatorfactorytest
         # GLOB-behavioral tests link the (now instrumented) app objects; listing them
         # gives their binaries the profile link flag and the export object set, which
         # is what makes the Corona-coupled core count toward whole-app coverage.
