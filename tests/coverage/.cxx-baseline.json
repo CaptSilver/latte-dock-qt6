@@ -1,5 +1,5 @@
 {
-  "overall_coverage": 0.2519044740024184,
+  "overall_coverage": 0.26671704957678355,
   "by_file": {
     "app/alternativeshelper.cpp": {
       "lines_hit": 0,
@@ -22,9 +22,9 @@
       "coverage": 0.0
     },
     "app/coronaengine.cpp": {
-      "lines_hit": 85,
+      "lines_hit": 88,
       "lines_total": 219,
-      "coverage": 0.3881278538812785
+      "coverage": 0.4018264840182648
     },
     "app/coronaengine.h": {
       "lines_hit": 0,
@@ -87,9 +87,9 @@
       "coverage": 1.0
     },
     "app/data/genericbasictable.cpp": {
-      "lines_hit": 3,
+      "lines_hit": 6,
       "lines_total": 9,
-      "coverage": 0.3333333333333333
+      "coverage": 0.6666666666666666
     },
     "app/data/genericbasictable.h": {
       "lines_hit": 0,
@@ -132,9 +132,9 @@
       "coverage": 1.0
     },
     "app/data/layouticondata.cpp": {
-      "lines_hit": 18,
+      "lines_hit": 22,
       "lines_total": 34,
-      "coverage": 0.5294117647058824
+      "coverage": 0.6470588235294118
     },
     "app/data/layouticondata.h": {
       "lines_hit": 0,
@@ -142,9 +142,9 @@
       "coverage": 1.0
     },
     "app/data/layoutstable.cpp": {
-      "lines_hit": 23,
+      "lines_hit": 26,
       "lines_total": 35,
-      "coverage": 0.6571428571428571
+      "coverage": 0.7428571428571429
     },
     "app/data/layoutstable.h": {
       "lines_hit": 0,
@@ -227,9 +227,9 @@
       "coverage": 1.0
     },
     "app/lattecorona.cpp": {
-      "lines_hit": 58,
+      "lines_hit": 61,
       "lines_total": 608,
-      "coverage": 0.09539473684210527
+      "coverage": 0.10032894736842106
     },
     "app/lattecorona.h": {
       "lines_hit": 0,
@@ -242,9 +242,9 @@
       "coverage": 1.0
     },
     "app/layout/abstractlayout.cpp": {
-      "lines_hit": 151,
+      "lines_hit": 168,
       "lines_total": 277,
-      "coverage": 0.5451263537906137
+      "coverage": 0.6064981949458483
     },
     "app/layout/abstractlayout.h": {
       "lines_hit": 0,
@@ -257,9 +257,9 @@
       "coverage": 1.0
     },
     "app/layout/centrallayout.cpp": {
-      "lines_hit": 20,
+      "lines_hit": 50,
       "lines_total": 135,
-      "coverage": 0.14814814814814814
+      "coverage": 0.37037037037037035
     },
     "app/layout/centrallayout.h": {
       "lines_hit": 0,
@@ -267,9 +267,9 @@
       "coverage": 1.0
     },
     "app/layout/genericlayout.cpp": {
-      "lines_hit": 12,
+      "lines_hit": 33,
       "lines_total": 1142,
-      "coverage": 0.010507880910683012
+      "coverage": 0.028896672504378284
     },
     "app/layout/genericlayout.h": {
       "lines_hit": 0,
@@ -312,9 +312,9 @@
       "coverage": 1.0
     },
     "app/layouts/importer.cpp": {
-      "lines_hit": 297,
+      "lines_hit": 300,
       "lines_total": 527,
-      "coverage": 0.5635673624288425
+      "coverage": 0.5692599620493358
     },
     "app/layouts/importer.h": {
       "lines_hit": 0,
@@ -322,9 +322,9 @@
       "coverage": 1.0
     },
     "app/layouts/manager.cpp": {
-      "lines_hit": 17,
+      "lines_hit": 92,
       "lines_total": 260,
-      "coverage": 0.06538461538461539
+      "coverage": 0.35384615384615387
     },
     "app/layouts/manager.h": {
       "lines_hit": 0,
@@ -332,9 +332,9 @@
       "coverage": 1.0
     },
     "app/layouts/storage.cpp": {
-      "lines_hit": 528,
+      "lines_hit": 536,
       "lines_total": 1057,
-      "coverage": 0.49952696310312206
+      "coverage": 0.5070955534531694
     },
     "app/layouts/storageidremapper.cpp": {
       "lines_hit": 53,
@@ -347,9 +347,9 @@
       "coverage": 1.0
     },
     "app/layouts/storagevalidator.cpp": {
-      "lines_hit": 120,
+      "lines_hit": 123,
       "lines_total": 125,
-      "coverage": 0.96
+      "coverage": 0.984
     },
     "app/layouts/syncedlaunchers.cpp": {
       "lines_hit": 4,
@@ -362,9 +362,9 @@
       "coverage": 1.0
     },
     "app/layouts/synchronizer.cpp": {
-      "lines_hit": 42,
+      "lines_hit": 175,
       "lines_total": 764,
-      "coverage": 0.0549738219895288
+      "coverage": 0.22905759162303665
     },
     "app/layouts/synchronizer.h": {
       "lines_hit": 0,
@@ -442,9 +442,9 @@
       "coverage": 1.0
     },
     "app/plasma/extended/theme.cpp": {
-      "lines_hit": 199,
+      "lines_hit": 201,
       "lines_total": 344,
-      "coverage": 0.5784883720930233
+      "coverage": 0.5843023255813954
     },
     "app/plasma/extended/theme.h": {
       "lines_hit": 0,
@@ -842,9 +842,9 @@
       "coverage": 1.0
     },
     "app/settings/universalsettings.cpp": {
-      "lines_hit": 288,
+      "lines_hit": 308,
       "lines_total": 425,
-      "coverage": 0.6776470588235294
+      "coverage": 0.7247058823529412
     },
     "app/settings/universalsettings.h": {
       "lines_hit": 0,
@@ -977,9 +977,9 @@
       "coverage": 1.0
     },
     "app/templates/templatesmanager.cpp": {
-      "lines_hit": 21,
+      "lines_hit": 183,
       "lines_total": 217,
-      "coverage": 0.0967741935483871
+      "coverage": 0.8433179723502304
     },
     "app/templates/templatesmanager.h": {
       "lines_hit": 0,

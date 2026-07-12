@@ -681,6 +681,63 @@ target_include_directories(layoutsmodeltest PRIVATE
     ${CMAKE_SOURCE_DIR}/app/settings/settingsdialog ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(layoutsmodeltest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+# Layouts::Manager's header drags in lattecorona.h, so the prebuilt-objects
+# trick links the real manager.cpp.o (minus main.cpp) and drives it through a
+# real headless Corona.
+ecm_add_test(layoutsmanagertest.cpp
+    TEST_NAME layoutsmanagertest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::DBus Qt6::Network
+        Plasma::Activities KF6::Archive KF6::CoreAddons KF6::Crash KF6::DBusAddons
+        KF6::ConfigQml KF6::ConfigCore KF6::GuiAddons KF6::GlobalAccel KF6::I18n
+        KF6::IconThemes KF6::IconWidgets KF6::KIOWidgets KF6::Notifications
+        KF6::NewStuffWidgets Plasma::Plasma KF6::Svg KF6::Package Plasma::PlasmaQuick
+        Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
+        KF6::Service Wayland::Client
+)
+target_link_libraries(layoutsmanagertest ${_latte_app_objs})
+add_dependencies(layoutsmanagertest latte-dock)
+target_include_directories(layoutsmanagertest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(layoutsmanagertest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+# Templates::Manager's header pulls in lattecorona.h; the prebuilt-objects trick
+# links the real templatesmanager.cpp.o (minus main.cpp) and drives it against a
+# real headless Corona so init() can scan the shipped shell-package templates.
+ecm_add_test(templatesmanagertest.cpp
+    TEST_NAME templatesmanagertest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::DBus Qt6::Network
+        Plasma::Activities KF6::Archive KF6::CoreAddons KF6::Crash KF6::DBusAddons
+        KF6::ConfigQml KF6::ConfigCore KF6::GuiAddons KF6::GlobalAccel KF6::I18n
+        KF6::IconThemes KF6::IconWidgets KF6::KIOWidgets KF6::Notifications
+        KF6::NewStuffWidgets Plasma::Plasma KF6::Svg KF6::Package Plasma::PlasmaQuick
+        Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
+        KF6::Service Wayland::Client
+)
+target_link_libraries(templatesmanagertest ${_latte_app_objs})
+add_dependencies(templatesmanagertest latte-dock)
+target_include_directories(templatesmanagertest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(templatesmanagertest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+# Synchronizer's header pulls in lattecorona.h; the prebuilt-objects trick links
+# the real synchronizer.cpp.o (minus main.cpp) and drives it against a real
+# headless Corona, injecting the passive layouts table via setLayoutsTable().
+ecm_add_test(layoutssynchronizertest.cpp
+    TEST_NAME layoutssynchronizertest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::DBus Qt6::Network
+        Plasma::Activities KF6::Archive KF6::CoreAddons KF6::Crash KF6::DBusAddons
+        KF6::ConfigQml KF6::ConfigCore KF6::GuiAddons KF6::GlobalAccel KF6::I18n
+        KF6::IconThemes KF6::IconWidgets KF6::KIOWidgets KF6::Notifications
+        KF6::NewStuffWidgets Plasma::Plasma KF6::Svg KF6::Package Plasma::PlasmaQuick
+        Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
+        KF6::Service Wayland::Client
+)
+target_link_libraries(layoutssynchronizertest ${_latte_app_objs})
+add_dependencies(layoutssynchronizertest latte-dock)
+target_include_directories(layoutssynchronizertest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(layoutssynchronizertest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 # viewsmodel.cpp's header pulls in lattecorona.h (the full app object graph), so
 # the prebuilt-objects trick links the real compiled viewsmodel.cpp.o (minus
 # main.cpp) and drives the model through its header.
@@ -766,7 +823,8 @@ if(LATTE_COVERAGE)
         # gives their binaries the profile link flag and the export object set, which
         # is what makes the Corona-coupled core count toward whole-app coverage.
         universalsettingstest storagetest schemesmodeltest viewsmodeltest
-        layoutsmodeltest lastactivewindowtest importerlogictest coronaenginegeometrytest)
+        layoutsmodeltest lastactivewindowtest importerlogictest coronaenginegeometrytest
+        layoutsmanagertest templatesmanagertest layoutssynchronizertest)
     foreach(_t ${_latte_cov_targets})
         target_compile_options(${_t} PRIVATE ${LATTE_COV_COMPILE_FLAGS})
         target_link_options(${_t} PRIVATE ${LATTE_COV_LINK_FLAGS})
