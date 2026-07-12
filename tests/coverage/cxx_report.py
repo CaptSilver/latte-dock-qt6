@@ -9,11 +9,30 @@ import sys
 from pathlib import Path
 
 
+def _canon(p: str) -> str:
+    # /home/<user> and /var/home/<user> are the same inode on an ostree host, and a
+    # recreated distrobox can flip which spelling it mounts. Canonicalize so the keys
+    # don't drift between runs on different box incarnations.
+    if p.startswith("/var/home/"):
+        return "/home/" + p[len("/var/home/"):]
+    return p
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--export", required=True, help="llvm-cov export -format=text output")
     ap.add_argument("--json-out", required=True)
+    ap.add_argument("--repo-root", default=None,
+                    help="strip this prefix so by_file keys are repo-relative and path-stable")
     args = ap.parse_args()
+
+    root = _canon(args.repo_root.rstrip("/")) + "/" if args.repo_root else None
+
+    def key(filename: str) -> str:
+        canon = _canon(filename)
+        if root and canon.startswith(root):
+            return canon[len(root):]
+        return filename
 
     data = json.loads(Path(args.export).read_text(encoding="utf-8"))
     d = data["data"][0]
@@ -24,7 +43,7 @@ def main() -> int:
     for f in d["files"]:
         lines = f["summary"]["lines"]
         cov = (lines["covered"] / lines["count"]) if lines["count"] else 1.0
-        by_file[f["filename"]] = {
+        by_file[key(f["filename"])] = {
             "lines_hit": lines["covered"],
             "lines_total": lines["count"],
             "coverage": cov,

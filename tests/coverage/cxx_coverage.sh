@@ -76,4 +76,4 @@ llvm-cov export -instr-profile="$COV_DIR/coverage/merged.profdata" -format=text 
 
 echo "== report =="
 python3 "$REPO/tests/coverage/cxx_report.py" \
-    --export "$OUT/cxx-export.json" --json-out "$OUT/cxx-cov.json"
+    --export "$OUT/cxx-export.json" --json-out "$OUT/cxx-cov.json" --repo-root "$REPO"
