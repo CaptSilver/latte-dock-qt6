@@ -10,6 +10,7 @@
 // local
 #include "tracker/schemes.h"
 #include "tracker/windowstracker.h"
+#include "windowgeometrypredicates.h"
 #include "windowtrackingpredicates.h"
 #include "../lattecorona.h"
 #include "../data/activitiesinfo.h"
@@ -25,9 +26,6 @@
 
 namespace Latte {
 namespace WindowSystem {
-
-#define MAXPLASMAPANELTHICKNESS 96
-#define MAXSIDEPANELTHICKNESS 512
 
 #define KWINSERVICE QStringLiteral("org.kde.KWin")
 #define KWINVIRTUALDESKTOPMANAGERNAMESPACE QStringLiteral("org.kde.KWin.VirtualDesktopManager")
@@ -138,11 +136,11 @@ bool AbstractWindowInterface::isIgnored(const WindowId &wid) const
     return WindowTrackingPredicates::isIgnored(m_ignoredWindows, wid);
 }
 
-bool AbstractWindowInterface::isFullScreenWindow(const QRect &wGeometry) const
+//! The screen geometries as the panel predicates want them: one QRect per screen,
+//! adjusted for the X11 global-scale devicePixelRatio quirk.
+QList<QRect> AbstractWindowInterface::currentScreenGeometries() const
 {
-    if (wGeometry.isEmpty()) {
-        return false;
-    }
+    QList<QRect> geometries;
 
     for (const auto scr : qGuiApp->screens()) {
         auto screenGeometry = scr->geometry();
@@ -156,91 +154,25 @@ bool AbstractWindowInterface::isFullScreenWindow(const QRect &wGeometry) const
                                    qRound(screenGeometry.height() * factor));
         }
 
-
-        if (wGeometry == screenGeometry) {
-            return true;
-        }
+        geometries << screenGeometry;
     }
 
-    return false;
+    return geometries;
+}
+
+bool AbstractWindowInterface::isFullScreenWindow(const QRect &wGeometry) const
+{
+    return WindowGeometryPredicates::isFullScreenWindow(wGeometry, currentScreenGeometries());
 }
 
 bool AbstractWindowInterface::isPlasmaPanel(const QRect &wGeometry) const
-{     
-    if (wGeometry.isEmpty()) {
-        return false;
-    }
-
-    bool isTouchingHorizontalEdge{false};
-    bool isTouchingVerticalEdge{false};
-
-    for (const auto scr : qGuiApp->screens()) {
-        auto screenGeometry = scr->geometry();
-
-        if (KWindowSystem::isPlatformX11() && scr->devicePixelRatio() != 1.0) {
-            //!Fix for X11 Global Scale, I dont think this could be pixel perfect accurate
-            auto factor = scr->devicePixelRatio();
-            screenGeometry = QRect(qRound(screenGeometry.x() * factor),
-                                   qRound(screenGeometry.y() * factor),
-                                   qRound(screenGeometry.width() * factor),
-                                   qRound(screenGeometry.height() * factor));
-        }
-
-        if (screenGeometry.contains(wGeometry.center())) {
-            if (wGeometry.y() == screenGeometry.y() || wGeometry.bottom() == screenGeometry.bottom()) {
-                isTouchingHorizontalEdge = true;
-            }
-
-            if (wGeometry.left() == screenGeometry.left() || wGeometry.right() == screenGeometry.right()) {
-                isTouchingVerticalEdge = true;
-            }
-
-            if (isTouchingVerticalEdge && isTouchingHorizontalEdge) {
-                break;
-            }
-        }
-    }
-
-    if ((isTouchingHorizontalEdge && wGeometry.height() < MAXPLASMAPANELTHICKNESS)
-            || (isTouchingVerticalEdge && wGeometry.width() < MAXPLASMAPANELTHICKNESS)) {
-        return true;
-    }
-
-    return false;
+{
+    return WindowGeometryPredicates::isPlasmaPanel(wGeometry, currentScreenGeometries());
 }
 
 bool AbstractWindowInterface::isSidepanel(const QRect &wGeometry) const
 {
-    bool isVertical = wGeometry.height() > wGeometry.width();
-
-    int thickness = qMin(wGeometry.width(), wGeometry.height());
-    int length = qMax(wGeometry.width(), wGeometry.height());
-
-    QRect screenGeometry;
-
-    for (const auto scr : qGuiApp->screens()) {
-        auto curScrGeometry = scr->geometry();
-
-        if (KWindowSystem::isPlatformX11() && scr->devicePixelRatio() != 1.0) {
-            //!Fix for X11 Global Scale, I dont think this could be pixel perfect accurate
-            auto factor = scr->devicePixelRatio();
-            curScrGeometry = QRect(qRound(curScrGeometry.x() * factor),
-                                   qRound(curScrGeometry.y() * factor),
-                                   qRound(curScrGeometry.width() * factor),
-                                   qRound(curScrGeometry.height() * factor));
-        }
-
-        if (curScrGeometry.contains(wGeometry.center())) {
-            screenGeometry = curScrGeometry;
-            break;
-        }
-    }
-
-    bool thicknessIsAcccepted = isVertical && ((thickness > MAXPLASMAPANELTHICKNESS) && (thickness < MAXSIDEPANELTHICKNESS));
-    bool lengthIsAccepted = isVertical && !screenGeometry.isEmpty() && (length > 0.6 * screenGeometry.height());
-    float sideRatio = (float)wGeometry.width() / (float)wGeometry.height();
-
-    return (thicknessIsAcccepted && lengthIsAccepted && sideRatio<0.4);
+    return WindowGeometryPredicates::isSidepanel(wGeometry, currentScreenGeometries());
 }
 
 bool AbstractWindowInterface::hasBlockedTracking(const WindowId &wid) const

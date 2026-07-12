@@ -176,6 +176,7 @@ protected:
     bool isRegisteredPlasmaIgnoredWindow(const WindowId &wid) const;
     bool isWhitelistedWindow(const WindowId &wid) const;
 
+    QList<QRect> currentScreenGeometries() const;
     bool isFullScreenWindow(const QRect &wGeometry) const;
     bool isPlasmaPanel(const QRect &wGeometry) const;
     bool isSidepanel(const QRect &wGeometry) const;

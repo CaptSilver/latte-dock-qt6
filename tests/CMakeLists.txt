@@ -247,6 +247,14 @@ ecm_add_test(windowtrackingpredicatestest.cpp ../app/wm/windowinfowrap.cpp
 target_include_directories(windowtrackingpredicatestest PRIVATE ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(windowtrackingpredicatestest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+# windowgeometrypredicates.h is the header-only panel/window geometry classifier
+# extracted out of AbstractWindowInterface; the test just includes it.
+ecm_add_test(windowgeometrypredicatestest.cpp
+    TEST_NAME windowgeometrypredicatestest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui)
+target_include_directories(windowgeometrypredicatestest PRIVATE ${CMAKE_SOURCE_DIR}/app)
+set_tests_properties(windowgeometrypredicatestest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 ecm_add_test(extraviewhintstest.cpp
     TEST_NAME extraviewhintstest
     LINK_LIBRARIES Qt6::Test Qt6::Gui Plasma::Plasma)
@@ -733,6 +741,7 @@ if(LATTE_COVERAGE)
         viewprioritytest addviewdecisiontest viewcontainertransitiontest activitysetalgebratest
         settingsnameutilstest iconsourceclassifiertest windowtrackingpredicatestest extraviewhintstest
         positionergeometrytest storagevalidatortest backgroundimageinfotest
+        windowgeometrypredicatestest
         # GLOB-behavioral tests link the (now instrumented) app objects; listing them
         # gives their binaries the profile link flag and the export object set, which
         # is what makes the Corona-coupled core count toward whole-app coverage.
