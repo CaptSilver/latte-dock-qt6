@@ -5,15 +5,52 @@
 
 #include "../app/settings/generic/generictools.h"
 
+#include <QApplication>
+#include <QDir>
+#include <QFile>
+#include <QIcon>
 #include <QImage>
 #include <QPainter>
 #include <QRect>
 #include <QStringList>
+#include <QStyle>
 #include <QStyleOption>
+#include <QStyleOptionButton>
+#include <QStyleOptionMenuItem>
 #include <QStyleOptionViewItem>
+#include <QTemporaryDir>
+#include <QWidget>
 #include <QtTest>
 
 using namespace Latte;
+
+//! True when any pixel carries a non-zero alpha, i.e. the painter drew something.
+static bool paintedAnything(const QImage &img)
+{
+    for (int y = 0; y < img.height(); ++y) {
+        for (int x = 0; x < img.width(); ++x) {
+            if (qAlpha(img.pixel(x, y)) != 0) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+//! True when some opaque pixel is dominated by the given channel, used to assert a
+//! solid-colour fill survived scaling/antialiasing without pinning an exact RGB.
+static bool hasGreenishPixel(const QImage &img)
+{
+    for (int y = 0; y < img.height(); ++y) {
+        for (int x = 0; x < img.width(); ++x) {
+            const QRgb px = img.pixel(x, y);
+            if (qAlpha(px) > 200 && qGreen(px) > 120 && qGreen(px) > qRed(px) && qGreen(px) > qBlue(px)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
 // Real-object tests for the Settings::Generic free helpers in generictools.cpp.
 // Most take a QStyleOption + QPainter; we feed real options and assert the
@@ -25,6 +62,9 @@ class GenericToolsTest : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
+    void initTestCase();
+    void cleanup();
+
     void statePredicates_data();
     void statePredicates();
 
@@ -56,6 +96,39 @@ private Q_SLOTS:
     void drawChangesIndicatorPaints();
     void drawScreenReturnsAvailableRect();
     void drawFormattedTextDoesNotCrash();
+
+    // remaining-rect helpers not yet exercised
+    void remainedFromFormattedText_data();
+    void remainedFromFormattedText();
+    void remainedFromFormattedTextRtlFlipsSide();
+    void remainedFromIconRtlKeepsX();
+    void remainedFromColorSchemeIconCenteredReturnsFull();
+    void remainedFromColorSchemeIconDelegatesWhenAligned();
+    void remainedFromLayoutIconLeftDelegates();
+    void primitiveCheckBoxWidthIsPositive();
+    void remainedFromCheckBoxShrinksFromLeft();
+    void remainedFromCheckBoxRtlKeepsX();
+    void remainedFromChangesIndicatorRtlShiftsX();
+    void remainedFromScreenDrawingRtlKeepsX();
+
+    // drawing helpers not yet exercised
+    void drawIconPaintsThemedIcon();
+    void drawLayoutIconBackgroundPaintsEllipse();
+    void drawLayoutIconThemedPaints();
+    void drawColorSchemeIconPaintsColors();
+    void drawCheckBoxPaints();
+    void drawBackgroundViewItemPaintsSelection();
+    void drawBackgroundMenuItemPaints();
+    void drawFormattedTextCenteredPaints();
+    void drawFormattedTextRightAlignedPaints();
+    void drawFormattedTextMenuOverloadPaints();
+    void drawChangesIndicatorRtlPaintsLeftEdge();
+    void drawScreenMultipleVerticalPaints();
+    void drawHelpersAlignmentAndRtlBranches();
+
+private:
+    QTemporaryDir *m_iconDir = nullptr;
+    QString m_themeIcon;
 };
 
 static QStyleOptionViewItem makeOption(QStyle::State state, const QRect &rect = QRect(0, 0, 200, 30))
@@ -82,8 +155,7 @@ void GenericToolsTest::statePredicates_data()
     QTest::newRow("mouseover") << int(QStyle::State_MouseOver) << false << false << false << true << false;
     QTest::newRow("focus") << int(QStyle::State_HasFocus) << false << false << false << false << true;
     QTest::newRow("all")
-        << int(QStyle::State_Enabled | QStyle::State_Active | QStyle::State_Selected
-               | QStyle::State_MouseOver | QStyle::State_HasFocus)
+        << int(QStyle::State_Enabled | QStyle::State_Active | QStyle::State_Selected | QStyle::State_MouseOver | QStyle::State_HasFocus)
         << true << true << true << true << true;
 }
 
@@ -343,6 +415,429 @@ void GenericToolsTest::drawFormattedTextDoesNotCrash()
         }
     }
     QVERIFY(painted);
+}
+
+void GenericToolsTest::initTestCase()
+{
+    // Stand up a throwaway icon theme with a solid-green icon so the icon-drawing
+    // helpers resolve deterministically instead of depending on the host theme.
+    m_iconDir = new QTemporaryDir();
+    QVERIFY(m_iconDir->isValid());
+    // A theme lives at <searchPath>/<themeName>/, so build it under a named subdir.
+    const QString themeRoot = m_iconDir->path() + QStringLiteral("/lattetest");
+    m_themeIcon = QStringLiteral("latte-generictools-testicon");
+
+    const QList<int> sizes{16, 22, 32, 48};
+    QStringList dirs;
+    for (int s : sizes) {
+        const QString rel = QStringLiteral("%1x%1/apps").arg(s);
+        dirs << rel;
+        QVERIFY(QDir().mkpath(themeRoot + QLatin1Char('/') + rel));
+        QImage icon(s, s, QImage::Format_ARGB32);
+        icon.fill(QColor(0, 180, 0));
+        QVERIFY(icon.save(themeRoot + QLatin1Char('/') + rel + QLatin1Char('/') + m_themeIcon + QStringLiteral(".png")));
+    }
+
+    QString index = QStringLiteral("[Icon Theme]\nName=lattetest\nDirectories=%1\n").arg(dirs.join(QLatin1Char(',')));
+    for (int s : sizes) {
+        index += QStringLiteral("[%1x%1/apps]\nSize=%1\nType=Fixed\nContext=Applications\n").arg(s);
+    }
+    QFile idx(themeRoot + QStringLiteral("/index.theme"));
+    QVERIFY(idx.open(QIODevice::WriteOnly | QIODevice::Text));
+    idx.write(index.toUtf8());
+    idx.close();
+
+    QIcon::setThemeSearchPaths(QStringList{m_iconDir->path()});
+    QIcon::setThemeName(QStringLiteral("lattetest"));
+    QVERIFY2(QIcon::hasThemeIcon(m_themeIcon), "the test icon theme did not resolve");
+}
+
+void GenericToolsTest::cleanup()
+{
+    // Several helpers branch on qApp->layoutDirection(); reset it so an RTL test
+    // can't leak into the next one.
+    qApp->setLayoutDirection(Qt::LeftToRight);
+}
+
+void GenericToolsTest::remainedFromFormattedText_data()
+{
+    QTest::addColumn<int>("alignment");
+    QTest::addColumn<bool>("fullRect");
+    QTest::addColumn<bool>("xShifts");
+
+    // Left (LTR): the remaining rect starts after the text slot.
+    QTest::newRow("left") << int(Qt::AlignLeft) << false << true;
+    // Right (LTR): x stays put, width shrinks by the text slot.
+    QTest::newRow("right") << int(Qt::AlignRight) << false << false;
+    // Center short-circuits to the full rect.
+    QTest::newRow("center") << int(Qt::AlignHCenter) << true << false;
+}
+
+void GenericToolsTest::remainedFromFormattedText()
+{
+    QFETCH(int, alignment);
+    QFETCH(bool, fullRect);
+    QFETCH(bool, xShifts);
+
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(10, 5, 200, 30));
+    QRect r = Latte::remainedFromFormattedText(opt, QStringLiteral("Hello"), Qt::AlignmentFlag(alignment));
+
+    if (fullRect) {
+        QCOMPARE(r, opt.rect);
+        return;
+    }
+
+    QVERIFY(r.width() < opt.rect.width());
+    QCOMPARE(r.height(), opt.rect.height());
+    if (xShifts) {
+        QVERIFY(r.x() > opt.rect.x());
+    } else {
+        QCOMPARE(r.x(), opt.rect.x());
+    }
+}
+
+void GenericToolsTest::remainedFromFormattedTextRtlFlipsSide()
+{
+    // In RTL, AlignLeft flips to the right-hand computation, so x stays put
+    // (the mirror of the LTR "left" row above).
+    qApp->setLayoutDirection(Qt::RightToLeft);
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(10, 5, 200, 30));
+    QRect r = Latte::remainedFromFormattedText(opt, QStringLiteral("Hello"), Qt::AlignLeft);
+    QCOMPARE(r.x(), opt.rect.x());
+    QVERIFY(r.width() < opt.rect.width());
+}
+
+void GenericToolsTest::remainedFromIconRtlKeepsX()
+{
+    // LTR AlignLeft shifts x right (covered elsewhere); RTL flips it so x is kept.
+    qApp->setLayoutDirection(Qt::RightToLeft);
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
+    QRect r = remainedFromIcon(opt, Qt::AlignLeft);
+    QCOMPARE(r.x(), 0);
+    QVERIFY(r.width() < 200);
+    QCOMPARE(r.height(), 30);
+}
+
+void GenericToolsTest::remainedFromColorSchemeIconCenteredReturnsFull()
+{
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(3, 4, 200, 30));
+    QCOMPARE(remainedFromColorSchemeIcon(opt, Qt::AlignHCenter), QRect(3, 4, 200, 30));
+}
+
+void GenericToolsTest::remainedFromColorSchemeIconDelegatesWhenAligned()
+{
+    // Non-centered just delegates to remainedFromIcon.
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
+    QCOMPARE(remainedFromColorSchemeIcon(opt, Qt::AlignLeft), remainedFromIcon(opt, Qt::AlignLeft));
+}
+
+void GenericToolsTest::remainedFromLayoutIconLeftDelegates()
+{
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
+    QCOMPARE(remainedFromLayoutIcon(opt, Qt::AlignLeft), remainedFromIcon(opt, Qt::AlignLeft));
+}
+
+void GenericToolsTest::primitiveCheckBoxWidthIsPositive()
+{
+    QStyleOptionButton opt;
+    opt.rect = QRect(0, 0, 200, 30);
+    QVERIFY(primitiveCheckBoxWidth(opt) > 0);
+}
+
+void GenericToolsTest::remainedFromCheckBoxShrinksFromLeft()
+{
+    QStyleOptionButton opt;
+    opt.rect = QRect(0, 0, 200, 30);
+    QRect r = remainedFromCheckBox(opt, Qt::AlignLeft);
+    QVERIFY(r.width() < 200);
+    QVERIFY(r.x() > 0); // LTR left: remaining starts past the checkbox slot
+    QCOMPARE(r.height(), 30);
+}
+
+void GenericToolsTest::remainedFromCheckBoxRtlKeepsX()
+{
+    qApp->setLayoutDirection(Qt::RightToLeft);
+    QStyleOptionButton opt;
+    opt.rect = QRect(0, 0, 200, 30);
+    QRect r = remainedFromCheckBox(opt, Qt::AlignLeft);
+    QCOMPARE(r.x(), 0);
+    QVERIFY(r.width() < 200);
+}
+
+void GenericToolsTest::remainedFromChangesIndicatorRtlShiftsX()
+{
+    // RTL reserves the indicator slot on the left, so x moves right by 6+2*5=16.
+    qApp->setLayoutDirection(Qt::RightToLeft);
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(10, 5, 200, 30));
+    QRect r = remainedFromChangesIndicator(opt);
+    QCOMPARE(r.x(), 10 + 16);
+    QCOMPARE(r.width(), 200 - 16);
+}
+
+void GenericToolsTest::remainedFromScreenDrawingRtlKeepsX()
+{
+    qApp->setLayoutDirection(Qt::RightToLeft);
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 300, 40));
+    QRect r = remainedFromScreenDrawing(opt, false);
+    QCOMPARE(r.x(), 0);
+    QVERIFY(r.width() < 300);
+}
+
+void GenericToolsTest::drawIconPaintsThemedIcon()
+{
+    QImage img(200, 30, QImage::Format_ARGB32_Premultiplied);
+    img.fill(Qt::transparent);
+    QPainter p(&img);
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
+
+    drawIcon(&p, opt, m_themeIcon, Qt::AlignLeft);
+    p.end();
+
+    QVERIFY(hasGreenishPixel(img));
+}
+
+void GenericToolsTest::drawLayoutIconBackgroundPaintsEllipse()
+{
+    QImage img(200, 30, QImage::Format_ARGB32_Premultiplied);
+    img.fill(Qt::transparent);
+    QPainter p(&img);
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
+
+    // Background-file branch: even with a missing image the ellipse outline is
+    // stroked with the palette text colour, so something lands on the canvas.
+    drawLayoutIcon(&p, opt, true, QStringLiteral("/definitely/missing-bg.png"), Qt::AlignLeft);
+    p.end();
+
+    QVERIFY(paintedAnything(img));
+}
+
+void GenericToolsTest::drawLayoutIconThemedPaints()
+{
+    QImage img(200, 30, QImage::Format_ARGB32_Premultiplied);
+    img.fill(Qt::transparent);
+    QPainter p(&img);
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
+
+    drawLayoutIcon(&p, opt, false, m_themeIcon, Qt::AlignLeft);
+    p.end();
+
+    QVERIFY(hasGreenishPixel(img));
+}
+
+void GenericToolsTest::drawColorSchemeIconPaintsColors()
+{
+    QImage img(200, 30, QImage::Format_ARGB32_Premultiplied);
+    img.fill(Qt::transparent);
+    QPainter p(&img);
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
+
+    const QColor textColor(220, 0, 0); // red foreground square
+    const QColor backColor(0, 0, 220); // blue background square
+    drawColorSchemeIcon(&p, opt, textColor, backColor, Qt::AlignLeft);
+    p.end();
+
+    bool hasRed = false;
+    bool hasBlue = false;
+    for (int y = 0; y < img.height() && !(hasRed && hasBlue); ++y) {
+        for (int x = 0; x < img.width(); ++x) {
+            const QRgb px = img.pixel(x, y);
+            if (qAlpha(px) < 200) {
+                continue;
+            }
+            if (qRed(px) > 120 && qRed(px) > qGreen(px) && qRed(px) > qBlue(px)) {
+                hasRed = true;
+            }
+            if (qBlue(px) > 120 && qBlue(px) > qRed(px) && qBlue(px) > qGreen(px)) {
+                hasBlue = true;
+            }
+        }
+    }
+    QVERIFY(hasRed);
+    QVERIFY(hasBlue);
+}
+
+void GenericToolsTest::drawCheckBoxPaints()
+{
+    QImage img(200, 30, QImage::Format_ARGB32_Premultiplied);
+    img.fill(Qt::transparent);
+    QPainter p(&img);
+    QStyleOptionButton opt;
+    opt.rect = QRect(0, 0, 200, 30);
+    opt.state = QStyle::State_Enabled | QStyle::State_On;
+    opt.palette = QApplication::palette();
+
+    drawCheckBox(&p, opt, Qt::AlignLeft);
+    p.end();
+
+    QVERIFY(paintedAnything(img));
+}
+
+void GenericToolsTest::drawBackgroundViewItemPaintsSelection()
+{
+    // drawBackground(viewitem) routes through option.widget->style(), so it needs a
+    // real widget; a selected item paints its highlight.
+    QWidget host;
+    QImage img(200, 30, QImage::Format_ARGB32_Premultiplied);
+    img.fill(Qt::transparent);
+    QPainter p(&img);
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled | QStyle::State_Selected | QStyle::State_Active, QRect(0, 0, 200, 30));
+    opt.widget = &host;
+    opt.palette = host.palette();
+
+    drawBackground(&p, opt);
+    p.end();
+
+    QVERIFY(paintedAnything(img));
+}
+
+void GenericToolsTest::drawBackgroundMenuItemPaints()
+{
+    QImage img(200, 30, QImage::Format_ARGB32_Premultiplied);
+    img.fill(Qt::transparent);
+    QPainter p(&img);
+    QStyleOptionMenuItem opt;
+    opt.rect = QRect(0, 0, 200, 30);
+    opt.state = QStyle::State_Enabled | QStyle::State_Selected;
+    opt.menuItemType = QStyleOptionMenuItem::Normal;
+    opt.palette = QApplication::palette();
+
+    drawBackground(&p, QApplication::style(), opt);
+    p.end();
+
+    QVERIFY(paintedAnything(img));
+}
+
+void GenericToolsTest::drawFormattedTextCenteredPaints()
+{
+    QImage img(200, 30, QImage::Format_ARGB32_Premultiplied);
+    img.fill(Qt::transparent);
+    QPainter p(&img);
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
+    opt.text = QStringLiteral("Hi");
+    opt.displayAlignment = Qt::AlignHCenter | Qt::AlignVCenter;
+
+    // viewitem overload maps AlignHCenter -> the centered translate branch.
+    drawFormattedText(&p, opt, 1.0);
+    p.end();
+
+    QVERIFY(paintedAnything(img));
+}
+
+void GenericToolsTest::drawFormattedTextRightAlignedPaints()
+{
+    QImage img(200, 30, QImage::Format_ARGB32_Premultiplied);
+    img.fill(Qt::transparent);
+    QPainter p(&img);
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
+    opt.text = QStringLiteral("Right");
+    opt.displayAlignment = Qt::AlignRight | Qt::AlignVCenter;
+
+    drawFormattedText(&p, opt, 1.0); // LTR AlignRight -> right translate branch
+    p.end();
+
+    QVERIFY(paintedAnything(img));
+}
+
+void GenericToolsTest::drawFormattedTextMenuOverloadPaints()
+{
+    // RTL so this also drives the direction-flip branch inside the core overload.
+    qApp->setLayoutDirection(Qt::RightToLeft);
+    QImage img(200, 30, QImage::Format_ARGB32_Premultiplied);
+    img.fill(Qt::transparent);
+    QPainter p(&img);
+    QStyleOptionMenuItem opt;
+    opt.rect = QRect(0, 0, 200, 30);
+    opt.state = QStyle::State_Enabled;
+    opt.text = QStringLiteral("Menu");
+    opt.palette = QApplication::palette();
+
+    drawFormattedText(&p, opt, 1.0);
+    p.end();
+
+    QVERIFY(paintedAnything(img));
+}
+
+void GenericToolsTest::drawChangesIndicatorRtlPaintsLeftEdge()
+{
+    // RTL parks the orange dot at the left edge; assert a painted pixel there, which
+    // the LTR case (right edge) would not produce.
+    qApp->setLayoutDirection(Qt::RightToLeft);
+    QImage img(200, 30, QImage::Format_ARGB32_Premultiplied);
+    img.fill(Qt::transparent);
+    QPainter p(&img);
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
+
+    drawChangesIndicator(&p, opt);
+    p.end();
+
+    bool leftPainted = false;
+    for (int y = 0; y < img.height() && !leftPainted; ++y) {
+        for (int x = 0; x < 30; ++x) {
+            if (qAlpha(img.pixel(x, y)) != 0) {
+                leftPainted = true;
+                break;
+            }
+        }
+    }
+    QVERIFY(leftPainted);
+}
+
+void GenericToolsTest::drawScreenMultipleVerticalPaints()
+{
+    // One call covering three otherwise-uncovered branches: RTL placement, a
+    // portrait screen (isVertical), and the multiple-screens decoration.
+    qApp->setLayoutDirection(Qt::RightToLeft);
+    QImage img(300, 40, QImage::Format_ARGB32_Premultiplied);
+    img.fill(Qt::transparent);
+    QPainter p(&img);
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 300, 40));
+
+    QRect avail = drawScreen(&p, opt, true, QRect(0, 0, 1080, 1920));
+    p.end();
+
+    QVERIFY(avail.isValid());
+    QVERIFY(avail.width() > 0);
+    QVERIFY(paintedAnything(img));
+}
+
+void GenericToolsTest::drawHelpersAlignmentAndRtlBranches()
+{
+    // The icon/checkbox draw helpers place their target per alignment; exercise the
+    // right-aligned and centered LTR branches, then the RTL direction-flip branch.
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
+    QStyleOptionButton btn;
+    btn.rect = QRect(0, 0, 200, 30);
+    btn.state = QStyle::State_Enabled | QStyle::State_On;
+    btn.palette = QApplication::palette();
+    const QColor red(220, 0, 0);
+    const QColor blue(0, 0, 220);
+
+    {
+        QImage img(200, 30, QImage::Format_ARGB32_Premultiplied);
+        img.fill(Qt::transparent);
+        QPainter p(&img);
+        drawIcon(&p, opt, m_themeIcon, Qt::AlignRight);
+        drawLayoutIcon(&p, opt, false, m_themeIcon, Qt::AlignRight);
+        drawLayoutIcon(&p, opt, true, QStringLiteral("/missing.png"), Qt::AlignHCenter);
+        drawColorSchemeIcon(&p, opt, red, blue, Qt::AlignRight);
+        drawColorSchemeIcon(&p, opt, red, blue, Qt::AlignHCenter);
+        drawCheckBox(&p, btn, Qt::AlignRight);
+        p.end();
+        QVERIFY(paintedAnything(img));
+    }
+
+    {
+        qApp->setLayoutDirection(Qt::RightToLeft);
+        QImage img(200, 30, QImage::Format_ARGB32_Premultiplied);
+        img.fill(Qt::transparent);
+        QPainter p(&img);
+        drawIcon(&p, opt, m_themeIcon, Qt::AlignLeft);
+        drawLayoutIcon(&p, opt, false, m_themeIcon, Qt::AlignLeft);
+        drawColorSchemeIcon(&p, opt, red, blue, Qt::AlignLeft);
+        drawCheckBox(&p, btn, Qt::AlignLeft);
+        p.end();
+        QVERIFY(paintedAnything(img));
+    }
 }
 
 QTEST_MAIN(GenericToolsTest)
