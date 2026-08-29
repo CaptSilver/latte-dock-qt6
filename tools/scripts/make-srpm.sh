@@ -120,18 +120,24 @@ else
     # The base version and a release tag are two independent sources for the
     # same number and nothing keeps them in step.  Cut v0.10.78 without moving
     # set(VERSION), and every snapshot after it still says 0.10.77^... -- which
-    # sorts BELOW the release, so dnf pins everyone to the release and offers no
-    # snapshot ever again.  That is the same permanent, silent stall the
-    # timestamp scheme exists to prevent, reached by a different road.  Tag and
-    # bump set(VERSION) in the same commit.
+    # sorts BELOW the published 0.10.78, so dnf pins everyone to the release and
+    # offers no snapshot ever again.  That is the same permanent, silent stall
+    # the timestamp scheme exists to prevent, reached by a different road.  Tag
+    # and bump set(VERSION) in the same commit.
+    #
+    # base EQUAL to the tag is the healthy state, not a fault: the tagged commit
+    # built as the plain version, and rpm sorts ${base}^stamp ABOVE ${base}, so
+    # the next snapshot lands just above the release exactly as intended.  Only
+    # a base BELOW the newest tag is broken.
     last_tag="$(git describe --tags --abbrev=0 2>/dev/null || true)"
     if [[ -n "$last_tag" ]]; then
-        newest_v="$(printf '%s\n%s\n' "$base" "${last_tag#v}" | sort -V | tail -1)"
-        if [[ "$newest_v" != "$base" || "$base" == "${last_tag#v}" ]]; then
-            echo "make-srpm.sh: set(VERSION ${base}) is not above tag ${last_tag}." >&2
-            echo "make-srpm.sh: ${base}^${commit_stamp} would sort below the published ${last_tag#v}," >&2
-            echo "make-srpm.sh: so nobody on ${last_tag#v} would ever be offered it." >&2
-            echo "make-srpm.sh: bump set(VERSION) in CMakeLists.txt past ${last_tag#v}." >&2
+        tag_v="${last_tag#v}"
+        oldest="$(printf '%s\n%s\n' "$base" "$tag_v" | sort -V | head -1)"
+        if [[ "$base" != "$tag_v" && "$oldest" == "$base" ]]; then
+            echo "make-srpm.sh: set(VERSION ${base}) is behind tag ${last_tag}." >&2
+            echo "make-srpm.sh: ${base}^${commit_stamp} would sort below the published ${tag_v}," >&2
+            echo "make-srpm.sh: so nobody on ${tag_v} would ever be offered it." >&2
+            echo "make-srpm.sh: bump set(VERSION) in CMakeLists.txt to ${tag_v} or later." >&2
             exit 1
         fi
     fi
