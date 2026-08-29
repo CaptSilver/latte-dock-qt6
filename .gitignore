@@ -45,3 +45,61 @@ CMakeLists.txt.user*
 # Python bytecode
 __pycache__/
 
+# In-source CMake output. This tree gets configured at the repo root as often as
+# in a build/ subdirectory, so generated files land right beside the sources they
+# came from. Anything below that a loose glob would also match a real tracked
+# source is anchored or spelled out in full: Makefile, types.h, generictools.*
+# and contextmenudata.h all exist in both forms.
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+ecm_uninstall.cmake
+install_manifest.txt
+Makefile
+!.copr/Makefile
+/Testing/
+/.qt/
+/bin/
+/lib/
+/prefix.sh
+/FindQtQuick-QMLModule.cmake
+/FindQtQuick.Layouts-QMLModule.cmake
+
+# moc, uic and the Wayland scanner. tests/__/ is where the test targets' autogen
+# tree lands, out of a relative path in their include dirs.
+*_autogen/
+/tests/__/
+moc_*.cpp
+moc_*.cpp_parameters
+ui_*.h
+qwayland-*.cpp
+qwayland-*.h
+wayland-*-client-protocol.h
+wayland-*-protocol.c
+
+# Configured headers, the D-Bus adaptor, and the desktop/appdata files built from
+# the .cmake templates next to them.
+/app/config-latte.h
+/app/coretypes.h
+/app/lattedockadaptor.cpp
+/app/lattedockadaptor.h
+/app/org.kde.latte-dock.appdata.xml
+/app/org.kde.latte-dock.desktop
+/containment/plugin/lattetypes.h
+/declarativeimports/core/config-latte-lib.h
+
+# Build-time copies of tracked sources, and kcfg output. Full paths only -- each
+# of these names a real file somewhere else in the tree.
+/containmentactions/contextmenu/contextmenudata.h
+/containmentactions/contextmenu/generictools.cpp
+/containmentactions/contextmenu/generictools.h
+/declarativeimports/core/types.h
+/plasmoid/kactivitymanagerd_plugins_settings.cpp
+/plasmoid/kactivitymanagerd_plugins_settings.h
+/tests/kactivitymanagerd_plugins_settings.cpp
+/tests/kactivitymanagerd_plugins_settings.h
+
+# Coverage counters from an instrumented run.
+*.profraw
+
