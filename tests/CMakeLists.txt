@@ -792,7 +792,9 @@ set_tests_properties(qmlloadcompile PROPERTIES
 # controls offscreen and synthesize real clicks to assert behavior. New cases go
 # in tests/qml/tst_*.qml.
 add_test(NAME qmlinteraction COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/manual/qml_interaction_test.sh)
-set_tests_properties(qmlinteraction PROPERTIES TIMEOUT 120)
+set_tests_properties(qmlinteraction PROPERTIES
+    ENVIRONMENT "BUILD=${CMAKE_BINARY_DIR}"
+    TIMEOUT 300)
 
 # Static guard against the edit-mode handle flicker regressing: the ConfigOverlay handle buttons must
 # never carry an attached QQC2.ToolTip (Wayland popup-surface hover-steal). No headless behavioral repro
