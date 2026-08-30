@@ -309,4 +309,81 @@ TestCase {
         compare(root.stickerCalls, before + 1, "swatch click should call viewConfig.setSticker exactly once");
         compare(root.lastStickerArg, true, "swatch click should raise the sticker (true)");
     }
+
+    // colorDialogLoader is the only object in the tree carrying a showDialog
+    // flag; arming it instantiates the ColorDialog synchronously (its
+    // Component.onCompleted seeds selectedColor and calls open(), which is
+    // harmless offscreen -- the earlier swatch-click test already proved that).
+    function armColorDialog(all) {
+        var ldr = null;
+        for (var i = 0; i < all.length; i++) {
+            const o = all[i];
+            if (o && o.showDialog !== undefined && o.active !== undefined) {
+                ldr = o;
+                break;
+            }
+        }
+        verify(ldr, "colorDialogLoader not found");
+        ldr.showDialog = true;
+        verify(ldr.item, "ColorDialog did not instantiate");
+        return ldr;
+    }
+
+    // onAccepted strips the '#' off selectedColor into the config, disarms the
+    // loader and drops the sticker. accepted() is a plain no-arg signal on the
+    // dialog, so emitting it drives the handler directly.
+    function test_color_dialog_accepted() {
+        const obj = make();
+        const all = collectAll(obj);
+        const ldr = armColorDialog(all);
+        const dlg = ldr.item;
+
+        dlg.selectedColor = "#abcdef";
+        configuration.shadowColor = "080808";
+        const before = root.stickerCalls;
+        dlg.accepted();
+
+        compare(configuration.shadowColor, "abcdef", "accept should store the chosen color without '#'");
+        compare(ldr.showDialog, false, "accept should disarm the dialog loader");
+        compare(root.stickerCalls, before + 1, "accept should call setSticker once");
+        compare(root.lastStickerArg, false, "accept should drop the sticker");
+    }
+
+    // onRejected disarms the loader and drops the sticker but must leave the
+    // stored color alone.
+    function test_color_dialog_rejected() {
+        const obj = make();
+        const all = collectAll(obj);
+        const ldr = armColorDialog(all);
+        const dlg = ldr.item;
+
+        configuration.shadowColor = "12ab34";
+        const before = root.stickerCalls;
+        dlg.rejected();
+
+        compare(configuration.shadowColor, "12ab34", "reject must not touch the stored color");
+        compare(ldr.showDialog, false, "reject should disarm the dialog loader");
+        compare(root.stickerCalls, before + 1, "reject should call setSticker once");
+        compare(root.lastStickerArg, false, "reject should drop the sticker");
+    }
+
+    // The custom indicator button's onTypeChanged routes back into
+    // tabBar.selectTab when its type matches the view's current indicator type.
+    // Assigning the mock indicator's type first (tabBar.type follows it by
+    // binding) and then the button's own type fires the handler; landing on tab
+    // index 2 proves the selectTab(type) call ran through the custom branch.
+    function test_custom_indicator_type_routes_to_tab() {
+        const obj = make();
+        const all = collectAll(obj);
+
+        const tab = firstWith(all, "selectTab");
+        verify(tab, "selectTab owner not found");
+        const custom = firstWith(all, "updateButtonInformation");
+        verify(custom, "custom indicator button not found");
+
+        tab.currentIndex = 0;        // latteBtn checks and rewrites indicator.type...
+        indicatorObj.type = "org.kde.latte.custom.probe";   // ...so retarget it afterwards
+        custom.type = "org.kde.latte.custom.probe";
+        compare(tab.currentIndex, 2, "matching type change should select the custom tab");
+    }
 }

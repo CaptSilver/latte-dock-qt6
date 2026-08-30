@@ -16,8 +16,18 @@
 // dereference the attached `Plasmoid.configuration` singleton, which only exists
 // inside a real applet. We can't shadow an uppercase attached name, so those
 // stay live-only rather than swallow the throw to bank a hollow entry tick.
+//
+// The bridge-side handlers (onIsActiveChanged, onGroupChanged, the isReady
+// Connections and the tasksModel launcherList sync) avoid that singleton as
+// long as the group is non-unique: importLauncherListInModel then reads
+// bridge.launchers.host.{layout,universal}Launchers instead of the config.
+// bridgeComp below is the minimal host shape those paths touch. It must carry
+// addAbilityClient/removeAbilityClient too — the child Syncer has its own
+// onIsActiveChanged that registers itself the moment a bridge appears.
 import QtQuick
 import QtTest
+
+import org.kde.latte.core 0.2 as LatteCore
 
 TestCase {
     id: root
@@ -103,6 +113,37 @@ TestCase {
         }
     }
 
+    // A fake ability bridge. `property Item bridge` on the ability rejects a
+    // bare QtObject, so the root is an Item. hostCalls records every host
+    // method the ability (or its Syncer) invokes.
+    Component {
+        id: bridgeComp
+        Item {
+            id: fakeBridge
+            property var hostCalls: []
+            readonly property QtObject launchers: QtObject {
+                property var client: null
+                readonly property QtObject host: QtObject {
+                    property bool isReady: false
+                    property var layoutLaunchers: []
+                    property var universalLaunchers: []
+                    function setLayoutLaunchers(list) { fakeBridge.hostCalls.push(["setLayoutLaunchers", list]); }
+                    function setUniversalLaunchers(list) { fakeBridge.hostCalls.push(["setUniversalLaunchers", list]); }
+                    function addAbilityClient(c) { fakeBridge.hostCalls.push(["addAbilityClient"]); }
+                    function removeAbilityClient(c) { fakeBridge.hostCalls.push(["removeAbilityClient"]); }
+                    function validateSyncedLaunchersOrder(clientId, group, groupId, list) { fakeBridge.hostCalls.push(["validateOrder", list]); }
+                }
+            }
+        }
+    }
+
+    // The bridge tests flip these shared context flags; restore the defaults
+    // the non-bridge tests were written against.
+    function init() {
+        appletAbilities.myView.isReady = false;
+        root.inDraggingPhase = false;
+    }
+
     function makeContext() {
         const tm = tasksModelComp.createObject(root);
         verify(tm, "tasksModel failed");
@@ -116,15 +157,22 @@ TestCase {
     // Build the ability with bridge=null (non-synced branches) and the mock
     // context wired in. Unqualified globals (activityInfo, launchers,
     // inDraggingPhase, appletAbilities) resolve against this TestCase root.
-    function make(ctx) {
+    // Pass extra properties (e.g. a fake bridge) via `extra`.
+    function make(ctx, extra) {
         const c = Qt.createComponent(target);
         verify(c.status === Component.Ready, "compile failed: " + c.errorString());
-        const obj = createTemporaryObject(c, root, {
+        const props = {
             bridge: null,
             layout: ctx.lay,
             view: ctx.vw,
             tasksModel: ctx.tm
-        });
+        };
+        if (extra) {
+            for (var k in extra) {
+                props[k] = extra[k];
+            }
+        }
+        const obj = createTemporaryObject(c, root, props);
         verify(obj, "instantiate failed");
         return obj;
     }
@@ -335,5 +383,105 @@ TestCase {
         const ctx = makeContext();
         const m = make(ctx);
         compare(m.isActive, false); // bridge null
+    }
+
+    // onIsActiveChanged: wiring a bridge after construction flips isActive and
+    // the handler registers the ability as the bridge's launchers client.
+    function test_isactive_bridge_binding() {
+        const ctx = makeContext();
+        const m = make(ctx);
+        const fb = createTemporaryObject(bridgeComp, root);
+        verify(fb, "bridge failed");
+
+        compare(m.isActive, false);
+        verify(fb.launchers.client === null);
+
+        m.bridge = fb;
+        compare(m.isActive, true);
+        verify(fb.launchers.client === m);
+        // the child Syncer registered itself on the same flip.
+        verify(fb.hostCalls.some(function(c){ return c[0] === "addAbilityClient"; }));
+    }
+
+    // onGroupChanged with a ready myView imports the host launcher list. Group
+    // moves Unique -> Layout (never back: the unique fallback would dereference
+    // Plasmoid.configuration and throw headlessly). The import assigns
+    // tasksModel.launcherList, which the launcherList Connections mirrors back
+    // to the host as setLayoutLaunchers.
+    function test_group_change_triggers_import() {
+        const ctx = makeContext();
+        const fb = createTemporaryObject(bridgeComp, root);
+        fb.launchers.host.isReady = true;
+        fb.launchers.host.layoutLaunchers = ["file:///apps/layout-a.desktop"];
+        appletAbilities.myView.isReady = true;
+
+        const m = make(ctx, { bridge: fb });
+        compare(ctx.tm.launcherList.length, 0);
+
+        m.group = LatteCore.Types.LayoutLaunchers;
+        compare(ctx.tm.launcherList, ["file:///apps/layout-a.desktop"]);
+        const setl = fb.hostCalls.filter(function(c){ return c[0] === "setLayoutLaunchers"; }).pop();
+        verify(setl, "host never received setLayoutLaunchers");
+        compare(setl[1], ["file:///apps/layout-a.desktop"]);
+    }
+
+    // The appletAbilities.myView Connections: isReady turning true while the
+    // group is non-unique runs the import (global branch here).
+    function test_myview_ready_triggers_import() {
+        const ctx = makeContext();
+        const fb = createTemporaryObject(bridgeComp, root);
+        fb.launchers.host.isReady = true;
+        fb.launchers.host.universalLaunchers = ["file:///apps/global-b.desktop"];
+
+        const m = make(ctx, { bridge: fb });
+        m.group = LatteCore.Types.GlobalLaunchers;
+        // myView not ready yet -> the group change alone must not import.
+        compare(ctx.tm.launcherList.length, 0);
+
+        appletAbilities.myView.isReady = true;
+        compare(ctx.tm.launcherList, ["file:///apps/global-b.desktop"]);
+        const setu = fb.hostCalls.filter(function(c){ return c[0] === "setUniversalLaunchers"; }).pop();
+        verify(setu, "host never received setUniversalLaunchers");
+        compare(setu[1], ["file:///apps/global-b.desktop"]);
+    }
+
+    // The bridge.launchers.host Connections: the host becoming ready runs the
+    // one-shot startup import and latches __isLoadedDuringViewStartup.
+    function test_host_ready_triggers_import() {
+        const ctx = makeContext();
+        const fb = createTemporaryObject(bridgeComp, root);
+        fb.launchers.host.layoutLaunchers = ["file:///apps/layout-c.desktop"];
+
+        const m = make(ctx, { bridge: fb }); // host not ready yet
+        m.group = LatteCore.Types.LayoutLaunchers;
+        compare(m.__isLoadedDuringViewStartup, false);
+        compare(ctx.tm.launcherList.length, 0);
+
+        fb.launchers.host.isReady = true;
+        compare(m.__isLoadedDuringViewStartup, true);
+        compare(ctx.tm.launcherList, ["file:///apps/layout-c.desktop"]);
+    }
+
+    // The tasksModel Connections: a launcherList change with a ready host and
+    // non-unique group forwards the list to the host; with inDraggingPhase set
+    // it also forwards the currently shown list for order validation.
+    function test_launcherlist_syncs_to_host() {
+        const ctx = makeContext();
+        const fb = createTemporaryObject(bridgeComp, root);
+        fb.launchers.host.isReady = true;
+
+        const m = make(ctx, { bridge: fb });
+        m.group = LatteCore.Types.GlobalLaunchers;
+        root.inDraggingPhase = true;
+
+        ctx.tm.launcherList = ["file:///apps/direct-d.desktop"];
+        const setu = fb.hostCalls.filter(function(c){ return c[0] === "setUniversalLaunchers"; }).pop();
+        verify(setu, "host never received setUniversalLaunchers");
+        compare(setu[1], ["file:///apps/direct-d.desktop"]);
+        // dragging phase -> validateSyncedLaunchersOrder forwarded the shown
+        // list (empty: the fake layout has no task delegates).
+        const val = fb.hostCalls.filter(function(c){ return c[0] === "validateOrder"; }).pop();
+        verify(val, "host never received validateSyncedLaunchersOrder");
+        compare(val[1], []);
     }
 }

@@ -649,4 +649,118 @@ TestCase {
 
         w.destroy();
     }
+
+    // The write-through sliders' onPressedChanged handlers call their update*()
+    // unconditionally -- the !pressed guard sits inside the function, and a
+    // headless slider is never pressed -- so emitting pressedChanged() runs the
+    // real release path. Setting value writes once through the valueChanged
+    // connection, so taint the config field afterwards: only the handler emit
+    // can restore it, which pins the write on onPressedChanged itself.
+    function emitPressedAndExpect(owner, cfg, field, taint, expected) {
+        cfg[field] = taint;
+        owner.pressedChanged();
+        compare(cfg[field], expected, field + " not rewritten by the onPressedChanged handler");
+    }
+
+    function test_pressedchanged_write_through_sliders() {
+        const cfg = makeConfig();
+        const w = makeWrapper(cfg, true);
+        const page = pageOf(w);
+
+        const icon = findWithFunction(page, "updateIconSize");
+        verify(icon, "icon size slider not found");
+        icon.value = 52;
+        emitPressedAndExpect(icon, cfg, "iconSize", 1, 52);
+
+        const prop = findWithFunction(page, "updateProportionIconSize");
+        verify(prop, "proportion slider not found");
+        prop.value = 7;
+        emitPressedAndExpect(prop, cfg, "proportionIconSize", 0, 7);
+
+        const zoom = findWithFunction(page, "updateZoomLevel");
+        verify(zoom, "zoom slider not found");
+        zoom.value = 1.5;
+        emitPressedAndExpect(zoom, cfg, "zoomLevel", 0, 10);
+
+        const panel = findWithFunction(page, "updatePanelSize");
+        verify(panel, "panel size slider not found");
+        panel.value = 73;
+        emitPressedAndExpect(panel, cfg, "panelSize", 0, 73);
+
+        const transp = findWithFunction(page, "updatePanelTransparency");
+        verify(transp, "transparency slider not found");
+        transp.value = 42;
+        emitPressedAndExpect(transp, cfg, "panelTransparency", 0, 42);
+
+        w.destroy();
+    }
+
+    // Same release-path handlers for the two length sliders. Left alignment
+    // keeps updateMaxLength on its simplest branch (no offset rebalancing).
+    function test_pressedchanged_length_sliders() {
+        const cfg = makeConfig();
+        cfg.alignment = alignLeft;
+        cfg.minLength = 10;
+        cfg.offset = 0;
+        const w = makeWrapper(cfg, true);
+        const page = pageOf(w);
+
+        const maxOwner = findWithFunction(page, "updateMaxLength");
+        verify(maxOwner, "max length slider not found");
+        maxOwner.value = 80;
+        emitPressedAndExpect(maxOwner, cfg, "maxLength", 33, 80);
+
+        const minOwner = findWithFunction(page, "updateMinLength");
+        verify(minOwner, "min length slider not found");
+        minOwner.value = 22;
+        emitPressedAndExpect(minOwner, cfg, "minLength", 5, 22);
+
+        w.destroy();
+    }
+
+    // The offset slider's onPressedChanged branches on pressed: the headless
+    // (released) side runs updateOffset() and drops userInputIsValid. Unlike the
+    // other sliders its valueChanged is NOT auto-connected (only offsetValue /
+    // bounds changes are), so the config staying put after the value assignment
+    // and moving after the emit attributes the write to the handler alone.
+    // The thickness slider has no update*() function at all -- its inline
+    // handler is the only writer, verified the same way.
+    function test_pressedchanged_offset_and_thickness() {
+        const cfg = makeConfig();
+        cfg.alignment = alignCenter;
+        cfg.maxLength = 60;            // bounds [-20, 20]
+        cfg.offset = 0;
+        const w = makeWrapper(cfg, true);
+        const page = pageOf(w);
+
+        const offOwner = findWithFunction(page, "updateOffset");
+        verify(offOwner, "offset slider not found");
+        verify(offOwner.sliderIsReady, "offset slider bounds not synced");
+        offOwner.userInputIsValid = true;
+        offOwner.value = 15;
+        compare(cfg.offset, 0, "value assignment alone must not write offset");
+        offOwner.pressedChanged();     // released branch: updateOffset + invalidate
+        compare(cfg.offset, 15, "released onPressedChanged should write the offset");
+        compare(offOwner.userInputIsValid, false, "release must drop userInputIsValid");
+
+        // Thickness slider: the only 0..60 slider in the page.
+        const all = [];
+        collectAll(page, all);
+        var thick = null;
+        for (var i = 0; i < all.length; i++) {
+            const o = all[i];
+            if (o && typeof o.pressedChanged === "function" && o.pressed !== undefined
+                    && o.from === 0 && o.to === 60) {
+                thick = o;
+                break;
+            }
+        }
+        verify(thick, "thickness slider not found");
+        thick.value = 23;
+        compare(cfg.thickMargin, 8, "no writer should fire on value assignment");
+        thick.pressedChanged();
+        compare(cfg.thickMargin, 23, "released onPressedChanged should write thickMargin");
+
+        w.destroy();
+    }
 }

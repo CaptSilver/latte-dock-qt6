@@ -368,4 +368,30 @@ TestCase {
         }
         verify(wrote, "toggling the advanced switch should write inAdvancedModeForEditSettings");
     }
+
+    // pinButton.onClicked persists the checked state to the configuration and
+    // pushes it to viewConfig.setSticker. A QQC2 ToolButton's clicked() is a
+    // no-arg signal, so emitting it directly runs the handler; set checked
+    // first because a programmatic emit does not toggle it.
+    function test_pinButtonClickWritesSticker() {
+        configuration.configurationSticker = false;
+        const loader = make();
+        const all = collectAll(loader);
+        const pin = findOne(all, function (o) {
+            return o.checkable === true && o.hasOwnProperty("inStartup");
+        });
+        verify(pin, "pinButton not found");
+
+        const before = root.setStickerCalls;
+        pin.checked = true;
+        pin.clicked();
+        compare(configuration.configurationSticker, true, "click should persist checked=true");
+        compare(root.setStickerCalls, before + 1, "click should call setSticker once");
+        compare(root.lastSetSticker, true, "click should pass the checked state");
+
+        pin.checked = false;
+        pin.clicked();
+        compare(configuration.configurationSticker, false, "second click should persist checked=false");
+        compare(root.lastSetSticker, false);
+    }
 }
