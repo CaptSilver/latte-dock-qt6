@@ -187,13 +187,21 @@ Item {
                 height: width
             }
 
+            // SvgItem dereferences whatever it is handed without checking, so a
+            // null svg segfaults the shell rather than drawing nothing. An
+            // indicator that exposes no svg resources is a legitimate state, so
+            // stand in an empty Svg instead of letting the null through.
+            KSvg.Svg {
+                id: emptySvg
+            }
+
             KSvg.SvgItem {
                 id: arrow
 
                 implicitWidth: 0.25 * iconBox.width
                 implicitHeight: implicitWidth
 
-                svg: groupSvg
+                svg: groupSvg ? groupSvg : emptySvg
                 elementId: elementForLocation(Plasmoid.location)
 
                 readonly property QtObject groupSvg: indicator.resources && indicator.resources.svgs.length > 0 ? indicator.resources.svgs[0] : null
