@@ -540,7 +540,7 @@ void GlobalShortcuts::hideViewsTimerSlot()
 
     // qDebug() << "MEMORY ::: " << m_hideViews.count() << " _ " << m_viewItemsCalled.count() << " _ " << m_showShortcutBadgesMethods.count();
 
-    // TODO: modifier-release polling needs a Wayland implementation (Phase 4+)
+    // TODO: modifier-release polling still needs a Wayland implementation
     initParameters();
 }
 

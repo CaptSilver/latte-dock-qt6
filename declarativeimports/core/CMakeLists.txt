@@ -20,7 +20,7 @@ target_link_libraries(lattecoreplugin
     KF6::Svg
     KF6::Package
     Plasma::PlasmaQuick
-    # KF5::QuickAddons -> no KF6 C++ target; ported in Phase 3. TODO Phase 3.
+    # KF5::QuickAddons has no KF6 C++ target; kquickcontrolsaddons is QML-only now.
     KF6::IconThemes
     KF6::WindowSystem
 )

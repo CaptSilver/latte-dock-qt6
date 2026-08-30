@@ -62,10 +62,10 @@ find_package(LibNotificationManager REQUIRED)
 find_package(PlasmaActivitiesStats ${KF6_MIN_VERSION} REQUIRED)
 # parentPid() resolves a process tree to match audio streams to tasks.
 find_package(KSysGuard ${KF6_MIN_VERSION} REQUIRED)
-# Pre-staged for Phase 6 (Plasma::Svg -> KSvg QML/C++ port).
+# Plasma::Svg split out as KSvg in Plasma 6; both QML and C++ callers need it.
 find_package(KF6Svg ${KF6_MIN_VERSION} REQUIRED)
 find_package(KWayland REQUIRED)
-# Pre-staged for Phase 4 (dock anchoring via layer-shell).
+# Dock anchoring goes through layer-shell on Wayland.
 find_package(LayerShellQt REQUIRED)
 
 # Plasma_VERSION (libplasma) stands in for the old LibTaskManager_VERSION; same workspace release.

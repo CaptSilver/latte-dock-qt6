@@ -15,7 +15,7 @@ target_link_libraries(lattecontainmentplugin
                       Qt6::Core
                       Qt6::Qml
                       Qt6::Quick
-                      KF6::ConfigQml  # KF5::Declarative -> KF6::ConfigQml (ConfigPropertyMap); Phase 3 for QML engine setup
+                      KF6::ConfigQml  # KF5::Declarative -> KF6::ConfigQml (ConfigPropertyMap); carries the QML engine setup
                       Plasma::Plasma
                       KF6::Svg
                       Plasma::PlasmaQuick)

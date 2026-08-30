@@ -7,7 +7,7 @@
 // the running/stopped distinction from org.kde.ActivityManager. The state mapping
 // (Running == 2; a stopped activity == 4 must be excluded from the running set)
 // is the bit that was previously lost, so it gets a deterministic test. The live
-// DBus query is exercised by Track B on a session, not here.
+// The DBus query is exercised against a live session, not here.
 
 #include "../app/data/activitiesinfo.h"
 #include "../app/data/activitydata.h"

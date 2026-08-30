@@ -73,7 +73,7 @@ target_link_libraries(latte-dock
     KF6::CoreAddons
     KF6::Crash
     KF6::DBusAddons
-    KF6::ConfigQml  # KF5::Declarative split in KF6; ConfigPropertyMap moved here; QmlObjectSharedEngine removed — Phase 3
+    KF6::ConfigQml  # KF5::Declarative split in KF6; ConfigPropertyMap moved here, QmlObjectSharedEngine went away
     KF6::GuiAddons
     KF6::GlobalAccel
     KF6::I18n
@@ -83,7 +83,7 @@ target_link_libraries(latte-dock
     KF6::Notifications
     KF6::NewStuffWidgets  # KF5::NewStuff split into KF6::NewStuffCore + KF6::NewStuffWidgets in KF6
     # KF5::QuickAddons has no KF6 C++ target (kquickcontrolsaddons is QML-only in KF6);
-    # the C++ that used it is ported in Phase 3 (KCMUtils / PlasmaQuick). TODO Phase 3.
+    # the C++ that used it now goes through KCMUtils / PlasmaQuick instead.
     Plasma::Plasma
     KF6::Svg
     KF6::Package
