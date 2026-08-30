@@ -6,44 +6,33 @@
 .directory
 
 # build directory
-build*/
+/build*/
 /cmake-build*
 
-# backup files
+# backup files. *~ above already catches every foo.ext~ and .foo.ext~ an editor
+# leaves behind, so only the non-tilde leftovers need naming here.
 *.autosave
-*.desktop~
-*.gitignore~
-*.js~
 *.kate-swp
-*.qml~
-*.sh~
-*.xml~
-.*.cpp~
-.*.h~
-.*.js~
-.*.pot~
-.*.po~
-.*.qml~
-.*.txt~
-.*.xml~
-.*~
 *.*.user
 *.*.orig
+*.rej
 
-# locale files
+# locale files. locale/ is what ki18n_install(po) writes when the tree is
+# configured in-source; the .po sources it compiles from stay tracked under po/.
 *.mo
+/locale/
 
 # KDevelop Project files
 *.kdev4
-.kdev4/
 
 !*.layout.latte
 
 CMakeLists.txt.user*
 /compile_commands.json
 
-# Python bytecode
+# Python bytecode and pytest state
 __pycache__/
+.pytest_cache/
 
 # In-source CMake output. This tree gets configured at the repo root as often as
 # in a build/ subdirectory, so generated files land right beside the sources they
@@ -102,4 +91,10 @@ wayland-*-protocol.c
 
 # Coverage counters from an instrumented run.
 *.profraw
+
+# Scene-probe per-run output. Only lands in the tree when the artifact dir is
+# pointed at it; the blessed .expected.<device>.png baselines beside it stay
+# tracked, so nothing here may match those.
+*.actual.png
+*.diff.png
 
