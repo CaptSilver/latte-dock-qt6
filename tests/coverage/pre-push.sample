@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 # Coverage ratchet as a pre-push gate. Install with:
 #   ln -sf ../../tests/coverage/pre-push.sample .git/hooks/pre-push
-# Runs the gate inside the fedora distrobox; blocks the push on regression.
+# Blocks the push when coverage regresses against the recorded baseline.
+#
+# Keep the executable bit on this file. A symlinked hook inherits its target's
+# mode, and git skips a hook it cannot execute without reporting anything -- the
+# push simply succeeds and the gate never runs.
+#
+# run.sh needs the build toolchain on PATH. If yours lives in a container, point
+# the hook at a wrapper that enters it rather than hardcoding one here.
 set -euo pipefail
-exec distrobox enter fedora -- bash -lc '~/build/latte-dock/tests/coverage/run.sh'
+exec "$(dirname "$(readlink -f "$0")")/run.sh"
