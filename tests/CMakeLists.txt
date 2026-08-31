@@ -671,6 +671,27 @@ set_tests_properties(lastactivewindowtest PROPERTIES ENVIRONMENT "QT_QPA_PLATFOR
 # layoutsmodel.cpp's header pulls in lattecorona.h (the full app object graph),
 # so the prebuilt-objects trick links the real compiled layoutsmodel.cpp.o (minus
 # main.cpp) and drives the model through its header.
+# The four tests below construct a real Latte::Corona, which resolves the shell package
+# through KPackage; with nothing installed they fail on a null layouts manager, which reads
+# like a code bug and is not. Stage the install once as a ctest fixture instead of making
+# every caller export XDG_DATA_DIRS by hand.
+#
+# The stage has to sit outside both the temp dir and $HOME. Data::Layout::isSystemTemplate()
+# rejects any id under QDir::tempPath() or QDir::homePath(), so staging into either one
+# reclassifies every shipped template as a user template and the template lookups go false.
+string(MD5 _latte_stage_id "${CMAKE_BINARY_DIR}")
+set(LATTE_SHELL_STAGE "/var/tmp/latte-shellstage-${_latte_stage_id}" CACHE PATH
+    "Where the shell package is staged for the tests that need a resolvable install")
+set(LATTE_SHELL_STAGE_ENV "XDG_DATA_DIRS=${LATTE_SHELL_STAGE}/usr/share:/usr/share")
+
+add_test(NAME shellpackagestage COMMAND ${CMAKE_COMMAND} --install ${CMAKE_BINARY_DIR})
+set_tests_properties(shellpackagestage PROPERTIES
+    ENVIRONMENT "DESTDIR=${LATTE_SHELL_STAGE}"
+    FIXTURES_SETUP shellpackage)
+
+add_test(NAME shellpackagestageclean COMMAND ${CMAKE_COMMAND} -E rm -rf ${LATTE_SHELL_STAGE})
+set_tests_properties(shellpackagestageclean PROPERTIES FIXTURES_CLEANUP shellpackage)
+
 ecm_add_test(layoutsmodeltest.cpp
     TEST_NAME layoutsmodeltest
     LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::DBus Qt6::Network
@@ -686,7 +707,9 @@ add_dependencies(layoutsmodeltest latte-dock)
 target_include_directories(layoutsmodeltest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/settings
     ${CMAKE_SOURCE_DIR}/app/settings/settingsdialog ${CMAKE_BINARY_DIR}/app)
-set_tests_properties(layoutsmodeltest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+set_tests_properties(layoutsmodeltest PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;${LATTE_SHELL_STAGE_ENV}"
+    FIXTURES_REQUIRED shellpackage)
 
 # Layouts::Manager's header drags in lattecorona.h, so the prebuilt-objects
 # trick links the real manager.cpp.o (minus main.cpp) and drives it through a
@@ -705,7 +728,9 @@ target_link_libraries(layoutsmanagertest ${_latte_app_objs})
 add_dependencies(layoutsmanagertest latte-dock)
 target_include_directories(layoutsmanagertest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
-set_tests_properties(layoutsmanagertest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+set_tests_properties(layoutsmanagertest PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;${LATTE_SHELL_STAGE_ENV}"
+    FIXTURES_REQUIRED shellpackage)
 
 # Templates::Manager's header pulls in lattecorona.h; the prebuilt-objects trick
 # links the real templatesmanager.cpp.o (minus main.cpp) and drives it against a
@@ -724,7 +749,9 @@ target_link_libraries(templatesmanagertest ${_latte_app_objs})
 add_dependencies(templatesmanagertest latte-dock)
 target_include_directories(templatesmanagertest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
-set_tests_properties(templatesmanagertest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+set_tests_properties(templatesmanagertest PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;${LATTE_SHELL_STAGE_ENV}"
+    FIXTURES_REQUIRED shellpackage)
 
 # Synchronizer's header pulls in lattecorona.h; the prebuilt-objects trick links
 # the real synchronizer.cpp.o (minus main.cpp) and drives it against a real
@@ -743,7 +770,9 @@ target_link_libraries(layoutssynchronizertest ${_latte_app_objs})
 add_dependencies(layoutssynchronizertest latte-dock)
 target_include_directories(layoutssynchronizertest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
-set_tests_properties(layoutssynchronizertest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+set_tests_properties(layoutssynchronizertest PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;${LATTE_SHELL_STAGE_ENV}"
+    FIXTURES_REQUIRED shellpackage)
 
 # viewsmodel.cpp's header pulls in lattecorona.h (the full app object graph), so
 # the prebuilt-objects trick links the real compiled viewsmodel.cpp.o (minus
