@@ -43,12 +43,12 @@ private:
                                  "}\n")
                                  .arg(id, name, category);
         QFile f(dir + QStringLiteral("/metadata.json"));
-        f.open(QIODevice::WriteOnly | QIODevice::Text);
+        QVERIFY2(f.open(QIODevice::WriteOnly | QIODevice::Text), qPrintable(f.fileName()));
         f.write(json.toUtf8());
         f.close();
 
         QFile ui(dir + QStringLiteral("/package/main.qml"));
-        ui.open(QIODevice::WriteOnly | QIODevice::Text);
+        QVERIFY2(ui.open(QIODevice::WriteOnly | QIODevice::Text), qPrintable(ui.fileName()));
         ui.write("import QtQuick\nItem {}\n");
         ui.close();
     }

@@ -78,17 +78,17 @@ void TabPreferences::initUi()
         Q_EMIT dataChanged();
     });
 
-    connect(m_ui->autostartChkBox, &QCheckBox::stateChanged, this, [&]() {
+    connect(m_ui->autostartChkBox, &QCheckBox::checkStateChanged, this, [&]() {
         m_preferences.autostart = m_ui->autostartChkBox->isChecked();
         Q_EMIT dataChanged();
     });
 
-    connect(m_ui->badges3DStyleChkBox, &QCheckBox::stateChanged, this, [&]() {
+    connect(m_ui->badges3DStyleChkBox, &QCheckBox::checkStateChanged, this, [&]() {
         m_preferences.badgeStyle3D = m_ui->badges3DStyleChkBox->isChecked();
         Q_EMIT dataChanged();
     });
 
-    connect(m_ui->broadcastGeomChkBox, &QCheckBox::stateChanged, this, [&]() {
+    connect(m_ui->broadcastGeomChkBox, &QCheckBox::checkStateChanged, this, [&]() {
         m_preferences.isAvailableGeometryBroadcastedToPlasma = m_ui->broadcastGeomChkBox->isChecked();
         Q_EMIT dataChanged();
     });
@@ -98,22 +98,22 @@ void TabPreferences::initUi()
         Q_EMIT dataChanged();
     });
 
-    connect(m_ui->metaPressChkBox, &QCheckBox::stateChanged, this, [&]() {
+    connect(m_ui->metaPressChkBox, &QCheckBox::checkStateChanged, this, [&]() {
         m_preferences.metaPressForAppLauncher = m_ui->metaPressChkBox->isChecked();
         Q_EMIT dataChanged();
     });
 
-    connect(m_ui->metaPressHoldChkBox, &QCheckBox::stateChanged, this, [&]() {
+    connect(m_ui->metaPressHoldChkBox, &QCheckBox::checkStateChanged, this, [&]() {
         m_preferences.metaHoldForBadges = m_ui->metaPressHoldChkBox->isChecked();
         Q_EMIT dataChanged();
     });
 
-    connect(m_ui->infoWindowChkBox, &QCheckBox::stateChanged, this, [&]() {
+    connect(m_ui->infoWindowChkBox, &QCheckBox::checkStateChanged, this, [&]() {
         m_preferences.layoutsInformationWindow = m_ui->infoWindowChkBox->isChecked();
         Q_EMIT dataChanged();
     });
 
-    connect(m_ui->noBordersForMaximizedChkBox, &QCheckBox::stateChanged, this, [&]() {
+    connect(m_ui->noBordersForMaximizedChkBox, &QCheckBox::checkStateChanged, this, [&]() {
         m_preferences.borderlessMaximized = m_ui->noBordersForMaximizedChkBox->isChecked();
         Q_EMIT dataChanged();
     });

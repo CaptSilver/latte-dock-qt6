@@ -55,11 +55,10 @@ Storage::Storage()
 
 
     //! Known SubContainment Families
-    SubContaimentIdentityData data;
     //! Systray Family
-    m_subIdentities << SubContaimentIdentityData{.cfgGroup=QStringLiteral("Configuration"), .cfgProperty=QStringLiteral("SystrayContainmentId")};
+    m_subIdentities << SubContaimentIdentityData{QStringLiteral("Configuration"), QStringLiteral("SystrayContainmentId")};
     //! Group applet Family
-    m_subIdentities << SubContaimentIdentityData{.cfgGroup=QStringLiteral("Configuration"), .cfgProperty=QStringLiteral("ContainmentId")};
+    m_subIdentities << SubContaimentIdentityData{QStringLiteral("Configuration"), QStringLiteral("ContainmentId")};
 }
 
 Storage::~Storage()

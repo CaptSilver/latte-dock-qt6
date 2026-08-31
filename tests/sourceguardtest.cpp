@@ -107,6 +107,11 @@ private Q_SLOTS:
     void visibilityManager_setViewOnFrontLayer_appliesConfiguredMode();
     void infoView_showEvent_keepsPopupOnTopLayer();
     void canvasConfigView_showEvent_staysAboveTheDock();
+    void iconItem_appliesEffectsThroughTheStaticApi();
+    void tabLayouts_onRawLayoutDropped_reportsAFailedImport();
+    void layoutsController_addLayoutByText_guardsTheTemporaryFile();
+    void importer_checksEveryArchiveOpen();
+    void filterDebugMessageOutput_survivesAnUnopenableLogFile();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -697,6 +702,63 @@ void SourceGuardTest::canvasConfigView_showEvent_staysAboveTheDock()
              "CanvasConfigView::showEvent must not default the canvas to LayerBottom");
     QVERIFY2(s.contains(QStringLiteral("setViewExtraFlags(this,true,Latte::Types::AlwaysVisible)")),
              "CanvasConfigView::showEvent must keep the canvas on the top layer, above the dock");
+}
+
+void SourceGuardTest::iconItem_appliesEffectsThroughTheStaticApi()
+{
+    const QString s = readFile(QStringLiteral("declarativeimports/core/iconitem.cpp"));
+    QVERIFY2(!s.isEmpty(), "iconitem.cpp unreadable");
+    // KIconLoader::iconEffect() and KIconEffect::apply() went away in KF 6.5. The static
+    // helpers mutate the pixmap in place, so a half-converted call site would compile as
+    // a copy that is applied to nothing and silently drop the disabled/active rendering.
+    QVERIFY2(!s.contains(QStringLiteral("iconEffect()->apply(")),
+             "iconitem.cpp must not use the removed KIconLoader::iconEffect() API");
+    QVERIFY2(s.contains(QStringLiteral("KIconEffect::toDisabled(")) && s.contains(QStringLiteral("KIconEffect::toActive(")),
+             "iconitem.cpp must still apply the disabled and active icon effects");
+}
+
+void SourceGuardTest::tabLayouts_onRawLayoutDropped_reportsAFailedImport()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/settings/settingsdialog/tablayoutshandler.cpp")),
+                                            QStringLiteral("void TabLayouts::onRawLayoutDropped(const QString &rawLayout)")));
+    QVERIFY2(!s.isEmpty(), "TabLayouts::onRawLayoutDropped() not found");
+    // addLayoutByText() returns a default-constructed layout when the drop cannot be imported.
+    // Announcing that unconditionally produced a green "Layout <b></b> imported successfully".
+    QVERIFY2(s.contains(QStringLiteral("importedlayout.isEmpty()")),
+             "a failed raw-layout drop must be detected before the success message");
+    QVERIFY2(s.contains(QStringLiteral("KMessageWidget::Error")),
+             "a failed raw-layout drop must be reported as an error");
+}
+
+void SourceGuardTest::layoutsController_addLayoutByText_guardsTheTemporaryFile()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/settings/settingsdialog/layoutscontroller.cpp")),
+                                            QStringLiteral("const Latte::Data::Layout Layouts::addLayoutByText(QString rawLayoutText)")));
+    QVERIFY2(!s.isEmpty(), "Layouts::addLayoutByText() not found");
+    // An unopened QTemporaryFile has an empty fileName(), so carrying on built a CentralLayout
+    // over a nonexistent path and pushed a phantom row into the model.
+    QVERIFY2(s.contains(QStringLiteral("if(!tempFile.open())")),
+             "addLayoutByText must not continue when the temporary file cannot be opened");
+}
+
+void SourceGuardTest::importer_checksEveryArchiveOpen()
+{
+    const QString s = stripped(readFile(QStringLiteral("app/layouts/importer.cpp")));
+    QVERIFY2(!s.isEmpty(), "importer.cpp unreadable");
+    // KArchive::open() is nodiscard for a reason: every directory() walk below it dereferences
+    // a null entry when the archive never opened.
+    QVERIFY2(!s.contains(QStringLiteral("archive.open(QIODevice::ReadOnly);")),
+             "importer.cpp must not ignore the result of KArchive::open()");
+}
+
+void SourceGuardTest::filterDebugMessageOutput_survivesAnUnopenableLogFile()
+{
+    const QString s = stripped(readFile(QStringLiteral("app/main.cpp")));
+    QVERIFY2(!s.isEmpty(), "main.cpp unreadable");
+    // Writing into an unopened QFile makes QIODevice warn on every single message, and this
+    // function is the installed handler for those warnings.
+    QVERIFY2(s.contains(QStringLiteral("if(logfile.open(QIODevice::WriteOnly|QIODevice::Append))")),
+             "the --log-file writer must check that the log file actually opened");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

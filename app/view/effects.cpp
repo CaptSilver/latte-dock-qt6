@@ -523,7 +523,7 @@ void Effects::updateEffects()
                         clearEffects = true;
                     } else {
                         const QVariant maskProperty = m_panelBackgroundSvg->property("mask");
-                        if (static_cast<QMetaType::Type>(maskProperty.type()) == QMetaType::QRegion) {
+                        if (maskProperty.typeId() == QMetaType::QRegion) {
                             backMask = maskProperty.value<QRegion>();
                         }
                     }

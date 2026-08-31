@@ -540,9 +540,9 @@ void IconItem::loadPixmap()
     }
 
     if (!isEnabled()) {
-        result = KIconLoader::global()->iconEffect()->apply(result, KIconLoader::Desktop, KIconLoader::DisabledState);
+        KIconEffect::toDisabled(result);
     } else if (m_active) {
-        result = KIconLoader::global()->iconEffect()->apply(result, KIconLoader::Desktop, KIconLoader::ActiveState);
+        KIconEffect::toActive(result);
     }
 
     m_iconPixmap = result;

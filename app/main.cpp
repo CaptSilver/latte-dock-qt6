@@ -39,13 +39,13 @@
 // KQuickAddons/QtQuickSettings removed: gone in KF6 (render backend now auto-configured)
 
 //! COLORS
-#define CNORMAL  "\e[0m"
-#define CIGREEN  "\e[1;32m"
-#define CGREEN   "\e[0;32m"
-#define CICYAN   "\e[1;36m"
-#define CCYAN    "\e[0;36m"
-#define CIRED    "\e[1;31m"
-#define CRED     "\e[0;31m"
+#define CNORMAL  "\033[0m"
+#define CIGREEN  "\033[1;32m"
+#define CGREEN   "\033[0;32m"
+#define CICYAN   "\033[1;36m"
+#define CCYAN    "\033[0;36m"
+#define CIRED    "\033[1;31m"
+#define CRED     "\033[0;31m"
 
 inline void configureAboutData();
 inline void detectPlatform(int argc, char **argv);
@@ -56,19 +56,11 @@ QString filterDebugLogFile;
 
 int main(int argc, char **argv)
 {
-    //Plasma scales itself to font DPI
-    //on X, where we don't have compositor scaling, this generally works fine.
-    //also there are bugs on older Qt, especially when it comes to fractional scaling
-    //there's advantages to disabling, and (other than small context menu icons) few advantages in enabling
-
-    //On wayland, it's different. Everything is simpler as all coordinates are in the same coordinate system
-    //we don't have fractional scaling on the client so don't hit most the remaining bugs and
-    //even if we don't use Qt scaling the compositor will try to scale us anyway so we have no choice
+    //Plasma scales itself to font DPI and Qt6 applies its own high-DPI scaling on top. The two
+    //attributes that used to switch that off are no-ops now, so all that is left here is keeping
+    //a stale device pixel ratio out of the environment for the processes we start.
     if (!qEnvironmentVariableIsSet("PLASMA_USE_QT_SCALING")) {
         qunsetenv("QT_DEVICE_PIXEL_RATIO");
-        QCoreApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
-    } else {
-        QCoreApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
     }
 
     QQuickWindow::setDefaultAlphaBuffer(true);
@@ -483,11 +475,21 @@ inline void filterDebugMessageOutput(QtMsgType type, const QMessageLogContext &c
                           #endif
                            << CICYAN << " - " << CNORMAL << msg;
     } else {
+        const QString logline = QStringLiteral("[") + typeStr + QStringLiteral(" : ") + QTime::currentTime().toString(QStringLiteral("h:mm:ss.zz")) + QStringLiteral("] - ") + msg;
+
         QFile logfile(filterDebugLogFile);
-        logfile.open(QIODevice::WriteOnly | QIODevice::Append);
-        QTextStream logts(&logfile);
-        logts << "[" << typeStr.toStdString().c_str() << " : " << QTime::currentTime().toString(QStringLiteral("h:mm:ss.zz")).toStdString().c_str() << "]"
-              <<  " - " << msg << Qt::endl;
+
+        if (logfile.open(QIODevice::WriteOnly | QIODevice::Append)) {
+            QTextStream logts(&logfile);
+            logts << logline << Qt::endl;
+        } else {
+            //! a q*() call made from inside the installed handler skips the handler and lands in
+            //! Qt's raw fallback, losing the prefix and filtering applied above, so report straight
+            //! to stderr. Streaming into an unopened QFile instead drops the line and makes
+            //! QIODevice warn about the closed device on every message that follows.
+            QTextStream errts(stderr);
+            errts << logline << Qt::endl;
+        }
     }
 }
 

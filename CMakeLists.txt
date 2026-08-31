@@ -10,7 +10,7 @@ set(WEBSITE "https://userbase.kde.org/LatteDock")
 set(BUG_ADDRESS "https://bugs.kde.org/enter_bug.cgi?product=lattedock")
 set(FAQS "https://userbase.kde.org/LatteDock/FAQ")
 
-set(QT_MIN_VERSION "6.6.0")
+set(QT_MIN_VERSION "6.7.0")
 set(KF6_MIN_VERSION "6.5.0")
 set(KDE_COMPILERSETTINGS_LEVEL "6.5.0")
 

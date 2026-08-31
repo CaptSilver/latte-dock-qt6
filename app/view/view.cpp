@@ -1698,7 +1698,7 @@ void View::releaseGrab()
     setMouseGrabEnabled(false);
 
     //! Send a fake QEvent::Leave to inform applets for mouse leaving the view
-    QHoverEvent e(QEvent::Leave, QPoint(-5,-5),  QPoint(m_releaseGrab_x, m_releaseGrab_y));
+    QHoverEvent e(QEvent::Leave, QPoint(-5,-5), QPoint(-5,-5), QPoint(m_releaseGrab_x, m_releaseGrab_y));
     QCoreApplication::instance()->sendEvent(this, &e);
 }
 
