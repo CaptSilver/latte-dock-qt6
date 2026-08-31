@@ -72,8 +72,24 @@ CAT_STAGED="$OUT/cat-staged.json"
 RUN_STAGED="$OUT/run-staged.txt"
 
 echo "== stage the install tree =="
+# Instrumenting the QML is instrument.py's job further down, not the compiler's, so any
+# configured tree can supply this install. Default to the in-source tree, which tracks
+# current source; build-coverage only exists once cxx_coverage.sh has built it, and its
+# plugins go stale between runs.
+COV_BUILD="${COV_BUILD:-$REPO}"
+[ -f "$COV_BUILD/cmake_install.cmake" ] || {
+    echo "FATAL: no configured build at $COV_BUILD to stage from." >&2
+    echo "       Configure one, or point COV_BUILD at an existing build dir." >&2
+    exit 1
+}
+# Install into a scratch dir and swap it in, so a failed install leaves the previous stage
+# where it was. Deleting first meant one bad install stranded every tests/qml/pkg test,
+# each of which resolves its target through $STAGE.
+STAGE_NEW="$STAGE.new"
+rm -rf "$STAGE_NEW"
+( cd "$COV_BUILD" && DESTDIR="$STAGE_NEW" cmake --install . ) >/dev/null
 rm -rf "$STAGE"
-( cd "$REPO/build-coverage" && DESTDIR="$STAGE" cmake --install . ) >/dev/null
+mv "$STAGE_NEW" "$STAGE"
 
 echo "== instrument the staged install tree =="
 python3 "$REPO/tools/qmlcov/instrument.py" --root "$STAGE" \

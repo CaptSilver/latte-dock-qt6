@@ -6,7 +6,7 @@
 set -u
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 HERE="$REPO/tests/e2e"
-BUILD="$REPO/build"
+BUILD="${BUILD:-$REPO}"
 DOCK="$BUILD/bin/latte-dock"
 IMGDIFF="$BUILD/bin/latte-imgdiff"
 # Default to a plasmoid that ships a renderable contents/ui/main.qml on disk so the pixel

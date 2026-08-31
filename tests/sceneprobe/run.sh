@@ -21,8 +21,12 @@ export SCENEPROBE_DEVICE
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 HERE="$REPO/tests/sceneprobe"
 WRAP="$HERE/run_in_kwin.sh"
-BUILD="${1:-$REPO/build-asan}"
-[ -x "$BUILD/bin/latte-sceneprobe" ] || BUILD="$REPO/build"
+BUILD="${1:-${BUILD:-$REPO/build-asan}}"
+if [ ! -x "$BUILD/bin/latte-sceneprobe" ]; then
+  echo "note: no probe under $BUILD - falling back to $REPO, which is built without" >&2
+  echo "      ASan, so the sanitizer half of this gate is inactive." >&2
+  BUILD="$REPO"
+fi
 PROBE="$BUILD/bin/latte-sceneprobe"
 [ -x "$PROBE" ] || { echo "no latte-sceneprobe at $PROBE (build it first)"; exit 2; }
 echo "device mode: $SCENEPROBE_DEVICE"
@@ -33,7 +37,7 @@ OUT="$(mktemp)"; trap 'rm -f "$OUT"' EXIT
 # real org.kde.latte.components types — the system copy in this environment can be stale
 # (qmldir lists files that aren't installed). The modules are source .qml copied by install,
 # so they reflect current source regardless of build state. Installs from the normal build.
-STAGE_BUILD="$REPO/build"
+STAGE_BUILD="${STAGE_BUILD:-$REPO}"
 [ -d "$STAGE_BUILD" ] || { echo "no build dir at $STAGE_BUILD to stage QML from"; exit 2; }
 STAGE="$(mktemp -d)"
 trap 'rm -f "$OUT"; rm -rf "$STAGE"' EXIT

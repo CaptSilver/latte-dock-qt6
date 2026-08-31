@@ -205,6 +205,13 @@ ecm_add_test(sourceguardtest.cpp
 target_compile_definitions(sourceguardtest PRIVATE
     REPO_ROOT="${CMAKE_SOURCE_DIR}")
 
+ecm_add_test(scriptguardtest.cpp
+    TEST_NAME scriptguardtest
+    LINK_LIBRARIES Qt6::Test Qt6::Core
+)
+target_compile_definitions(scriptguardtest PRIVATE
+    REPO_ROOT="${CMAKE_SOURCE_DIR}")
+
 ecm_add_test(activitiesinfotest.cpp ../app/data/activitiesinfo.cpp
     TEST_NAME activitiesinfotest
     LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::DBus
@@ -809,6 +816,7 @@ if(LATTE_COVERAGE)
     set(_latte_cov_targets
         indicatorsknsrctest templatesnametest storageroundtriptest storageidremappertest
         abstractlayouttest bindingrestoremodetest alternativescreateapplettest sourceguardtest
+        scriptguardtest
         activitiesinfotest activitystatescachetest syncedlaunchersclienttest layershellmappingtest
         windowinfowraptest windowindextest visibilityrevealtest coretypesenumtest appletzoomsizetest
         panelbackgroundtest panelbackgroundscantest configcontrolstest contextmenudefaulttest
