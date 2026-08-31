@@ -53,6 +53,7 @@ private Q_SLOTS:
     void uninstall_doesNotReadTheStaleBuildManifest();
     void uninstall_failsLoudlyWhenTheManifestIsMissing();
     void e2eRunner_honoursABuildDirOverride();
+    void manualRunners_doNotDefaultToTheStaleBuildTree();
     void sceneprobeRunner_stagesFromTheSelectedBuildDir();
     void sceneprobeRunner_announcesAnUninstrumentedFallback();
     void qmlCoverage_honoursACoverageBuildOverride();
@@ -153,6 +154,19 @@ void ScriptGuardTest::qmlCoverage_stagesBeforeDestroyingThePreviousStage()
     QVERIFY2(build != -1, "qml_coverage.sh should install into a scratch stage first");
     QVERIFY2(destroy == -1 || build < destroy,
              "qml_coverage.sh destroys the stage before the step that rebuilds it");
+}
+
+void ScriptGuardTest::manualRunners_doNotDefaultToTheStaleBuildTree()
+{
+    // ctest passes BUILD explicitly, so these defaults only ever bite someone running the
+    // script by hand -- which is exactly when a two-month-old tree is hardest to notice.
+    for (const QString &rel : {QStringLiteral("tests/manual/qml_load_compile.sh"),
+                               QStringLiteral("tests/manual/qml_interaction_test.sh")}) {
+        const QString src = readScript(rel);
+        QVERIFY2(!src.isEmpty(), qPrintable(rel + QStringLiteral(" unreadable")));
+        QVERIFY2(!src.contains(QStringLiteral("${BUILD:-$REPO/build}")),
+                 qPrintable(rel + QStringLiteral(" still defaults to the stale $REPO/build")));
+    }
 }
 
 QTEST_MAIN(ScriptGuardTest)

@@ -14,7 +14,7 @@
 set -u
 
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
-BUILD="${BUILD:-$REPO/build}"
+BUILD="${BUILD:-$REPO}"
 STAGE="${STAGE:-/tmp/lattestage}"
 QMLTESTRUNNER="${QMLTESTRUNNER:-/usr/lib64/qt6/bin/qmltestrunner}"
 

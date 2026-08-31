@@ -27,6 +27,26 @@ _guard_no_warning_cap() {
     fi
 }
 
+echo "== stage the install tree =="
+# Instrumenting the QML is instrument.py's job further down, not the compiler's, so any
+# configured tree can supply this install. Default to the in-source tree, which tracks
+# current source; build-coverage only exists once cxx_coverage.sh has built it, and its
+# plugins go stale between runs.
+COV_BUILD="${COV_BUILD:-$REPO}"
+[ -f "$COV_BUILD/cmake_install.cmake" ] || {
+    echo "FATAL: no configured build at $COV_BUILD to stage from." >&2
+    echo "       Configure one, or point COV_BUILD at an existing build dir." >&2
+    exit 1
+}
+# Install into a scratch dir and swap it in, so a failed install leaves the previous stage
+# where it was. Deleting first meant one bad install stranded every tests/qml/pkg test,
+# each of which resolves its target through $STAGE.
+STAGE_NEW="$STAGE.new"
+rm -rf "$STAGE_NEW"
+( cd "$COV_BUILD" && DESTDIR="$STAGE_NEW" cmake --install . ) >/dev/null
+rm -rf "$STAGE"
+mv "$STAGE_NEW" "$STAGE"
+
 # ------------------------------------------------------------------ RUN 1 ----
 # Repo-relative instrumented mirror of tests/qml + production dirs, exercised by
 # the leaf-component suite. Covers the leaf components and the _covself fixture.
@@ -59,6 +79,7 @@ QT_QPA_PLATFORM=offscreen "$QMLTESTRUNNER" \
     -maxwarnings 0 \
     -input "$MIRROR/tests/qml" \
     -import /usr/lib64/qt6/qml \
+    -import "$STAGE/usr/lib64/qt6/qml" \
     -import "$MIRROR/tests/qml" \
     > "$RUN_MIRROR" 2>&1 || {
         echo "qmltestrunner (mirror) failed:"; tail -30 "$RUN_MIRROR"; exit 1; }
@@ -70,26 +91,6 @@ _guard_no_warning_cap "$RUN_MIRROR" mirror
 # $STAGE by a build-relative file URL.
 CAT_STAGED="$OUT/cat-staged.json"
 RUN_STAGED="$OUT/run-staged.txt"
-
-echo "== stage the install tree =="
-# Instrumenting the QML is instrument.py's job further down, not the compiler's, so any
-# configured tree can supply this install. Default to the in-source tree, which tracks
-# current source; build-coverage only exists once cxx_coverage.sh has built it, and its
-# plugins go stale between runs.
-COV_BUILD="${COV_BUILD:-$REPO}"
-[ -f "$COV_BUILD/cmake_install.cmake" ] || {
-    echo "FATAL: no configured build at $COV_BUILD to stage from." >&2
-    echo "       Configure one, or point COV_BUILD at an existing build dir." >&2
-    exit 1
-}
-# Install into a scratch dir and swap it in, so a failed install leaves the previous stage
-# where it was. Deleting first meant one bad install stranded every tests/qml/pkg test,
-# each of which resolves its target through $STAGE.
-STAGE_NEW="$STAGE.new"
-rm -rf "$STAGE_NEW"
-( cd "$COV_BUILD" && DESTDIR="$STAGE_NEW" cmake --install . ) >/dev/null
-rm -rf "$STAGE"
-mv "$STAGE_NEW" "$STAGE"
 
 echo "== instrument the staged install tree =="
 python3 "$REPO/tools/qmlcov/instrument.py" --root "$STAGE" \
