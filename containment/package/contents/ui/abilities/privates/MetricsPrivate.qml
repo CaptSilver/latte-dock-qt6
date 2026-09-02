@@ -66,7 +66,7 @@ AbilityHost.Metrics {
         }
 
         //! 45% of max shadow size in px.
-        var shadowMaxNeededMargin = 0.45 * root.myView.itemShadow.maxSize;
+        var shadowMaxNeededMargin = 0.45 * root.myView.itemShadowMaxSize;
         var shadowOpacity = (Plasmoid.configuration.shadowOpacity) / 100;
         //! +40% of shadow opacity in percentage
         shadowOpacity = shadowOpacity + shadowOpacity*0.4;

@@ -29,7 +29,7 @@ AbilityItem.IndicatorLevel {
                                        abilityItem.abilities.metrics.iconSize + abilityItem.abilities.metrics.totals.lengthPaddings :
                                        abilityItem.parabolicItem.length - 2*abilityItem.parabolicItem.zoom*abilityItem.abilities.metrics.margin.length
     readonly property real thickness: abilityItem.preserveIndicatorInInitialPosition ?
-                                          abilityItem.abilities.metrics.thickness :
+                                          abilityItem.abilities.metrics.totals.thickness :
                                           abilityItem.parabolicItem.thickness
 
     Connections {

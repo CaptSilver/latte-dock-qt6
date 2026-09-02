@@ -74,10 +74,10 @@ Item{
 
             Kirigami.Icon{
                 id: tempRemoveIcon
-                anchors.rightMargin: root.location === PlasmaCore.Types.LeftEdge ? taskItem.abilities.metrics.margin.thickness : 0
-                anchors.leftMargin: root.location === PlasmaCore.Types.RightEdge ? taskItem.abilities.metrics.margin.thickness : 0
-                anchors.topMargin: root.location === PlasmaCore.Types.BottomEdge ? taskItem.abilities.metrics.margin.thickness : 0
-                anchors.bottomMargin: root.location === PlasmaCore.Types.TopEdge ? taskItem.abilities.metrics.margin.thickness : 0
+                anchors.rightMargin: root.location === PlasmaCore.Types.LeftEdge ? taskItem.abilities.metrics.margin.tailThickness : 0
+                anchors.leftMargin: root.location === PlasmaCore.Types.RightEdge ? taskItem.abilities.metrics.margin.tailThickness : 0
+                anchors.topMargin: root.location === PlasmaCore.Types.BottomEdge ? taskItem.abilities.metrics.margin.tailThickness : 0
+                anchors.bottomMargin: root.location === PlasmaCore.Types.TopEdge ? taskItem.abilities.metrics.margin.tailThickness : 0
 
                 anchors.horizontalCenter: !root.vertical ? parent.horizontalCenter : undefined;
                 anchors.verticalCenter: root.vertical ? parent.verticalCenter : undefined;

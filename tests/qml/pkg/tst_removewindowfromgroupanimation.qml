@@ -78,7 +78,14 @@ TestCase {
             }
             property QtObject metrics: QtObject {
                 property int iconSize: 48
-                property QtObject margin: QtObject { property int thickness: 4 }
+                // The real Margin ability has no symmetric `thickness`; mock its actual
+                // shape, with tail and head deliberately different so an assertion on one
+                // of them cannot pass on the other.
+                property QtObject margin: QtObject {
+                    property int tailThickness: 4
+                    property int headThickness: 7
+                    property int screenEdge: 0
+                }
             }
             property QtObject animations: QtObject {
                 // slide duration = 2 * 0.25 * 120 = 60ms: long enough to catch
@@ -104,6 +111,18 @@ TestCase {
         root.vertical = false;
         root.windowRemovedFromGroupEnabled = true;
         root._providesRemovedAnimation = false;
+    }
+
+    // The ghost's children are the shadow Loader, the Kirigami.Icon and the
+    // desaturating MultiEffect. All three carry a `source`, so pick the icon by
+    // isMask, which only Kirigami.Icon has.
+    function ghostIconOf(ghost) {
+        for (var i = 0; i < ghost.children.length; ++i) {
+            if (ghost.children[i] && ('isMask' in ghost.children[i])) {
+                return ghost.children[i];
+            }
+        }
+        return null;
     }
 
     // The slide animation is a resource of the ghost, not a child; identify it
@@ -158,6 +177,45 @@ TestCase {
 
         tryVerify(function() { return root.children.length === before; }, 4000,
                   "ghost was not destroyed when the slide stopped");
+    }
+
+    // The ghost icon is inset from its cell edge by the item's thickness margin,
+    // the same inset the real icon carries -- one margin per dock edge, the rest
+    // zero. A margin read that resolves to undefined leaves the anchor at 0 and
+    // draws the ghost flush against the edge before it slides off.
+    function test_ghostIconIsInsetByItemMargin() {
+        const edges = [
+            {name: "bottom", edge: PlasmaCore.Types.BottomEdge, inset: "topMargin"},
+            {name: "top",    edge: PlasmaCore.Types.TopEdge,    inset: "bottomMargin"},
+            {name: "left",   edge: PlasmaCore.Types.LeftEdge,   inset: "rightMargin"},
+            {name: "right",  edge: PlasmaCore.Types.RightEdge,  inset: "leftMargin"}
+        ];
+
+        // One animation for the whole loop: createTemporaryObject only cleans up when
+        // the test function returns, so a per-iteration make() would leave the earlier
+        // ones connected to taskGroupedWindowRemoved and every fire would spawn a ghost
+        // per connection.
+        const obj = make();
+
+        for (var i = 0; i < edges.length; ++i) {
+            const e = edges[i];
+            reset();
+            root.location = e.edge;
+            root.vertical = (e.edge === PlasmaCore.Types.LeftEdge || e.edge === PlasmaCore.Types.RightEdge);
+            const before = root.children.length;
+
+            taskItem.taskGroupedWindowRemoved();
+            compare(root.children.length, before + 1, e.name + ": no ghost was spawned");
+            const ghost = root.children[root.children.length - 1];
+            const icon = ghostIconOf(ghost);
+            verify(icon, e.name + ": the ghost's Kirigami.Icon was not found");
+
+            compare(icon.anchors[e.inset], taskItem.abilities.metrics.margin.tailThickness,
+                    e.name + ": ghost icon is not inset by the item's thickness margin");
+
+            tryVerify(function() { return root.children.length === before; }, 4000,
+                      e.name + ": ghost was not destroyed when the slide stopped");
+        }
     }
 
     // A top dock slides the ghost the other way: toPoint is one iconSize above

@@ -957,7 +957,7 @@ ContainmentItem {
     Behavior on maxLengthPerCentage {
         enabled: root.behaveAsDockWithMask && Plasmoid.configuration.floatingGapHidingWaitsMouse && dockContainsMouse
         NumberAnimation {
-            duration: animations.duration.short
+            duration: animations.duration.small
             easing.type: Easing.InQuad
         }
     }

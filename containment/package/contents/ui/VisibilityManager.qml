@@ -336,7 +336,7 @@ Item{
             if (latteView.visibility.isHidden) {
                 inputThickness = metrics.mask.thickness.hidden;
             } else if (root.hasFloatingGapInputEventsDisabled) {
-                inputThickness = animated ? metrics.mask.thickness.zoomedForItems - metrics.margins.screenEdge : metrics.totals.thickness;
+                inputThickness = animated ? metrics.mask.thickness.zoomedForItems - metrics.margin.screenEdge : metrics.totals.thickness;
             } else {
                 inputThickness = animated ? metrics.mask.thickness.zoomedForItems : metrics.mask.screenEdge + metrics.totals.thickness;
             }

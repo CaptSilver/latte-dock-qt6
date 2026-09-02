@@ -79,7 +79,7 @@ TestCase {
             }
         }
         property QtObject totals: QtObject { property real thickness: 44 }
-        property QtObject margins: QtObject { property real screenEdge: 4 }
+        property QtObject margin: QtObject { property real screenEdge: 4 }
     }
 
     QtObject {
@@ -283,6 +283,25 @@ TestCase {
         effectsObj.inputMask = Qt.rect(9, 9, 9, 9);
         m.updateInputGeometry();
         // no-edge path: (0,0,root.width,root.height) clamped to view size
+        compare(effectsObj.inputMask.x, 0);
+        compare(effectsObj.inputMask.y, 0);
+        compare(effectsObj.inputMask.width, 500);
+        compare(effectsObj.inputMask.height, 44);
+    }
+
+    // The floating-gap branch: with input events disabled over the gap AND an
+    // item animation in flight, the input thickness is the zoomed thickness less
+    // the screen-edge margin. Reading that margin off a member the Metrics ability
+    // does not declare throws, and the throw abandons the rest of the function --
+    // so the mask is never written and the dock keeps the previous call's input
+    // region. Assert the function ran to completion.
+    function test_updateInputGeometry_floatingGapWhileAnimated() {
+        resetState();
+        const m = make();
+        root.hasFloatingGapInputEventsDisabled = true;
+        animations.needBothAxis.count = 1;
+        effectsObj.inputMask = Qt.rect(9, 9, 9, 9);
+        m.updateInputGeometry();
         compare(effectsObj.inputMask.x, 0);
         compare(effectsObj.inputMask.y, 0);
         compare(effectsObj.inputMask.width, 500);

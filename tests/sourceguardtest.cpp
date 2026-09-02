@@ -13,9 +13,12 @@
 //   * ContainmentInterface::updateContainmentConfigProperty  empty guard body
 //                                             falls through to a null deref
 
+#include <QDirIterator>
 #include <QFile>
 #include <QRegularExpression>
+#include <QSet>
 #include <QString>
+#include <QStringList>
 #include <QtTest>
 
 class SourceGuardTest : public QObject
@@ -61,6 +64,93 @@ private:
         QString s = body;
         s.remove(QRegularExpression(QStringLiteral("\\s+")));
         return s;
+    }
+
+    // Absolute paths of every *.qml under the given REPO_ROOT-relative directories.
+    static QStringList qmlSourcesUnder(const QStringList &relDirs)
+    {
+        QStringList out;
+        for (const QString &rel : relDirs) {
+            QDirIterator it(QStringLiteral("%1/%2").arg(QStringLiteral(REPO_ROOT), rel),
+                            QStringList() << QStringLiteral("*.qml"),
+                            QDir::Files,
+                            QDirIterator::Subdirectories);
+            while (it.hasNext()) {
+                out << it.next();
+            }
+        }
+        return out;
+    }
+
+    // Every member name the given ability layers declare: properties (aliases included),
+    // signals and functions. Commented-out declarations do not count -- the four dead
+    // `//margin.thickness:` lines left behind by the margin split are exactly the trap.
+    static QSet<QString> declaredMembers(const QStringList &relFiles)
+    {
+        // An ability object is an Item, so a read of an inherited member is not a typo.
+        static const QSet<QString> itemMembers = {
+            QStringLiteral("x"), QStringLiteral("y"), QStringLiteral("z"),
+            QStringLiteral("width"), QStringLiteral("height"), QStringLiteral("visible"),
+            QStringLiteral("opacity"), QStringLiteral("enabled"), QStringLiteral("parent"),
+            QStringLiteral("children"), QStringLiteral("data"), QStringLiteral("anchors"),
+            QStringLiteral("state"), QStringLiteral("states"), QStringLiteral("transitions"),
+            QStringLiteral("clip"), QStringLiteral("focus"), QStringLiteral("scale"),
+            QStringLiteral("rotation"), QStringLiteral("objectName")};
+
+        static const QRegularExpression decl(
+            QStringLiteral("^\\s*(?:readonly\\s+)?property\\s+(?:alias\\s+)?[A-Za-z_][\\w.<>]*\\s+([A-Za-z_]\\w*)\\s*[:{]"
+                           "|^\\s*signal\\s+([A-Za-z_]\\w*)"
+                           "|^\\s*function\\s+([A-Za-z_]\\w*)"),
+            QRegularExpression::MultilineOption);
+
+        QSet<QString> names = itemMembers;
+        for (const QString &rel : relFiles) {
+            const QString src = readFile(rel);
+            if (src.isEmpty()) {
+                return QSet<QString>(); // caller turns an unreadable layer into a failure
+            }
+            QRegularExpressionMatchIterator it = decl.globalMatch(src);
+            while (it.hasNext()) {
+                const QRegularExpressionMatch m = it.next();
+                for (int g = 1; g <= 3; ++g) {
+                    if (!m.captured(g).isEmpty()) {
+                        names.insert(m.captured(g));
+                    }
+                }
+            }
+        }
+        return names;
+    }
+
+    // "file:line  expr" for every `<ns>.<member>` read whose member no layer declares.
+    static QStringList unresolvedReads(const QString &ns, const QSet<QString> &declared, const QStringList &absFiles)
+    {
+        const QRegularExpression use(QStringLiteral("\\b%1\\.([A-Za-z_]\\w*)").arg(QRegularExpression::escape(ns)));
+        const QString prefix = QStringLiteral("%1/").arg(QStringLiteral(REPO_ROOT));
+
+        QStringList bad;
+        for (const QString &abs : absFiles) {
+            QFile f(abs);
+            if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                continue;
+            }
+            const QStringList lines = QString::fromUtf8(f.readAll()).split(QLatin1Char('\n'));
+            for (int i = 0; i < lines.size(); ++i) {
+                if (lines.at(i).trimmed().startsWith(QStringLiteral("//"))) {
+                    continue;
+                }
+                QRegularExpressionMatchIterator it = use.globalMatch(lines.at(i));
+                while (it.hasNext()) {
+                    const QString member = it.next().captured(1);
+                    if (!declared.contains(member)) {
+                        QString rel = abs;
+                        rel.remove(prefix);
+                        bad << QStringLiteral("%1:%2  %3.%4").arg(rel).arg(i + 1).arg(ns, member);
+                    }
+                }
+            }
+        }
+        return bad;
     }
 
 private Q_SLOTS:
@@ -112,6 +202,7 @@ private Q_SLOTS:
     void layoutsController_addLayoutByText_guardsTheTemporaryFile();
     void importer_checksEveryArchiveOpen();
     void filterDebugMessageOutput_survivesAnUnopenableLogFile();
+    void abilityMemberReadsResolve();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -759,6 +850,65 @@ void SourceGuardTest::filterDebugMessageOutput_survivesAnUnopenableLogFile()
     // function is the installed handler for those warnings.
     QVERIFY2(s.contains(QStringLiteral("if(logfile.open(QIODevice::WriteOnly|QIODevice::Append))")),
              "the --log-file writer must check that the log file actually opened");
+}
+
+void SourceGuardTest::abilityMemberReadsResolve()
+{
+    // QML answers a read of a member nothing declares with `undefined` instead of an error, so a
+    // renamed or mistyped ability member dies silently: the binding keeps its previous value, the
+    // animation quietly falls back to a Qt default, or -- worst -- the expression throws mid-call
+    // and abandons the rest of the function body. Nothing else catches these; the qmlloadcompile
+    // gate only compiles the QML, and undefined member reads are resolved at run time.
+    //
+    // So resolve them here. For each ability namespace, collect the names its layers declare and
+    // require every read across the shipped QML to be one of them.
+    const QStringList shippedQml = qmlSourcesUnder({QStringLiteral("containment"),
+                                                    QStringLiteral("plasmoid"),
+                                                    QStringLiteral("declarativeimports"),
+                                                    QStringLiteral("shell")});
+    QVERIFY2(shippedQml.size() > 100, "found suspiciously few QML sources to scan");
+
+    struct Namespace
+    {
+        QString reads;          // how the namespace is spelled at the call sites
+        QStringList declaredIn; // every layer that may contribute a member
+    };
+
+    const QList<Namespace> namespaces = {
+        {QStringLiteral("metrics"),
+         {QStringLiteral("declarativeimports/abilities/definition/Metrics.qml"),
+          QStringLiteral("declarativeimports/abilities/host/Metrics.qml"),
+          QStringLiteral("declarativeimports/abilities/client/Metrics.qml"),
+          QStringLiteral("containment/package/contents/ui/abilities/Metrics.qml"),
+          QStringLiteral("containment/package/contents/ui/abilities/privates/MetricsPrivate.qml")}},
+        {QStringLiteral("metrics.margin"),
+         {QStringLiteral("declarativeimports/abilities/definition/metrics/Margin.qml")}},
+        {QStringLiteral("metrics.totals"),
+         {QStringLiteral("declarativeimports/abilities/definition/metrics/Totals.qml")}},
+        {QStringLiteral("animations.duration"),
+         {QStringLiteral("declarativeimports/abilities/definition/animations/Duration.qml")}},
+        {QStringLiteral("myView.itemShadow"),
+         {QStringLiteral("declarativeimports/abilities/definition/myview/ItemShadow.qml")}},
+        {QStringLiteral("myView"),
+         {QStringLiteral("declarativeimports/abilities/definition/MyView.qml"),
+          QStringLiteral("declarativeimports/abilities/host/MyView.qml"),
+          QStringLiteral("declarativeimports/abilities/client/MyView.qml"),
+          // bridge/MyView.qml is an empty BridgeItem; host/client come from the base
+          QStringLiteral("declarativeimports/abilities/bridge/BridgeItem.qml"),
+          QStringLiteral("containment/package/contents/ui/abilities/MyView.qml"),
+          QStringLiteral("containment/package/contents/ui/abilities/privates/MyViewPrivate.qml")}},
+    };
+
+    QStringList unresolved;
+    for (const Namespace &ns : namespaces) {
+        const QSet<QString> declared = declaredMembers(ns.declaredIn);
+        QVERIFY2(!declared.isEmpty(), qPrintable(QStringLiteral("no declarations found for %1").arg(ns.reads)));
+        unresolved << unresolvedReads(ns.reads, declared, shippedQml);
+    }
+
+    QVERIFY2(unresolved.isEmpty(),
+             qPrintable(QStringLiteral("ability member reads that resolve to undefined:\n  %1")
+                            .arg(unresolved.join(QStringLiteral("\n  ")))));
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)
