@@ -242,7 +242,7 @@ Item{
 
             if (!animationSent) {
                 animationSent = true;
-                animations.needLength.removeEvent(layoutsContainer);
+                animations.needLength.addEvent(layoutsContainer);
             }
 
             contentsLengthChanged();
