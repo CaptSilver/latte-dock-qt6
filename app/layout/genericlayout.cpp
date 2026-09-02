@@ -13,6 +13,7 @@
 #include "realviewfactory.h"
 #include "validviewsmapbuilder.h"
 #include "viewcontainertransition.h"
+#include "viewedges.h"
 #include "viewpriority.h"
 #include "viewsyncplan.h"
 #include "../apptypes.h"
@@ -281,61 +282,23 @@ int GenericLayout::viewsCount() const
     return views;
 }
 
-QList<int> GenericLayout::qmlFreeEdges(int screen) const
-{
-    if (!m_corona) {
-        const QList<int> emptyEdges;
-        return emptyEdges;
-    }
-
-    const auto edges = freeEdges(screen);
-    QList<int> edgesInt;
-
-    for (const Plasma::Types::Location &edge : edges) {
-        edgesInt.append(static_cast<int>(edge));
-    }
-
-    return edgesInt;
-}
-
-QList<Plasma::Types::Location> GenericLayout::freeEdges(QScreen *scr) const
-{
-    using Plasma::Types;
-    QList<Types::Location> edges{Types::BottomEdge, Types::LeftEdge,
-                Types::TopEdge, Types::RightEdge};
-
-    if (!m_corona) {
-        return edges;
-    }
-
-    for (const auto view : m_latteViews) {
-        if (view && view->positioner()->currentScreenName() == scr->name()) {
-            edges.removeOne(view->location());
-        }
-    }
-
-    return edges;
-}
-
 QList<Plasma::Types::Location> GenericLayout::freeEdges(int screen) const
 {
-    using Plasma::Types;
-    QList<Types::Location> edges{Types::BottomEdge, Types::LeftEdge,
-                Types::TopEdge, Types::RightEdge};
-
     if (!m_corona) {
-        return edges;
+        return ViewEdges::all();
     }
 
     QScreen *scr = m_corona->screenPool()->screenForId(screen);
+    QList<Plasma::Types::Location> occupied;
 
+    //! an unknown screen occupies nothing, so every edge stays free
     for (const auto view : m_latteViews) {
         if (view && scr && view->positioner()->currentScreenName() == scr->name()) {
-            edges.removeOne(view->location());
+            occupied.append(view->location());
         }
     }
 
-    return edges;
+    return ViewEdges::freeFrom(occupied);
 }
 
 int GenericLayout::viewsWithTasks() const
@@ -1134,27 +1097,6 @@ bool GenericLayout::hasLatteView(Plasma::Containment *containment)
     return m_latteViews.contains(containment);
 }
 
-QList<Plasma::Types::Location> GenericLayout::availableEdgesForView(QScreen *scr, Latte::View *forView) const
-{
-    using Plasma::Types;
-    QList<Types::Location> edges{Types::BottomEdge, Types::LeftEdge,
-                Types::TopEdge, Types::RightEdge};
-
-    if (!m_corona) {
-        return edges;
-    }
-
-    for (const auto view : m_latteViews) {
-        //! make sure that available edges takes into account only views that should be excluded,
-        //! this is why the forView should not be excluded
-        if (view && view != forView && view->positioner()->currentScreenName() == scr->name()) {
-            edges.removeOne(view->location());
-        }
-    }
-
-    return edges;
-}
-
 bool GenericLayout::explicitDockOccupyEdge(int screen, Plasma::Types::Location location) const
 {
     if (!m_corona) {
@@ -1461,11 +1403,7 @@ bool GenericLayout::newView(const QString &templateName)
     Data::View nextdata = templateviews[0];
     int scrId = m_corona->screenPool()->primaryScreenId();
 
-    QList<Plasma::Types::Location> freeedges = freeEdges(scrId);
-
-    if (!freeedges.contains(nextdata.edge)) {
-        nextdata.edge = (freeedges.count() > 0 ? freeedges[0] : Plasma::Types::BottomEdge);
-    }
+    nextdata.edge = ViewEdges::forNewView(freeEdges(scrId), nextdata.edge);
 
     nextdata.setState(Data::View::OriginFromViewTemplate, templatefilepath);
 

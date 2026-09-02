@@ -22,6 +22,7 @@
 #include "../declarativeimports/interfaces.h"
 #include "../indicator/factory.h"
 #include "../layout/genericlayout.h"
+#include "../layout/viewedges.h"
 #include "../layouts/manager.h"
 #include "../layouts/storage.h"
 #include "../plasma/extended/theme.h"
@@ -576,11 +577,7 @@ void View::newView(const QString &templateFile)
     Data::View nextdata = templateviews[0];
     int scrId = onPrimary() ? m_corona->screenPool()->primaryScreenId() : m_positioner->currentScreenId();
 
-    QList<Plasma::Types::Location> freeedges = m_layout->freeEdges(scrId);
-
-    if (!freeedges.contains(nextdata.edge)) {
-        nextdata.edge = (freeedges.count() > 0 ? freeedges[0] : Plasma::Types::BottomEdge);
-    }
+    nextdata.edge = Layout::ViewEdges::forNewView(m_layout->freeEdges(scrId), nextdata.edge);
 
     nextdata.setState(Data::View::OriginFromViewTemplate, templateFile);
 

@@ -892,6 +892,13 @@ set_tests_properties(qmlinteraction PROPERTIES
 add_test(NAME editmodetooltipguard COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/manual/editmode_tooltip_guard.sh)
 set_tests_properties(editmodetooltipguard PROPERTIES TIMEOUT 30)
 
+ecm_add_test(viewedgestest.cpp ${CMAKE_SOURCE_DIR}/app/layout/viewedges.cpp
+    TEST_NAME viewedgestest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Plasma::Plasma
+)
+target_include_directories(viewedgestest PRIVATE ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(viewedgestest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 # When coverage is on, instrument every test binary AND the production sources
 # linked into it (ecm_add_test compiles the listed app/* sources into the target).
 # Add new test names here when adding tests.
@@ -911,7 +918,7 @@ if(LATTE_COVERAGE)
         positionergeometrytest storagevalidatortest backgroundimageinfotest
         windowgeometrypredicatestest indicatorfactorytest
         screengeometrycalculatortest coronahelperstest startuplayoutplannertest
-        validviewsmapbuildertest viewsyncplantest
+        validviewsmapbuildertest viewsyncplantest viewedgestest
         # GLOB-behavioral tests link the (now instrumented) app objects; listing them
         # gives their binaries the profile link flag and the export object set, which
         # is what makes the Corona-coupled core count toward whole-app coverage.

@@ -126,11 +126,8 @@ public:
     QString storedView(const int &containmentId); //returns temp filepath containing all view data
     void removeOrphanedSubContainment(const int &containmentId);
 
-    //! Available edges for specific view in that screen
-    virtual QList<Plasma::Types::Location> availableEdgesForView(QScreen *scr, Latte::View *forView) const;
     //! All free edges in that screen
-    virtual QList<Plasma::Types::Location> freeEdges(QScreen *scr) const;
-    virtual QList<Plasma::Types::Location> freeEdges(int screen) const;
+    QList<Plasma::Types::Location> freeEdges(int screen) const;
 
     //! Bind this latteView and its relevant containments(including subcontainments)
     //! to this layout. It is used for moving a Latte::View from layout to layout)
@@ -150,7 +147,6 @@ public:
 
 public Q_SLOTS:
     Q_INVOKABLE int viewsWithTasks() const;
-    virtual Q_INVOKABLE QList<int> qmlFreeEdges(int screen) const;  //change <Plasma::Types::Location> to <int> types
 
     void toggleHiddenState(QString viewName, QString screenName, Plasma::Types::Location edge);
 
