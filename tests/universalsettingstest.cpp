@@ -50,6 +50,7 @@ private Q_SLOTS:
     void settersEmitAndGuardNoOp();
     void roundTripThroughConfig();
     void enumAndDefaultsLoadFromEmptyConfig();
+    void freshProfileIsInPreferencesDefaults();
     void screenScalesRoundTrip();
     void sensitivityAlwaysHigh();
 };
@@ -95,11 +96,12 @@ void UniversalSettingsTest::defaultsBeforeLoad()
     QCOMPARE(settings.metaPressAndHoldEnabled(), true);
     QCOMPARE(settings.isAvailableGeometryBroadcastedToPlasma(), true);
     QCOMPARE(settings.badges3DStyle(), false);
+    QCOMPARE(settings.badges3DStyle(), Data::Preferences::BADGE3DSTYLE);
     QCOMPARE(settings.canDisableBorders(), false);
     QCOMPARE(settings.inAdvancedModeForEditSettings(), false);
     QCOMPARE(settings.inConfigureAppletsMode(), false);
     QCOMPARE(settings.version(), 1);
-    QCOMPARE(settings.screenTrackerInterval(), 2500);
+    QCOMPARE(settings.screenTrackerInterval(), Data::Preferences::SCREENSDELAY);
     QCOMPARE(settings.parabolicSpread(), Data::Preferences::PARABOLICSPREAD);
     QCOMPARE(settings.thicknessMarginInfluence(), Data::Preferences::THICKNESSMARGININFLUENCE);
     QVERIFY(settings.singleModeLayoutName().isEmpty());
@@ -210,16 +212,49 @@ void UniversalSettingsTest::enumAndDefaultsLoadFromEmptyConfig()
     // Documented defaults, read back through loadConfig on an otherwise empty group.
     QCOMPARE(settings.version(), 1);
     QCOMPARE(settings.badges3DStyle(), false);
+    QCOMPARE(settings.badges3DStyle(), Data::Preferences::BADGE3DSTYLE);
     QCOMPARE(settings.canDisableBorders(), false);
     QCOMPARE(settings.showInfoWindow(), true);
     QCOMPARE(settings.metaPressAndHoldEnabled(), true);
     QCOMPARE(settings.isAvailableGeometryBroadcastedToPlasma(), true);
-    QCOMPARE(settings.screenTrackerInterval(), 2500);
+    QCOMPARE(settings.screenTrackerInterval(), Data::Preferences::SCREENSDELAY);
     QCOMPARE(settings.parabolicSpread(), Data::Preferences::PARABOLICSPREAD);
     QCOMPARE(settings.thicknessMarginInfluence(), Data::Preferences::THICKNESSMARGININFLUENCE);
 
     // contextMenuActionsAlwaysShown defaults to the built-in always-visible set.
     QCOMPARE(settings.contextMenuActionsAlwaysShown(), Latte::Data::ContextMenu::ACTIONSALWAYSVISIBLE);
+}
+
+void UniversalSettingsTest::freshProfileIsInPreferencesDefaults()
+{
+    // The settings dialog greys out its Restore Defaults button through
+    // Data::Preferences::inDefaultValues(), so a pristine profile must satisfy it.
+    // Any UniversalSettings default that drifts from its Data::Preferences constant
+    // shows up here as a live Restore Defaults button on an untouched Preferences tab.
+    {
+        KConfig seed(m_configPath, KConfig::SimpleConfig);
+        seed.group(QStringLiteral("UniversalSettings")).writeEntry(QStringLiteral("userConfiguredAutostart"), true);
+        seed.sync();
+    }
+
+    UniversalSettings settings(freshConfig(), nullptr, this);
+    settings.load();
+
+    // Mirrors TabPreferences::initSettings for every field backed by lattedockrc.
+    // autostart and the kwin Meta binding come from the filesystem and kwinrc, so
+    // they are deliberately left at their defaults instead of dragging host state in.
+    Data::Preferences prefs;
+    prefs.badgeStyle3D = settings.badges3DStyle();
+    prefs.layoutsInformationWindow = settings.showInfoWindow();
+    prefs.borderlessMaximized = settings.canDisableBorders();
+    prefs.isAvailableGeometryBroadcastedToPlasma = settings.isAvailableGeometryBroadcastedToPlasma();
+    prefs.metaHoldForBadges = settings.metaPressAndHoldEnabled();
+    prefs.contextMenuAlwaysActions = settings.contextMenuActionsAlwaysShown();
+    prefs.parabolicSpread = settings.parabolicSpread();
+    prefs.thicknessMarginInfluence = settings.thicknessMarginInfluence();
+    prefs.screensDelay = settings.screenTrackerInterval();
+
+    QVERIFY(prefs.inDefaultValues());
 }
 
 void UniversalSettingsTest::screenScalesRoundTrip()

@@ -31,7 +31,7 @@ Ability.MyViewPrivate {
     inRelocationAnimation: isReady && view.positioner.inRelocationAnimation
     inRelocationHiding: visibilityManager.inRelocationHiding
 
-    badgesIn3DStyle: universalSettings ? universalSettings.badges3DStyle : true
+    badgesIn3DStyle: universalSettings ? universalSettings.badges3DStyle : false
 
     alignment: Plasmoid.configuration.alignment
     visibilityMode: isReady ? view.visibility.mode : LatteCore.Types.None

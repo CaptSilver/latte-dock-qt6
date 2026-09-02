@@ -568,16 +568,16 @@ void UniversalSettings::upgrade_v010()
 void UniversalSettings::loadConfig()
 {
     m_version = m_universalGroup.readEntry("version", 1);
-    m_badges3DStyle = m_universalGroup.readEntry("badges3DStyle", false);
-    m_canDisableBorders = m_universalGroup.readEntry("canDisableBorders", false);
+    m_badges3DStyle = m_universalGroup.readEntry("badges3DStyle", Data::Preferences::BADGE3DSTYLE);
+    m_canDisableBorders = m_universalGroup.readEntry("canDisableBorders", Data::Preferences::BORDERLESSMAXIMIZED);
     m_contextMenuActionsAlwaysShown = m_universalGroup.readEntry("contextMenuActionsAlwaysShown", Latte::Data::ContextMenu::ACTIONSALWAYSVISIBLE);
     m_inAdvancedModeForEditSettings = m_universalGroup.readEntry("inAdvancedModeForEditSettings", false);
     m_inConfigureAppletsMode = m_universalGroup.readEntry("inConfigureAppletsMode", false);
-    m_isAvailableGeometryBroadcastedToPlasma = m_universalGroup.readEntry("isAvailableGeometryBroadcastedToPlasma", true);
+    m_isAvailableGeometryBroadcastedToPlasma = m_universalGroup.readEntry("isAvailableGeometryBroadcastedToPlasma", Data::Preferences::ISAVAILABLEGEOMETRYBROADCASTEDTOPLASMA);
     m_launchers = m_universalGroup.readEntry("launchers", QStringList());
-    m_metaPressAndHoldEnabled = m_universalGroup.readEntry("metaPressAndHoldEnabled", true);
-    m_screenTrackerInterval = m_universalGroup.readEntry("screenTrackerInterval", 2500);
-    m_showInfoWindow = m_universalGroup.readEntry("showInfoWindow", true);
+    m_metaPressAndHoldEnabled = m_universalGroup.readEntry("metaPressAndHoldEnabled", Data::Preferences::METAHOLDFORBADGES);
+    m_screenTrackerInterval = m_universalGroup.readEntry("screenTrackerInterval", Data::Preferences::SCREENSDELAY);
+    m_showInfoWindow = m_universalGroup.readEntry("showInfoWindow", Data::Preferences::LAYOUTSINFORMATIONWINDOW);
     m_singleModeLayoutName = m_universalGroup.readEntry("singleModeLayoutName", QString());
     m_parabolicSpread = m_universalGroup.readEntry("parabolicSpread", Data::Preferences::PARABOLICSPREAD);
     m_thicknessMarginInfluence = m_universalGroup.readEntry("parabolicThicknessMarginInfluence", Data::Preferences::THICKNESSMARGININFLUENCE);

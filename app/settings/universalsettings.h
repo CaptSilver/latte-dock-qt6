@@ -183,14 +183,14 @@ private:
     void setLayoutsMemoryUsage(MemoryUsage::LayoutsMemory layoutsMemoryUsage);
 
 private:
-    bool m_badges3DStyle{false};
-    bool m_canDisableBorders{false};
+    bool m_badges3DStyle{Data::Preferences::BADGE3DSTYLE};
+    bool m_canDisableBorders{Data::Preferences::BORDERLESSMAXIMIZED};
     bool m_colorsScriptIsPresent{false};
     bool m_inAdvancedModeForEditSettings{false};
     bool m_inConfigureAppletsMode{false};
-    bool m_isAvailableGeometryBroadcastedToPlasma{true};
-    bool m_metaPressAndHoldEnabled{true};
-    bool m_showInfoWindow{true};
+    bool m_isAvailableGeometryBroadcastedToPlasma{Data::Preferences::ISAVAILABLEGEOMETRYBROADCASTEDTOPLASMA};
+    bool m_metaPressAndHoldEnabled{Data::Preferences::METAHOLDFORBADGES};
+    bool m_showInfoWindow{Data::Preferences::LAYOUTSINFORMATIONWINDOW};
 
     //!kwinrc tracking
     bool m_kwinMetaForwardedToLatte{false};
@@ -199,7 +199,7 @@ private:
     //when there isnt a version it is an old universal file
     int m_version{1};
 
-    int m_screenTrackerInterval{2500};
+    int m_screenTrackerInterval{Data::Preferences::SCREENSDELAY};
     int m_parabolicSpread{Data::Preferences::PARABOLICSPREAD};
     float m_thicknessMarginInfluence{Data::Preferences::THICKNESSMARGININFLUENCE};
 

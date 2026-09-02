@@ -119,6 +119,10 @@ TestCase {
         const m = make({bridge: null});
         compare(m.isBridgeActive, false);
         compare(m.isShownFully, true);
+        // Badges follow the ability definition's own default, which mirrors the
+        // flat style the dock ships; the plasmoid in a plain Plasma panel takes
+        // this leg, so a 3D value here would render differently than inside Latte.
+        compare(m.badgesIn3DStyle, false);
         // Plasmoid attached object has no live containment -> userConfiguring is
         // undefined, so the bool property coerces to false.
         compare(m.inEditMode, false);

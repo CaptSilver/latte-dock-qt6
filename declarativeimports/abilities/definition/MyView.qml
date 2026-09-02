@@ -33,7 +33,7 @@ Item {
     property bool inRelocationAnimation: false
     property bool inRelocationHiding: false
 
-    property bool badgesIn3DStyle: true
+    property bool badgesIn3DStyle: false
 
     property int alignment: LatteCore.Types.Center
     property int visibilityMode: LatteCore.Types.None

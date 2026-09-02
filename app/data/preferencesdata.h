@@ -19,7 +19,7 @@ namespace Data {
 class Preferences
 {
 public:
-    static const bool BADGE3DSTYLE = true;
+    static const bool BADGE3DSTYLE = false;
     static const bool LAYOUTSINFORMATIONWINDOW = true;
     static const bool AUTOSTART = true;
     static const bool BORDERLESSMAXIMIZED = false;
