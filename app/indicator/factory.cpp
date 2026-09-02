@@ -15,6 +15,7 @@
 #include <QDirIterator>
 #include <QMessageBox>
 #include <QProcess>
+#include <QRegularExpression>
 #include <QTemporaryDir>
 #include <QTimer>
 #include <QLatin1String>
@@ -31,8 +32,24 @@
 #include <KArchive/KArchiveDirectory>
 #include <KNSWidgets/Dialog>
 
+// C++
+#include <memory>
+
 namespace Latte {
 namespace Indicator {
+
+namespace {
+
+//! The id becomes a directory name under the indicators tree and the argument
+//! kpackagetool6 removes, so it has to stay a single harmless path component.
+bool pluginIdIsSafe(const QString &id)
+{
+    static const QRegularExpression validId(QRegularExpression::anchoredPattern(QStringLiteral("[A-Za-z0-9._-]+")));
+
+    return !id.isEmpty() && id != QLatin1String(".") && id != QLatin1String("..") && validId.match(id).hasMatch();
+}
+
+}
 
 Factory::Factory(QObject *parent)
     : QObject(parent)
@@ -236,6 +253,7 @@ bool Factory::isCustomType(const QString &id) const
 bool Factory::metadataAreValid(KPluginMetaData &metadata)
 {
     return metadata.isValid()
+            && pluginIdIsSafe(metadata.pluginId())
             && metadata.category() == QLatin1String("Latte Indicator")
             && !metadata.value(QStringLiteral("X-Latte-MainScript")).isEmpty();
 }
@@ -291,31 +309,44 @@ Latte::ImportExport::State Factory::importIndicatorFile(QString compressedFile)
         notification->sendEvent();
     };
 
-    KArchive *archive;
+    std::unique_ptr<KArchive> archive;
 
-    KZip *zipArchive = new KZip(compressedFile);
-    zipArchive->open(QIODevice::ReadOnly);
+    auto zipArchive = std::make_unique<KZip>(compressedFile);
 
-    //! if the file isnt a zip archive
-    if (!zipArchive->isOpen()) {
-        delete zipArchive;
+    //! KArchive::isOpen() stays true after a failed open(), so only the return value
+    //! tells a zip apart from anything else
+    if (zipArchive->open(QIODevice::ReadOnly)) {
+        archive = std::move(zipArchive);
+    } else {
+        zipArchive.reset();
 
-        KTar *tarArchive = new KTar(compressedFile, QStringLiteral("application/x-tar"));
-        tarArchive->open(QIODevice::ReadOnly);
+        auto tarArchive = std::make_unique<KTar>(compressedFile, QStringLiteral("application/x-tar"));
 
-        if (!tarArchive->isOpen()) {
-            delete tarArchive;
+        if (!tarArchive->open(QIODevice::ReadOnly)) {
             showNotificationError();
             return Latte::ImportExport::FailedState;
-        } else {
-            archive = tarArchive;
         }
-    } else {
-        archive = zipArchive;
+
+        archive = std::move(tarArchive);
     }
 
     QTemporaryDir archiveTempDir;
-    archive->directory()->copyTo(archiveTempDir.path());
+
+    //! an invalid QTemporaryDir has an empty path(), and copyTo("") would unpack the
+    //! archive into the working directory
+    if (!archiveTempDir.isValid()) {
+        qWarning() << "Indicator import failed, no usable temporary directory ::" << compressedFile;
+        showNotificationError();
+        return Latte::ImportExport::FailedState;
+    }
+
+    if (!archive->directory()->copyTo(archiveTempDir.path())) {
+        qWarning() << "Indicator import failed, archive could not be extracted ::" << compressedFile;
+        showNotificationError();
+        return Latte::ImportExport::FailedState;
+    }
+
+    archive->close();
 
     //metadata file
     QString packagePath = archiveTempDir.path();
@@ -340,19 +371,39 @@ Latte::ImportExport::State Factory::importIndicatorFile(QString compressedFile)
 
     if (metadataAreValid(metadata)) {
         QStringList standardPaths = Latte::Layouts::Importer::standardPaths();
-        QString installPath = standardPaths[0] + QStringLiteral("/latte/indicators/") + metadata.pluginId();
+
+        if (standardPaths.isEmpty()) {
+            showNotificationError();
+            return Latte::ImportExport::FailedState;
+        }
+
+        const QString indicatorsPath = QDir::cleanPath(standardPaths.at(0) + QStringLiteral("/latte/indicators"));
+        const QString installPath = QDir::cleanPath(indicatorsPath + QLatin1Char('/') + metadata.pluginId());
+
+        //! the archive picks its own install directory through the metadata id, so an id
+        //! such as "../../../.config/autostart" would have us wipe and replace a directory
+        //! that has nothing to do with indicators
+        if (!installPath.startsWith(indicatorsPath + QLatin1Char('/'))) {
+            qWarning() << "Refusing to install indicator outside" << indicatorsPath << "::" << metadata.pluginId();
+            showNotificationError();
+            return Latte::ImportExport::FailedState;
+        }
 
         bool updated{QDir(installPath).exists()};
 
-        if (QDir(installPath).exists()) {
+        if (updated) {
             QDir(installPath).removeRecursively();
         }
 
+        //! nothing else creates the indicators directory, so without this the first
+        //! import on a profile that never downloaded one has nowhere to move to
+        QDir().mkpath(indicatorsPath);
+
         QProcess process;
         process.start(QStringLiteral("mv"), {packagePath, installPath});
-        process.waitForFinished();
 
-        if (process.exitCode() != 0) {
+        //! exitCode() is 0 when the process never started at all
+        if (!process.waitForFinished() || process.exitStatus() != QProcess::NormalExit || process.exitCode() != 0) {
             showNotificationError();
             return Latte::ImportExport::FailedState;
         }
