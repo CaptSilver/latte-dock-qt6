@@ -54,7 +54,10 @@ QWidget *Activities::createEditor(QWidget *parent, const QStyleOptionViewItem &o
 
     QStringList assignedActivities = index.data(Qt::UserRole).toStringList();
 
-    QList<int> originalChecked;
+    //! Track the actions themselves rather than their position: rows that fail
+    //! isValid() never produce an action, and the separator plus the button box
+    //! add entries of their own, so no index is shared by the two lists.
+    QList<QAction *> originalChecked;
 
     QString currentrealactivityid;
 
@@ -76,15 +79,15 @@ QWidget *Activities::createEditor(QWidget *parent, const QStyleOptionViewItem &o
         bool inCurrentActivity = (activitydata.id == QLatin1String(Data::Layout::CURRENTACTIVITYID) && assignedActivities.contains(currentrealactivityid));
         bool ischecked = assignedActivities.contains(activitydata.id) || inCurrentActivity;
 
-        if (ischecked) {
-            originalChecked << i;
-        }
-
         QAction *action = new QAction(activitydata.name);
         action->setData(activitydata.id);
         action->setIcon(QIcon::fromTheme(activitydata.icon));
         action->setCheckable(true);
         action->setChecked(ischecked);
+
+        if (ischecked) {
+            originalChecked << action;
+        }
 
         if (activitydata.id == QLatin1String(Data::Layout::FREEACTIVITIESID)
                 || activitydata.id == QLatin1String(Data::Layout::ALLACTIVITIESID)
@@ -196,12 +199,13 @@ QWidget *Activities::createEditor(QWidget *parent, const QStyleOptionViewItem &o
 
     connect(menuDialogButtons->button(QDialogButtonBox::Cancel), &QPushButton::clicked,  menu, &QMenu::hide);
 
-    connect(menuDialogButtons->button(QDialogButtonBox::Reset), &QPushButton::clicked,  [this, menu, originalChecked]() {
-        for (int i=0; i<menu->actions().count(); ++i) {
-            if (!originalChecked.contains(i)) {
-                menu->actions().at(i)->setChecked(false);
-            } else {
-                menu->actions().at(i)->setChecked(true);
+    connect(menuDialogButtons->button(QDialogButtonBox::Reset), &QPushButton::clicked,  menu, [menu, originalChecked]() {
+        const auto actions = menu->actions();
+
+        for (QAction *action : actions) {
+            //! skips the separators and the button box, which carry no state
+            if (action->isCheckable()) {
+                action->setChecked(originalChecked.contains(action));
             }
         }
     });

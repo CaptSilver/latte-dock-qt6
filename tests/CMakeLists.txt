@@ -175,6 +175,40 @@ target_include_directories(generictoolstest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/settings/generic)
 set_tests_properties(generictoolstest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+# The Activities cell delegate builds a real QPushButton + PersistentMenu, so a
+# hand-built model drives it headless. activitiesdelegate.cpp includes
+# layoutsmodel.h -> lattecorona.h, which is why the link list carries KSvg,
+# XmlGui, Package, PlasmaQuick and Activities; that reach is compile-only, no
+# Corona symbol is referenced, so this narrow source list links.
+ecm_add_test(activitiesdelegatetest.cpp
+    ${CMAKE_SOURCE_DIR}/app/settings/settingsdialog/delegates/activitiesdelegate.cpp
+    ${CMAKE_SOURCE_DIR}/app/settings/generic/persistentmenu.cpp
+    ${CMAKE_SOURCE_DIR}/app/settings/generic/generictools.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/genericdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/activitydata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/appletdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layoutcolordata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layouticondata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/errorinformationdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/errordata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/generictable.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layoutdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/viewdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/screendata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/viewstable.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layoutstable.cpp
+    ${CMAKE_SOURCE_DIR}/app/tools/commontools.cpp
+    TEST_NAME activitiesdelegatetest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Widgets
+        KF6::ConfigCore KF6::I18n KF6::IconThemes KF6::Svg KF6::XmlGui KF6::Package
+        Plasma::Plasma Plasma::PlasmaQuick Plasma::Activities
+)
+target_include_directories(activitiesdelegatetest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app
+    ${CMAKE_SOURCE_DIR}/app/settings/settingsdialog
+    ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(activitiesdelegatetest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 ecm_add_test(coretoolstest.cpp
     ${CMAKE_SOURCE_DIR}/declarativeimports/core/tools.cpp
     ${CMAKE_SOURCE_DIR}/declarativeimports/core/environment.cpp
