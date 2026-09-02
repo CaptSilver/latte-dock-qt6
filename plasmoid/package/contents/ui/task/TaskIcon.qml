@@ -43,12 +43,11 @@ Item {
         radius: 3
         anchors.margins: 5
 
-        property color tempColor: Kirigami.Theme.highlightColor
-        color: tempColor
+        //! the translucency belongs in the binding; writing back into the alpha of
+        //! a bound color drops the binding and freezes the fill on the old accent
+        color: Qt.alpha(Kirigami.Theme.highlightColor, 0.35)
         border.width: 1
         border.color: Kirigami.Theme.highlightColor
-
-        onTempColorChanged: tempColor.a = 0.35;
     }
 
     Loader {
