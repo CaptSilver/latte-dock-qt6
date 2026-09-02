@@ -58,4 +58,45 @@ TestCase {
         glow.showGlow = true;
         compare(glow.showGlow, true);
     }
+
+    // The attention pulse has to drive animationColor all the way to the caller's
+    // attentionColor and back down to basicColor. Green is used for the attention
+    // color on purpose: GlowPoint's animationColor default is a hard-coded "red",
+    // so a pulse that never consults attentionColor cannot pass by accident.
+    function test_attentionPulseReachesAttentionColor() {
+        const glow = makeGlow({showAttention: true, showGlow: false,
+                               basicColor: "#0000ff", attentionColor: "#00ff00",
+                               animation: 60, width: 20, height: 20});
+        var maxGreen = 0;
+        var maxBlue = 0;
+        // Extract the channel as a Number inside the handler. Pushing the color
+        // value itself into an array would store a live handle on the property,
+        // so every entry would read back as whatever it holds at assert time.
+        glow.animationColorChanged.connect(function () {
+            maxGreen = Math.max(maxGreen, glow.animationColor.g);
+            maxBlue = Math.max(maxBlue, glow.animationColor.b);
+        });
+        wait(400);
+        verify(maxGreen > 0.9, "attention pulse never reached attentionColor (peak green " + maxGreen + ")");
+        verify(maxBlue > 0.9, "attention pulse never returned to basicColor (peak blue " + maxBlue + ")");
+    }
+
+    // animationColor is a plain property that outlives the Loader wrapping the
+    // pulse, so the second attention episode starts from whatever mid-transition
+    // color the first one was interrupted at. Its peak must still be attentionColor.
+    function test_attentionPeakSurvivesRepeatEpisodes() {
+        const glow = makeGlow({showAttention: true, showGlow: false,
+                               basicColor: "#0000ff", attentionColor: "#00ff00",
+                               animation: 60, width: 20, height: 20});
+        wait(200);
+        glow.showAttention = false;
+        wait(120);
+        glow.showAttention = true;
+        var maxGreen = 0;
+        glow.animationColorChanged.connect(function () {
+            maxGreen = Math.max(maxGreen, glow.animationColor.g);
+        });
+        wait(400);
+        verify(maxGreen > 0.9, "repeat attention episode peaked at a stale color (peak green " + maxGreen + ")");
+    }
 }

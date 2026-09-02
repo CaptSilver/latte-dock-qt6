@@ -289,7 +289,7 @@ Item{
                     PropertyAnimation {
                         target: glowItem
                         property: "animationColor"
-                        to: glowItem.animationColor
+                        to: glowItem.attentionColor
                         duration: glowItem.animation
                         easing.type: Easing.InOutQuad
                     }
