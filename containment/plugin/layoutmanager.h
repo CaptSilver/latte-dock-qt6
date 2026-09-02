@@ -81,6 +81,11 @@ public:
     QQuickItem *metrics() const;
     void setMetrics(QQuickItem *metrics);
 
+    //! Justify splitters, searched across start -> main -> end and the reverse. Public so the
+    //! scan order can be asserted directly; deliberately not slots, QML never calls them.
+    QQuickItem *firstSplitter();
+    QQuickItem *lastSplitter();
+
 public Q_SLOTS:
     Q_INVOKABLE void restore();
     Q_INVOKABLE void save();
@@ -176,8 +181,8 @@ private:
     int distanceFromTail(QQuickItem *layout, QPointF pos) const;
     int distanceFromHead(QQuickItem *layout, QPointF pos) const;
 
-    QQuickItem *firstSplitter();
-    QQuickItem *lastSplitter();
+    QQuickItem *firstSplitterIn(QQuickItem *layout) const;
+    QQuickItem *lastSplitterIn(QQuickItem *layout) const;
     QQuickItem *appletItem(const int &id);
     QQuickItem *appletItemInLayout(QQuickItem *layout, const int &id);
 

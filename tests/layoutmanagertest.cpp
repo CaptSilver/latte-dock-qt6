@@ -11,6 +11,8 @@
 // value, fires its NOTIFY exactly once on a real change, and stays silent on a redundant write.
 // The masquerade index helpers are pure integer logic that the drag-and-drop path relies on for
 // round-tripping a target index through a fake QPoint, so they're checked end-to-end too.
+// The justify-splitter search is covered here as well: reordering anchors applets to the two
+// splitters, so a search that skips a layout hands the reorder the wrong anchor (or none).
 
 #include <QtTest>
 #include <QGuiApplication>
@@ -36,6 +38,10 @@ private Q_SLOTS:
     void setOption_unknownProperty_isNoOp();
     void scheduledDestruction_addRemoveAndSignal();
     void scheduledDestruction_idempotent();
+    void splitterSearch_scansAllThreeLayouts();
+    void splitterSearch_findsSplitterInMainOrEndLayout();
+    void splitterSearch_toleratesUnsetLayouts();
+    void requestAppletsOrder_withoutLayoutsIsNoOp();
     void quickItemProperties_setAndSignal();
     void quickItemProperties_noSignalOnRedundantSet();
     void masqueradedIndex_roundTrip();
@@ -180,6 +186,95 @@ void LayoutManagerTest::scheduledDestruction_idempotent()
     // Disabling an id that was never scheduled is also a no-op.
     lm.setAppletInScheduledDestruction(123, false);
     QCOMPARE(spy.count(), 1);
+}
+
+//! Builds a child of @p parent that answers the isInternalViewSplitter property the way
+//! JustifySplitter.qml does, so the manager's splitter search treats it as a real splitter.
+static QQuickItem *addSplitter(QQuickItem *parent, bool isSplitter)
+{
+    QQuickItem *item = new QQuickItem(parent);
+    item->setProperty("isInternalViewSplitter", isSplitter);
+    return item;
+}
+
+void LayoutManagerTest::splitterSearch_scansAllThreeLayouts()
+{
+    LayoutManager lm(nullptr);
+
+    QQuickItem start, main, end;
+    lm.setStartLayout(&start);
+    lm.setMainLayout(&main);
+    lm.setEndLayout(&end);
+
+    // Both splitters parked in the start layout with a plain applet between them. firstSplitter
+    // walks start -> main -> end, lastSplitter must walk the mirror end -> main -> start.
+    QQuickItem *first = addSplitter(&start, true);
+    addSplitter(&start, false);
+    QQuickItem *last = addSplitter(&start, true);
+
+    QCOMPARE(lm.firstSplitter(), first);
+    QCOMPARE(lm.lastSplitter(), last);
+}
+
+void LayoutManagerTest::splitterSearch_findsSplitterInMainOrEndLayout()
+{
+    QQuickItem start, main, end;
+
+    {
+        // The transient state right after addJustifySplittersInMainLayout(): both splitters sit
+        // in the main layout because the justify move has not run yet.
+        LayoutManager lm(nullptr);
+        lm.setStartLayout(&start);
+        lm.setMainLayout(&main);
+        lm.setEndLayout(&end);
+
+        QQuickItem *first = addSplitter(&main, true);
+        addSplitter(&main, false);
+        QQuickItem *last = addSplitter(&main, true);
+
+        QCOMPARE(lm.firstSplitter(), first);
+        QCOMPARE(lm.lastSplitter(), last);
+    }
+
+    // The end layout wins over the start layout for lastSplitter, and loses to it for
+    // firstSplitter, whichever order the layouts were populated in.
+    LayoutManager lm(nullptr);
+    QQuickItem start2, main2, end2;
+    lm.setStartLayout(&start2);
+    lm.setMainLayout(&main2);
+    lm.setEndLayout(&end2);
+
+    QQuickItem *inStart = addSplitter(&start2, true);
+    QQuickItem *inEnd = addSplitter(&end2, true);
+
+    QCOMPARE(lm.firstSplitter(), inStart);
+    QCOMPARE(lm.lastSplitter(), inEnd);
+}
+
+void LayoutManagerTest::splitterSearch_toleratesUnsetLayouts()
+{
+    // Before main.qml assigns the layouts every pointer is null; searching must answer "none"
+    // instead of dereferencing.
+    LayoutManager lm(nullptr);
+    QCOMPARE(lm.firstSplitter(), nullptr);
+    QCOMPARE(lm.lastSplitter(), nullptr);
+
+    // Partially wired up is the same story: the two null layouts are skipped, not dereferenced.
+    QQuickItem start;
+    lm.setStartLayout(&start);
+    QQuickItem *only = addSplitter(&start, true);
+
+    QCOMPARE(lm.firstSplitter(), only);
+    QCOMPARE(lm.lastSplitter(), only);
+}
+
+void LayoutManagerTest::requestAppletsOrder_withoutLayoutsIsNoOp()
+{
+    // Reordering reads the containment configuration and the three layouts; with none of them
+    // present it must bail out rather than dereference.
+    LayoutManager lm(nullptr);
+    lm.requestAppletsOrder({1, LayoutManager::JUSTIFYSPLITTERID, 2});
+    QVERIFY(lm.order().isEmpty());
 }
 
 void LayoutManagerTest::quickItemProperties_setAndSignal()

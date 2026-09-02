@@ -704,7 +704,7 @@ void LayoutManager::insertAtLayoutTail(QQuickItem *layout, QQuickItem *item)
 
     if (layout->childItems().count() > 0) {
         if (layout == m_endLayout && isJustifySplitter(layout->childItems()[0])) {
-            //! this way we ignore the justify splitter in start layout
+            //! this way we ignore the justify splitter in end layout
             insertAfter(layout->childItems()[0], item);
         } else {
             insertBefore(layout->childItems()[0], item);
@@ -725,7 +725,7 @@ void LayoutManager::insertAtLayoutHead(QQuickItem *layout, QQuickItem *item)
 
     if (count > 0) {
         if (layout == m_startLayout && isJustifySplitter(layout->childItems()[count-1])) {
-            //! this way we ignore the justify splitter in end layout
+            //! this way we ignore the justify splitter in start layout
             insertBefore(layout->childItems()[count-1], item);
         } else {
             insertAfter(layout->childItems()[count-1], item);
@@ -822,29 +822,45 @@ bool LayoutManager::insertAtLayoutCoordinates(QQuickItem *layout, QQuickItem *it
     return false;
 }
 
+QQuickItem *LayoutManager::firstSplitterIn(QQuickItem *layout) const
+{
+    if (!layout) {
+        return nullptr;
+    }
+
+    const QList<QQuickItem *> children = layout->childItems();
+
+    for (int i = 0; i < children.count(); ++i) {
+        if (isJustifySplitter(children[i])) {
+            return children[i];
+        }
+    }
+
+    return nullptr;
+}
+
+QQuickItem *LayoutManager::lastSplitterIn(QQuickItem *layout) const
+{
+    if (!layout) {
+        return nullptr;
+    }
+
+    const QList<QQuickItem *> children = layout->childItems();
+
+    for (int i = children.count() - 1; i >= 0; --i) {
+        if (isJustifySplitter(children[i])) {
+            return children[i];
+        }
+    }
+
+    return nullptr;
+}
+
 QQuickItem *LayoutManager::firstSplitter()
 {
-    for(int i=0; i<m_startLayout->childItems().count(); ++i) {
-        QQuickItem *item = m_startLayout->childItems()[i];
-        bool isInternalSplitter = item->property("isInternalViewSplitter").toBool();
-        if (isInternalSplitter) {
-            return item;
-        }
-    }
-
-    for(int i=0; i<m_mainLayout->childItems().count(); ++i) {
-        QQuickItem *item = m_mainLayout->childItems()[i];
-        bool isInternalSplitter = item->property("isInternalViewSplitter").toBool();
-        if (isInternalSplitter) {
-            return item;
-        }
-    }
-
-    for(int i=0; i<m_endLayout->childItems().count(); ++i) {
-        QQuickItem *item = m_endLayout->childItems()[i];
-        bool isInternalSplitter = item->property("isInternalViewSplitter").toBool();
-        if (isInternalSplitter) {
-            return item;
+    for (QQuickItem *layout : {m_startLayout, m_mainLayout, m_endLayout}) {
+        if (QQuickItem *splitter = firstSplitterIn(layout)) {
+            return splitter;
         }
     }
 
@@ -853,27 +869,10 @@ QQuickItem *LayoutManager::firstSplitter()
 
 QQuickItem *LayoutManager::lastSplitter()
 {
-    for(int i=m_endLayout->childItems().count()-1; i>=0; --i) {
-        QQuickItem *item = m_endLayout->childItems()[i];
-        bool isInternalSplitter = item->property("isInternalViewSplitter").toBool();
-        if (isInternalSplitter) {
-            return item;
-        }
-    }
-
-    for(int i=m_mainLayout->childItems().count()-1; i>=0; --i) {
-        QQuickItem *item = m_mainLayout->childItems()[i];
-        bool isInternalSplitter = item->property("isInternalViewSplitter").toBool();
-        if (isInternalSplitter) {
-            return item;
-        }
-    }
-
-    for(int i=m_endLayout->childItems().count()-1; i>=0; --i) {
-        QQuickItem *item = m_endLayout->childItems()[i];
-        bool isInternalSplitter = item->property("isInternalViewSplitter").toBool();
-        if (isInternalSplitter) {
-            return item;
+    //! mirror of firstSplitter(): the layouts are visited tail-first, end layout before start
+    for (QQuickItem *layout : {m_endLayout, m_mainLayout, m_startLayout}) {
+        if (QQuickItem *splitter = lastSplitterIn(layout)) {
+            return splitter;
         }
     }
 
@@ -991,6 +990,10 @@ int LayoutManager::dndSpacerIndex()
 
 void LayoutManager::requestAppletsOrder(const QList<int> &order)
 {
+    if (!m_configuration || !m_startLayout || !m_mainLayout || !m_endLayout) {
+        return;
+    }
+
     Latte::Types::Alignment alignment = static_cast<Latte::Types::Alignment>((*m_configuration)[QStringLiteral("alignment")].toInt());
     QQuickItem *nextlayout = alignment != Latte::Types::Justify ? m_mainLayout : m_startLayout;
     QQuickItem *previousitem = nullptr;
