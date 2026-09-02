@@ -33,6 +33,9 @@ public:
     };
 
     explicit Colors(QObject *parent, Latte::Corona *corona);
+    //! canvas directory is normally derived from the corona package; taking it
+    //! directly lets the model be built without a live Corona
+    explicit Colors(QObject *parent, const QString &colorsPath);
     ~Colors();
 
     int rowCount() const;

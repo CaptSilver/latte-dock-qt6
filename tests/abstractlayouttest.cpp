@@ -32,6 +32,8 @@ private Q_SLOTS:
     void layoutSettingsRoundTrip();
     void layoutName_data();
     void layoutName();
+    void defaultTextColor_data();
+    void defaultTextColor();
 };
 
 void AbstractLayoutTest::initTestCase()
@@ -98,6 +100,35 @@ void AbstractLayoutTest::layoutName()
     QFETCH(QString, path);
     QFETCH(QString, expected);
     QCOMPARE(AbstractLayout::layoutName(path), expected);
+}
+
+void AbstractLayoutTest::defaultTextColor_data()
+{
+    QTest::addColumn<QString>("color");
+    QTest::addColumn<QString>("expected");
+
+    //! these eleven ids are the ones the details-dialog color model publishes;
+    //! anything else has to land on the neutral fallback
+    QTest::newRow("blue")         << QStringLiteral("blue")         << QStringLiteral("#D7E3FF");
+    QTest::newRow("brown")        << QStringLiteral("brown")        << QStringLiteral("#F1DECB");
+    QTest::newRow("darkgrey")     << QStringLiteral("darkgrey")     << QStringLiteral("#ECECEC");
+    QTest::newRow("gold")         << QStringLiteral("gold")         << QStringLiteral("#7C3636");
+    QTest::newRow("green")        << QStringLiteral("green")        << QStringLiteral("#4D7549");
+    QTest::newRow("lightskyblue") << QStringLiteral("lightskyblue") << QStringLiteral("#0C2A43");
+    QTest::newRow("orange")       << QStringLiteral("orange")       << QStringLiteral("#6F3902");
+    QTest::newRow("pink")         << QStringLiteral("pink")         << QStringLiteral("#743C46");
+    QTest::newRow("purple")       << QStringLiteral("purple")       << QStringLiteral("#ECD9FF");
+    QTest::newRow("red")          << QStringLiteral("red")          << QStringLiteral("#F3E4E4");
+    QTest::newRow("wheat")        << QStringLiteral("wheat")        << QStringLiteral("#6A4E25");
+    QTest::newRow("unknown id")   << QStringLiteral("teal")         << QStringLiteral("#FCFCFC");
+    QTest::newRow("empty id")     << QString()                      << QStringLiteral("#FCFCFC");
+}
+
+void AbstractLayoutTest::defaultTextColor()
+{
+    QFETCH(QString, color);
+    QFETCH(QString, expected);
+    QCOMPARE(AbstractLayout::defaultTextColor(color), expected);
 }
 
 QTEST_GUILESS_MAIN(AbstractLayoutTest)

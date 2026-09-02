@@ -644,6 +644,26 @@ target_include_directories(schemesmodeltest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/settings ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(schemesmodeltest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+# colorsmodel.cpp's header includes lattecorona.h, so it uses the same
+# prebuilt-objects real-link and drives the model through its corona-free
+# constructor. Qt6::Widgets is on the list because the negative-row case is
+# pinned through a real QComboBox, which is how the defect reaches data().
+ecm_add_test(colorsmodeltest.cpp
+    TEST_NAME colorsmodeltest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Qml Qt6::Quick Qt6::DBus Qt6::Network
+        Plasma::Activities KF6::Archive KF6::CoreAddons KF6::Crash KF6::DBusAddons
+        KF6::ConfigQml KF6::ConfigCore KF6::GuiAddons KF6::GlobalAccel KF6::I18n
+        KF6::IconThemes KF6::IconWidgets KF6::KIOWidgets KF6::Notifications
+        KF6::NewStuffWidgets KF6::WidgetsAddons Plasma::Plasma KF6::Svg KF6::Package Plasma::PlasmaQuick
+        Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
+        KF6::Service Wayland::Client
+)
+target_link_libraries(colorsmodeltest ${_latte_app_objs})
+add_dependencies(colorsmodeltest latte-dock)
+target_include_directories(colorsmodeltest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/settings/detailsdialog ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(colorsmodeltest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 # importer.cpp pulls in lattecorona.h (the full app object graph) through its
 # includes, so the prebuilt-objects trick links the real compiled
 # layouts/importer.cpp.o (minus main.cpp) and drives its static parser/path
@@ -895,7 +915,7 @@ if(LATTE_COVERAGE)
         # GLOB-behavioral tests link the (now instrumented) app objects; listing them
         # gives their binaries the profile link flag and the export object set, which
         # is what makes the Corona-coupled core count toward whole-app coverage.
-        universalsettingstest storagetest schemesmodeltest viewsmodeltest
+        universalsettingstest storagetest schemesmodeltest colorsmodeltest viewsmodeltest
         layoutsmodeltest lastactivewindowtest importerlogictest coronaenginegeometrytest
         layoutsmanagertest templatesmanagertest layoutssynchronizertest)
     foreach(_t ${_latte_cov_targets})

@@ -17,12 +17,16 @@ namespace Settings {
 namespace Model {
 
 Colors::Colors(QObject *parent, Latte::Corona *corona)
+    : Colors(parent, corona->kPackage().path() + QStringLiteral("../../shells/org.kde.latte.shell/contents/images/canvas/"))
+{
+    m_corona = corona;
+}
+
+Colors::Colors(QObject *parent, const QString &colorsPath)
     : QAbstractTableModel(parent),
-      m_corona(corona)
+      m_colorsPath(colorsPath)
 {
     //!find the available colors
-    m_colorsPath = m_corona->kPackage().path() + QStringLiteral("../../shells/org.kde.latte.shell/contents/images/canvas/");
-
     init();
 }
 
@@ -93,7 +97,7 @@ QVariant Colors::data(const QModelIndex &index, int role) const
     const int row = index.row();
     int column = index.column();
 
-    if (row >= rowCount()) {
+    if (row < 0 || row >= rowCount()) {
         return QVariant{};
     }
 
