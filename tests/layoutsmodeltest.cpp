@@ -25,6 +25,7 @@
 #include "../app/layouts/manager.h"
 #include "../app/data/layoutdata.h"
 #include "../app/data/layoutstable.h"
+#include "../app/data/activitydata.h"
 
 #include <Plasma/Plasma>
 
@@ -73,6 +74,7 @@ private Q_SLOTS:
     void alteredLayoutsDiff();
     void lookupsAndCurrentData();
     void inMultipleModeToggle();
+    void pseudoActivityRowsAreSelectable();
 
 private:
     static Data::Layout makeLayout(const QString &id, const QString &name);
@@ -562,6 +564,41 @@ void LayoutsModelTest::inMultipleModeToggle()
 
     // The INMULTIPLELAYOUTSROLE now reports multiple mode.
     QCOMPARE(model.data(model.index(0, LModel::IDCOLUMN), LModel::INMULTIPLELAYOUTSROLE).toBool(), true);
+}
+
+// The Activities cell offers three pseudo rows -- all activities, free
+// activities and the current one -- ahead of the real activities. The delegate
+// builds its menu by looking each sorted id up in the activities table and
+// skipping any entry that is not valid, so a pseudo row that carries no state
+// never reaches the menu and the assignment becomes unreachable from the UI.
+void LayoutsModelTest::pseudoActivityRowsAreSelectable()
+{
+    LModel model(nullptr, m_corona);
+
+    Data::LayoutsTable table;
+    table << makeLayout(QStringLiteral("/a.layout.latte"), QStringLiteral("Alpha"));
+    model.setOriginalData(table);
+
+    const QModelIndex activity0 = model.index(0, LModel::ACTIVITYCOLUMN);
+
+    const QStringList sorted = model.data(activity0, LModel::ALLACTIVITIESSORTEDROLE).toStringList();
+    QVERIFY(sorted.contains(QLatin1String(Data::Layout::ALLACTIVITIESID)));
+    QVERIFY(sorted.contains(QLatin1String(Data::Layout::FREEACTIVITIESID)));
+    QVERIFY(sorted.contains(QLatin1String(Data::Layout::CURRENTACTIVITYID)));
+
+    const QVariant tableVar = model.data(activity0, LModel::ALLACTIVITIESDATAROLE);
+    QVERIFY(tableVar.canConvert<Data::ActivitiesTable>());
+    const Data::ActivitiesTable activities = tableVar.value<Data::ActivitiesTable>();
+
+    for (const QString &id : {QLatin1String(Data::Layout::ALLACTIVITIESID),
+                              QLatin1String(Data::Layout::FREEACTIVITIESID),
+                              QLatin1String(Data::Layout::CURRENTACTIVITYID)}) {
+        QVERIFY2(activities.containsId(id), qPrintable(QStringLiteral("missing from the activities table: ") + id));
+        QVERIFY2(activities[id].isValid(), qPrintable(QStringLiteral("row is skipped by the delegate: ") + id));
+        // They are placeholders, not real activities, so nothing should treat
+        // them as running.
+        QVERIFY(!activities[id].isRunning());
+    }
 }
 
 QTEST_MAIN(LayoutsModelTest)

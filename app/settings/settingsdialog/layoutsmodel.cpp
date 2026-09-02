@@ -894,22 +894,28 @@ QList<Latte::Data::Layout> Layouts::alteredLayouts() const
 //! Activities code
 void Layouts::initActivities()
 {
+    //! The three pseudo activities stand in for real ones in the assignment
+    //! menu, so they need a state that passes isValid() or the delegate skips
+    //! them; Stopped keeps them out of isRunning(), which they never are.
     Latte::Data::Activity allActivities;
     allActivities.id = QLatin1String(Latte::Data::Layout::ALLACTIVITIESID);
     allActivities.name = QString(QStringLiteral("[ ") + i18n("All Activities") + QStringLiteral(" ]"));
     allActivities.icon = QStringLiteral("activities");
+    allActivities.state = Latte::Data::Activity::Stopped;
     m_activitiesTable << allActivities;
 
     Latte::Data::Activity freeActivities;
     freeActivities.id = QLatin1String(Latte::Data::Layout::FREEACTIVITIESID);
     freeActivities.name = QString(QStringLiteral("[ ") + i18n("Free Activities") + QStringLiteral(" ]"));
     freeActivities.icon = QStringLiteral("activities");
+    freeActivities.state = Latte::Data::Activity::Stopped;
     m_activitiesTable << freeActivities;
 
     Latte::Data::Activity currentActivity;
     currentActivity.id = QLatin1String(Latte::Data::Layout::CURRENTACTIVITYID);
     currentActivity.name = QString(QStringLiteral("[ ") + i18n("Current Activity") + QStringLiteral(" ]"));
     currentActivity.icon = QStringLiteral("dialog-yes");
+    currentActivity.state = Latte::Data::Activity::Stopped;
     m_activitiesTable << currentActivity;
 
     QStringList activities = m_corona->layoutsManager()->synchronizer()->activities();;
