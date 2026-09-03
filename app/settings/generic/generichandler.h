@@ -9,6 +9,7 @@
 //! Qt
 #include <QAction>
 #include <QObject>
+#include <QMenu>
 #include <QPushButton>
 
 // KDE
@@ -58,6 +59,17 @@ Q_SIGNALS:
 protected:
     void setTwinProperty(QAction *action, const QString &property, QVariant value);
     void connectActionWithButton(QPushButton *button, QAction *action);
+
+    //! Builds an action and its twin button in one step. iconName sits between the
+    //! two text parameters on purpose, so swapping label and tooltip does not
+    //! silently compile. Pass a null menu for an action that lives in no menu.
+    QAction *addTwinAction(QMenu *menu,
+                           QPushButton *button,
+                           const QString &text,
+                           const QString &iconName,
+                           const QString &tooltip,
+                           const QKeySequence &shortcut,
+                           bool checkable = false);
 
 private:
     //! Twin Actions bind QAction* behavior with QPushButton*

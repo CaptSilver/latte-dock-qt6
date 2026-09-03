@@ -68,11 +68,12 @@ void ViewsHandler::init()
     m_ui->layoutsCmb->setItemDelegate(new Settings::Layout::Delegate::LayoutCmbItemDelegate(this));
 
     //! New Button
-    m_newViewAction = new QAction(i18nc("new view", "&New"), this);
-    m_newViewAction->setToolTip(i18n("New dock or panel"));
-    m_newViewAction->setIcon(QIcon::fromTheme(QStringLiteral("add")));
-    m_newViewAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_N));
-    connectActionWithButton(m_ui->newBtn, m_newViewAction);
+    m_newViewAction = addTwinAction(nullptr,
+                                    m_ui->newBtn,
+                                    i18nc("new view", "&New"),
+                                    QStringLiteral("add"),
+                                    i18n("New dock or panel"),
+                                    QKeySequence(Qt::CTRL | Qt::Key_N));
     connect(m_newViewAction, &QAction::triggered, m_ui->newBtn, &QPushButton::showMenu);
 
     initViewTemplatesSubMenu();
@@ -82,36 +83,40 @@ void ViewsHandler::init()
     connect(corona()->templatesManager(), &Latte::Templates::Manager::viewTemplatesChanged, this, &ViewsHandler::initViewTemplatesSubMenu);
 
     //! Duplicate Button
-    m_duplicateViewAction = new QAction(i18nc("duplicate dock or panel", "&Duplicate"), this);
-    m_duplicateViewAction->setToolTip(i18n("Duplicate selected dock or panel"));
-    m_duplicateViewAction->setIcon(QIcon::fromTheme(QStringLiteral("edit-copy")));
-    m_duplicateViewAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_D));
-    connectActionWithButton(m_ui->duplicateBtn, m_duplicateViewAction);
+    m_duplicateViewAction = addTwinAction(nullptr,
+                                          m_ui->duplicateBtn,
+                                          i18nc("duplicate dock or panel", "&Duplicate"),
+                                          QStringLiteral("edit-copy"),
+                                          i18n("Duplicate selected dock or panel"),
+                                          QKeySequence(Qt::CTRL | Qt::Key_D));
     connect(m_duplicateViewAction, &QAction::triggered, m_viewsController, &Controller::Views::duplicateSelectedViews);
 
     //! Remove Button
-    m_removeViewAction = new QAction(i18nc("remove layout", "Remove"), m_ui->removeBtn);
-    m_removeViewAction->setToolTip(i18n("Remove selected view"));
-    m_removeViewAction->setIcon(QIcon::fromTheme(QStringLiteral("delete")));
-    m_removeViewAction->setShortcut(QKeySequence(Qt::Key_Delete));
-    connectActionWithButton(m_ui->removeBtn, m_removeViewAction);
+    m_removeViewAction = addTwinAction(nullptr,
+                                       m_ui->removeBtn,
+                                       i18nc("remove layout", "Remove"),
+                                       QStringLiteral("delete"),
+                                       i18n("Remove selected view"),
+                                       QKeySequence(Qt::Key_Delete));
     connect(m_removeViewAction, &QAction::triggered, this, &ViewsHandler::removeSelectedViews);
     m_ui->removeBtn->addAction(m_removeViewAction); //this is needed in order to be triggered properly
 
     //! Import
-    m_importViewAction = new QAction(i18nc("import dock/panel", "&Import..."), this);
-    m_importViewAction->setToolTip(i18n("Import dock or panel from local file"));
-    m_importViewAction->setIcon(QIcon::fromTheme(QStringLiteral("document-import")));
-    m_importViewAction->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_I));
-    connectActionWithButton(m_ui->importBtn, m_importViewAction);
+    m_importViewAction = addTwinAction(nullptr,
+                                       m_ui->importBtn,
+                                       i18nc("import dock/panel", "&Import..."),
+                                       QStringLiteral("document-import"),
+                                       i18n("Import dock or panel from local file"),
+                                       QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_I));
     connect(m_importViewAction, &QAction::triggered, this, &ViewsHandler::importView);
 
     //! Export
-    m_exportViewAction = new QAction(i18nc("export layout", "&Export"), this);
-    m_exportViewAction->setToolTip(i18n("Export selected dock or panel at your system"));
-    m_exportViewAction->setIcon(QIcon::fromTheme(QStringLiteral("document-export")));
-    m_exportViewAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_E));
-    connectActionWithButton(m_ui->exportBtn, m_exportViewAction);
+    m_exportViewAction = addTwinAction(nullptr,
+                                       m_ui->exportBtn,
+                                       i18nc("export layout", "&Export"),
+                                       QStringLiteral("document-export"),
+                                       i18n("Export selected dock or panel at your system"),
+                                       QKeySequence(Qt::CTRL | Qt::Key_E));
     connect(m_exportViewAction, &QAction::triggered, m_ui->exportBtn, &QPushButton::showMenu);
 
     initViewExportSubMenu();

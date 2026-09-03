@@ -222,6 +222,18 @@ target_include_directories(plasmaquickheaderstest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(plasmaquickheaderstest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+# genericdialog.cpp has to be here even though the test never calls it:
+# generichandler.cpp calls m_dialog->showInlineMessage, so the symbol must exist.
+ecm_add_test(generichandlertest.cpp
+    ${CMAKE_SOURCE_DIR}/app/settings/generic/generichandler.cpp
+    ${CMAKE_SOURCE_DIR}/app/settings/generic/genericdialog.cpp
+    TEST_NAME generichandlertest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Widgets KF6::I18n KF6::WidgetsAddons
+)
+target_include_directories(generichandlertest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/settings/generic)
+set_tests_properties(generichandlertest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 ecm_add_test(coretoolstest.cpp
     ${CMAKE_SOURCE_DIR}/declarativeimports/core/tools.cpp
     ${CMAKE_SOURCE_DIR}/declarativeimports/core/environment.cpp

@@ -119,27 +119,30 @@ void TabLayouts::initLayoutMenu()
         m_parentDialog->appMenuBar()->insertMenu(m_parentDialog->helpMenu()->menuAction(), m_layoutMenu);
     }
 
-    m_switchLayoutAction = m_layoutMenu->addAction(i18nc("switch layout","Switch"));
-    m_switchLayoutAction->setToolTip(i18n("Switch to selected layout"));
-    m_switchLayoutAction->setIcon(QIcon::fromTheme(QStringLiteral("user-identity")));
-    m_switchLayoutAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Tab));
-    connectActionWithButton(m_ui->switchButton, m_switchLayoutAction);
+    m_switchLayoutAction = addTwinAction(m_layoutMenu,
+                                         m_ui->switchButton,
+                                         i18nc("switch layout","Switch"),
+                                         QStringLiteral("user-identity"),
+                                         i18n("Switch to selected layout"),
+                                         QKeySequence(Qt::CTRL | Qt::Key_Tab));
     connect(m_switchLayoutAction, &QAction::triggered, this, &TabLayouts::switchLayout);
 
-    m_activitiesManagerAction = m_layoutMenu->addAction(i18n("&Activities"));
-    m_activitiesManagerAction->setToolTip(i18n("Show Plasma Activities manager"));
-    m_activitiesManagerAction->setIcon(QIcon::fromTheme(QStringLiteral("activities")));
-    m_activitiesManagerAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_A));
-    connectActionWithButton(m_ui->activitiesButton, m_activitiesManagerAction);
+    m_activitiesManagerAction = addTwinAction(m_layoutMenu,
+                                              m_ui->activitiesButton,
+                                              i18n("&Activities"),
+                                              QStringLiteral("activities"),
+                                              i18n("Show Plasma Activities manager"),
+                                              QKeySequence(Qt::CTRL | Qt::Key_A));
     connect(m_activitiesManagerAction, &QAction::triggered, this, &TabLayouts::toggleActivitiesManager);
 
     m_layoutMenu->addSeparator();
 
-    m_newLayoutAction = m_layoutMenu->addAction(i18nc("new layout", "&New"));
-    m_newLayoutAction->setToolTip(i18n("New layout"));
-    m_newLayoutAction->setIcon(QIcon::fromTheme(QStringLiteral("add")));
-    m_newLayoutAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_N));
-    connectActionWithButton(m_ui->newButton, m_newLayoutAction);
+    m_newLayoutAction = addTwinAction(m_layoutMenu,
+                                      m_ui->newButton,
+                                      i18nc("new layout", "&New"),
+                                      QStringLiteral("add"),
+                                      i18n("New layout"),
+                                      QKeySequence(Qt::CTRL | Qt::Key_N));
     connect(m_newLayoutAction, &QAction::triggered, m_ui->newButton, &QPushButton::showMenu);
 
     initLayoutTemplatesSubMenu();
@@ -148,62 +151,69 @@ void TabLayouts::initLayoutMenu()
 
     connect(m_corona->templatesManager(), &Latte::Templates::Manager::layoutTemplatesChanged, this, &TabLayouts::initLayoutTemplatesSubMenu);
 
-    m_duplicateLayoutAction = m_layoutMenu->addAction(i18nc("duplicate layout", "&Duplicate"));
-    m_duplicateLayoutAction->setToolTip(i18n("Duplicate selected layout"));
-    m_duplicateLayoutAction->setIcon(QIcon::fromTheme(QStringLiteral("edit-copy")));
-    m_duplicateLayoutAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_D));
-    connectActionWithButton(m_ui->duplicateButton, m_duplicateLayoutAction);
+    m_duplicateLayoutAction = addTwinAction(m_layoutMenu,
+                                            m_ui->duplicateButton,
+                                            i18nc("duplicate layout", "&Duplicate"),
+                                            QStringLiteral("edit-copy"),
+                                            i18n("Duplicate selected layout"),
+                                            QKeySequence(Qt::CTRL | Qt::Key_D));
     connect(m_duplicateLayoutAction, &QAction::triggered, this, &TabLayouts::duplicateLayout);
 
-    m_removeLayoutAction = m_layoutMenu->addAction(i18nc("remove layout", "Remove"));
-    m_removeLayoutAction->setToolTip(i18n("Remove selected layout"));
-    m_removeLayoutAction->setIcon(QIcon::fromTheme(QStringLiteral("delete")));
-    m_removeLayoutAction->setShortcut(QKeySequence(Qt::Key_Delete));
-    connectActionWithButton(m_ui->removeButton, m_removeLayoutAction);
+    m_removeLayoutAction = addTwinAction(m_layoutMenu,
+                                         m_ui->removeButton,
+                                         i18nc("remove layout", "Remove"),
+                                         QStringLiteral("delete"),
+                                         i18n("Remove selected layout"),
+                                         QKeySequence(Qt::Key_Delete));
     connect(m_removeLayoutAction, &QAction::triggered, this, &TabLayouts::removeLayout);
     m_ui->removeButton->addAction(m_removeLayoutAction); //this is needed in order to be triggered properly
 
     m_layoutMenu->addSeparator();
 
-    m_enabledLayoutAction = m_layoutMenu->addAction(i18n("Ena&bled"));
-    m_enabledLayoutAction->setToolTip(i18n("Assign in activities in order to be activated through Plasma Activities"));
-    m_enabledLayoutAction->setIcon(QIcon::fromTheme(QStringLiteral("edit-link")));
-    m_enabledLayoutAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_B));
-    m_enabledLayoutAction->setCheckable(true);
-    connectActionWithButton(m_ui->enabledButton, m_enabledLayoutAction);
+    m_enabledLayoutAction = addTwinAction(m_layoutMenu,
+                                          m_ui->enabledButton,
+                                          i18n("Ena&bled"),
+                                          QStringLiteral("edit-link"),
+                                          i18n("Assign in activities in order to be activated through Plasma Activities"),
+                                          QKeySequence(Qt::CTRL | Qt::Key_B),
+                                          true);
     connect(m_enabledLayoutAction, &QAction::triggered, this, &TabLayouts::toggleEnabledLayout);
 
-    m_readOnlyLayoutAction = m_layoutMenu->addAction(i18nc("read only layout", "&Read Only"));
-    m_readOnlyLayoutAction->setToolTip(i18n("Make selected layout read-only"));
-    m_readOnlyLayoutAction->setIcon(QIcon::fromTheme(QStringLiteral("object-locked")));
-    m_readOnlyLayoutAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_R));
-    m_readOnlyLayoutAction->setCheckable(true);
-    connectActionWithButton(m_ui->readOnlyButton, m_readOnlyLayoutAction);
+    m_readOnlyLayoutAction = addTwinAction(m_layoutMenu,
+                                           m_ui->readOnlyButton,
+                                           i18nc("read only layout", "&Read Only"),
+                                           QStringLiteral("object-locked"),
+                                           i18n("Make selected layout read-only"),
+                                           QKeySequence(Qt::CTRL | Qt::Key_R),
+                                           true);
     connect(m_readOnlyLayoutAction, &QAction::triggered, this, &TabLayouts::lockLayout);
 
-    m_viewsAction = m_layoutMenu->addAction(i18nc("layout docks / panels", "Docks, &Panels..."));
-    m_viewsAction->setToolTip(i18n("Show selected layouts docks and panels"));
-    m_viewsAction->setIcon(QIcon::fromTheme(QStringLiteral("window")));
-    m_viewsAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_P));
-    connectActionWithButton(m_ui->viewsBtn, m_viewsAction);
+    m_viewsAction = addTwinAction(m_layoutMenu,
+                                  m_ui->viewsBtn,
+                                  i18nc("layout docks / panels", "Docks, &Panels..."),
+                                  QStringLiteral("window"),
+                                  i18n("Show selected layouts docks and panels"),
+                                  QKeySequence(Qt::CTRL | Qt::Key_P));
     connect(m_viewsAction, &QAction::triggered, this, &TabLayouts::showViewsDialog);
 
-    m_detailsAction = m_layoutMenu->addAction(i18nc("layout details", "De&tails..."));
-    m_detailsAction->setToolTip(i18n("Show selected layout details"));
-    m_detailsAction->setIcon(QIcon::fromTheme(QStringLiteral("view-list-details")));
-    m_detailsAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_T));
-    connectActionWithButton(m_ui->detailsButton, m_detailsAction);
+    m_detailsAction = addTwinAction(m_layoutMenu,
+                                    m_ui->detailsButton,
+                                    i18nc("layout details", "De&tails..."),
+                                    QStringLiteral("view-list-details"),
+                                    i18n("Show selected layout details"),
+                                    QKeySequence(Qt::CTRL | Qt::Key_T));
     connect(m_detailsAction, &QAction::triggered, this, &TabLayouts::showDetailsDialog);
 
     m_layoutMenu->addSeparator();
 
 
     //! Import
-    m_importLayoutAction = m_layoutMenu->addAction(i18nc("import layout", "&Import"));
-    m_importLayoutAction->setToolTip(i18n("Import layout from various resources"));
-    m_importLayoutAction->setIcon(QIcon::fromTheme(QStringLiteral("document-import")));
-    m_importLayoutAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_I));
-    connectActionWithButton(m_ui->importButton, m_importLayoutAction);
+    m_importLayoutAction = addTwinAction(m_layoutMenu,
+                                         m_ui->importButton,
+                                         i18nc("import layout", "&Import"),
+                                         QStringLiteral("document-import"),
+                                         i18n("Import layout from various resources"),
+                                         QKeySequence(Qt::CTRL | Qt::Key_I));
     connect(m_importLayoutAction, &QAction::triggered, m_ui->importButton, &QPushButton::showMenu);
 
     initImportLayoutSubMenu();
@@ -211,11 +221,12 @@ void TabLayouts::initLayoutMenu()
     m_ui->importButton->setMenu(m_layoutImportSubMenu);
 
     //! Export
-    m_exportLayoutAction = m_layoutMenu->addAction(i18nc("export layout", "&Export"));
-    m_exportLayoutAction->setToolTip(i18n("Export selected layout at your system"));
-    m_exportLayoutAction->setIcon(QIcon::fromTheme(QStringLiteral("document-export")));
-    m_exportLayoutAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_E));
-    connectActionWithButton(m_ui->exportButton, m_exportLayoutAction);
+    m_exportLayoutAction = addTwinAction(m_layoutMenu,
+                                         m_ui->exportButton,
+                                         i18nc("export layout", "&Export"),
+                                         QStringLiteral("document-export"),
+                                         i18n("Export selected layout at your system"),
+                                         QKeySequence(Qt::CTRL | Qt::Key_E));
     connect(m_exportLayoutAction, &QAction::triggered, m_ui->exportButton, &QPushButton::showMenu);
 
     initExportLayoutSubMenu();

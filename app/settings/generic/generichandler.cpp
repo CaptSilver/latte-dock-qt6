@@ -57,6 +57,34 @@ void Generic::connectActionWithButton(QPushButton *button, QAction *action)
     connect(button, &QPushButton::clicked, action, &QAction::trigger);
 }
 
+QAction *Generic::addTwinAction(QMenu *menu,
+                                QPushButton *button,
+                                const QString &text,
+                                const QString &iconName,
+                                const QString &tooltip,
+                                const QKeySequence &shortcut,
+                                bool checkable)
+{
+    auto action = new QAction(text, this);
+    action->setToolTip(tooltip);
+    action->setIcon(QIcon::fromTheme(iconName));
+    action->setShortcut(shortcut);
+
+    if (checkable) {
+        action->setCheckable(true);
+    }
+
+    if (menu) {
+        menu->addAction(action);
+    }
+
+    //! Last, because the button copies text, tooltip and icon at this point and
+    //! never resyncs -- wiring first is how a twin ends up with no tooltip.
+    connectActionWithButton(button, action);
+
+    return action;
+}
+
 void Generic::showInlineMessage(const QString &msg, const KMessageWidget::MessageType &type, const bool &isPersistent, QList<QAction *> actions)
 {
     m_dialog->showInlineMessage(msg, type, isPersistent, actions);
