@@ -20,6 +20,9 @@
 // change tracking and alteredLayouts diffing.
 
 #include "settingsdialog/layoutsmodel.h"
+#include "coronafixture.h"
+
+#include "../app/tools/commontools.h"
 
 #include "../app/lattecorona.h"
 #include "../app/layouts/manager.h"
@@ -32,6 +35,7 @@
 #include <QAbstractItemModel>
 #include <QFont>
 #include <QSignalSpy>
+#include <QFileInfo>
 #include <QtTest>
 
 #include <type_traits>
@@ -53,6 +57,7 @@ class LayoutsModelTest : public QObject
 
 private Q_SLOTS:
     void initTestCase();
+    void coronaWritesInsideTheSandbox();
     void cleanupTestCase();
 
     void emptyByDefault();
@@ -80,6 +85,8 @@ private:
     static Data::Layout makeLayout(const QString &id, const QString &name);
 
     Latte::Corona *m_corona{nullptr};
+
+    CoronaSandbox m_sandbox;
 };
 
 Data::Layout LayoutsModelTest::makeLayout(const QString &id, const QString &name)
@@ -92,12 +99,24 @@ Data::Layout LayoutsModelTest::makeLayout(const QString &id, const QString &name
 
 void LayoutsModelTest::initTestCase()
 {
-    m_corona = new Latte::Corona(false, QString(), QString(), 0, nullptr);
+    // Redirect the config home before the Corona opens anything.
+    QVERIFY(m_sandbox.arm());
+
+    m_corona = buildHeadlessCorona();
     QVERIFY(m_corona != nullptr);
     QVERIFY(m_corona->universalSettings() != nullptr);
     QVERIFY(m_corona->layoutsManager() != nullptr);
     QVERIFY(m_corona->layoutsManager()->synchronizer() != nullptr);
     QVERIFY(m_corona->activitiesConsumer() != nullptr);
+}
+
+void LayoutsModelTest::coronaWritesInsideTheSandbox()
+{
+    // The Corona's rc must land in the throwaway dir, not the developer's home.
+    QVERIFY2(Latte::configPath().startsWith(m_sandbox.dir.path()),
+             qPrintable(QStringLiteral("config path escaped the sandbox: ") + Latte::configPath()));
+    QVERIFY(QFileInfo::exists(m_sandbox.dir.path() + QLatin1Char('/')
+                              + QCoreApplication::applicationName() + QStringLiteral("rc")));
 }
 
 void LayoutsModelTest::cleanupTestCase()

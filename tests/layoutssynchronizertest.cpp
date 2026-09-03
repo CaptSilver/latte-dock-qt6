@@ -18,6 +18,9 @@
 // capture.
 
 #include "../app/lattecorona.h"
+#include "coronafixture.h"
+
+#include "../app/tools/commontools.h"
 #include "../app/layouts/manager.h"
 #include "../app/layouts/synchronizer.h"
 #include "../app/data/layoutdata.h"
@@ -25,6 +28,7 @@
 
 #include <QSignalSpy>
 #include <QStringList>
+#include <QFileInfo>
 #include <QtTest>
 
 using namespace Latte;
@@ -35,6 +39,7 @@ class LayoutsSynchronizerTest : public QObject
 
 private Q_SLOTS:
     void initTestCase();
+    void coronaWritesInsideTheSandbox();
     void cleanupTestCase();
 
     void injectsLayoutsTable();
@@ -50,6 +55,8 @@ private:
     static Data::LayoutsTable makeTable();
 
     Latte::Corona *m_corona{nullptr};
+
+    CoronaSandbox m_sandbox;
     Layouts::Synchronizer *m_sync{nullptr};
 };
 
@@ -78,11 +85,23 @@ Data::LayoutsTable LayoutsSynchronizerTest::makeTable()
 
 void LayoutsSynchronizerTest::initTestCase()
 {
-    m_corona = new Latte::Corona(false, QString(), QString(), 0, nullptr);
+    // Redirect the config home before the Corona opens anything.
+    QVERIFY(m_sandbox.arm());
+
+    m_corona = buildHeadlessCorona();
     QVERIFY(m_corona->layoutsManager() != nullptr);
     m_sync = m_corona->layoutsManager()->synchronizer();
     QVERIFY(m_sync != nullptr);
     QVERIFY(m_corona->activitiesConsumer() != nullptr);
+}
+
+void LayoutsSynchronizerTest::coronaWritesInsideTheSandbox()
+{
+    // The Corona's rc must land in the throwaway dir, not the developer's home.
+    QVERIFY2(Latte::configPath().startsWith(m_sandbox.dir.path()),
+             qPrintable(QStringLiteral("config path escaped the sandbox: ") + Latte::configPath()));
+    QVERIFY(QFileInfo::exists(m_sandbox.dir.path() + QLatin1Char('/')
+                              + QCoreApplication::applicationName() + QStringLiteral("rc")));
 }
 
 void LayoutsSynchronizerTest::cleanupTestCase()

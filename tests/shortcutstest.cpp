@@ -62,10 +62,9 @@ void ShortcutsTest::initTestCase()
 {
     m_configDir = new QTemporaryDir();
     QVERIFY(m_configDir->isValid());
+    // QStandardPaths re-reads XDG_CONFIG_HOME on every standardLocations() call,
+    // so setting it here is enough for configPath() to find the temp dir.
     qputenv("XDG_CONFIG_HOME", m_configDir->path().toUtf8());
-    // QStandardPaths caches config locations off the env at first use; reset so
-    // configPath() picks up our temp dir.
-    QStandardPaths::setTestModeEnabled(false);
 }
 
 void ShortcutsTest::cleanupTestCase()

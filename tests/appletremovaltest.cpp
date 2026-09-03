@@ -15,6 +15,8 @@
 // container is actually taken out of its layout. No mocks of the Plasma API: if the removal regresses,
 // this fails.
 
+#include <QTemporaryDir>
+#include <QStandardPaths>
 #include <QtTest>
 #include <QGuiApplication>
 #include <QObject>
@@ -34,6 +36,9 @@ public:
     QRect screenGeometry(int) const override { return QRect(0, 0, 1920, 1080); }
 };
 
+//! Throwaway config home, armed in main() before QGuiApplication exists.
+static QTemporaryDir s_xdgConfig;
+
 class AppletRemovalTest : public QObject
 {
     Q_OBJECT
@@ -44,6 +49,9 @@ private Q_SLOTS:
 
 void AppletRemovalTest::removesContainerWhenAppletAlreadyDestroyed()
 {
+    QVERIFY2(QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation).startsWith(s_xdgConfig.path()),
+             "config home escaped the sandbox");
+
     auto *corona = new TestCorona();
     Plasma::Containment *cont = corona->createContainment(QStringLiteral("org.kde.plasma.desktopcontainment"));
     if (!cont) {
@@ -92,6 +100,10 @@ void AppletRemovalTest::removesContainerWhenAppletAlreadyDestroyed()
 int main(int argc, char *argv[])
 {
     qputenv("QT_QPA_PLATFORM", "offscreen");
+    // The real Plasma::Corona writes its applets rc under the config home; keep
+    // that out of the developer's own ~/.config. Only XDG_DATA_* drives package
+    // resolution, so the two QSKIP guards above are unaffected.
+    qputenv("XDG_CONFIG_HOME", s_xdgConfig.path().toUtf8());
     QGuiApplication app(argc, argv);
     AppletRemovalTest tc;
     return QTest::qExec(&tc, argc, argv);

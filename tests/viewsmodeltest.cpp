@@ -16,8 +16,13 @@
 // removal, temporary-view append, and the altered/new view diffing.
 
 #include "viewsmodel.h"
+#include "coronafixture.h"
+
+#include "../app/tools/commontools.h"
 
 #include "../app/lattecorona.h"
+#include "../app/layouts/manager.h"
+#include "../app/screenpool.h"
 #include "../app/data/viewdata.h"
 #include "../app/data/viewstable.h"
 #include "../app/data/screendata.h"
@@ -28,6 +33,7 @@
 
 #include <QAbstractItemModel>
 #include <QSignalSpy>
+#include <QFileInfo>
 #include <QtTest>
 
 using namespace Latte;
@@ -38,6 +44,7 @@ class ViewsModelTest : public QObject
 
 private Q_SLOTS:
     void initTestCase();
+    void coronaWritesInsideTheSandbox();
     void cleanupTestCase();
 
     void emptyByDefault();
@@ -62,6 +69,8 @@ private:
                                Latte::Types::Alignment align = Latte::Types::Center);
 
     Latte::Corona *m_corona{nullptr};
+
+    CoronaSandbox m_sandbox;
 };
 
 Data::View ViewsModelTest::makeView(const QString &id, const QString &name,
@@ -78,9 +87,24 @@ Data::View ViewsModelTest::makeView(const QString &id, const QString &name,
 
 void ViewsModelTest::initTestCase()
 {
-    m_corona = new Latte::Corona(false, QString(), QString(), 0, nullptr);
+    // Redirect the config home before the Corona opens anything.
+    QVERIFY(m_sandbox.arm());
+
+    m_corona = buildHeadlessCorona();
     QVERIFY(m_corona != nullptr);
     QVERIFY(m_corona->screenPool() != nullptr);
+    // Only assigned once the shell package resolved, so this is the honest probe
+    // for a Corona that actually came up.
+    QVERIFY(m_corona->layoutsManager() != nullptr);
+}
+
+void ViewsModelTest::coronaWritesInsideTheSandbox()
+{
+    // The Corona's rc must land in the throwaway dir, not the developer's home.
+    QVERIFY2(Latte::configPath().startsWith(m_sandbox.dir.path()),
+             qPrintable(QStringLiteral("config path escaped the sandbox: ") + Latte::configPath()));
+    QVERIFY(QFileInfo::exists(m_sandbox.dir.path() + QLatin1Char('/')
+                              + QCoreApplication::applicationName() + QStringLiteral("rc")));
 }
 
 void ViewsModelTest::cleanupTestCase()
@@ -480,12 +504,14 @@ void ViewsModelTest::choicesRolesReturnTables()
     QVERIFY(hAligns.rowCount() > 0);
     QVERIFY(vAligns.rowCount() > 0);
 
-    // Screen choices come back as a ScreensTable with at least the default
-    // primary / all-screens / all-secondary entries populateScreens() seeded.
+    // Screen choices come back as a ScreensTable holding the three entries
+    // populateScreens() always seeds -- primary / all-screens / all-secondary --
+    // followed by one row per screen the pool knows about. Asserting only ">= 3"
+    // would pass against a Corona whose ScreenPool never came up at all.
     Data::ScreensTable screens =
         model.data(model.index(0, Settings::Model::Views::SCREENCOLUMN), Settings::Model::Views::CHOICESROLE)
             .value<Data::ScreensTable>();
-    QVERIFY(screens.rowCount() >= 3);
+    QCOMPARE(screens.rowCount(), 3 + m_corona->screenPool()->screensTable().rowCount());
 }
 
 QTEST_MAIN(ViewsModelTest)

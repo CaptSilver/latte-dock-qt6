@@ -728,7 +728,7 @@ set_tests_properties(lastactivewindowtest PROPERTIES ENVIRONMENT "QT_QPA_PLATFOR
 # layoutsmodel.cpp's header pulls in lattecorona.h (the full app object graph),
 # so the prebuilt-objects trick links the real compiled layoutsmodel.cpp.o (minus
 # main.cpp) and drives the model through its header.
-# The four tests below construct a real Latte::Corona, which resolves the shell package
+# The Corona-backed tests below construct a real Latte::Corona, which resolves the shell package
 # through KPackage; with nothing installed they fail on a null layouts manager, which reads
 # like a code bug and is not. Stage the install once as a ctest fixture instead of making
 # every caller export XDG_DATA_DIRS by hand.
@@ -849,7 +849,9 @@ add_dependencies(viewsmodeltest latte-dock)
 target_include_directories(viewsmodeltest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/settings
     ${CMAKE_SOURCE_DIR}/app/settings/viewsdialog ${CMAKE_BINARY_DIR}/app)
-set_tests_properties(viewsmodeltest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+set_tests_properties(viewsmodeltest PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;${LATTE_SHELL_STAGE_ENV}"
+    FIXTURES_REQUIRED shellpackage)
 
 ecm_add_test(smartlauncheritemtest.cpp
     ${CMAKE_SOURCE_DIR}/plasmoid/plugin/smartlauncheritem.cpp
