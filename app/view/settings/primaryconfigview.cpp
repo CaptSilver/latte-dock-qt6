@@ -227,9 +227,20 @@ void PrimaryConfigView::setParentView(Latte::View *view, const bool &immediate)
     if (m_latteView && !immediate) {
         hideConfigWindow();
 
+        //! The dock we are sliding towards can die before we get there: screen
+        //! changes, layout switches and view recreates all delete views on a
+        //! shorter delay than this one, and the config window deliberately
+        //! outlives its dock. Hold the target weakly, and give the timer a
+        //! receiver so it is dropped along with the window at quit.
+        QPointer<Latte::View> nextView{view};
+
         //!slide-out delay
-        QTimer::singleShot(SLIDEOUTINTERVAL, [this, view]() {
-            initParentView(view);
+        QTimer::singleShot(SLIDEOUTINTERVAL, this, [this, nextView]() {
+            if (!nextView) {
+                return;
+            }
+
+            initParentView(nextView.data());
             showConfigWindow();
         });
     } else {
