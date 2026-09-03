@@ -99,8 +99,8 @@ void ViewsHandler::init()
     m_ui->removeBtn->addAction(m_removeViewAction); //this is needed in order to be triggered properly
 
     //! Import
-    m_importViewAction =new QAction(i18nc("import dock/panel","&Import..."));
-    m_duplicateViewAction->setToolTip(i18n("Import dock or panel from local file"));
+    m_importViewAction = new QAction(i18nc("import dock/panel", "&Import..."), this);
+    m_importViewAction->setToolTip(i18n("Import dock or panel from local file"));
     m_importViewAction->setIcon(QIcon::fromTheme(QStringLiteral("document-import")));
     m_importViewAction->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_I));
     connectActionWithButton(m_ui->importBtn, m_importViewAction);
