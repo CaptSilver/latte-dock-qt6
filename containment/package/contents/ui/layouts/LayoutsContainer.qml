@@ -34,6 +34,29 @@ Item{
     readonly property alias endLayout: _endLayout
     readonly property alias contextMenuIsShown: contextMenuLayer.menuIsShown
 
+    //! Real applets across the three layouts. The layouts also carry non-applet
+    //! children: the two parabolic edge spacers that live permanently in
+    //! _mainLayout, the drag placeholder while a widget is being dropped, and
+    //! the justify splitters. None of those mean the dock has something in it.
+    readonly property int appletsCount: {
+        var layouts = [_startLayout, _mainLayout, _endLayout];
+        var count = 0;
+
+        for (var l=0; l<layouts.length; ++l) {
+            var items = layouts[l].children;
+
+            for (var i=items.length-1; i>=0; --i) {
+                var item = items[i];
+
+                if (item && !item.isDndSpacer && !item.isInternalViewSplitter && !item.isParabolicEdgeSpacer) {
+                    count++;
+                }
+            }
+        }
+
+        return count;
+    }
+
     signal contentsLengthChanged();
 
     Binding {

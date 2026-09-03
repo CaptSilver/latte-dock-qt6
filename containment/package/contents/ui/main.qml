@@ -349,30 +349,7 @@ ContainmentItem {
     Plasmoid.backgroundHints: PlasmaCore.Types.NoBackground
 
     //// BEGIN properties in functions
-    property int noApplets: {
-        var count1 = 0;
-        var count2 = 0;
-
-        count1 = layoutsContainer.mainLayout.children.length;
-        var tempLength = layoutsContainer.mainLayout.children.length;
-
-        for (var i=tempLength-1; i>=0; --i) {
-            var applet = layoutsContainer.mainLayout.children[i];
-            if (applet && (applet === dndSpacer ||  applet.isInternalViewSplitter))
-                count1--;
-        }
-
-        count2 = layoutsContainer.endLayout.children.length;
-        tempLength = layoutsContainer.endLayout.children.length;
-
-        for (var i=tempLength-1; i>=0; --i) {
-            var applet = layoutsContainer.endLayout.children[i];
-            if (applet && (applet === dndSpacer || applet.isInternalViewSplitter))
-                count2--;
-        }
-
-        return (count1 + count2);
-    }
+    readonly property int noApplets: layoutsContainer.appletsCount
 
     ///The index of user's current icon size
     property int currentIconIndex:{
