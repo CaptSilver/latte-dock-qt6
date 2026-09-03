@@ -18,6 +18,7 @@
 #include "../app/apptypes.h"
 #include "../app/coretypes.h"
 #include "../app/data/preferencesdata.h"
+#include "../app/tools/commontools.h"
 
 #include <KConfig>
 #include <KConfigGroup>
@@ -53,6 +54,7 @@ private Q_SLOTS:
     void freshProfileIsInPreferencesDefaults();
     void screenScalesRoundTrip();
     void sensitivityAlwaysHigh();
+    void kwinMetaForwardIsCachedAndReloaded();
 };
 
 KSharedConfig::Ptr UniversalSettingsTest::freshConfig()
@@ -65,6 +67,12 @@ void UniversalSettingsTest::initTestCase()
 {
     QVERIFY(m_dir.isValid());
     m_configPath = m_dir.filePath(QStringLiteral("lattedockrc"));
+
+    // The ctor opens kwinrc from the config location rather than from the injected
+    // config, so without this every run watches - and the kwin_ setters would write -
+    // the developer's real ~/.config/kwinrc, reconfiguring the live compositor.
+    qputenv("XDG_CONFIG_HOME", m_dir.path().toLocal8Bit());
+    QCOMPARE(Latte::configPath(), m_dir.path());
 }
 
 void UniversalSettingsTest::init()
@@ -301,6 +309,36 @@ void UniversalSettingsTest::sensitivityAlwaysHigh()
 
     settings.setSensitivity(Settings::LowMouseSensitivity);
     QCOMPARE(settings.sensitivity(), Settings::HighMouseSensitivity);
+}
+
+void UniversalSettingsTest::kwinMetaForwardIsCachedAndReloaded()
+{
+    UniversalSettings settings(freshConfig(), nullptr, this);
+    const QString kwinrcPath = m_dir.filePath(QStringLiteral("kwinrc"));
+
+    QCOMPARE(settings.kwin_metaForwardedToLatte(), false);
+
+    settings.kwin_forwardMetaToLatte(true);
+
+    // The cached flag is what the settings dialog, the global shortcuts and the
+    // containment interface read back, so it has to move with the file.
+    QVERIFY(QFile::exists(kwinrcPath));
+    QFile written(kwinrcPath);
+    QVERIFY(written.open(QIODevice::ReadOnly | QIODevice::Text));
+    QVERIFY(QString::fromUtf8(written.readAll()).contains(QStringLiteral("org.kde.lattedock")));
+    written.close();
+    QCOMPARE(settings.kwin_metaForwardedToLatte(), true);
+
+    // Somebody else - System Settings - hands Meta back to plasmashell. Written with
+    // QFile on purpose: opening it through KSharedConfig would hand back the very
+    // instance under test and mutate its in-memory copy, hiding a stale read.
+    QFile external(kwinrcPath);
+    QVERIFY(external.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text));
+    external.write("[ModifierOnlyShortcuts]\nMeta=org.kde.plasmashell,/PlasmaShell,org.kde.PlasmaShell,activateLauncherMenu\n");
+    external.close();
+
+    QVERIFY(QMetaObject::invokeMethod(&settings, "recoverKWinOptions"));
+    QCOMPARE(settings.kwin_metaForwardedToLatte(), false);
 }
 
 // The UniversalSettings ctor connects to QGuiApplication::screenAdded/screenRemoved

@@ -563,7 +563,10 @@ target_link_libraries(universalsettingstest ${_latte_app_objs})
 add_dependencies(universalsettingstest latte-dock)
 target_include_directories(universalsettingstest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/settings ${CMAKE_BINARY_DIR}/app)
-set_tests_properties(universalsettingstest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+# The kwin_ setters ask KWin to re-read its config; an unreachable bus address keeps
+# that call from reaching the live compositor while the test drives them.
+set_tests_properties(universalsettingstest PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;DBUS_SESSION_BUS_ADDRESS=unix:path=/nonexistent")
 
 # CoronaEngine drags in the whole application object graph, so it links the same
 # prebuilt objects (minus main.cpp) and builds a real engine headlessly to drive

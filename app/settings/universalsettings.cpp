@@ -388,15 +388,10 @@ void UniversalSettings::kwin_forwardMetaToLatte(bool forward)
         return;
     }
 
-    if (KWindowSystem::isPlatformWayland()) {
-        // BUG: https://bugs.kde.org/show_bug.cgi?id=428202
-        // KWin::reconfigure() function blocks/freezes Latte under wayland
-        return;
-    }
-
     QString forwardStr = QLatin1String(forward ? KWINMETAFORWARDTOLATTESTRING : KWINMETAFORWARDTOPLASMASTRING);
     m_kwinrcModifierOnlyShortcutsGroup.writeEntry("Meta", forwardStr);
     m_kwinrcModifierOnlyShortcutsGroup.sync();
+    m_kwinMetaForwardedToLatte = forward;
 
     QDBusMessage message = QDBusMessage::createMethodCall(QStringLiteral("org.kde.KWin"),
                                                           QStringLiteral("/KWin"),
@@ -441,6 +436,11 @@ void UniversalSettings::kwin_setDisabledMaximizedBorders(bool disable)
 void UniversalSettings::recoverKWinOptions()
 {
     qDebug() << "kwinrc: recovering values...";
+
+    //! KConfig hands back the parse it made when the file was opened, so without this
+    //! an edit from System Settings is never seen and Latte keeps believing it owns
+    //! the key. Both writers here sync immediately, so nothing local is discarded.
+    m_kwinrcPtr->reparseConfiguration();
 
     //! Meta forwarded to Latte option
     QString metaforwardedstr = m_kwinrcModifierOnlyShortcutsGroup.readEntry(QStringLiteral("Meta"), QStringLiteral(KWINMETAFORWARDTOPLASMASTRING));
