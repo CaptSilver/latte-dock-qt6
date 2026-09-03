@@ -52,8 +52,6 @@ void Effects::init()
 
     connect(this, &Effects::backgroundCornersMaskChanged, this, &Effects::updateMask);
     connect(this, &Effects::backgroundRadiusEnabledChanged, this, &Effects::updateMask);
-    connect(this, &Effects::subtractedMaskRegionsChanged, this, &Effects::updateMask);
-    connect(this, &Effects::unitedMaskRegionsChanged, this, &Effects::updateMask);
     connect(m_view, &QQuickWindow::widthChanged, this, &Effects::updateMask);
     connect(m_view, &QQuickWindow::heightChanged, this, &Effects::updateMask);
     connect(m_view, &Latte::View::behaveAsPlasmaPanelChanged, this, &Effects::updateMask);
@@ -362,46 +360,6 @@ void Effects::forceMaskRedraw()
     updateMask();
 }
 
-void Effects::setSubtractedMaskRegion(const QString &regionid, const QRegion &region)
-{
-    if (m_subtractedMaskRegions.contains(regionid) && m_subtractedMaskRegions[regionid] == region) {
-        return;
-    }
-
-    m_subtractedMaskRegions[regionid] = region;
-    Q_EMIT subtractedMaskRegionsChanged();
-}
-
-void Effects::removeSubtractedMaskRegion(const QString &regionid)
-{
-    if (!m_subtractedMaskRegions.contains(regionid)) {
-        return;
-    }
-
-    m_subtractedMaskRegions.remove(regionid);
-    Q_EMIT subtractedMaskRegionsChanged();
-}
-
-void Effects::setUnitedMaskRegion(const QString &regionid, const QRegion &region)
-{
-    if (m_unitedMaskRegions.contains(regionid) && m_unitedMaskRegions[regionid] == region) {
-        return;
-    }
-
-    m_unitedMaskRegions[regionid] = region;
-    Q_EMIT unitedMaskRegionsChanged();
-}
-
-void Effects::removeUnitedMaskRegion(const QString &regionid)
-{
-    if (!m_unitedMaskRegions.contains(regionid)) {
-        return;
-    }
-
-    m_unitedMaskRegions.remove(regionid);
-    Q_EMIT unitedMaskRegionsChanged();
-}
-
 QRegion Effects::customMask(const QRect &rect)
 {
     QRegion result = rect;
@@ -435,20 +393,6 @@ QRegion Effects::customMask(const QRect &rect)
     return result;
 }
 
-QRegion Effects::maskCombinedRegion()
-{
-    QRegion region = m_mask;
-
-    for(auto subregion : m_subtractedMaskRegions) {
-        region = region.subtracted(subregion);
-    }
-
-    for(auto subregion : m_unitedMaskRegions) {
-        region = region.united(subregion);
-    }
-
-    return region;
-}
 
 void Effects::updateBackgroundCorners()
 {

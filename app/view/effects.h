@@ -112,10 +112,6 @@ public:
 
 public Q_SLOTS:
     Q_INVOKABLE void forceMaskRedraw();
-    Q_INVOKABLE void setSubtractedMaskRegion(const QString &regionid, const QRegion &region);
-    Q_INVOKABLE void removeSubtractedMaskRegion(const QString &regionid);
-    Q_INVOKABLE void setUnitedMaskRegion(const QString &regionid, const QRegion &region);
-    Q_INVOKABLE void removeUnitedMaskRegion(const QString &regionid);
 
     void clearShadows();
     void updateShadows();
@@ -142,9 +138,6 @@ Q_SIGNALS:
     void popUpMarginChanged();
     void rectChanged();
 
-    void subtractedMaskRegionsChanged();
-    void unitedMaskRegionsChanged();
-
 private Q_SLOTS:
     void init();
 
@@ -157,7 +150,6 @@ private:
     bool backgroundRadiusIsEnabled() const;
     qreal currentMidValue(const qreal &max, const qreal &factor, const qreal &min) const;
     QRegion customMask(const QRect &rect);
-    QRegion maskCombinedRegion();
 
 private:
     bool m_animationsBlocked{false};
@@ -201,10 +193,6 @@ private:
 
     //assigned from qml side in order to access the official panel background svg
     QQuickItem *m_panelBackgroundSvg{nullptr};
-
-    //! Subtracted and United Mask regions
-    QHash<QString, QRegion> m_subtractedMaskRegions;
-    QHash<QString, QRegion> m_unitedMaskRegions;
 };
 
 }
