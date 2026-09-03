@@ -296,11 +296,6 @@
       "lines_total": 11,
       "coverage": 1.0
     },
-    "app/layout/viewpriority.cpp": {
-      "lines_hit": 55,
-      "lines_total": 56,
-      "coverage": 0.9821428571428571
-    },
     "app/layout/viewsyncplan.cpp": {
       "lines_hit": 16,
       "lines_total": 16,

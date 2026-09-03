@@ -194,7 +194,6 @@ private:
 
     QList<int> subContainmentsOf(Plasma::Containment *containment) const;
 
-    QList<Latte::Data::View> sortedViewsData(const QList<Latte::Data::View> &viewsData);
 
     void destroyContainment(Plasma::Containment *containment);
 

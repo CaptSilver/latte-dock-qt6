@@ -14,7 +14,6 @@
 #include "validviewsmapbuilder.h"
 #include "viewcontainertransition.h"
 #include "viewedges.h"
-#include "viewpriority.h"
 #include "viewsyncplan.h"
 #include "../apptypes.h"
 #include "../lattecorona.h"
@@ -532,7 +531,6 @@ bool GenericLayout::viewAtLowerScreenPriority(Latte::View *test, Latte::View *ba
 
     }
 
-    qDebug() << "viewAtLowerScreenPriority : shouldn't had reached here...";
     return false;
 }
 
@@ -563,11 +561,6 @@ bool GenericLayout::viewAtLowerEdgePriority(Latte::View *test, Latte::View *base
     } else {
         return false;
     }
-}
-
-QList<Latte::Data::View> GenericLayout::sortedViewsData(const QList<Latte::Data::View> &viewsData)
-{
-    return Layout::ViewPriority::sorted(viewsData);
 }
 
 
