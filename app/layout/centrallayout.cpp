@@ -213,15 +213,4 @@ const QStringList CentralLayout::appliedActivities()
     }
 }
 
-Types::ViewType CentralLayout::latteViewType(uint containmentId) const
-{
-    for (const auto view : m_latteViews) {
-        if (view->containment() && view->containment()->id() == (uint)containmentId) {
-            return view->type();
-        }
-    }
-
-    return Types::DockView;
-}
-
 }

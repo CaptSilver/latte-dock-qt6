@@ -223,11 +223,6 @@ QMenuBar *SettingsDialog::appMenuBar() const
     return m_globalMenuBar;
 }
 
-QMenu *SettingsDialog::fileMenu() const
-{
-    return m_fileMenu;
-}
-
 QMenu *SettingsDialog::helpMenu() const
 {
     return m_helpMenu->menu();

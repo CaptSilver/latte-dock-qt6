@@ -61,7 +61,6 @@ public:
     Ui::SettingsDialog *ui() const;
 
     QMenuBar *appMenuBar() const;
-    QMenu *fileMenu() const;
     QMenu *helpMenu() const;
 
     void setStoredWindowSize(const QSize &size);

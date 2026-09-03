@@ -264,23 +264,6 @@ QList<Plasma::Types::Location> GenericLayout::freeEdges(int screen) const
     return ViewEdges::freeFrom(occupied);
 }
 
-int GenericLayout::viewsWithTasks() const
-{
-    if (!m_corona) {
-        return 0;
-    }
-
-    int result = 0;
-
-    for (const auto view : m_latteViews) {
-        if (view->extendedInterface()->hasLatteTasks() || view->extendedInterface()->hasPlasmaTasks()) {
-            result++;
-        }
-    }
-
-    return result;
-}
-
 QStringList GenericLayout::unloadedContainmentsIds()
 {
     return m_unloadedContainmentsIds;
@@ -289,17 +272,6 @@ QStringList GenericLayout::unloadedContainmentsIds()
 Latte::Corona *GenericLayout::corona() const
 {
     return m_corona;
-}
-
-Types::ViewType GenericLayout::latteViewType(uint containmentId) const
-{
-    for (const auto view : m_latteViews) {
-        if (view->containment() && view->containment()->id() == containmentId) {
-            return view->type();
-        }
-    }
-
-    return Types::DockView;
 }
 
 Latte::View *GenericLayout::highestPriorityView()
@@ -1059,54 +1031,6 @@ bool GenericLayout::hasLatteView(Plasma::Containment *containment)
     }
 
     return m_latteViews.contains(containment);
-}
-
-bool GenericLayout::explicitDockOccupyEdge(int screen, Plasma::Types::Location location) const
-{
-    if (!m_corona) {
-        return false;
-    }
-
-    for (const auto containment : m_containments) {
-        if (Layouts::Storage::self()->isLatteContainment(containment)) {
-            bool onPrimary = containment->config().readEntry("onPrimary", true);
-            int id = containment->lastScreen();
-            Plasma::Types::Location contLocation = containment->location();
-
-            if (!onPrimary && id == screen && contLocation == location) {
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
-bool GenericLayout::primaryDockOccupyEdge(Plasma::Types::Location location) const
-{
-    if (!m_corona) {
-        return false;
-    }
-
-    for (const auto containment : m_containments) {
-        if (Layouts::Storage::self()->isLatteContainment(containment)) {
-            bool onPrimary{false};
-
-            if (m_latteViews.contains(containment)) {
-                onPrimary = m_latteViews[containment]->onPrimary();
-            } else {
-                onPrimary = containment->config().readEntry("onPrimary", true);
-            }
-
-            Plasma::Types::Location contLocation = containment->location();
-
-            if (onPrimary && contLocation == location) {
-                return true;
-            }
-        }
-    }
-
-    return false;
 }
 
 bool GenericLayout::mapContainsId(const Layout::ViewsMap *map, uint viewId) const

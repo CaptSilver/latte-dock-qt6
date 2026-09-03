@@ -77,7 +77,6 @@ public:
 
     QStringList unloadedContainmentsIds();
 
-    virtual Types::ViewType latteViewType(uint containmentId) const;
     const QList<Plasma::Containment *> *containments() const;
 
     bool contains(Plasma::Containment *containment) const;
@@ -144,7 +143,6 @@ public:
     Data::WarningsList warnings() const;
 
 public Q_SLOTS:
-    Q_INVOKABLE int viewsWithTasks() const;
 
     void toggleHiddenState(QString viewName, QString screenName, Plasma::Types::Location edge);
 
@@ -186,8 +184,6 @@ private:
     bool blockAutomaticLatteViewCreation() const;
     void setBlockAutomaticLatteViewCreation(bool block);
 
-    bool explicitDockOccupyEdge(int screen, Plasma::Types::Location location) const;
-    bool primaryDockOccupyEdge(Plasma::Types::Location location) const;
 
     bool mapContainsId(const ViewsMap *map, uint viewId) const;
     QString mapScreenName(const ViewsMap *map, uint viewId) const;
