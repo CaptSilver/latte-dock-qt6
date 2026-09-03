@@ -11,12 +11,20 @@
 // used to include them, so it could never reach zero and that fallback was dead.
 // The start layout was never counted at all.
 //
+// shouldCheckHalfs rides on the same count: in Justify alignment the container
+// has to notice when one half has outgrown half the screen, which is exactly the
+// case the whole-contents check misses. Its guard was written as
+// `_mainLayout.children>1` -- the list, not its length -- which coerces to NaN and
+// compares false, so that check has never run.
+//
 // The creation-context mocks below mirror tst_layoutscontainer_lengthevent.qml --
 // they are what LayoutsContainer.qml and its children read unqualified on a live
 // dock, and the spacers only construct when all of them are present.
 
 import QtQuick
 import QtTest
+
+import org.kde.latte.core 0.2 as LatteCore
 
 import org.kde.plasma.core 2.0 as PlasmaCore
 
@@ -213,6 +221,37 @@ TestCase {
         addApplet(obj.endLayout);
 
         compare(obj.appletsCount, 3, "every layout holds real applets");
+    }
+
+    function test_halfCheckStaysOffOutsideJustify() {
+        const obj = make();
+        root.myView.alignment = LatteCore.Types.Left;
+
+        addApplet(obj.mainLayout);
+        addApplet(obj.mainLayout);
+
+        compare(obj.shouldCheckHalfs, false, "only a justified dock has halves to outgrow");
+    }
+
+    function test_halfCheckNeedsMoreThanOneAppletInTheMainLayout() {
+        const obj = make();
+        root.myView.alignment = LatteCore.Types.Justify;
+
+        compare(obj.shouldCheckHalfs, false, "the edge spacers are not applets");
+
+        addApplet(obj.mainLayout);
+
+        compare(obj.shouldCheckHalfs, false, "a single applet cannot straddle the centre");
+    }
+
+    function test_halfCheckRunsForAJustifiedMainLayout() {
+        const obj = make();
+        root.myView.alignment = LatteCore.Types.Justify;
+
+        addApplet(obj.mainLayout);
+        addApplet(obj.mainLayout);
+
+        compare(obj.shouldCheckHalfs, true, "a justified dock with a filled centre must watch its halves");
     }
 
     //! Guards against "subtract two" passing the cases above.
