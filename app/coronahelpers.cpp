@@ -61,21 +61,11 @@ QStringList buildContextMenuData(const ContextMenuInputs &inputs)
     QStringList data;
 
     data << QString::number(inputs.memoryUsage);
-    data << inputs.centralLayoutsNames.join(QStringLiteral(";;"));
-    data << inputs.currentLayoutsNames.join(QStringLiteral(";;"));
-    data << inputs.alwaysShownActions.join(QStringLiteral(";;"));
+    data << inputs.centralLayoutsNames.join(Latte::Data::ContextMenu::FIELDSEPARATOR);
+    data << inputs.currentLayoutsNames.join(Latte::Data::ContextMenu::FIELDSEPARATOR);
+    data << inputs.alwaysShownActions.join(Latte::Data::ContextMenu::FIELDSEPARATOR);
 
-    QStringList layoutsmenu;
-
-    for (const auto &entry : inputs.menuLayouts) {
-        QStringList layoutdata;
-        layoutdata << entry.name;
-        layoutdata << (entry.isBackgroundFile ? QStringLiteral("1") : QStringLiteral("0"));
-        layoutdata << entry.iconName;
-        layoutsmenu << layoutdata.join(QStringLiteral("**"));
-    }
-
-    data << layoutsmenu.join(QStringLiteral(";;"));
+    data << Latte::Data::ContextMenu::joinLayoutsMenuField(inputs.menuLayouts);
     data << inputs.selectedViewLayoutName;
 
     QStringList viewtype;
@@ -92,7 +82,7 @@ QStringList buildContextMenuData(const ContextMenuInputs &inputs)
         viewtype << QStringLiteral("0");
     }
 
-    data << viewtype.join(QStringLiteral(";;"));
+    data << viewtype.join(Latte::Data::ContextMenu::FIELDSEPARATOR);
 
     return data;
 }

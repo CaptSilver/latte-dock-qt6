@@ -221,7 +221,7 @@ QList<QAction *> Menu::contextualActions()
         m_viewTemplates = templatesData.value();
     }
 
-    m_actionsAlwaysShown = m_data[ACTIONSALWAYSSHOWN].split(QStringLiteral(";;"));
+    m_actionsAlwaysShown = m_data.value(ACTIONSALWAYSSHOWN).split(Latte::Data::ContextMenu::FIELDSEPARATOR);
 
     updateViewData();
 
@@ -237,7 +237,7 @@ QList<QAction *> Menu::contextualActions()
     const QString exportTemplateText = (m_view.type == DockView) ? i18n("E&xport Dock as Template") : i18n("E&xport Panel as Template");
     m_actions[QLatin1String(Latte::Data::ContextMenu::EXPORTVIEWTEMPLATEACTION)]->setText(exportTemplateText);
 
-    m_activeLayoutNames = m_data[ACTIVELAYOUTSINDEX].split(QStringLiteral(";;"));
+    m_activeLayoutNames = m_data.value(ACTIVELAYOUTSINDEX).split(Latte::Data::ContextMenu::FIELDSEPARATOR);
     const QString moveText = (m_view.type == DockView) ? i18n("&Move Dock To Layout") : i18n("&Move Panel To Layout");
     m_actions[QLatin1String(Latte::Data::ContextMenu::MOVEVIEWACTION)]->setText(moveText);
 
@@ -306,42 +306,29 @@ void Menu::populateLayouts()
 {
     m_switchLayoutsMenu->clear();
 
-    LayoutsMemoryUsage memoryUsage = static_cast<LayoutsMemoryUsage>((m_data[MEMORYINDEX]).toInt());
-    QStringList activeNames = m_data[ACTIVELAYOUTSINDEX].split(QStringLiteral(";;"));
-    QStringList currentNames = m_data[CURRENTLAYOUTSINDEX].split(QStringLiteral(";;"));
+    LayoutsMemoryUsage memoryUsage = static_cast<LayoutsMemoryUsage>((m_data.value(MEMORYINDEX)).toInt());
+    QStringList activeNames = m_data.value(ACTIVELAYOUTSINDEX).split(Latte::Data::ContextMenu::FIELDSEPARATOR);
+    QStringList currentNames = m_data.value(CURRENTLAYOUTSINDEX).split(Latte::Data::ContextMenu::FIELDSEPARATOR);
 
-    QList<LayoutInfo> layoutsmenulist;
-
-    QStringList layoutsdata = m_data[LAYOUTMENUINDEX].split(QStringLiteral(";;"));
-
-    for (int i=0; i<layoutsdata.count(); ++i) {
-        QStringList cdata = layoutsdata[i].split(QStringLiteral("**"));
-
-        LayoutInfo info;
-        info.layoutName = cdata[0];
-        info.isBackgroundFileIcon = cdata[1].toInt();
-        info.iconName = cdata[2];
-
-        layoutsmenulist << info;
-    }
+    const QList<Latte::Data::ContextMenu::ContextMenuLayoutEntry> layoutsmenulist = Latte::Data::ContextMenu::parseLayoutsMenuField(m_data.value(LAYOUTMENUINDEX));
 
     for (int i = 0; i < layoutsmenulist.count(); ++i) {
-        bool isActive = activeNames.contains(layoutsmenulist[i].layoutName);
+        bool isActive = activeNames.contains(layoutsmenulist[i].name);
 
-        QString layoutText = layoutsmenulist[i].layoutName;
+        QString layoutText = layoutsmenulist[i].name;
 
         bool isCurrent = ((memoryUsage == SingleLayout && isActive)
-                          || (memoryUsage == MultipleLayouts && currentNames.contains(layoutsmenulist[i].layoutName)));
+                          || (memoryUsage == MultipleLayouts && currentNames.contains(layoutsmenulist[i].name)));
 
 
         QWidgetAction *action = new QWidgetAction(m_switchLayoutsMenu);
-        action->setText(layoutsmenulist[i].layoutName);
+        action->setText(layoutsmenulist[i].name);
         action->setCheckable(true);
         action->setChecked(isCurrent);
-        action->setData(layoutsmenulist[i].layoutName);
+        action->setData(layoutsmenulist[i].name);
 
         LayoutMenuItemWidget *menuitem = new LayoutMenuItemWidget(action, m_switchLayoutsMenu);
-        menuitem->setIcon(layoutsmenulist[i].isBackgroundFileIcon, layoutsmenulist[i].iconName);
+        menuitem->setIcon(layoutsmenulist[i].isBackgroundFile, layoutsmenulist[i].iconName);
         action->setDefaultWidget(menuitem);
         m_switchLayoutsMenu->addAction(action);
     }
@@ -364,40 +351,27 @@ void Menu::populateMoveToLayouts()
 {
     m_moveToLayoutMenu->clear();
 
-    LayoutsMemoryUsage memoryUsage = static_cast<LayoutsMemoryUsage>((m_data[MEMORYINDEX]).toInt());
+    LayoutsMemoryUsage memoryUsage = static_cast<LayoutsMemoryUsage>((m_data.value(MEMORYINDEX)).toInt());
 
     if (memoryUsage == LayoutsMemoryUsage::MultipleLayouts) {
-        QStringList activeNames = m_data[ACTIVELAYOUTSINDEX].split(QStringLiteral(";;"));
-        QStringList currentNames = m_data[CURRENTLAYOUTSINDEX].split(QStringLiteral(";;"));
-        QString viewLayoutName = m_data[VIEWLAYOUTINDEX];
+        QStringList activeNames = m_data.value(ACTIVELAYOUTSINDEX).split(Latte::Data::ContextMenu::FIELDSEPARATOR);
+        QStringList currentNames = m_data.value(CURRENTLAYOUTSINDEX).split(Latte::Data::ContextMenu::FIELDSEPARATOR);
+        QString viewLayoutName = m_data.value(VIEWLAYOUTINDEX);
 
-        QList<LayoutInfo> layoutsmenulist;
-
-        QStringList layoutsdata = m_data[LAYOUTMENUINDEX].split(QStringLiteral(";;"));
-
-        for (int i=0; i<layoutsdata.count(); ++i) {
-            QStringList cdata = layoutsdata[i].split(QStringLiteral("**"));
-
-            LayoutInfo info;
-            info.layoutName = cdata[0];
-            info.isBackgroundFileIcon = cdata[1].toInt();
-            info.iconName = cdata[2];
-
-            layoutsmenulist << info;
-        }
+        const QList<Latte::Data::ContextMenu::ContextMenuLayoutEntry> layoutsmenulist = Latte::Data::ContextMenu::parseLayoutsMenuField(m_data.value(LAYOUTMENUINDEX));
 
         for (int i = 0; i < layoutsmenulist.count(); ++i) {
-            bool isCurrent = currentNames.contains(layoutsmenulist[i].layoutName) && activeNames.contains(layoutsmenulist[i].layoutName);
-            bool isViewCurrentLayout = layoutsmenulist[i].layoutName == viewLayoutName;
+            bool isCurrent = currentNames.contains(layoutsmenulist[i].name) && activeNames.contains(layoutsmenulist[i].name);
+            bool isViewCurrentLayout = layoutsmenulist[i].name == viewLayoutName;
 
             QWidgetAction *action = new QWidgetAction(m_moveToLayoutMenu);
-            action->setText(layoutsmenulist[i].layoutName);
+            action->setText(layoutsmenulist[i].name);
             action->setCheckable(true);
             action->setChecked(isViewCurrentLayout);
-            action->setData(isViewCurrentLayout ? QString() : layoutsmenulist[i].layoutName);
+            action->setData(isViewCurrentLayout ? QString() : layoutsmenulist[i].name);
 
             LayoutMenuItemWidget *menuitem = new LayoutMenuItemWidget(action, m_moveToLayoutMenu);
-            menuitem->setIcon(layoutsmenulist[i].isBackgroundFileIcon, layoutsmenulist[i].iconName);
+            menuitem->setIcon(layoutsmenulist[i].isBackgroundFile, layoutsmenulist[i].iconName);
             action->setDefaultWidget(menuitem);
             m_moveToLayoutMenu->addAction(action);
         }
@@ -406,25 +380,22 @@ void Menu::populateMoveToLayouts()
 
 void Menu::updateViewData()
 {
-    QStringList vdata = m_data[VIEWTYPEINDEX].split(QStringLiteral(";;"));
-    m_view.type = static_cast<ViewType>((vdata[0]).toInt());
-    m_view.isCloned = vdata[1].toInt();
-    m_view.clonesCount = vdata[2].toInt();
+    QStringList vdata = m_data.value(VIEWTYPEINDEX).split(Latte::Data::ContextMenu::FIELDSEPARATOR);
+    m_view.type = static_cast<ViewType>(vdata.value(0).toInt());
+    m_view.isCloned = vdata.value(1).toInt();
+    m_view.clonesCount = vdata.value(2).toInt();
 }
 
 void Menu::populateViewTemplates()
 {
     m_addViewMenu->clear();
 
-    for(int i=0; i<m_viewTemplates.count(); ++i) {
-        if (i % 2 == 1) {
-            //! even records are the templates ids and they have already been registered
-            continue;
-        }
-
-        QAction *templateAction = m_addViewMenu->addAction(m_viewTemplates[i]);
+    //! records arrive as name/id pairs, so the odd ones are the ids and are
+    //! consumed along with the name before them
+    for(int i=0; i+1<m_viewTemplates.count(); i+=2) {
+        QAction *templateAction = m_addViewMenu->addAction(m_viewTemplates.at(i));
         templateAction->setIcon(QIcon::fromTheme(QStringLiteral("list-add")));
-        templateAction->setData(m_viewTemplates[i+1]);
+        templateAction->setData(m_viewTemplates.at(i+1));
     }
 
     QAction *templatesSeparatorAction = m_addViewMenu->addSeparator();

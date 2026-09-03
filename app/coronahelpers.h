@@ -7,6 +7,8 @@
 #ifndef CORONAHELPERS_H
 #define CORONAHELPERS_H
 
+#include "data/contextmenudata.h"
+
 // Qt
 #include <QHash>
 #include <QList>
@@ -31,13 +33,9 @@ struct WindowIdAndScheme
     QString scheme;
 };
 
-//! One entry of the layouts submenu: a layout name plus its icon descriptor.
-struct ContextMenuLayoutEntry
-{
-    QString name;
-    bool isBackgroundFile{false};
-    QString iconName;
-};
+//! The layouts-submenu entry and the wire format of the payload it goes into are
+//! shared with the reader; see data/contextmenudata.h.
+using ContextMenuLayoutEntry = Latte::Data::ContextMenu::ContextMenuLayoutEntry;
 
 //! Everything buildContextMenuData needs, gathered by Corona from the live
 //! layout managers and the selected view.
@@ -71,7 +69,7 @@ bool pruneObsoleteContainmentConfig(KConfigGroup &containments,
                                     const QSet<uint> &liveContainmentIds,
                                     const QHash<uint, QSet<uint>> &liveAppletIds);
 
-//! Marshal the context-menu payload that the menu QML parses: memory usage,
+//! Marshal the context-menu payload that the context-menu plugin parses: memory usage,
 //! the active/current layout name lists, the always-shown actions, the layouts
 //! submenu, the selected view's layout, and the view-type triple. Fields are
 //! ";;"-joined lists; each submenu entry is "name**isBackgroundFile**icon".

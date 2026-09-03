@@ -22,12 +22,6 @@ enum ViewType
     PanelView
 };
 
-struct LayoutInfo {
-    QString layoutName;
-    bool isBackgroundFileIcon;
-    QString iconName;
-};
-
 struct ViewTypeData {
     ViewType type{ViewType::DockView};
     bool isCloned{true};

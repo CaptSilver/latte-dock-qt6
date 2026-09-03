@@ -31,6 +31,9 @@ private Q_SLOTS:
     void contextMenu_marshalsFieldsAndOriginalView();
     void contextMenu_encodesClonedViewAndMultipleLayouts();
     void contextMenu_encodesNeitherWhenNoView();
+    void contextMenu_parsesLayoutsFieldBackFromTheWire();
+    void contextMenu_dropsLayoutEntriesTruncatedByASeparatorInTheName();
+    void contextMenu_parsesAnEmptyLayoutsFieldAsNoEntries();
     void parseWindowIdAndScheme_splitsOnFirstDash();
     void parseWindowIdAndScheme_handlesEdges();
     void validPageOrFirst_keepsInRangeElseFirst();
@@ -120,6 +123,44 @@ void CoronaHelpersTest::prune_noChangeWhenEverythingLive()
     QCOMPARE(containments.groupList(), QStringList({QStringLiteral("5")}));
     QCOMPARE(containments.group(QStringLiteral("5")).group(QStringLiteral("Applets")).groupList(),
              QStringList({QStringLiteral("50")}));
+}
+
+void CoronaHelpersTest::contextMenu_parsesAnEmptyLayoutsFieldAsNoEntries()
+{
+    // Splitting an empty string yields one empty piece, so the loop still runs once
+    // and reads a triple that is not there.
+    QCOMPARE(Latte::Data::ContextMenu::parseLayoutsMenuField(QString()).count(), 0);
+}
+
+void CoronaHelpersTest::contextMenu_dropsLayoutEntriesTruncatedByASeparatorInTheName()
+{
+    // A layout may be named anything, including the field separator. "a;;b**0**icon"
+    // therefore arrives as two pieces, and the first one carries no triple at all --
+    // this is what crashes the dock when the Layouts submenu is hovered.
+    const auto entries = Latte::Data::ContextMenu::parseLayoutsMenuField(QStringLiteral("a;;b**0**icon"));
+
+    QCOMPARE(entries.count(), 1);
+    QCOMPARE(entries.at(0).name, QStringLiteral("b"));
+    QCOMPARE(entries.at(0).isBackgroundFile, false);
+    QCOMPARE(entries.at(0).iconName, QStringLiteral("icon"));
+}
+
+void CoronaHelpersTest::contextMenu_parsesLayoutsFieldBackFromTheWire()
+{
+    CoronaHelpers::ContextMenuInputs in;
+    in.menuLayouts = {{QStringLiteral("Default"), true, QStringLiteral("sunset")},
+                      {QStringLiteral("Work"), false, QStringLiteral("blue")}};
+
+    const QStringList payload = CoronaHelpers::buildContextMenuData(in);
+    const auto entries = Latte::Data::ContextMenu::parseLayoutsMenuField(payload.at(4));
+
+    QCOMPARE(entries.count(), in.menuLayouts.count());
+
+    for (int i=0; i<entries.count(); ++i) {
+        QCOMPARE(entries.at(i).name, in.menuLayouts.at(i).name);
+        QCOMPARE(entries.at(i).isBackgroundFile, in.menuLayouts.at(i).isBackgroundFile);
+        QCOMPARE(entries.at(i).iconName, in.menuLayouts.at(i).iconName);
+    }
 }
 
 void CoronaHelpersTest::contextMenu_marshalsFieldsAndOriginalView()
