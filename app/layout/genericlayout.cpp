@@ -448,6 +448,13 @@ QList<Latte::View *> GenericLayout::sortedLatteViews()
     return sortedLatteViews(latteViews(), primaryScreen);
 }
 
+//! A view can be between screens while one is being unplugged, and the sorting
+//! below only ever compares the pointer -- so the tracing must not deref it.
+static QString sortingScreenName(const Latte::View *view)
+{
+    return view->screen() ? view->screen()->name() : QStringLiteral("<no screen>");
+}
+
 QList<Latte::View *> GenericLayout::sortedLatteViews(QList<Latte::View *> views, QScreen *primaryScreen)
 {
     QList<Latte::View *> sortedViews = views;
@@ -455,7 +462,7 @@ QList<Latte::View *> GenericLayout::sortedLatteViews(QList<Latte::View *> views,
     qDebug() << " -------- ";
 
     for (int i = 0; i < sortedViews.count(); ++i) {
-        qDebug() << i << ". " << sortedViews[i]->screen()->name() << " - " << sortedViews[i]->location();
+        qDebug() << i << ". " << sortingScreenName(sortedViews[i]) << " - " << sortedViews[i]->location();
     }
 
     //! sort the views based on screens and edges priorities
@@ -491,7 +498,7 @@ QList<Latte::View *> GenericLayout::sortedLatteViews(QList<Latte::View *> views,
     qDebug() << " -------- sorted -----";
 
     for (int i = 0; i < sortedViews.count(); ++i) {
-        qDebug() << i << ". " << sortedViews[i]->isPreferredForShortcuts() << " - " << sortedViews[i]->screen()->name() << " - " << sortedViews[i]->location();
+        qDebug() << i << ". " << sortedViews[i]->isPreferredForShortcuts() << " - " << sortingScreenName(sortedViews[i]) << " - " << sortedViews[i]->location();
     }
 
     return sortedViews;
