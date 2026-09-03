@@ -33,6 +33,7 @@
 
 #include <QAbstractItemModel>
 #include <QSignalSpy>
+#include <QDBusConnection>
 #include <QFileInfo>
 #include <QtTest>
 
@@ -105,6 +106,12 @@ void ViewsModelTest::coronaWritesInsideTheSandbox()
              qPrintable(QStringLiteral("config path escaped the sandbox: ") + Latte::configPath()));
     QVERIFY(QFileInfo::exists(m_sandbox.dir.path() + QLatin1Char('/')
                               + QCoreApplication::applicationName() + QStringLiteral("rc")));
+
+    // GlobalShortcuts registers through KGlobalAccel over the session bus, and the
+    // daemon on the other end writes kglobalshortcutsrc itself -- redirecting the
+    // config home cannot stop that. The bus has to be unreachable instead.
+    QVERIFY2(!QDBusConnection::sessionBus().isConnected(),
+             "a reachable session bus lets this test register global shortcuts for real");
 }
 
 void ViewsModelTest::cleanupTestCase()

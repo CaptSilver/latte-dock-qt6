@@ -766,6 +766,14 @@ set(LATTE_SHELL_STAGE "/var/tmp/latte-shellstage-${_latte_stage_id}" CACHE PATH
     "Where the shell package is staged for the tests that need a resolvable install")
 set(LATTE_SHELL_STAGE_ENV "XDG_DATA_DIRS=${LATTE_SHELL_STAGE}/usr/share:/usr/share")
 
+# A real Corona builds GlobalShortcuts, which registers through KGlobalAccel over the
+# session bus -- and it is the kglobalaccel daemon, not this process, that writes
+# kglobalshortcutsrc, so redirecting XDG_CONFIG_HOME cannot stop it. Every run used to
+# add a component group named after the test binary to the developer's own file. An
+# unreachable bus address makes the registration a no-op.
+set(LATTE_NO_SESSION_BUS "DBUS_SESSION_BUS_ADDRESS=unix:path=/nonexistent")
+
+
 add_test(NAME shellpackagestage COMMAND ${CMAKE_COMMAND} --install ${CMAKE_BINARY_DIR})
 set_tests_properties(shellpackagestage PROPERTIES
     ENVIRONMENT "DESTDIR=${LATTE_SHELL_STAGE}"
@@ -790,7 +798,7 @@ target_include_directories(layoutsmodeltest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/settings
     ${CMAKE_SOURCE_DIR}/app/settings/settingsdialog ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(layoutsmodeltest PROPERTIES
-    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;${LATTE_SHELL_STAGE_ENV}"
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;${LATTE_SHELL_STAGE_ENV};${LATTE_NO_SESSION_BUS}"
     FIXTURES_REQUIRED shellpackage)
 
 # Layouts::Manager's header drags in lattecorona.h, so the prebuilt-objects
@@ -811,7 +819,7 @@ add_dependencies(layoutsmanagertest latte-dock)
 target_include_directories(layoutsmanagertest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(layoutsmanagertest PROPERTIES
-    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;${LATTE_SHELL_STAGE_ENV}"
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;${LATTE_SHELL_STAGE_ENV};${LATTE_NO_SESSION_BUS}"
     FIXTURES_REQUIRED shellpackage)
 
 # Templates::Manager's header pulls in lattecorona.h; the prebuilt-objects trick
@@ -832,7 +840,7 @@ add_dependencies(templatesmanagertest latte-dock)
 target_include_directories(templatesmanagertest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(templatesmanagertest PROPERTIES
-    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;${LATTE_SHELL_STAGE_ENV}"
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;${LATTE_SHELL_STAGE_ENV};${LATTE_NO_SESSION_BUS}"
     FIXTURES_REQUIRED shellpackage)
 
 # Synchronizer's header pulls in lattecorona.h; the prebuilt-objects trick links
@@ -853,7 +861,7 @@ add_dependencies(layoutssynchronizertest latte-dock)
 target_include_directories(layoutssynchronizertest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(layoutssynchronizertest PROPERTIES
-    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;${LATTE_SHELL_STAGE_ENV}"
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;${LATTE_SHELL_STAGE_ENV};${LATTE_NO_SESSION_BUS}"
     FIXTURES_REQUIRED shellpackage)
 
 # viewsmodel.cpp's header pulls in lattecorona.h (the full app object graph), so
@@ -875,7 +883,7 @@ target_include_directories(viewsmodeltest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/settings
     ${CMAKE_SOURCE_DIR}/app/settings/viewsdialog ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(viewsmodeltest PROPERTIES
-    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;${LATTE_SHELL_STAGE_ENV}"
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;${LATTE_SHELL_STAGE_ENV};${LATTE_NO_SESSION_BUS}"
     FIXTURES_REQUIRED shellpackage)
 
 ecm_add_test(smartlauncheritemtest.cpp
