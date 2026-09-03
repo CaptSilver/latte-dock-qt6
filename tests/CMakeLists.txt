@@ -209,6 +209,19 @@ target_include_directories(activitiesdelegatetest PRIVATE
     ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(activitiesdelegatetest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+# Compile-only: asserts the program agrees with libPlasmaQuick about the base
+# class of PlasmaQuick::ConfigView. Instantiates nothing, so it needs no app
+# sources -- but lattecorona.h drags in Plasma, KPackage and KXmlGui headers.
+ecm_add_test(plasmaquickheaderstest.cpp
+    TEST_NAME plasmaquickheaderstest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Quick
+        KF6::ConfigCore KF6::I18n KF6::IconThemes KF6::Svg KF6::XmlGui KF6::Package
+        Plasma::Plasma Plasma::PlasmaQuick Plasma::Activities
+)
+target_include_directories(plasmaquickheaderstest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(plasmaquickheaderstest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 ecm_add_test(coretoolstest.cpp
     ${CMAKE_SOURCE_DIR}/declarativeimports/core/tools.cpp
     ${CMAKE_SOURCE_DIR}/declarativeimports/core/environment.cpp

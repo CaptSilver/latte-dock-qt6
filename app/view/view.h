@@ -21,8 +21,8 @@
 #include "../data/viewdata.h"
 #include "../shortcuts/globalshortcuts.h"
 #include "../layout/genericlayout.h"
-#include "../plasma/quick/containmentview.h"
-#include "../plasma/quick/configview.h"
+#include <PlasmaQuick/ContainmentView>
+#include <PlasmaQuick/ConfigView>
 
 // C++
 #include <array>

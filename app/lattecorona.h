@@ -10,7 +10,7 @@
 
 // local
 #include <coretypes.h>
-#include "plasma/quick/configview.h"
+#include <PlasmaQuick/ConfigView>
 #include "layouts/storage.h"
 #include "view/panelshadows_p.h"
 

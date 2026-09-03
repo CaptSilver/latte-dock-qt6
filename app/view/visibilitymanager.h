@@ -11,7 +11,7 @@
 
 // local
 #include <coretypes.h>
-#include "../plasma/quick/containmentview.h"
+#include <PlasmaQuick/ContainmentView>
 
 // Qt
 #include <QObject>
