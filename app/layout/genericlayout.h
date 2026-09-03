@@ -69,9 +69,7 @@ public:
     bool isWritable() const;
     bool hasCorona() const;
 
-    virtual int viewsCount(int screen) const;
-    virtual int viewsCount(QScreen *screen) const;
-    virtual int viewsCount() const;
+    int viewsCount() const;
 
     Type type() const override;
 

@@ -229,42 +229,6 @@ QString GenericLayout::textColor() const
     return AbstractLayout::textColor();
 }
 
-int GenericLayout::viewsCount(int screen) const
-{
-    if (!m_corona) {
-        return 0;
-    }
-
-    QScreen *scr = m_corona->screenPool()->screenForId(screen);
-
-    int views{0};
-
-    for (const auto view : m_latteViews) {
-        if (view && view->screen() == scr && !view->containment()->destroyed()) {
-            ++views;
-        }
-    }
-
-    return views;
-}
-
-int GenericLayout::viewsCount(QScreen *screen) const
-{
-    if (!m_corona) {
-        return 0;
-    }
-
-    int views{0};
-
-    for (const auto view : m_latteViews) {
-        if (view && view->screen() == screen && !view->containment()->destroyed()) {
-            ++views;
-        }
-    }
-
-    return views;
-}
-
 int GenericLayout::viewsCount() const
 {
     if (!m_corona) {
