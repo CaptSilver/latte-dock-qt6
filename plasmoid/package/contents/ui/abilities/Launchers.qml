@@ -93,8 +93,8 @@ Item {
     function addLauncher(launcherUrl) {
         if (bridge) {
             bridge.launchers.host.addSyncedLauncher(syncer.clientId,
-                                                    launchers.group,
-                                                    launchers.groupId,
+                                                    _launchers.group,
+                                                    _launchers.groupId,
                                                     launcherUrl);
         } else {
             _launchers.tasksModel.requestAddLauncher(launcherUrl);
@@ -115,7 +115,7 @@ Item {
         _launchers.launcherInAdding(filename);
 
         tasksModel.requestAddLauncher(launcherUrl);
-        launchers.launcherChanged(launcherUrl);
+        _launchers.launcherChanged(launcherUrl);
         tasksModel.syncLaunchers();
     }
 
@@ -123,8 +123,8 @@ Item {
         //! inform synced docks for new dropped launchers
         if (bridge) {
             bridge.launchers.host.addDroppedLaunchers(syncer.clientId,
-                                                      launchers.group,
-                                                      launchers.groupId,
+                                                      _launchers.group,
+                                                      _launchers.groupId,
                                                       urls);
         } else {
             urls.forEach(function (item) {
@@ -153,8 +153,8 @@ Item {
     function removeLauncher(launcherUrl) {
         if (bridge) {
             bridge.launchers.host.removeSyncedLauncher(syncer.clientId,
-                                                       launchers.group,
-                                                       launchers.groupId,
+                                                       _launchers.group,
+                                                       _launchers.groupId,
                                                        launcherUrl);
         } else {
             _launchers.launcherInRemoving(launcherUrl);
@@ -166,8 +166,8 @@ Item {
     function addLauncherToActivity(launcherUrl, activityId) {
         if (bridge) {
             bridge.launchers.host.addSyncedLauncherToActivity(syncer.clientId,
-                                                              launchers.group,
-                                                              launchers.groupId,
+                                                              _launchers.group,
+                                                              _launchers.groupId,
                                                               launcherUrl,
                                                               activityId);
         } else {
@@ -183,8 +183,8 @@ Item {
     function removeLauncherFromActivity(launcherUrl, activityId) {
         if (bridge) {
             bridge.launchers.host.removeSyncedLauncherFromActivity(syncer.clientId,
-                                                                   launchers.group,
-                                                                   launchers.groupId,
+                                                                   _launchers.group,
+                                                                   _launchers.groupId,
                                                                    launcherUrl,
                                                                    activityId);
         } else {
@@ -199,8 +199,8 @@ Item {
     function validateSyncedLaunchersOrder() {
         if (bridge) {
             bridge.launchers.host.validateSyncedLaunchersOrder(syncer.clientId,
-                                                               launchers.group,
-                                                               launchers.groupId,
+                                                               _launchers.group,
+                                                               _launchers.groupId,
                                                                currentShownLauncherList());
         } else {
             /*validator.stop();

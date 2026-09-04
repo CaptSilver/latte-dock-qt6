@@ -1,10 +1,9 @@
 // Coverage for the client-side Indexer ability
 // (declarativeimports/abilities/client/Indexer.qml). The component derives from
 // AbilityDefinition.Indexer (an Item carrying `separators`/`hidden` arrays) and
-// reads three creation-context names unqualified: `bridge`, `layout`, and
-// `indexer`. In the real AppletAbilities the `indexer` alias points back at this
-// same client object; headless we shadow it with a sentinel on `root` and assert
-// the activate/destroy handlers write it into bridge.indexer.client.
+// takes `bridge` and `layout` as its own properties. The activate/destroy
+// handlers publish the client itself into bridge.indexer.client, so the
+// assertions below check for that identity.
 //
 // Instrumented units (the ones the staged copy injects Cov.tick into):
 //   onIsActiveChanged@40, Component.onCompleted@46, Component.onDestruction@52,
@@ -48,12 +47,6 @@ TestCase {
         id: bridgeMock
         property QtObject indexer: bridgeIndexer
     }
-
-    // `indexer` creation-context name: in production it aliases the client object
-    // itself. We hand the handlers a recognizable sentinel and assert the bridge
-    // received exactly it.
-    property var indexerSentinel: ({ tag: "client-sentinel" })
-    property var indexer: indexerSentinel
 
     // The `layout` slot is also `property Item`; its children drive every Binding
     // and the visibleIndex loop. Each child carries the itemIndex/isSeparator/
@@ -99,7 +92,7 @@ TestCase {
         const m = make({bridge: bridgeMock, layout: layoutMock});
         compare(m.isActive, true);
         // the completed handler ran and stored our sentinel
-        compare(bridgeIndexer.client, root.indexerSentinel);
+        verify(bridgeIndexer.client === m);
     }
 
     // Component.onCompleted@46, inactive branch: created with bridge null ->
@@ -124,7 +117,7 @@ TestCase {
 
         m.bridge = bridgeMock;          // null -> non-null toggles isActive
         compare(m.isActive, true);
-        compare(bridgeIndexer.client, root.indexerSentinel);
+        verify(bridgeIndexer.client === m);
     }
 
     // Component.onDestruction@52: with a live bridge, destroying the instance runs
@@ -138,7 +131,7 @@ TestCase {
         const obj = c.createObject(root, {bridge: bridgeMock, layout: layoutMock});
         verify(obj, "instantiate failed");
         // onCompleted set it
-        compare(bridgeIndexer.client, root.indexerSentinel);
+        verify(bridgeIndexer.client === obj);
 
         obj.destroy();
         // onDestruction's active branch nulls the retained bridge's client

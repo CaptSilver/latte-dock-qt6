@@ -39,15 +39,6 @@ TestCase {
 
     // ---- creation-context globals the component reads unqualified ----
 
-    // The ambient `launchers` alias: in the live plasmoid it points back at the
-    // ability, so addDroppedLauncher calls launchers.launcherChanged(url). Mock
-    // it as a sink that records the urls it was handed.
-    property var launcherChangedSink: []
-    QtObject {
-        id: launchers
-        function launcherChanged(url) { root.launcherChangedSink.push(url); }
-    }
-
     // activityInfo.currentActivity drives the activity-scoped add/remove and the
     // inCurrentActivity membership check.
     QtObject {
@@ -233,7 +224,8 @@ TestCase {
         const ctx = makeContext();
         const m = make(ctx);
 
-        root.launcherChangedSink = [];
+        let changed = [];
+        m.launcherChanged.connect(function(u){ changed.push(u); });
         let adding = [];
         m.launcherInAdding.connect(function(f){ adding.push(f); });
 
@@ -245,19 +237,19 @@ TestCase {
         verify(lastAdd, "no add call");
         compare(lastAdd[1].indexOf("?iconData=") === -1, true);
         compare(lastAdd[1], "file:///apps/foo.desktop");
-        // the `launchers` sink was notified with the stripped url.
-        compare(root.launcherChangedSink[root.launcherChangedSink.length - 1], "file:///apps/foo.desktop");
+        // launcherChanged was emitted with the stripped url.
+        compare(changed[changed.length - 1], "file:///apps/foo.desktop");
         // syncLaunchers ran after the add.
         compare(ctx.tm.calls.some(function(c){ return c[0] === "sync"; }), true);
 
         // bridge=null -> iterates and calls addDroppedLauncher per item.
         adding = [];
-        root.launcherChangedSink = [];
+        changed = [];
         m.addDroppedLaunchers(["file:///apps/bar.desktop", "file:///apps/baz.desktop"]);
         compare(adding.length, 2);
         compare(adding[0], "bar.desktop");
         compare(adding[1], "baz.desktop");
-        compare(root.launcherChangedSink, ["file:///apps/bar.desktop", "file:///apps/baz.desktop"]);
+        compare(changed, ["file:///apps/bar.desktop", "file:///apps/baz.desktop"]);
     }
 
     // Separator add/remove at position. addInternalSeparatorAtPos emits

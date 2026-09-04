@@ -39,13 +39,13 @@ AbilityDefinition.Indexer {
 
     onIsActiveChanged: {
         if (isActive) {
-            bridge.indexer.client = indexer;
+            bridge.indexer.client = _indexer;
         }
     }
 
     Component.onCompleted: {
         if (isActive) {
-            bridge.indexer.client = indexer;
+            bridge.indexer.client = _indexer;
         }
     }
 
