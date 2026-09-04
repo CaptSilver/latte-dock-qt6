@@ -451,6 +451,13 @@ void Synchronizer::onActivityRemoved(const QString &activityid)
     for(auto explicitlayoutname : explicits) {
         QString explicitlayoutid = m_layouts.idForName(explicitlayoutname);
 
+        //! An assignment can name a layout the table no longer holds; writing
+        //! through a missing id lands in a shared throwaway that the next lookup
+        //! resets, so the removal would silently do nothing.
+        if (!m_layouts.containsId(explicitlayoutid)) {
+            continue;
+        }
+
         m_layouts[explicitlayoutid].activities.removeAll(activityid);
         m_manager->setOnActivities(explicitlayoutname, m_layouts[explicitlayoutid].activities);
         Q_EMIT layoutActivitiesChanged(m_layouts[explicitlayoutid]);
@@ -819,6 +826,10 @@ bool Synchronizer::switchToLayoutInMultipleModeBasedOnActivities(const QString &
 
             for(auto explicitlayoutname : explicits) {
                 QString explicitlayoutid = m_layouts.idForName(explicitlayoutname);
+
+                if (!m_layouts.containsId(explicitlayoutid)) {
+                    continue;
+                }
 
                 m_layouts[explicitlayoutid].activities.removeAll(currentactivityid);
                 m_manager->setOnActivities(explicitlayoutname, m_layouts[explicitlayoutid].activities);

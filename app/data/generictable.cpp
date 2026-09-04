@@ -91,14 +91,7 @@ bool GenericTable<T>::operator!=(const GenericTable<T> &rhs) const
 template <class T>
 T &GenericTable<T>::operator[](const QString &id)
 {
-    int pos{-1};
-
-    for(int i=0; i<m_list.count(); ++i) {
-        if (m_list[i].id == id){
-            pos = i;
-            break;
-        }
-    }
+    const int pos = indexOf(id);
 
     if (pos < 0) {
         //! a missing id must not index m_list[-1]; hand back a clean throwaway
@@ -114,14 +107,7 @@ T &GenericTable<T>::operator[](const QString &id)
 template <class T>
 const T GenericTable<T>::operator[](const QString &id) const
 {
-    int pos{-1};
-
-    for(int i=0; i<m_list.count(); ++i) {
-        if (m_list[i].id == id){
-            pos = i;
-            break;
-        }
-    }
+    const int pos = indexOf(id);
 
     if (pos < 0) {
         return T();
@@ -155,28 +141,13 @@ const T GenericTable<T>::operator[](const uint &index) const
 template <class T>
 GenericTable<T>::operator QString() const
 {
-    QString result;
-
-    for(int i=0; i<m_list.count(); ++i) {
-        result += m_list[i].id;
-        if (i<(m_list.count()-1)) {
-            result += QStringLiteral(", ");
-        }
-    }
-
-    return result;
+    return ids().join(QStringLiteral(", "));
 }
 
 template <class T>
 bool GenericTable<T>::containsId(const QString &id) const
 {
-    for(int i=0; i<m_list.count(); ++i) {
-        if (m_list[i].id == id){
-            return true;
-        }
-    }
-
-    return false;
+    return indexOf(id) >= 0;
 }
 
 template <class T>
@@ -200,7 +171,7 @@ bool GenericTable<T>::isEmpty() const
 template <class T>
 bool GenericTable<T>::rowExists(const int &row) const
 {
-    return (m_list.count()>=0 && row>=0 && row<rowCount());
+    return (row >= 0 && row < rowCount());
 }
 
 template <class T>
