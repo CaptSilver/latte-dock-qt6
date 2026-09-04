@@ -11,15 +11,11 @@
 # scope for catching the Plasma 5->6 "X is not a type" / "non-existent property"
 # class without a live Wayland session.
 #
-# Two files-classes are skipped (and reported) because a standalone engine can't
-# judge them; they are instead covered by qml_load_gate.sh, which runs the real
-# dock:
+# One class of file is skipped (and reported) because a standalone engine can't
+# judge it; it is instead covered by qml_load_gate.sh, which runs the real dock:
 #   * files importing org.kde.latte.private.app — that module is registered in
 #     the latte-dock binary (lattecorona.cpp), so it only exists inside the
 #     running app, never in qmltestrunner. These all load at startup anyway.
-#   * superseded *.5.2[0-5].qml version-ladder variants — on Plasma 6 only the
-#     newest variant is ever loaded (see ToolTipInstance.qml's selector); the
-#     older ones target removed Plasma 5 APIs and are dead here.
 #
 # Usage:
 #   tests/manual/qml_load_compile.sh
@@ -33,9 +29,16 @@ QMLTESTRUNNER="${QMLTESTRUNNER:-/usr/lib64/qt6/bin/qmltestrunner}"
 # Deploy the current tree so Latte's own QML modules (org.kde.latte.*) and any
 # edits resolve through the import path the dock actually uses.
 echo "staging $BUILD -> $STAGE ..."
-if ! ( cd "$BUILD" && DESTDIR="$STAGE" cmake --install . ) >/tmp/qml-compile-stage.log 2>&1; then
+# Install into a fresh dir and swap it in: installing over the previous stage leaves
+# deleted files behind, so a removed QML keeps getting compiled long after it is gone.
+STAGE_NEW="$STAGE.new"
+rm -rf "$STAGE_NEW"
+if ! ( cd "$BUILD" && DESTDIR="$STAGE_NEW" cmake --install . ) >/tmp/qml-compile-stage.log 2>&1; then
     echo "STAGE FAILED:"; tail -15 /tmp/qml-compile-stage.log; exit 2
 fi
+
+rm -rf "$STAGE"
+mv "$STAGE_NEW" "$STAGE"
 
 PKG="$STAGE/usr/share/plasma"
 # Indicators live outside the plasma package tree (share/latte/indicators) and
@@ -53,13 +56,12 @@ mapfile -t ALL < <(find \
 if [ "${#ALL[@]}" -eq 0 ]; then echo "no staged QML found under $PKG"; exit 2; fi
 
 # Partition into checkable vs skipped (see header for why).
-FILES=(); skipped_app=0; skipped_ver=0
+FILES=(); skipped_app=0
 for f in "${ALL[@]}"; do
-    if [[ "$f" =~ \.5\.2[0-5]\.qml$ ]]; then skipped_ver=$((skipped_ver+1)); continue; fi
     if grep -q 'org.kde.latte.private.app' "$f"; then skipped_app=$((skipped_app+1)); continue; fi
     FILES+=("$f")
 done
-echo "skipped $skipped_app app-module-dependent + $skipped_ver dead-version-ladder files (covered by qml_load_gate.sh)"
+echo "skipped $skipped_app app-module-dependent files (covered by qml_load_gate.sh)"
 
 if [ "${#FILES[@]}" -eq 0 ]; then echo "nothing left to compile"; exit 2; fi
 

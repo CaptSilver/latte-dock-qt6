@@ -34,8 +34,6 @@ TestCase {
     property bool inEditMode: false
     property bool inDraggingPhase: false
     property bool vertical: false
-    property bool plasma515: true
-    property bool plasmaAtLeast525: true
     property int location: 4 // PlasmaCore.Types.BottomEdge
     property var dragSource: null
     property var contextMenu: null
@@ -96,7 +94,6 @@ TestCase {
     QtObject {
         id: backendObj
         property bool windowViewAvailable: false
-        property bool canPresentWindows: false
         function generateMimeData(a, b, c) { return null; }
         function globalRect(item) { return Qt.rect(0, 0, 10, 10); }
     }

@@ -1,5 +1,5 @@
 // Kirigami.ShadowedRectangle — Latte's custom dock-background panel (colorizer/
-// KirigamiShadowedRectangle.qml, used whenever the Kirigami library is found). It is a
+// KirigamiShadowedRectangle.qml, which the dock now uses unconditionally). It is a
 // QSGMaterial-backed primitive that loads its rounded-rect + soft-shadow shaders at runtime,
 // so it exercises a shader path separate from MultiEffect/BadgeEffect and is drawn in nearly
 // every live dock. Mirrors the real call site: transparent fill, coloured soft shadow.

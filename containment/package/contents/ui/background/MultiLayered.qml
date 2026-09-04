@@ -255,7 +255,6 @@ BackgroundProperties{
     readonly property bool customShadowedRectangleIsEnabled: customRadiusIsEnabled || (customDefShadowIsEnabled || customUserShadowIsEnabled)
 
     readonly property bool customShadowIsSupported: LatteCore.WindowSystem.compositingActive
-                                                    && kirigamiLibraryIsFound
 
     //!current shadow state but do not change other values of normal mode, for example if a Dock hides its screen edge thickness
     //!shouldn't change the fact that customShadowedRectangle is still used
@@ -263,7 +262,7 @@ BackgroundProperties{
     readonly property bool customDefShadowIsEnabled: customShadowIsSupported && !customUserShadowIsEnabled && customRadiusIsEnabled
     readonly property bool customUserShadowIsEnabled: customShadowIsSupported && Plasmoid.configuration.backgroundShadowSize >= 0
 
-    readonly property bool customRadiusIsEnabled: kirigamiLibraryIsFound && Plasmoid.configuration.backgroundRadius >= 0
+    readonly property bool customRadiusIsEnabled: Plasmoid.configuration.backgroundRadius >= 0
 
     readonly property int customRadius: {
         if (customDefShadowIsEnabled && !customRadiusIsEnabled && themeExtendedBackground) {

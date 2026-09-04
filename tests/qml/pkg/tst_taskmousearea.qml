@@ -13,7 +13,7 @@
 //                        abilities.myView / abilities.debug
 //   windowsPreviewDlg -> .visible/.activeItem/.hide(v)
 //   scrollableList    -> .autoScrollFor(item, v)
-//   backend           -> .windowViewAvailable/.canPresentWindows/
+//   backend           -> .windowViewAvailable/
 //                        .cancelHighlightWindows()
 //   root.*            -> the handler flag set (showPreviews, highlightWindows,
 //                        autoScrollTasksEnabled, disableAllWindowsFunctionality,
@@ -63,8 +63,6 @@ TestCase {
     // write lastButtonClicked/pressX/pressY and short-circuit on the rest; every
     // name must resolve or the handler throws mid-event.
     property int leftClickAction: 0
-    property bool plasmaAtLeast525: true
-    property bool plasmaGreaterThan522: false
     property bool inBlockingAnimation: false
     property bool inAttentionBuiltinAnimation: false
     property bool isGroupParent: false
@@ -138,7 +136,6 @@ TestCase {
     QtObject {
         id: backend
         property bool windowViewAvailable: false
-        property bool canPresentWindows: false
         property int cancelHighlightCalls: 0
         function cancelHighlightWindows() { cancelHighlightCalls++; }
     }

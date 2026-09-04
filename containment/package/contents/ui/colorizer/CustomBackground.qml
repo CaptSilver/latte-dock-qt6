@@ -102,10 +102,8 @@ Item{
     Loader {
         id: kirigamiRect
         anchors.fill: painter
-        active: root.kirigamiLibraryIsFound && main.shadowSize>0
-        //! this "source" approach is needed in order for KF5<=5.68 to load Latte correctly with no
-        //! qml breakage because Kirigami2.ShadowedRectangle is not present
-        source: root.kirigamiLibraryIsFound ? "KirigamiShadowedRectangle.qml" : "NormalRectangle.qml"
+        active: main.shadowSize>0
+        source: "KirigamiShadowedRectangle.qml"
     }
 
     Rectangle{

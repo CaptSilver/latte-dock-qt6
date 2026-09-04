@@ -48,14 +48,6 @@ PlasmoidItem {
     LayoutMirroring.enabled: Qt.application.layoutDirection === Qt.RightToLeft && !root.vertical
     LayoutMirroring.childrenInherit: true
 
-    property bool plasma515: LatteCore.Environment.plasmaDesktopVersion >= LatteCore.Environment.makeVersion(5,15,0)
-    property bool plasma518: LatteCore.Environment.plasmaDesktopVersion >= LatteCore.Environment.makeVersion(5,18,0)
-    property bool plasma520: LatteCore.Environment.plasmaDesktopVersion >= LatteCore.Environment.makeVersion(5,20,0)
-    property bool plasmaGreaterThan522: LatteCore.Environment.plasmaDesktopVersion >= LatteCore.Environment.makeVersion(5,21,75)
-    property bool plasmaAtLeast524: LatteCore.Environment.plasmaDesktopVersion >= LatteCore.Environment.makeVersion(5,24,0)
-    property bool plasmaAtLeast525: LatteCore.Environment.plasmaDesktopVersion >= LatteCore.Environment.makeVersion(5,24,75)
-    property bool plasmaAtLeast526: LatteCore.Environment.plasmaDesktopVersion >= LatteCore.Environment.makeVersion(5,25,75)
-
     property bool disableRestoreZoom: false //blocks restore animation in rightClick
     property bool disableAllWindowsFunctionality: Plasmoid.configuration.hideAllTasks
     property bool inActivityChange: false
@@ -209,7 +201,6 @@ PlasmoidItem {
 
     signal draggingFinished();
     signal hiddenTasksUpdated();
-    signal presentWindows(variant winIds);
     signal activateWindowView(variant winIds);
     signal requestLayout;
     signal signalPreviewsShown();
@@ -1282,22 +1273,14 @@ PlasmoidItem {
     }
 
     Component.onCompleted:  {
-        if (root.plasmaAtLeast525) {
-            root.activateWindowView.connect(backend.activateWindowView);
-        } else {
-            root.presentWindows.connect(backend.presentWindows);
-        }
+        root.activateWindowView.connect(backend.activateWindowView);
 
         root.windowsHovered.connect(backend.windowsHovered);
         updateListViewParent();
     }
 
     Component.onDestruction: {
-        if (root.plasmaAtLeast525) {
-            root.activateWindowView.disconnect(backend.activateWindowView);
-        } else {
-            root.presentWindows.disconnect(backend.presentWindows);
-        }
+        root.activateWindowView.disconnect(backend.activateWindowView);
 
         root.windowsHovered.disconnect(backend.windowsHovered);
     }

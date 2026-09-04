@@ -86,7 +86,6 @@ TestCase {
           + '  property int subGroupSpacing: 8\n'
           + '  property bool advancedLevel: true\n'
           + '  property bool viewIsPanel: false\n'
-          + '  property bool kirigamiLibraryIsFound: true\n'
           + '  property var plasmoid: QtObject { property var configuration }\n'
           + '  property var viewConfig: QtObject {\n'
           + '     property bool isReady: ' + (isReady ? 'true' : 'false') + '\n'

@@ -7,7 +7,7 @@
 //
 // MultiLayered reads a long list of UNQUALIFIED creation-context names (root.*,
 // myView, metrics, animations, indicators, background, colorizerManager,
-// layoutsContainerItem, latteView, themeExtended, kirigamiLibraryIsFound, and the
+// layoutsContainerItem, latteView, themeExtended, and the
 // root layout flags). QML resolves those against the component's creation context,
 // so we name the TestCase `id: root` and declare each as a shaped property / id'd
 // QtObject. The shapes match what the target actually dereferences — never a
@@ -49,7 +49,6 @@ TestCase {
     property bool userShowPanelBackground: true
     property bool panelOutline: false
     property bool panelShadowsActive: true
-    property bool kirigamiLibraryIsFound: true
 
     // solidBackground's Component.onCompleted connects this signal to its
     // updateEffectsArea(); emitting it must reach that slot. Declared as a real

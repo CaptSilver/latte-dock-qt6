@@ -61,7 +61,6 @@ TestCase {
     QtObject {
         id: fakeRoot
         property bool inDraggingPhase: false
-        property bool plasma515: true
     }
 
     property var fakeRootIndex: ({ row: 0 })

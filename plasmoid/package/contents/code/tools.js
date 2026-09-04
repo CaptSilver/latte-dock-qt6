@@ -30,9 +30,6 @@ function activateTask(index, model, modifiers, task) {
         tasksModel.requestNewInstance(index);
     } else if (task.isGroupParent) {
         task.activateNextTask();
-       // if (backend.canPresentWindows()) {
-        //    backend.presentWindows(model.LegacyWinIdList);
-       // }
         /*} else if (groupDialog.visible) {
             groupDialog.visible = false;
         } else {
