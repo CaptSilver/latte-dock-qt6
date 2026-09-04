@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Headless compile-check for every QML file in Latte's shell/containment/plasmoid
-# and indicator packages. Unlike qml_load_gate.sh (which runs the dock and only sees QML that
-# loads during passive startup), this compiles each file in the real QML engine
+# packages, its indicators, and the org.kde.latte.* QML modules. Unlike
+# qml_load_gate.sh (which runs the dock and only sees QML that loads during
+# passive startup), this compiles each file in the real QML engine
 # via Qt.createComponent — so it catches removed-type / removed-property errors
 # in lazy, interaction-only components (the widget explorer, task context menu,
 # config pages) that a click would otherwise be needed to surface.
@@ -46,11 +47,18 @@ PKG="$STAGE/usr/share/plasma"
 # the dot vanished because the C++ side failed to load the package, and a QML
 # error here would do the same silently, so compile-check them too.
 IND="$STAGE/usr/share/latte/indicators"
+# The org.kde.latte.* QML modules (components, abilities) install with
+# install(DIRECTORY), so no build file names their individual files and nothing
+# else compiles them: a broken one only errors inside whatever imports it, and
+# for a module this is also third-party import surface, so it can break an
+# indicator nobody here ships.
+MOD="$STAGE/usr/lib64/qt6/qml/org/kde/latte"
 mapfile -t ALL < <(find \
     "$PKG/shells/org.kde.latte.shell" \
     "$PKG/plasmoids/org.kde.latte.containment" \
     "$PKG/plasmoids/org.kde.latte.plasmoid" \
     "$IND" \
+    "$MOD" \
     -name '*.qml' 2>/dev/null | sort)
 
 if [ "${#ALL[@]}" -eq 0 ]; then echo "no staged QML found under $PKG"; exit 2; fi

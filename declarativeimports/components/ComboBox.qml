@@ -5,7 +5,6 @@
 */
 
 import QtQuick 2.7
-import QtQuick.Window 2.2
 import QtQuick.Templates 2.2 as T
 import QtQuick.Controls 2.2 as Controls
 import QtQuick.Layouts 1.3
@@ -103,14 +102,6 @@ T.ComboBox {
         elementId: "down-arrow"
     }
 
-    //     contentItem: Label {
-    //         text: control.displayText
-    //         font: control.font
-    //         color: theme.buttonTextColor
-    //         horizontalAlignment: Text.AlignLeft
-    //         verticalAlignment: Text.AlignVCenter
-    //         elide: Text.ElideRight
-    //     }
     contentItem: MouseArea {
         id: mouseArea
         anchors.fill: parent
@@ -247,74 +238,8 @@ T.ComboBox {
 
                 visible: !control.hideDisplayText
             }
-
-         /*   T.TextField {
-                id: textField
-                padding: 0
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-
-                text: control.editable ? control.editText : control.displayText
-
-                enabled: control.editable
-                autoScroll: control.editable
-
-                readOnly: control.down || !control.hasOwnProperty("editable") || !control.editable
-                inputMethodHints: control.inputMethodHints
-                validator: control.validator
-
-                // Work around Qt bug where NativeRendering breaks for non-integer scale factors
-                // https://bugreports.qt.io/browse/QTBUG-67007
-                renderType: Screen.devicePixelRatio % 1 !== 0 ? Text.QtRendering : Text.NativeRendering
-                color: theme.buttonTextColor //control.enabled ? theme.textColor : theme.disabledTextColor
-                selectionColor: Kirigami.Theme.highlightColor
-                selectedTextColor: Kirigami.Theme.highlightedTextColor
-
-                selectByMouse: !Kirigami.Settings.tabletMode
-                cursorDelegate: Kirigami.Settings.tabletMode ? mobileCursor : undefinedCursor
-
-                font: control.font
-                horizontalAlignment: Text.AlignLeft
-                verticalAlignment: Text.AlignVCenter
-                opacity: control.enabled ? 1 : 0.6
-                onFocusChanged: {
-                    if (focus) {
-                        Private.MobileTextActionsToolBar.controlRoot = textField;
-                    }
-                }
-
-                onPressAndHold: {
-                    if (!Kirigami.Settings.tabletMode) {
-                        return;
-                    }
-                    forceActiveFocus();
-                    cursorPosition = positionAt(event.x, event.y);
-                    selectWord();
-                }
-            }*/
         }
     }
-
-  /*  Component {
-        id: mobileCursor
-        Private.MobileCursor {
-            target: textField
-        }
-    }*/
-
-    Component {
-        id: undefinedCursor
-        Item{}
-    }
-
- /*   Private.MobileCursor {
-        target: textField
-        selectionStartHandle: true
-        property var rect: textField.positionToRectangle(textField.selectionStart)
-        //FIXME: this magic values seem to be always valid, for every font,every dpi, every scaling
-        x: rect.x + 5
-        y: rect.y + 6
-    }*/
 
     background: KSvg.FrameSvgItem {
         id: surfaceNormal
@@ -406,15 +331,6 @@ T.ComboBox {
         bottomMargin: 6
 
         readonly property bool exceedsContent: control.width < width
-
-        /*onVisibleChanged: {
-            if (visible) {
-                console.log("  mirrored:" + control.mirrored);
-                console.log("  exceeds: " + exceedsContent);
-                console.log("  popupAR: " + control.popUpAlignRight);
-                console.log("  popupRX: " + popUpRelativeX);
-            }
-        }*/
 
         contentItem: ListView {
             id: listView

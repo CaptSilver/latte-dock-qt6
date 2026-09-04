@@ -316,6 +316,9 @@ private Q_SLOTS:
     void orphanHeaderDeclarationsAreGone();
     void stdNamespaceIsNotReopened();
     void configuredHeaderMacrosAreAllRead();
+    void latteQmlModulesShipNoUnreachableFiles();
+    void qmldirExportsResolveToTheirFiles();
+    void comboBoxDropsItsDeadMobileTextMachinery();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -1539,6 +1542,163 @@ void SourceGuardTest::configuredHeaderMacrosAreAllRead()
         }
         QVERIFY2(names > 0, qPrintable(QStringLiteral("%1 parsed as having no #cmakedefine at all").arg(relativeToRepo(tmpl))));
     }
+}
+
+void SourceGuardTest::latteQmlModulesShipNoUnreachableFiles()
+{
+    // A .qml inside an installed QML module has exactly two ways in: a qmldir export, which makes it
+    // a type any third-party indicator can import, or an instantiation by name from other QML. The
+    // module is installed with install(DIRECTORY), so no build file names the individual files and
+    // nothing notices when the last reader of one goes away -- three files under components/private/
+    // were reachable only from commented-out Plasma 5 code and still shipped to every user's import
+    // path, reading like live code the whole time.
+    const QStringList packages = {QStringLiteral("containment"),
+                                  QStringLiteral("plasmoid"),
+                                  QStringLiteral("declarativeimports"),
+                                  QStringLiteral("shell"),
+                                  QStringLiteral("indicators")};
+
+    const QStringList sources = qmlSourcesUnder(packages);
+    QVERIFY2(sources.size() > 50, qPrintable(QStringLiteral("only %1 QML files walked, the roots are wrong").arg(sources.size())));
+
+    // A name surviving only in a comment is not a reader: every ref below is checked against the
+    // comment-free body, which is the whole reason the dead private/ files looked used.
+    QHash<QString, QString> readable;
+    for (const QString &path : sources) {
+        readable.insert(path, withoutComments(readAbsolute(path)));
+    }
+
+    QStringList unreachable;
+    int checked = 0;
+
+    for (const QString &path : sources) {
+        // Only declarativeimports/ installs as QML modules. A package file under shell/ or
+        // containment/ is reached by path from its own package, so the rule does not apply.
+        if (!path.contains(QStringLiteral("/declarativeimports/"))) {
+            continue;
+        }
+        ++checked;
+
+        const QFileInfo info(path);
+
+        bool exported = false;
+        const QStringList qmldirLines = readAbsolute(info.absolutePath() + QStringLiteral("/qmldir")).split(QLatin1Char('\n'));
+        for (const QString &line : qmldirLines) {
+            if (line.simplified().split(QLatin1Char(' ')).contains(info.fileName())) {
+                exported = true;
+                break;
+            }
+        }
+        if (exported) {
+            continue;
+        }
+
+        // Base names are unique among the files that are not exported, so a whole-word match tells
+        // "somebody instantiates this" from "nobody does" without parsing QML.
+        const QRegularExpression use(QStringLiteral("\\b%1\\b").arg(QRegularExpression::escape(info.completeBaseName())));
+        bool referenced = false;
+        for (auto it = readable.constBegin(); it != readable.constEnd(); ++it) {
+            if (it.key() == path) {
+                continue;
+            }
+            if (it.value().contains(use)) {
+                referenced = true;
+                break;
+            }
+        }
+
+        if (!referenced) {
+            unreachable << relativeToRepo(path);
+        }
+    }
+
+    QVERIFY2(checked > 40, qPrintable(QStringLiteral("only %1 module QML files checked, the roots are wrong").arg(checked)));
+    unreachable.sort();
+    QVERIFY2(unreachable.isEmpty(),
+             qPrintable(QStringLiteral("installed QML modules ship files nothing can reach -- neither exported in their qmldir nor instantiated anywhere: %1").arg(unreachable.join(QStringLiteral(", ")))));
+}
+
+void SourceGuardTest::qmldirExportsResolveToTheirFiles()
+{
+    // A qmldir line is the module's public declaration of a type and the only thing that makes it
+    // importable from outside this tree. Delete the .qml without the line and the installed module
+    // keeps offering a type whose file is gone -- an error that surfaces in whichever third-party
+    // applet imports it, never here. qmlloadcompile cannot catch it either: it enumerates the files
+    // that exist, so an export pointing at nothing is invisible to it by construction.
+    const QStringList qmldirs = sourcesUnder({QStringLiteral("containment"), QStringLiteral("plasmoid"), QStringLiteral("declarativeimports")},
+                                             QStringLiteral("qmldir"));
+    QVERIFY2(qmldirs.size() >= 8, qPrintable(QStringLiteral("only %1 qmldir files walked, the roots are wrong").arg(qmldirs.size())));
+
+    static const QRegularExpression exportLine(QStringLiteral("^\\s*(?:singleton\\s+)?\\w+\\s+[\\d.]+\\s+(\\S+\\.qml)\\s*$"));
+
+    QStringList dangling;
+    int exports = 0;
+
+    for (const QString &path : qmldirs) {
+        const QString dir = QFileInfo(path).absolutePath();
+        const QStringList lines = readAbsolute(path).split(QLatin1Char('\n'));
+
+        for (const QString &line : lines) {
+            const QRegularExpressionMatch m = exportLine.match(line);
+            if (!m.hasMatch()) {
+                continue;
+            }
+            ++exports;
+
+            if (!QFileInfo::exists(QStringLiteral("%1/%2").arg(dir, m.captured(1)))) {
+                dangling << QStringLiteral("%1 exports a missing %2").arg(relativeToRepo(path), m.captured(1));
+            }
+        }
+    }
+
+    QVERIFY2(exports > 50, qPrintable(QStringLiteral("only %1 qmldir exports parsed, the line pattern is wrong").arg(exports)));
+    QVERIFY2(dangling.isEmpty(), qPrintable(dangling.join(QStringLiteral("; "))));
+}
+
+void SourceGuardTest::comboBoxDropsItsDeadMobileTextMachinery()
+{
+    const QString raw = readFile(QStringLiteral("declarativeimports/components/ComboBox.qml"));
+    QVERIFY2(!raw.isEmpty(), "ComboBox.qml not found");
+
+    // The editable/tablet-mode TextField path was commented out well before the Qt6 port and never
+    // came back -- nothing in the tree sets `editable`. It kept two cursor delegates, a mobile
+    // selection toolbar and an `undefinedCursor` Component alive on paper, all of them named only
+    // from inside the comment, plus a `theme.buttonTextColor` that stopped existing in Plasma 6.
+    const QStringList dead = {QStringLiteral("MobileCursor"),
+                              QStringLiteral("MobileTextActionsToolBar"),
+                              QStringLiteral("undefinedCursor"),
+                              QStringLiteral("T.TextField"),
+                              QStringLiteral("theme.buttonTextColor"),
+                              QStringLiteral("console.log"),
+                              // Screen.devicePixelRatio inside that block was the only thing this import was for.
+                              QStringLiteral("import QtQuick.Window")};
+    for (const QString &name : dead) {
+        QVERIFY2(!raw.contains(name), qPrintable(QStringLiteral("ComboBox.qml still carries the dead %1").arg(name)));
+    }
+
+    // The trap: TextFieldFocus reads exactly as dead as the rest -- it is only ever visible when
+    // `editable` is set, which nothing does -- but the background's opacity binding reads its id, so
+    // removing it turns that binding into a ReferenceError and the transparent button stops hiding.
+    const QString live = stripped(withoutComments(raw));
+    QVERIFY2(live.contains(QStringLiteral("Private.TextFieldFocus{id:textFieldPrivate")),
+             "ComboBox.qml must keep Private.TextFieldFocus: its id is read by the background opacity binding");
+    QVERIFY2(live.contains(QStringLiteral("textFieldPrivate.state!==\"hover\"")),
+             "the background opacity binding must still read textFieldPrivate.state");
+    QVERIFY2(live.contains(QStringLiteral("Private.ButtonShadow{")),
+             "ComboBox.qml must keep the live Private.ButtonShadow");
+
+    // ItemDelegate's only tie to private/ was a commented-out background line. The import has to go
+    // with it, or the file keeps importing a directory it no longer takes anything from.
+    const QString delegate = readFile(QStringLiteral("declarativeimports/components/ItemDelegate.qml"));
+    QVERIFY2(!delegate.isEmpty(), "ItemDelegate.qml not found");
+    QVERIFY2(!delegate.contains(QStringLiteral("DefaultListItemBackground")),
+             "ItemDelegate.qml still names the deleted DefaultListItemBackground");
+    QVERIFY2(!delegate.contains(QStringLiteral("import \"private\"")),
+             "ItemDelegate.qml imports private/ but instantiates nothing from it");
+
+    // Slider is the other live consumer of private/, and the reason the directory has to survive.
+    QVERIFY2(withoutComments(readFile(QStringLiteral("declarativeimports/components/Slider.qml"))).contains(QStringLiteral("Private.RoundShadow")),
+             "Slider.qml must keep the live Private.RoundShadow");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

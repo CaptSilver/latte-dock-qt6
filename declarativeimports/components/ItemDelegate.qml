@@ -12,8 +12,6 @@ import org.kde.kirigami 2.20 as Kirigami
 
 import org.kde.latte.components 1.0 as LatteComponents
 
-import "private" as Private
-
 T.CheckDelegate {
     id: control
     implicitWidth: contentItem.implicitWidth + leftPadding + rightPadding
@@ -108,7 +106,6 @@ T.CheckDelegate {
         }
     }
 
-    //background: Private.DefaultListItemBackground {}
     background: Rectangle {
         visible: isSeparator ? false : (control.ListView.view ? control.ListView.view.highlight === null : true)
         enabled: control.enabled
