@@ -921,12 +921,6 @@ void Corona::importFullConfiguration(const QString &file)
 
 inline void Corona::qmlRegisterTypes() const
 {   
-    qmlRegisterUncreatableMetaObject(Latte::Settings::staticMetaObject,
-                                     "org.kde.latte.private.app",          // import statement
-                                     0, 1,                                 // major and minor version of the import
-                                     "Settings",                           // name in QML
-                                     QStringLiteral("Error: only enums of latte app settings"));
-
     qmlRegisterType<Latte::BackgroundTracker>("org.kde.latte.private.app", 0, 1, "BackgroundTracker");
     qmlRegisterType<Latte::Interfaces>("org.kde.latte.private.app", 0, 1, "Interfaces");
     qmlRegisterType<Latte::ContextMenuLayerQuickItem>("org.kde.latte.private.app", 0, 1, "ContextMenuLayer");

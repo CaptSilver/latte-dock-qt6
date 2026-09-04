@@ -18,7 +18,6 @@ const bool Preferences::METAHOLDFORBADGES;
 const int Preferences::PARABOLICSPREAD;
 const int Preferences::SCREENSDELAY;
 const float Preferences::THICKNESSMARGININFLUENCE = 1.0f;
-const Settings::MouseSensitivity Preferences::MOUSESENSITIVITY;
 
 Preferences::Preferences()
 {
@@ -34,7 +33,6 @@ bool Preferences::operator==(const Preferences &rhs) const
             && (isAvailableGeometryBroadcastedToPlasma == rhs.isAvailableGeometryBroadcastedToPlasma)
             && (metaPressForAppLauncher == rhs.metaPressForAppLauncher)
             && (metaHoldForBadges == rhs.metaHoldForBadges)
-            && (mouseSensitivity == rhs.mouseSensitivity)
             && (parabolicSpread == rhs.parabolicSpread)
             && (thicknessMarginInfluence == rhs.thicknessMarginInfluence)
             && (screensDelay == rhs.screensDelay);
@@ -55,7 +53,6 @@ bool Preferences::inDefaultValues() const
             && (isAvailableGeometryBroadcastedToPlasma == ISAVAILABLEGEOMETRYBROADCASTEDTOPLASMA)
             && (metaPressForAppLauncher == METAPRESSFORAPPLAUNCHER)
             && (metaHoldForBadges == METAHOLDFORBADGES)
-            && (mouseSensitivity == MOUSESENSITIVITY)
             && (parabolicSpread == PARABOLICSPREAD)
             && (thicknessMarginInfluence == THICKNESSMARGININFLUENCE)
             && (screensDelay == SCREENSDELAY);
@@ -71,7 +68,6 @@ void Preferences::setToDefaults()
     isAvailableGeometryBroadcastedToPlasma = ISAVAILABLEGEOMETRYBROADCASTEDTOPLASMA;
     metaPressForAppLauncher = METAPRESSFORAPPLAUNCHER;
     metaHoldForBadges = METAHOLDFORBADGES;
-    mouseSensitivity = MOUSESENSITIVITY;
     parabolicSpread = PARABOLICSPREAD;
     thicknessMarginInfluence = THICKNESSMARGININFLUENCE;
     screensDelay = SCREENSDELAY;

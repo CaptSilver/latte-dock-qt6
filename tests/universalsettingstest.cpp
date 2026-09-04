@@ -15,7 +15,6 @@
 
 #include "universalsettings.h"
 
-#include "../app/apptypes.h"
 #include "../app/coretypes.h"
 #include "../app/data/preferencesdata.h"
 #include "../app/tools/commontools.h"
@@ -53,7 +52,6 @@ private Q_SLOTS:
     void enumAndDefaultsLoadFromEmptyConfig();
     void freshProfileIsInPreferencesDefaults();
     void screenScalesRoundTrip();
-    void sensitivityAlwaysHigh();
     void kwinMetaForwardIsCachedAndReloaded();
 };
 
@@ -298,17 +296,6 @@ void UniversalSettingsTest::screenScalesRoundTrip()
     reloaded.load();
     QCOMPARE(reloaded.screenWidthScale(QStringLiteral("DP-1")), 1.25f);
     QCOMPARE(reloaded.screenHeightScale(QStringLiteral("DP-1")), 0.75f);
-}
-
-void UniversalSettingsTest::sensitivityAlwaysHigh()
-{
-    // The port deliberately hard-returns HighMouseSensitivity regardless of stored
-    // state (the setter updates the member but the getter ignores it).
-    UniversalSettings settings(freshConfig(), nullptr, this);
-    QCOMPARE(settings.sensitivity(), Settings::HighMouseSensitivity);
-
-    settings.setSensitivity(Settings::LowMouseSensitivity);
-    QCOMPARE(settings.sensitivity(), Settings::HighMouseSensitivity);
 }
 
 void UniversalSettingsTest::kwinMetaForwardIsCachedAndReloaded()

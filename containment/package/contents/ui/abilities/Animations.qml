@@ -7,7 +7,6 @@ import QtQuick 2.7
 import org.kde.plasma.plasmoid 2.0
 
 import org.kde.latte.core 0.2 as LatteCore
-import org.kde.latte.private.app 0.1 as LatteApp
 
 import "./privates" as Ability
 
@@ -34,17 +33,6 @@ Ability.AnimationsPrivate {
         }
 
         return speedFactor.normal;
-    }
-
-    //! animations related to parabolic effect
-    hoverPixelSensitivity: {
-        if (!settings || settings.sensitivity === LatteApp.Settings.HighMouseSensitivity) {
-            return 1;
-        } else if (settings.sensitivity === LatteApp.Settings.MediumMouseSensitivity) {
-            return Math.max(3, metrics.iconSize / 18);
-        } else if (settings.sensitivity === LatteApp.Settings.LowMouseSensitivity) {
-            return Math.max(5, metrics.iconSize / 10);
-        }
     }
 
     //! do not update during dragging/moving applets inConfigureAppletsMode

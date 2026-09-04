@@ -316,6 +316,7 @@ private Q_SLOTS:
     void alignmentStateSelfReadsResolve();
     void commonTools_standardPath_dropsTheDeadReverseSearch();
     void orphanHeaderDeclarationsAreGone();
+    void mouseSensitivityChainIsGone();
     void editModeLogSinkExistsOnlyInDebugOutput();
     void namespaceConstantsNobodyReadsAreDeleted();
     void delegatePaintDropsItsUnreadLocals();
@@ -1553,6 +1554,79 @@ void SourceGuardTest::orphanHeaderDeclarationsAreGone()
     // translation units pays for QQmlEngine and QQuickWindow again.
     QVERIFY2(!readFile(QStringLiteral("app/lattecorona.h")).contains(QStringLiteral("PlasmaQuick/ConfigView")),
              "lattecorona.h must not include <PlasmaQuick/ConfigView>, nothing in it needs the type");
+}
+
+void SourceGuardTest::mouseSensitivityChainIsGone()
+{
+    // UniversalSettings::sensitivity() hard-returned HighMouseSensitivity and the setter's
+    // Q_EMIT was commented out, so the property never changed, never saved and never loaded --
+    // the containment's single reader could only ever take the High branch. Half the chain
+    // survived as commented-out code, which neither the compiler nor a behavioural test can
+    // see, so reading the files is the only way to pin the removal.
+    const QStringList files = {QStringLiteral("app/apptypes.h"),
+                               QStringLiteral("app/settings/universalsettings.h"),
+                               QStringLiteral("app/settings/universalsettings.cpp"),
+                               QStringLiteral("app/data/preferencesdata.h"),
+                               QStringLiteral("app/data/preferencesdata.cpp")};
+
+    // Deliberately NOT withoutComments(): the load and save entries were already commented
+    // out, and stripping comments would report them gone while they still sat in the file.
+    // Case-insensitive catches m_sensitivity, setSensitivity, mouseSensitivity and
+    // MOUSESENSITIVITY in one rule -- no live name in these five files contains the word.
+    const QRegularExpression sensitivity(QStringLiteral("sensitivity"), QRegularExpression::CaseInsensitiveOption);
+
+    for (const QString &rel : files) {
+        const QString src = readFile(rel);
+        QVERIFY2(!src.isEmpty(), qPrintable(QStringLiteral("%1 is unreadable").arg(rel)));
+        QVERIFY2(!src.contains(sensitivity),
+                 qPrintable(QStringLiteral("%1 still names the mouse sensitivity chain").arg(rel)));
+    }
+
+    // MouseSensitivity was the only reason Latte::Settings carried a namespace meta-object.
+    // ImportExport still needs one, and apptypes.cpp exists to give moc a translation unit.
+    QVERIFY2(stripped(readFile(QStringLiteral("app/apptypes.h"))).contains(QStringLiteral("Q_ENUM_NS(State);")),
+             "ImportExport::State must keep its namespace meta-object");
+
+    // The deletion stops at the enum. Latte::Settings itself is reopened by the whole
+    // settings-dialog hierarchy, so removing the namespace instead takes ~30 headers with it.
+    QVERIFY2(readFile(QStringLiteral("app/settings/settingsdialog/tabpreferenceshandler.h"))
+                     .contains(QStringLiteral("Latte::Settings::Dialog::SettingsDialog")),
+             "the Latte::Settings namespace must survive, the settings dialog lives in it");
+
+    // The uncreatable metaobject registration was the enum's only C++ reader. The QML module
+    // it registered into stays: three live types are still imported from it.
+    const QString corona = readFile(QStringLiteral("app/lattecorona.cpp"));
+    QVERIFY2(!corona.isEmpty(), "lattecorona.cpp is unreadable");
+    QVERIFY2(!corona.contains(QStringLiteral("Latte::Settings::staticMetaObject")),
+             "lattecorona.cpp still registers the Latte::Settings meta-object with QML");
+    QVERIFY2(corona.contains(QStringLiteral("qmlRegisterType<Latte::BackgroundTracker>(\"org.kde.latte.private.app\"")),
+             "org.kde.latte.private.app must keep its live registrations");
+
+    // The containment binding was the only QML reader, and it must go BEFORE the registration:
+    // a missing enum resolves to undefined rather than failing, which would silently pin
+    // hoverPixelSensitivity at undefined and disable every parabolic hover comparison.
+    const QString animations = readFile(QStringLiteral("containment/package/contents/ui/abilities/Animations.qml"));
+    QVERIFY2(!animations.isEmpty(), "containment Animations.qml is unreadable");
+    QVERIFY2(!animations.contains(QRegularExpression(QStringLiteral("\\bLatteApp\\b"))),
+             "containment Animations.qml still names the LatteApp module alias");
+    QVERIFY2(!animations.contains(QStringLiteral("MouseSensitivity")),
+             "containment Animations.qml still reads a MouseSensitivity enumerator");
+
+    // metrics and settings were plumbed into AnimationsPrivate for the two dead branches alone.
+    // The declaration must not outlive the assignment: QML errors on assigning a property that
+    // does not exist, and at containment load that error takes the whole dock down.
+    const QString privates = readFile(QStringLiteral("containment/package/contents/ui/abilities/privates/AnimationsPrivate.qml"));
+    QVERIFY2(!privates.isEmpty(), "AnimationsPrivate.qml is unreadable");
+    QVERIFY2(!privates.contains(QRegularExpression(QStringLiteral("property\\s+\\w+\\s+(metrics|settings)\\b"))),
+             "AnimationsPrivate.qml still declares the metrics/settings sinks only the dead branches read");
+    QVERIFY2(privates.contains(QStringLiteral("property Item layouts")),
+             "AnimationsPrivate.qml must keep layouts, the zoomFactor Binding walks it");
+
+    const QString block = functionBody(readFile(QStringLiteral("containment/package/contents/ui/main.qml")),
+                                       QStringLiteral("Ability.Animations"));
+    QVERIFY2(!block.isEmpty(), "the Ability.Animations block in main.qml was not found");
+    QVERIFY2(!block.contains(QRegularExpression(QStringLiteral("\\b(metrics|settings)\\s*:"))),
+             "main.qml still feeds metrics/settings to Ability.Animations");
 }
 
 void SourceGuardTest::editModeLogSinkExistsOnlyInDebugOutput()

@@ -8,7 +8,6 @@
 
 // local
 #include "contextmenudata.h"
-#include "../apptypes.h"
 
 // Qt
 #include <QStringList>
@@ -29,7 +28,6 @@ public:
     static const int PARABOLICSPREAD = 3;
     static const int SCREENSDELAY = 2500;
     static const float THICKNESSMARGININFLUENCE;
-    static const Settings::MouseSensitivity MOUSESENSITIVITY = Settings::HighMouseSensitivity;
 
     Preferences();
     Preferences(Preferences &&o) = default;
@@ -47,7 +45,6 @@ public:
     int screensDelay{SCREENSDELAY};
     float thicknessMarginInfluence{THICKNESSMARGININFLUENCE};
     QStringList contextMenuAlwaysActions{Data::ContextMenu::ACTIONSALWAYSVISIBLE};
-    Settings::MouseSensitivity mouseSensitivity{MOUSESENSITIVITY};
 
     bool inDefaultValues() const;
     void setToDefaults();

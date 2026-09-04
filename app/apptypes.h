@@ -53,22 +53,4 @@ enum Status
 }
 }
 
-//! These are LatteApp::Types that will be used from Latte App c++ implementation AND
-//! Latte containment qml. Such types are irrelevant and not used from plasma applets.
-
-namespace Latte {
-namespace Settings {
-Q_NAMESPACE
-
-enum MouseSensitivity
-{
-    LowMouseSensitivity = 0,
-    MediumMouseSensitivity,
-    HighMouseSensitivity
-};
-Q_ENUM_NS(MouseSensitivity);
-
-}
-}
-
 #endif

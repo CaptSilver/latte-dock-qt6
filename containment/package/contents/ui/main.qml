@@ -942,8 +942,6 @@ ContainmentItem {
     Ability.Animations {
         id: _animations
         layouts: layoutsContainer
-        metrics: _metrics
-        settings: universalSettings
     }
 
     Ability.AutoSize {

@@ -11,8 +11,6 @@ import org.kde.latte.abilities.host 0.1 as AbilityHost
 AbilityHost.Animations {
     id: animationsPrivate
     property Item layouts: null
-    property Item metrics: null
-    property QtObject settings: null
 
     property bool updateIsBlocked: false
 
