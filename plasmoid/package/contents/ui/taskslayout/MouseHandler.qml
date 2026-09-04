@@ -251,14 +251,4 @@ Item {
             }
         }
     }
-    /*
-    MouseArea {
-        id: wheelHandler
-
-        anchors.fill: parent
-        property int wheelDelta: 0;
-        enabled: Plasmoid.configuration.wheelEnabled
-
-        onWheel: wheelDelta = TaskTools.wheelActivateNextPrevTask(wheelDelta, wheel.angleDelta.y);
-    } */
 }

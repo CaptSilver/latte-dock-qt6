@@ -13,8 +13,10 @@
 //   * ContainmentInterface::updateContainmentConfigProperty  empty guard body
 //                                             falls through to a null deref
 
+#include <QDir>
 #include <QDirIterator>
 #include <QFile>
+#include <QFileInfo>
 #include <QRegularExpression>
 #include <QSet>
 #include <QString>
@@ -66,20 +68,31 @@ private:
         return s;
     }
 
-    // Absolute paths of every *.qml under the given REPO_ROOT-relative directories.
-    static QStringList qmlSourcesUnder(const QStringList &relDirs)
+    // Absolute paths of every file matching `glob` under the given REPO_ROOT-relative directories.
+    static QStringList sourcesUnder(const QStringList &relDirs, const QString &glob)
     {
         QStringList out;
         for (const QString &rel : relDirs) {
             QDirIterator it(QStringLiteral("%1/%2").arg(QStringLiteral(REPO_ROOT), rel),
-                            QStringList() << QStringLiteral("*.qml"),
+                            QStringList() << glob,
                             QDir::Files,
                             QDirIterator::Subdirectories);
             while (it.hasNext()) {
-                out << it.next();
+                const QString path = it.next();
+                //! this repo configures in-source, so moc output sits beside the sources it was
+                //! generated from; scanning it makes a guard answer for code nobody wrote
+                if (path.contains(QStringLiteral("_autogen/")) || path.contains(QStringLiteral("/CMakeFiles/"))) {
+                    continue;
+                }
+                out << path;
             }
         }
         return out;
+    }
+
+    static QStringList qmlSourcesUnder(const QStringList &relDirs)
+    {
+        return sourcesUnder(relDirs, QStringLiteral("*.qml"));
     }
 
     // Every member name the given ability layers declare: properties (aliases included),
@@ -202,6 +215,7 @@ private Q_SLOTS:
     void layoutsController_addLayoutByText_guardsTheTemporaryFile();
     void importer_checksEveryArchiveOpen();
     void abilityMemberReadsResolve();
+    void shippedJavaScriptIsImported();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -898,6 +912,55 @@ void SourceGuardTest::abilityMemberReadsResolve()
     QVERIFY2(unresolved.isEmpty(),
              qPrintable(QStringLiteral("ability member reads that resolve to undefined:\n  %1")
                             .arg(unresolved.join(QStringLiteral("\n  ")))));
+}
+
+void SourceGuardTest::shippedJavaScriptIsImported()
+{
+    // A .js in a shipped package has exactly one entry point: an `import "....js"` from a QML
+    // file next to it. Nothing else can reach it -- plasma_install_package ships the directory
+    // wholesale, so no build file names the individual scripts, and qmlloadcompile only compiles
+    // what the QML actually imports. A script nobody imports is therefore dead the moment its
+    // last import goes, yet it keeps getting packaged and keeps reading like live code.
+    const QStringList packages = {QStringLiteral("containment"),
+                                  QStringLiteral("plasmoid"),
+                                  QStringLiteral("declarativeimports"),
+                                  QStringLiteral("shell"),
+                                  QStringLiteral("indicators")};
+
+    const QStringList scripts = sourcesUnder(packages, QStringLiteral("*.js"));
+    QVERIFY2(!scripts.isEmpty(), "found no shipped JavaScript to scan");
+
+    // Resolve each import against the importing file's own directory instead of matching base
+    // names, so an import of a same-named script elsewhere in the tree cannot vouch for this one.
+    // A leading `//` keeps a commented-out import from counting, which is the whole point.
+    static const QRegularExpression jsImport(QStringLiteral("^[ \\t]*import\\s+\"([^\"]+\\.js)\""),
+                                             QRegularExpression::MultilineOption);
+
+    QSet<QString> imported;
+    for (const QString &qml : qmlSourcesUnder(packages)) {
+        QFile f(qml);
+        if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            continue;
+        }
+        const QString dir = QFileInfo(qml).absolutePath();
+        QRegularExpressionMatchIterator it = jsImport.globalMatch(QString::fromUtf8(f.readAll()));
+        while (it.hasNext()) {
+            imported.insert(QDir::cleanPath(QStringLiteral("%1/%2").arg(dir, it.next().captured(1))));
+        }
+    }
+
+    const QString prefix = QStringLiteral("%1/").arg(QStringLiteral(REPO_ROOT));
+    QStringList orphans;
+    for (const QString &js : scripts) {
+        if (!imported.contains(QDir::cleanPath(js))) {
+            QString rel = js;
+            rel.remove(prefix);
+            orphans << rel;
+        }
+    }
+
+    QVERIFY2(orphans.isEmpty(),
+             qPrintable(QStringLiteral("shipped JavaScript no QML imports:\n  %1").arg(orphans.join(QStringLiteral("\n  ")))));
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

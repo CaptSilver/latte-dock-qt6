@@ -29,7 +29,6 @@ import "abilities" as Ability
 import "previews" as Previews
 import "task" as Task
 import "taskslayout" as TasksLayout
-import "../code/tools.js" as TaskTools
 import "../code/activitiesTools.js" as ActivitiesTools
 
 PlasmoidItem {

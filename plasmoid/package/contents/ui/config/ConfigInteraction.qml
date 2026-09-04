@@ -41,6 +41,9 @@ Item {
                 PlasmaComponents.CheckBox {
                     id: wheelEnabled
                     text: i18n("Cycle through tasks with mouse wheel")
+                    // Permanently off: nothing reads wheelEnabled. The dock cycles tasks from
+                    // the containment instead (EnvironmentActions.qml, driven by Scroll Action),
+                    // so this checkbox and its main.xml entry are leftovers.
                     enabled: false
                 }
 
