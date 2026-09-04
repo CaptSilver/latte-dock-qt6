@@ -18,6 +18,58 @@ const int INDICATORCHANGESLENGTH = 6;
 const int INDICATORCHANGESMARGIN = 5;
 const int MARGIN = 2;
 
+namespace {
+
+//! The icon slot resolved out of the -1 sentinels: the icon square plus the length
+//! margin on either side of it.
+struct IconMetrics
+{
+    int lenmargin;
+    int thickmargin;
+    int iconsize;
+    int total;
+};
+
+IconMetrics iconMetrics(const QStyleOption &option, int lengthMargin, int thickMargin)
+{
+    IconMetrics metrics;
+    metrics.lenmargin = (lengthMargin == -1 ? ICONMARGIN + MARGIN : lengthMargin);
+    metrics.thickmargin = (thickMargin == -1 ? ICONMARGIN : thickMargin);
+    metrics.iconsize = option.rect.height() - 2*metrics.thickmargin;
+    metrics.total = metrics.iconsize + 2*metrics.lenmargin;
+    return metrics;
+}
+
+//! Where the alignment ends up on screen: RTL mirrors the two sides, but a centered
+//! slot has no side to mirror and must stay put.
+Qt::AlignmentFlag visualAlignment(Qt::AlignmentFlag alignment)
+{
+    if (qApp->layoutDirection() == Qt::LeftToRight || alignment == Qt::AlignHCenter) {
+        return alignment;
+    }
+
+    return alignment == Qt::AlignLeft ? Qt::AlignRight : Qt::AlignLeft;
+}
+
+QRect iconTargetRect(const QStyleOption &option, Qt::AlignmentFlag alignment, int lengthMargin, int thickMargin)
+{
+    const IconMetrics metrics = iconMetrics(option, lengthMargin, thickMargin);
+    const Qt::AlignmentFlag curalign = visualAlignment(alignment);
+
+    int x = option.rect.x() + metrics.lenmargin;
+
+    if (curalign == Qt::AlignRight) {
+        x += option.rect.width() - metrics.total;
+    } else if (curalign != Qt::AlignLeft) {
+        //! anything not pinned to a side is centered in the row
+        x += (option.rect.width() - metrics.total)/2;
+    }
+
+    return QRect(x, option.rect.y() + metrics.thickmargin, metrics.iconsize, metrics.iconsize);
+}
+
+}
+
 bool isEnabled(const QStyleOption &option)
 {
     if (option.state & QStyle::State_Enabled) {
@@ -231,30 +283,7 @@ void drawLayoutIcon(QPainter *painter, const QStyleOption &option, const bool &i
     bool selected = Latte::isSelected(option);
     bool focused = Latte::isFocused(option);
 
-    int lenmargin = (lengthMargin == -1 ? ICONMARGIN + MARGIN : lengthMargin);
-    int thickmargin = (thickMargin == -1 ? ICONMARGIN : thickMargin);
-
-    int iconsize = option.rect.height() - 2*thickmargin;
-    int total = iconsize + 2*lenmargin;
-
-    Qt::AlignmentFlag curalign = alignment;
-
-    if (qApp->layoutDirection() == Qt::LeftToRight || alignment == Qt::AlignHCenter) {
-        curalign = alignment;
-    } else {
-        curalign = alignment == Qt::AlignLeft ? Qt::AlignRight : Qt::AlignLeft;
-    }
-
-    QRect target;
-
-    if (curalign == Qt::AlignLeft) {
-        target = QRect(option.rect.x() + lenmargin, option.rect.y() + thickmargin, iconsize, iconsize);
-    } else if (curalign == Qt::AlignRight) {
-        target = QRect(option.rect.x() + option.rect.width() - total + lenmargin, option.rect.y() + thickmargin, iconsize, iconsize);
-    } else {
-        //! centered
-        target = QRect(option.rect.x() + ((option.rect.width() - total)/2) + lenmargin, option.rect.y() + thickmargin, iconsize, iconsize);
-    }
+    const QRect target = iconTargetRect(option, alignment, lengthMargin, thickMargin);
 
     painter->save();
     painter->setRenderHint(QPainter::Antialiasing, true);
@@ -300,30 +329,7 @@ void drawColorSchemeIcon(QPainter *painter, const QStyleOption &option, const QC
     bool selected = Latte::isSelected(option);
     bool focused = Latte::isFocused(option);
 
-    int lenmargin = (lengthMargin == -1 ? ICONMARGIN + MARGIN : lengthMargin);
-    int thickmargin = (thickMargin == -1 ? ICONMARGIN : thickMargin);
-
-    int iconsize = option.rect.height() - 2*thickmargin;
-    int total = iconsize + 2*lenmargin;
-
-    Qt::AlignmentFlag curalign = alignment;
-
-    if (qApp->layoutDirection() == Qt::LeftToRight || alignment == Qt::AlignHCenter) {
-        curalign = alignment;
-    } else {
-        curalign = alignment == Qt::AlignLeft ? Qt::AlignRight : Qt::AlignLeft;
-    }
-
-    QRect target;
-
-    if (curalign == Qt::AlignLeft) {
-        target = QRect(option.rect.x() + lenmargin, option.rect.y() + thickmargin, iconsize, iconsize);
-    } else if (curalign == Qt::AlignRight) {
-        target = QRect(option.rect.x() + option.rect.width() - total + lenmargin, option.rect.y() + thickmargin, iconsize, iconsize);
-    } else {
-        //! centered
-        target = QRect(option.rect.x() + ((option.rect.width() - total)/2) + lenmargin, option.rect.y() + thickmargin, iconsize, iconsize);
-    }
+    const QRect target = iconTargetRect(option, alignment, lengthMargin, thickMargin);
 
     painter->save();
     painter->setRenderHint(QPainter::Antialiasing, false);
@@ -355,19 +361,10 @@ void drawColorSchemeIcon(QPainter *painter, const QStyleOption &option, const QC
 
 QRect remainedFromIcon(const QStyleOption &option, Qt::AlignmentFlag alignment, int lengthMargin, int thickMargin)
 {
-    int lenmargin = (lengthMargin == -1 ? ICONMARGIN + MARGIN : lengthMargin);
-    int thickmargin = (thickMargin == -1 ? ICONMARGIN : thickMargin);
-
-    int iconsize = option.rect.height() - 2*thickmargin;
-    int total = iconsize + 2*lenmargin;
-
-    Qt::AlignmentFlag curalign = alignment;
-
-    if (qApp->layoutDirection() == Qt::LeftToRight) {
-        curalign = alignment;
-    } else {
-        curalign = alignment == Qt::AlignLeft ? Qt::AlignRight : Qt::AlignLeft;
-    }
+    //! The reserved slot includes both length margins, so this is deliberately not
+    //! derived from the icon target rect - that one starts a margin further in.
+    const int total = iconMetrics(option, lengthMargin, thickMargin).total;
+    const Qt::AlignmentFlag curalign = visualAlignment(alignment);
 
     QRect optionRemainedRect = (curalign == Qt::AlignLeft) ? QRect(option.rect.x() + total, option.rect.y(), option.rect.width() - total, option.rect.height()) :
                                                              QRect(option.rect.x(), option.rect.y(), option.rect.width() - total, option.rect.height());
@@ -377,33 +374,13 @@ QRect remainedFromIcon(const QStyleOption &option, Qt::AlignmentFlag alignment, 
 
 void drawIcon(QPainter *painter, const QStyleOption &option, const QString &icon, Qt::AlignmentFlag alignment, int lengthMargin, int thickMargin)
 {
-    int lenmargin = (lengthMargin == -1 ? ICONMARGIN + MARGIN : lengthMargin);
-    int thickmargin = (thickMargin == -1 ? ICONMARGIN : thickMargin);
-
-    int iconsize = option.rect.height() - 2*thickmargin;
-    int total = iconsize + 2*lenmargin;
-
     bool active = Latte::isActive(option);
     bool selected = Latte::isSelected(option);
     bool focused = Latte::isFocused(option);
 
     QIcon::Mode mode = ((active && (selected || focused)) ? QIcon::Selected : QIcon::Normal);
 
-    Qt::AlignmentFlag curalign = alignment;
-
-    if (qApp->layoutDirection() == Qt::LeftToRight) {
-        curalign = alignment;
-    } else {
-        curalign = alignment == Qt::AlignLeft ? Qt::AlignRight : Qt::AlignLeft;
-    }
-
-    QRect target;
-
-    if (curalign == Qt::AlignLeft) {
-        target = QRect(option.rect.x() + lenmargin, option.rect.y() + thickmargin, iconsize, iconsize);
-    } else {
-        target = QRect(option.rect.x() + option.rect.width() - total + lenmargin, option.rect.y() + thickmargin, iconsize, iconsize);
-    }
+    const QRect target = iconTargetRect(option, alignment, lengthMargin, thickMargin);
 
     painter->drawPixmap(target, QIcon::fromTheme(icon).pixmap(target.height(), target.height(), mode));
 }

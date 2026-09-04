@@ -52,6 +52,47 @@ static bool hasGreenishPixel(const QImage &img)
     return false;
 }
 
+//! Paints one icon helper onto its own transparent canvas the size of the option
+//! rect, so two helpers can be compared pixel for pixel.
+// Bounding box of everything non-transparent. drawIcon and drawLayoutIcon now share
+// iconTargetRect, so comparing one against the other can no longer fail -- the placement
+// has to be pinned against absolute geometry instead.
+static QRect paintedBounds(const QImage &img)
+{
+    int left = img.width(), right = -1, top = img.height(), bottom = -1;
+    for (int y = 0; y < img.height(); ++y) {
+        for (int x = 0; x < img.width(); ++x) {
+            if (qAlpha(img.pixel(x, y)) != 0) {
+                left = qMin(left, x);
+                right = qMax(right, x);
+                top = qMin(top, y);
+                bottom = qMax(bottom, y);
+            }
+        }
+    }
+    return right < 0 ? QRect() : QRect(left, top, right - left + 1, bottom - top + 1);
+}
+
+static QImage paintedByIcon(const QStyleOption &option, const QString &icon, Qt::AlignmentFlag alignment)
+{
+    QImage img(option.rect.width(), option.rect.height(), QImage::Format_ARGB32_Premultiplied);
+    img.fill(Qt::transparent);
+    QPainter p(&img);
+    drawIcon(&p, option, icon, alignment);
+    p.end();
+    return img;
+}
+
+static QImage paintedByLayoutIcon(const QStyleOption &option, const QString &icon, Qt::AlignmentFlag alignment)
+{
+    QImage img(option.rect.width(), option.rect.height(), QImage::Format_ARGB32_Premultiplied);
+    img.fill(Qt::transparent);
+    QPainter p(&img);
+    drawLayoutIcon(&p, option, false, icon, alignment);
+    p.end();
+    return img;
+}
+
 // Real-object tests for the Settings::Generic free helpers in generictools.cpp.
 // Most take a QStyleOption + QPainter; we feed real options and assert the
 // observable outputs (state-flag predicates, alignment mapping, color-group
@@ -125,6 +166,14 @@ private Q_SLOTS:
     void drawChangesIndicatorRtlPaintsLeftEdge();
     void drawScreenMultipleVerticalPaints();
     void drawHelpersAlignmentAndRtlBranches();
+
+    // the icon slot itself: every icon painter must place its target identically
+    void drawIconMatchesLayoutIconWhenAligned_data();
+    void drawIconMatchesLayoutIconWhenAligned();
+    void drawIconCenteredMatchesLayoutIcon();
+    void drawIconCenteredMatchesLayoutIconRtl();
+    void remainedFromIconExactSlot();
+    void remainedFromIconCenteredIgnoresDirection();
 
 private:
     QTemporaryDir *m_iconDir = nullptr;
@@ -838,6 +887,84 @@ void GenericToolsTest::drawHelpersAlignmentAndRtlBranches()
         p.end();
         QVERIFY(paintedAnything(img));
     }
+}
+
+void GenericToolsTest::drawIconMatchesLayoutIconWhenAligned_data()
+{
+    QTest::addColumn<Qt::AlignmentFlag>("alignment");
+    QTest::addColumn<Qt::LayoutDirection>("direction");
+    QTest::addColumn<QRect>("painted");
+
+    // Geometry measured from the run, not derived: a 200x30 row with the default margins
+    // puts a 28px icon at x=3 on the leading edge and x=169 on the trailing one, and RTL
+    // swaps which alignment lands where.
+    QTest::newRow("left-ltr") << Qt::AlignLeft << Qt::LeftToRight << QRect(3, 1, 28, 28);
+    QTest::newRow("right-ltr") << Qt::AlignRight << Qt::LeftToRight << QRect(169, 1, 28, 28);
+    QTest::newRow("left-rtl") << Qt::AlignLeft << Qt::RightToLeft << QRect(169, 1, 28, 28);
+    QTest::newRow("right-rtl") << Qt::AlignRight << Qt::RightToLeft << QRect(3, 1, 28, 28);
+}
+
+void GenericToolsTest::drawIconMatchesLayoutIconWhenAligned()
+{
+    // Both now route through iconTargetRect, so asserting they agree with each other is a
+    // tautology no implementation can fail. Pin the absolute placement instead.
+    QFETCH(Qt::AlignmentFlag, alignment);
+    QFETCH(Qt::LayoutDirection, direction);
+    QFETCH(QRect, painted);
+
+    qApp->setLayoutDirection(direction);
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
+
+    QCOMPARE(paintedBounds(paintedByIcon(opt, m_themeIcon, alignment)), painted);
+    QCOMPARE(paintedBounds(paintedByLayoutIcon(opt, m_themeIcon, alignment)), painted);
+}
+
+void GenericToolsTest::drawIconCenteredMatchesLayoutIcon()
+{
+    // Centered is where the two used to diverge: drawIcon had no centered branch
+    // and dropped the icon at the right edge instead.
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
+
+    QCOMPARE(paintedBounds(paintedByIcon(opt, m_themeIcon, Qt::AlignHCenter)), QRect(86, 1, 28, 28));
+    QCOMPARE(paintedBounds(paintedByLayoutIcon(opt, m_themeIcon, Qt::AlignHCenter)), QRect(86, 1, 28, 28));
+}
+
+void GenericToolsTest::drawIconCenteredMatchesLayoutIconRtl()
+{
+    // In RTL the mirror must leave a centered icon centered; drawIcon used to map
+    // AlignHCenter onto AlignLeft and park it at the left edge.
+    qApp->setLayoutDirection(Qt::RightToLeft);
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
+
+    QCOMPARE(paintedBounds(paintedByIcon(opt, m_themeIcon, Qt::AlignHCenter)), QRect(86, 1, 28, 28));
+    QCOMPARE(paintedBounds(paintedByLayoutIcon(opt, m_themeIcon, Qt::AlignHCenter)), QRect(86, 1, 28, 28));
+}
+
+void GenericToolsTest::remainedFromIconExactSlot()
+{
+    // Pin the whole slot arithmetic: lenmargin 3 + iconsize 28 + lenmargin 3 = 34
+    // reserved. Left-aligned pushes the remaining rect past the slot, right-aligned
+    // only shrinks it - deriving one from the icon target rect would lose a margin.
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
+    QCOMPARE(remainedFromIcon(opt, Qt::AlignLeft), QRect(34, 0, 166, 30));
+    QCOMPARE(remainedFromIcon(opt, Qt::AlignRight), QRect(0, 0, 166, 30));
+
+    qApp->setLayoutDirection(Qt::RightToLeft);
+    QCOMPARE(remainedFromIcon(opt, Qt::AlignLeft), QRect(0, 0, 166, 30));
+    QCOMPARE(remainedFromIcon(opt, Qt::AlignRight), QRect(34, 0, 166, 30));
+}
+
+void GenericToolsTest::remainedFromIconCenteredIgnoresDirection()
+{
+    // A centered slot has no side to mirror, so the layout direction must not move
+    // the remaining rect. No production caller reaches this path today - both
+    // wrappers hand back the full rect for AlignHCenter - but the default argument
+    // makes it reachable.
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
+    const QRect ltr = remainedFromIcon(opt, Qt::AlignHCenter);
+
+    qApp->setLayoutDirection(Qt::RightToLeft);
+    QCOMPARE(remainedFromIcon(opt, Qt::AlignHCenter), ltr);
 }
 
 QTEST_MAIN(GenericToolsTest)
