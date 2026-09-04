@@ -17,6 +17,9 @@
 #include "../templates/templatesmanager.h"
 #include "../tools/commontools.h"
 
+// C++
+#include <algorithm>
+
 // Qt
 #include <QFile>
 #include <QLatin1String>
@@ -187,17 +190,11 @@ QStringList Importer::standardPaths(bool localfirst)
 {
     QStringList paths = QStandardPaths::standardLocations(QStandardPaths::GenericDataLocation);
 
-    if (localfirst) {
-        return paths;
-    } else {
-        QStringList reversed;
-
-        for (int i=paths.count()-1; i>=0; i--) {
-            reversed << paths[i];
-        }
-
-        return reversed;
+    if (!localfirst) {
+        std::reverse(paths.begin(), paths.end());
     }
+
+    return paths;
 }
 
 QStringList Importer::standardPathsFor(QString subPath, bool localfirst)

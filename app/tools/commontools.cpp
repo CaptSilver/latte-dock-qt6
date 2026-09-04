@@ -86,25 +86,16 @@ QRect stringToRect(const QString &str)
     return QRect(pos[0].toInt(), pos[1].toInt(), size[0].toInt(), size[1].toInt());
 }
 
-QString standardPath(QString subPath, bool localfirst)
+QString standardPath(QString subPath)
 {
     QStringList paths = QStandardPaths::standardLocations(QStandardPaths::GenericDataLocation);
 
     QString separator = subPath.startsWith(QLatin1Char('/')) ? QString() : QStringLiteral("/");
 
-    if (localfirst) {
-        for (const auto &pt : paths) {
-            QString ptF = pt + separator +subPath;
-            if (QFileInfo(ptF).exists()) {
-                return ptF;
-            }
-        }
-    } else {
-        for (int i=paths.count()-1; i>=0; i--) {
-            QString ptF = paths[i] + separator +subPath;
-            if (QFileInfo(ptF).exists()) {
-                return ptF;
-            }
+    for (const auto &pt : paths) {
+        QString ptF = pt + separator + subPath;
+        if (QFileInfo(ptF).exists()) {
+            return ptF;
         }
     }
 

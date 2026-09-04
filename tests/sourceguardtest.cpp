@@ -226,6 +226,7 @@ private Q_SLOTS:
     void corona_dropsTheOrphanAboutDialog();
     void dataTables_dropDeadCopyAndRedundantEarlyOuts();
     void alignmentStateSelfReadsResolve();
+    void commonTools_standardPath_dropsTheDeadReverseSearch();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -1290,6 +1291,29 @@ void SourceGuardTest::alignmentStateSelfReadsResolve()
     QVERIFY2(unresolved.isEmpty(),
              qPrintable(QStringLiteral("alignment-state reads that resolve to undefined:\n  %1")
                             .arg(unresolved.join(QStringLiteral("\n  ")))));
+}
+
+void SourceGuardTest::commonTools_standardPath_dropsTheDeadReverseSearch()
+{
+    // Latte::standardPath took a localfirst bool that selected between a forward and a
+    // reverse walk of GenericDataLocation. Every caller in the tree took the default, so
+    // the reverse walk could never run -- and it is the kind of dead branch that reads
+    // like a supported mode, so the next caller reaches for a flag that was never used.
+    // Nothing behavioural can catch its return, hence the source-level guard.
+    const QString src = readFile(QStringLiteral("app/tools/commontools.cpp"));
+    QVERIFY2(!src.isEmpty(), "commontools.cpp is unreadable");
+
+    const QString s = stripped(functionBody(src, QStringLiteral("QString standardPath(QString subPath)")));
+    QVERIFY2(!s.isEmpty(), "standardPath(QString subPath) not found -- it must take the subPath alone");
+    QVERIFY2(!s.contains(QStringLiteral("localfirst")),
+             "standardPath must not keep a branch on localfirst, no caller ever passes it");
+    QVERIFY2(!s.contains(QStringLiteral("}else{")),
+             "standardPath must not keep the unreachable reverse-order search");
+
+    const QString header = stripped(readFile(QStringLiteral("app/tools/commontools.h")));
+    QVERIFY2(!header.isEmpty(), "commontools.h is unreadable");
+    QVERIFY2(header.contains(QStringLiteral("QStringstandardPath(QStringsubPath);")),
+             "commontools.h must declare standardPath without the localFirst parameter");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

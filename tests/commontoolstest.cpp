@@ -7,16 +7,39 @@
 
 #include <QColor>
 #include <QDir>
+#include <QFile>
+#include <QFileInfo>
 #include <QRect>
 #include <QStandardPaths>
 #include <QString>
+#include <QTemporaryDir>
+#include <QUuid>
 #include <QtTest>
 
 class CommonToolsTest : public QObject
 {
     Q_OBJECT
 
+private:
+    QTemporaryDir m_dataHome;
+    QTemporaryDir m_dataDirs;
+
+    static bool writeMarker(const QString &path)
+    {
+        if (!QDir().mkpath(QFileInfo(path).absolutePath())) {
+            return false;
+        }
+        QFile f(path);
+        if (!f.open(QIODevice::WriteOnly)) {
+            return false;
+        }
+        f.write("marker");
+        return true;
+    }
+
 private Q_SLOTS:
+    void initTestCase();
+
     void brightnessBlackIsZero();
     void brightnessWhiteIsFull();
     void brightnessWeightedChannels();
@@ -35,7 +58,27 @@ private Q_SLOTS:
     void rectRoundTrip();
 
     void configPathNonEmpty();
+
+    void standardPathPrefersLocalWhenPresentInBoth();
+    void standardPathFallsThroughToLowerPriorityDir();
+    void standardPathHandlesSlashPrefixedSubPath();
+    void standardPathReturnsEmptyWhenAbsent();
 };
+
+void CommonToolsTest::initTestCase()
+{
+    QVERIFY(m_dataHome.isValid());
+    QVERIFY(m_dataDirs.isValid());
+
+    //! standardPath() walks GenericDataLocation, so two distinct temp dirs give the search
+    //! a known priority order and keep the host's real data dirs out of the answers.
+    qputenv("XDG_DATA_HOME", m_dataHome.path().toLocal8Bit());
+    qputenv("XDG_DATA_DIRS", m_dataDirs.path().toLocal8Bit());
+
+    const QStringList locations = QStandardPaths::standardLocations(QStandardPaths::GenericDataLocation);
+    QCOMPARE(locations.value(0), m_dataHome.path());
+    QVERIFY(locations.contains(m_dataDirs.path()));
+}
 
 //! The models concatenate variable-width text after this prefix, so a lexicographic
 //! compare only matches numeric order while the width is fixed.
@@ -163,6 +206,43 @@ void CommonToolsTest::configPathNonEmpty()
     // unless the location list is empty).
     QString path = Latte::configPath();
     QVERIFY(!path.isEmpty());
+}
+
+void CommonToolsTest::standardPathPrefersLocalWhenPresentInBoth()
+{
+    const QString sub = QStringLiteral("latte/shared/marker.txt");
+    QVERIFY(writeMarker(m_dataHome.path() + QLatin1Char('/') + sub));
+    QVERIFY(writeMarker(m_dataDirs.path() + QLatin1Char('/') + sub));
+
+    // A user's own copy wins over the system one, so the search has to run in the
+    // order GenericDataLocation hands back, XDG_DATA_HOME first.
+    QCOMPARE(Latte::standardPath(sub), m_dataHome.path() + QLatin1Char('/') + sub);
+}
+
+void CommonToolsTest::standardPathFallsThroughToLowerPriorityDir()
+{
+    const QString sub = QStringLiteral("latte/systemonly/marker.txt");
+    QVERIFY(writeMarker(m_dataDirs.path() + QLatin1Char('/') + sub));
+
+    QCOMPARE(Latte::standardPath(sub), m_dataDirs.path() + QLatin1Char('/') + sub);
+}
+
+void CommonToolsTest::standardPathHandlesSlashPrefixedSubPath()
+{
+    const QString sub = QStringLiteral("/latte/slashed/marker.txt");
+    QVERIFY(writeMarker(m_dataHome.path() + sub));
+
+    // A subPath that already carries its leading slash must not get a second one.
+    QCOMPARE(Latte::standardPath(sub), m_dataHome.path() + sub);
+}
+
+void CommonToolsTest::standardPathReturnsEmptyWhenAbsent()
+{
+    // The /usr/share fallback ignores XDG entirely, so a miss can only be pinned with
+    // a subPath no host could be carrying.
+    const QString sub = QStringLiteral("latte-absent-") + QUuid::createUuid().toString(QUuid::WithoutBraces);
+
+    QVERIFY(Latte::standardPath(sub).isEmpty());
 }
 
 QTEST_GUILESS_MAIN(CommonToolsTest)

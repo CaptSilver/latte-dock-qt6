@@ -43,6 +43,7 @@ class ImporterLogicTest : public QObject
 private:
     QTemporaryDir m_configHome; // XDG_CONFIG_HOME -> Latte::configPath()
     QTemporaryDir m_dataDir;    // XDG_DATA_DIRS    -> system data root
+    QTemporaryDir m_userData;   // XDG_DATA_HOME    -> user data root
 
     QString configPath() const { return m_configHome.path(); }
     QString latteDir() const { return m_configHome.path() + QStringLiteral("/latte"); }
@@ -164,12 +165,14 @@ void ImporterLogicTest::initTestCase()
 {
     QVERIFY(m_configHome.isValid());
     QVERIFY(m_dataDir.isValid());
+    QVERIFY(m_userData.isValid());
 
     // configPath() reads ConfigLocation (XDG_CONFIG_HOME); layout dir lives under it.
     qputenv("XDG_CONFIG_HOME", m_configHome.path().toLocal8Bit());
-    // systemShellDataPath()/standardPaths() read GenericDataLocation. Pin DATA_HOME
-    // to the same dir as DATA_DIRS' tail so the host's real data dirs don't leak in.
-    qputenv("XDG_DATA_HOME", m_dataDir.path().toLocal8Bit());
+    // systemShellDataPath()/standardPaths() read GenericDataLocation. The two roots must be
+    // DIFFERENT dirs: point both at one path and standardPaths() answers with two identical
+    // strings, which makes it its own reverse and any ordering assertion vacuous.
+    qputenv("XDG_DATA_HOME", m_userData.path().toLocal8Bit());
     qputenv("XDG_DATA_DIRS", m_dataDir.path().toLocal8Bit());
 
     QDir(configPath()).mkpath(QStringLiteral("latte"));
@@ -310,7 +313,13 @@ void ImporterLogicTest::standardPathsOrdering()
     const QStringList localFirst = Importer::standardPaths(true);
     const QStringList localLast = Importer::standardPaths(false);
 
-    QVERIFY(!localFirst.isEmpty());
+    QVERIFY(localFirst.count() > 1);
+    // Orientation, not just symmetry: a reversal assertion alone passes against a function
+    // that never reverses anything. localfirst decides whether enableAutostart() finds the
+    // system .desktop or a user-local override, so pin which end the user's dir lands on.
+    QCOMPARE(localFirst.first(), m_userData.path());
+    QCOMPARE(localLast.last(), m_userData.path());
+
     // localfirst=false is the exact reverse of localfirst=true.
     QStringList reversed = localFirst;
     std::reverse(reversed.begin(), reversed.end());

@@ -28,9 +28,9 @@ QString sortKeyPrefix(int priority);
 QString rectToString(const QRect &rect);
 QRect stringToRect(const QString &str);
 
-//! returns the standard path found that contains the subPath
-//! local paths have higher priority by default
-QString standardPath(QString subPath, bool localFirst = true);
+//! returns the standard path found that contains the subPath,
+//! searching the user's own data dirs ahead of the system ones
+QString standardPath(QString subPath);
 
 QString configPath();
 }
