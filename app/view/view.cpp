@@ -32,6 +32,7 @@
 #include "../settings/exporttemplatedialog/exporttemplatedialog.h"
 #include "../shortcuts/globalshortcuts.h"
 #include "../shortcuts/shortcutstracker.h"
+#include "../wm/windowgeometrypredicates.h"
 
 // Qt
 #include <QAction>
@@ -737,12 +738,7 @@ void View::updateAbsoluteGeometry(bool bypassChecks)
     }
 
     if (KWindowSystem::isPlatformX11() && devicePixelRatio() != 1.0) {
-        //!Fix for X11 Global Scale, I dont think this could be pixel perfect accurate
-        auto factor = devicePixelRatio();
-        absGeometry = QRect(qRound(absGeometry.x() * factor),
-                            qRound(absGeometry.y() * factor),
-                            qRound(absGeometry.width() * factor),
-                            qRound(absGeometry.height() * factor));
+        absGeometry = WindowSystem::WindowGeometryPredicates::scaledForGlobalScale(absGeometry, devicePixelRatio());
     }
 
     if (m_absoluteGeometry == absGeometry && !bypassChecks) {

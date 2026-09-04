@@ -12,6 +12,7 @@
 #include "view.h"
 #include "../lattecorona.h"
 #include "../wm/abstractwindowinterface.h"
+#include "../wm/windowgeometrypredicates.h"
 
 // Qt
 #include <QRegion>
@@ -301,12 +302,7 @@ void Effects::setInputMask(QRect area)
 
     if (KWindowSystem::isPlatformX11()) {
         if (m_view->devicePixelRatio() != 1.0) {
-            //!Fix for X11 Global Scale
-            auto ratio = m_view->devicePixelRatio();
-            area = QRect(qRound(area.x() * ratio),
-                         qRound(area.y() * ratio),
-                         qRound(area.width()*ratio),
-                         qRound(area.height() * ratio));
+            area = WindowSystem::WindowGeometryPredicates::scaledForGlobalScale(area, m_view->devicePixelRatio());
         }
 
         m_corona->wm()->setInputMask(m_view, area);

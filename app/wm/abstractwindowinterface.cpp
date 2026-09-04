@@ -147,12 +147,7 @@ QList<QRect> AbstractWindowInterface::currentScreenGeometries() const
         auto screenGeometry = scr->geometry();
 
         if (KWindowSystem::isPlatformX11() && scr->devicePixelRatio() != 1.0) {
-            //!Fix for X11 Global Scale, I dont think this could be pixel perfect accurate
-            auto factor = scr->devicePixelRatio();
-            screenGeometry = QRect(qRound(screenGeometry.x() * factor),
-                                   qRound(screenGeometry.y() * factor),
-                                   qRound(screenGeometry.width() * factor),
-                                   qRound(screenGeometry.height() * factor));
+            screenGeometry = WindowGeometryPredicates::scaledForGlobalScale(screenGeometry, scr->devicePixelRatio());
         }
 
         geometries << screenGeometry;

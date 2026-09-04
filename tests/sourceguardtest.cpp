@@ -289,6 +289,7 @@ private Q_SLOTS:
     void viewsController_pasteSelectedViews_delegatesToHelper();
     void storage_newUniqueIdsFile_delegatesToRemapper();
     void windowstracker_predicatesDelegate();
+    void x11GlobalScaleScalingIsSharedNotCopied();
     void abstractWindowInterface_classifiersDelegate();
     void windowsTracker_updateExtraViewHints_delegatesToBucketing();
     void windowsTracker_perEventIterationAvoidsKeysCopy();
@@ -797,6 +798,48 @@ void SourceGuardTest::windowstracker_predicatesDelegate()
              "isMaximizedInViewScreen must delegate to WindowTrackingPredicates");
     QVERIFY2(isMaxScreenBody.contains(QStringLiteral("devicePixelRatio")),
              "isMaximizedInViewScreen must keep X11 DPR scaling");
+}
+
+// The X11 global-scale fixup used to be the same eight-line QRect(qRound(...)) block copy-pasted
+// into six functions across three directories. One shared rule keeps them rounding alike; the
+// QRect(qRound absence is what catches the next copy being pasted back in.
+void SourceGuardTest::x11GlobalScaleScalingIsSharedNotCopied()
+{
+    struct Site
+    {
+        QString file;
+        QString signature;
+    };
+
+    const QList<Site> sites = {
+        {QStringLiteral("app/wm/tracker/windowstracker.cpp"), QStringLiteral("Windows::isActiveInViewScreen")},
+        {QStringLiteral("app/wm/tracker/windowstracker.cpp"), QStringLiteral("Windows::isMaximizedInViewScreen")},
+        {QStringLiteral("app/wm/tracker/windowstracker.cpp"), QStringLiteral("bool Windows::isTouchingViewEdge(Latte::View *view, const QRect &windowgeometry)")},
+        {QStringLiteral("app/wm/abstractwindowinterface.cpp"), QStringLiteral("QList<QRect> AbstractWindowInterface::currentScreenGeometries() const")},
+        {QStringLiteral("app/view/view.cpp"), QStringLiteral("void View::updateAbsoluteGeometry(bool bypassChecks)")},
+        {QStringLiteral("app/view/effects.cpp"), QStringLiteral("void Effects::setInputMask(QRect area)")},
+    };
+
+    for (const auto &site : sites) {
+        const QString body = functionBody(readFile(site.file), site.signature);
+        const QString where = QStringLiteral("%1 %2").arg(site.file, site.signature);
+        const QByteArray missing = where.toUtf8();
+        const QByteArray notShared = QStringLiteral("%1 must scale through WindowGeometryPredicates::scaledForGlobalScale()").arg(where).toUtf8();
+        const QByteArray stillInline = QStringLiteral("%1 must not rebuild the scaled QRect inline").arg(where).toUtf8();
+
+        QVERIFY2(!body.isEmpty(), missing.constData());
+        QVERIFY2(body.contains(QStringLiteral("scaledForGlobalScale(")), notShared.constData());
+        QVERIFY2(!body.contains(QStringLiteral("QRect(qRound(")), stillInline.constData());
+    }
+
+    // The scalar sibling in publishFrameExtents() is deliberately left out: it writes the scaled
+    // value back into the same field it uses as its early-out cache key, so folding it in as-is
+    // would dress that bug up as reviewed code.
+    const QString publish = functionBody(readFile(QStringLiteral("app/view/visibilitymanager.cpp")),
+                                         QStringLiteral("void VisibilityManager::publishFrameExtents(bool forceUpdate)"));
+    QVERIFY2(!publish.isEmpty(), "publishFrameExtents() not found");
+    QVERIFY2(!publish.contains(QStringLiteral("scaledForGlobalScale(")),
+             "publishFrameExtents must not adopt the rect helper before its cache-key bug is fixed");
 }
 
 void SourceGuardTest::windowsTracker_updateExtraViewHints_delegatesToBucketing()

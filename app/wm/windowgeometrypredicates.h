@@ -15,11 +15,24 @@ namespace WindowSystem {
 //! Pure geometry classification lifted out of AbstractWindowInterface so the
 //! fullscreen/panel/sidepanel tests are unit-testable without qGuiApp or a live
 //! window list. The caller passes the (already devicePixelRatio-adjusted) screen
-//! geometries; these functions only reason about rectangles.
+//! geometries, scaled through scaledForGlobalScale() below; these functions only
+//! reason about rectangles.
 namespace WindowGeometryPredicates {
 
 constexpr int MAXPLASMAPANELTHICKNESS = 96;
 constexpr int MAXSIDEPANELTHICKNESS = 512;
+
+//! The X11 "Global Scale" fixup every caller applies before its geometry means anything to
+//! the predicates below. It is approximate, not pixel perfect. Each component is rounded on
+//! its own rather than scaling the rect as a whole, because rounding right()/bottom() instead
+//! of width()/height() walks the far edge by a pixel on odd geometry at a fractional scale.
+inline QRect scaledForGlobalScale(const QRect &geometry, qreal factor)
+{
+    return QRect(qRound(geometry.x() * factor),
+                 qRound(geometry.y() * factor),
+                 qRound(geometry.width() * factor),
+                 qRound(geometry.height() * factor));
+}
 
 //! A window whose geometry exactly fills one of the screens.
 inline bool isFullScreenWindow(const QRect &wGeometry, const QList<QRect> &screenGeometries)

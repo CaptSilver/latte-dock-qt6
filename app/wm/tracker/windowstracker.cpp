@@ -12,6 +12,7 @@
 #include "trackedlayoutinfo.h"
 #include "trackedviewinfo.h"
 #include "../abstractwindowinterface.h"
+#include "../windowgeometrypredicates.h"
 #include "../windowtrackingpredicates.h"
 #include "../schemecolors.h"
 #include "../../apptypes.h"
@@ -700,12 +701,7 @@ bool Windows::isActiveInViewScreen(Latte::View *view, const WindowInfoWrap &winf
     auto screenGeometry = m_views[view]->screenGeometry();
 
     if (KWindowSystem::isPlatformX11() && view->devicePixelRatio() != 1.0) {
-        //!Fix for X11 Global Scale, I dont think this could be pixel perfect accurate
-        auto factor = view->devicePixelRatio();
-        screenGeometry = QRect(qRound(screenGeometry.x() * factor),
-                               qRound(screenGeometry.y() * factor),
-                               qRound(screenGeometry.width() * factor),
-                               qRound(screenGeometry.height() * factor));
+        screenGeometry = WindowGeometryPredicates::scaledForGlobalScale(screenGeometry, view->devicePixelRatio());
     }
 
     return WindowTrackingPredicates::isActiveInViewScreen(winfo, screenGeometry);
@@ -716,12 +712,7 @@ bool Windows::isMaximizedInViewScreen(Latte::View *view, const WindowInfoWrap &w
     auto screenGeometry = m_views[view]->screenGeometry();
 
     if (KWindowSystem::isPlatformX11() && view->devicePixelRatio() != 1.0) {
-        //!Fix for X11 Global Scale, I dont think this could be pixel perfect accurate
-        auto factor = view->devicePixelRatio();
-        screenGeometry = QRect(qRound(screenGeometry.x() * factor),
-                               qRound(screenGeometry.y() * factor),
-                               qRound(screenGeometry.width() * factor),
-                               qRound(screenGeometry.height() * factor));
+        screenGeometry = WindowGeometryPredicates::scaledForGlobalScale(screenGeometry, view->devicePixelRatio());
     }
 
     //! updated implementation to identify the screen that the maximized window is present
@@ -746,12 +737,7 @@ bool Windows::isTouchingViewEdge(Latte::View *view, const QRect &windowgeometry)
     QRect screenGeometry = view->screenGeometry();
 
     if (KWindowSystem::isPlatformX11() && view->devicePixelRatio() != 1.0) {
-        //!Fix for X11 Global Scale, I dont think this could be pixel perfect accurate
-        auto factor = view->devicePixelRatio();
-        screenGeometry = QRect(qRound(screenGeometry.x() * factor),
-                               qRound(screenGeometry.y() * factor),
-                               qRound(screenGeometry.width() * factor),
-                               qRound(screenGeometry.height() * factor));
+        screenGeometry = WindowGeometryPredicates::scaledForGlobalScale(screenGeometry, view->devicePixelRatio());
     }
 
     bool inCurrentScreen{screenGeometry.contains(windowgeometry.topLeft()) || screenGeometry.contains(windowgeometry.bottomRight())};

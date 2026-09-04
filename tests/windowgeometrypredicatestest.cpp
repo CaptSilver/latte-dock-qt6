@@ -33,6 +33,9 @@ private Q_SLOTS:
 
     void isSidepanel_data();
     void isSidepanel();
+
+    void scaledForGlobalScale_data();
+    void scaledForGlobalScale();
 };
 
 void WindowGeometryPredicatesTest::isFullScreen_data()
@@ -106,6 +109,35 @@ void WindowGeometryPredicatesTest::isSidepanel()
     QFETCH(QRect, window);
     QFETCH(bool, expected);
     QCOMPARE(Latte::WindowSystem::WindowGeometryPredicates::isSidepanel(window, single()), expected);
+}
+
+void WindowGeometryPredicatesTest::scaledForGlobalScale_data()
+{
+    QTest::addColumn<QRect>("geometry");
+    QTest::addColumn<qreal>("factor");
+    QTest::addColumn<QRect>("expected");
+
+    QTest::newRow("identity") << QRect(10, 20, 300, 40) << 1.0 << QRect(10, 20, 300, 40);
+    QTest::newRow("double") << QRect(10, 20, 300, 40) << 2.0 << QRect(20, 40, 600, 80);
+    // Each of x/y/width/height is rounded on its own, so the scaled rect's right edge
+    // (5 + 11 - 1 = 15) is not the scaled original right edge (qRound(9 * 1.5) = 14).
+    // Going through QRectF, QRect::scaled() or rounding right()/bottom() lands on 14
+    // and shifts X11 geometry by a pixel.
+    QTest::newRow("odd rounding") << QRect(3, 5, 7, 9) << 1.5 << QRect(5, 8, 11, 14);
+    // A screen left of the primary one, as currentScreenGeometries() reports it.
+    QTest::newRow("negative origin") << QRect(-1920, 0, 1920, 1080) << 2.0 << QRect(-3840, 0, 3840, 2160);
+    // qRound rounds away from zero, so a negative half goes down, not toward zero.
+    QTest::newRow("negative fractional") << QRect(-1281, -3, 1280, 5) << 1.5 << QRect(-1922, -5, 1920, 8);
+    // No isEmpty() early-out: a null rect scales like any other, as the call sites expect.
+    QTest::newRow("null rect") << QRect() << 2.0 << QRect(0, 0, 0, 0);
+}
+
+void WindowGeometryPredicatesTest::scaledForGlobalScale()
+{
+    QFETCH(QRect, geometry);
+    QFETCH(qreal, factor);
+    QFETCH(QRect, expected);
+    QCOMPARE(Latte::WindowSystem::WindowGeometryPredicates::scaledForGlobalScale(geometry, factor), expected);
 }
 
 QTEST_APPLESS_MAIN(WindowGeometryPredicatesTest)
