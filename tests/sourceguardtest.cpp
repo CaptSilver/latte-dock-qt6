@@ -224,6 +224,7 @@ private Q_SLOTS:
     void containmentInterface_trackAppletExpansion_guardsBeforeConnecting();
     void wm_skipTaskBarNoOpIsGone();
     void corona_dropsTheOrphanAboutDialog();
+    void dataTables_dropDeadCopyAndRedundantEarlyOuts();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -1220,6 +1221,43 @@ void SourceGuardTest::corona_dropsTheOrphanAboutDialog()
              "the settings window must still build a KHelpMenu");
     QVERIFY2(!settings.contains(QStringLiteral("KHelpMenu::menuAboutApp")),
              "nothing may hide the KHelpMenu About entry, it is the only About surface left");
+}
+
+void SourceGuardTest::dataTables_dropDeadCopyAndRedundantEarlyOuts()
+{
+    const QString views = readFile(QStringLiteral("app/data/viewstable.cpp"));
+    QVERIFY2(!views.isEmpty(), "viewstable.cpp is unreadable");
+
+    const QString equality = stripped(functionBody(views, QStringLiteral("bool ViewsTable::operator==(const ViewsTable &rhs) const")));
+    QVERIFY2(!equality.isEmpty(), "ViewsTable::operator== not found");
+    QVERIFY2(!equality.contains(QStringLiteral("tempView")),
+             "ViewsTable::operator== must not build a table copy it never reads");
+    //! a C-style cast to a non-reference class type slices a whole temporary into existence on
+    //! each side; the base operator takes rhs by reference, so name it instead
+    QVERIFY2(!equality.contains(QStringLiteral("(GenericTable<View>)")),
+             "ViewsTable::operator== must not slice both sides through C-style casts");
+    QVERIFY2(equality.contains(QStringLiteral("GenericTable<View>::operator==(rhs)")),
+             "ViewsTable::operator== must qualify the base comparison it hides");
+    //! isInitialized is the whole of Views::hasChangedData(), and layoutscontroller is its only
+    //! writer -- trimming this term leaves a dialog that has changes reporting none, silently
+    QVERIFY2(equality.contains(QStringLiteral("isInitialized==rhs.isInitialized")),
+             "ViewsTable::operator== must keep comparing isInitialized");
+
+    //! when the two sides compare equal every id is in rhs, so the loop below the early-out
+    //! appends nothing and returns the same empty table the early-out returned
+    const QString viewsSubtracted = stripped(functionBody(views, QStringLiteral("ViewsTable ViewsTable::subtracted(const ViewsTable &rhs) const")));
+    QVERIFY2(!viewsSubtracted.isEmpty(), "ViewsTable::subtracted not found");
+    QVERIFY2(!viewsSubtracted.contains(QStringLiteral("(*this)==rhs")),
+             "ViewsTable::subtracted must not keep an early-out that cannot change its result");
+
+    const QString layouts = readFile(QStringLiteral("app/data/layoutstable.cpp"));
+    QVERIFY2(!layouts.isEmpty(), "layoutstable.cpp is unreadable");
+    const QString layoutsSubtracted = stripped(functionBody(layouts, QStringLiteral("LayoutsTable LayoutsTable::subtracted(const LayoutsTable &rhs) const")));
+    QVERIFY2(!layoutsSubtracted.isEmpty(), "LayoutsTable::subtracted not found");
+    QVERIFY2(!layoutsSubtracted.contains(QStringLiteral("(*this)==rhs")),
+             "LayoutsTable::subtracted must not keep an early-out that cannot change its result");
+    QVERIFY2(!stripped(layouts).contains(QStringLiteral("#include<QDebug>")),
+             "layoutstable.cpp must drop <QDebug>, nothing in it logs");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

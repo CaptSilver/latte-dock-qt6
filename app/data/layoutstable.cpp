@@ -5,8 +5,6 @@
 
 #include "layoutstable.h"
 
-#include <QDebug>
-
 namespace Latte {
 namespace Data {
 
@@ -19,10 +17,6 @@ LayoutsTable::LayoutsTable()
 LayoutsTable LayoutsTable::subtracted(const LayoutsTable &rhs) const
 {
     LayoutsTable subtract;
-
-    if ((*this) == rhs) {
-        return subtract;
-    }
 
     for(int i=0; i<m_list.count(); ++i) {
         if (!rhs.containsId(m_list[i].id)) {

@@ -54,6 +54,7 @@ private Q_SLOTS:
     void screen_serializeRoundTrip();
     void screen_isScreensGroup();
     void viewsTable_hasContainmentIdRecursion();
+    void viewsTable_operatorEqual();
     void viewsTable_subtractedAndOnlyOriginals();
     void viewsTable_appendTemporaryView();
     void layoutsTable_subtractedAndFreeActivities();
@@ -567,6 +568,50 @@ void DataTypesTest::viewsTable_hasContainmentIdRecursion()
     QVERIFY(!views.hasContainmentId(QStringLiteral("999")));
 }
 
+void DataTypesTest::viewsTable_operatorEqual()
+{
+    Data::ViewsTable lhs;
+    lhs << Data::View(QStringLiteral("a"), QStringLiteral("A"))
+        << Data::View(QStringLiteral("b"), QStringLiteral("B"));
+
+    Data::ViewsTable rhs = lhs;
+    QVERIFY(lhs == rhs);
+    QVERIFY(!(lhs != rhs));
+
+    //! isInitialized is not a row, but it is half of this comparison: Views::hasChangedData()
+    //! is nothing but operator!=, so a views table that has been populated must not compare
+    //! equal to one that never was.
+    rhs.isInitialized = true;
+    QVERIFY(lhs != rhs);
+    lhs.isInitialized = true;
+    QVERIFY(lhs == rhs);
+
+    // fewer rows, same flag
+    Data::ViewsTable shorter;
+    shorter.isInitialized = true;
+    shorter << Data::View(QStringLiteral("a"), QStringLiteral("A"));
+    QVERIFY(lhs != shorter);
+
+    // same ids and count, one row edited
+    Data::ViewsTable renamed = lhs;
+    renamed[QStringLiteral("b")].name = QStringLiteral("Renamed");
+    QVERIFY(lhs != renamed);
+
+    // same count, one id swapped out
+    Data::ViewsTable swapped;
+    swapped.isInitialized = true;
+    swapped << Data::View(QStringLiteral("a"), QStringLiteral("A"))
+            << Data::View(QStringLiteral("z"), QStringLiteral("B"));
+    QVERIFY(lhs != swapped);
+
+    // empty tables still answer through the flag
+    Data::ViewsTable emptyLhs;
+    Data::ViewsTable emptyRhs;
+    QVERIFY(emptyLhs == emptyRhs);
+    emptyRhs.isInitialized = true;
+    QVERIFY(emptyLhs != emptyRhs);
+}
+
 void DataTypesTest::viewsTable_subtractedAndOnlyOriginals()
 {
     Data::ViewsTable lhs;
@@ -585,6 +630,9 @@ void DataTypesTest::viewsTable_subtractedAndOnlyOriginals()
     // identical tables subtract to empty
     Data::ViewsTable same = lhs.subtracted(lhs);
     QVERIFY(same.isEmpty());
+
+    // a subset subtracts to empty as well; this is what the save path hands to removeView()
+    QVERIFY(rhs.subtracted(lhs).isEmpty());
 
     // onlyOriginals filters out cloned views
     Data::View original(QStringLiteral("o"), QStringLiteral("Original"));
@@ -626,6 +674,11 @@ void DataTypesTest::layoutsTable_subtractedAndFreeActivities()
     Data::LayoutsTable diff = lhs.subtracted(rhs);
     QCOMPARE(diff.rowCount(), 1);
     QVERIFY(diff.containsId(QStringLiteral("b")));
+
+    // identical tables subtract to empty
+    QVERIFY(lhs.subtracted(lhs).isEmpty());
+    // so does a subset, which is the same answer reached row by row
+    QVERIFY(rhs.subtracted(lhs).isEmpty());
 
     // setLayoutForFreeActivities writes the free-activities sentinel into the matched row
     lhs.setLayoutForFreeActivities(QStringLiteral("b"));

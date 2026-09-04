@@ -21,10 +21,8 @@ ViewsTable::ViewsTable()
 //! Operators
 bool ViewsTable::operator==(const ViewsTable &rhs) const
 {
-    GenericTable<View> tempView = (*this);
-
     return (isInitialized == rhs.isInitialized)
-            && (((GenericTable<View>)*this) == ((GenericTable<View>)rhs));
+            && GenericTable<View>::operator==(rhs);
 }
 
 bool ViewsTable::operator!=(const ViewsTable &rhs) const
@@ -50,10 +48,6 @@ bool ViewsTable::hasContainmentId(const QString &cid) const
 ViewsTable ViewsTable::subtracted(const ViewsTable &rhs) const
 {
     ViewsTable subtract;
-
-    if ((*this) == rhs) {
-        return subtract;
-    }
 
     for(int i=0; i<m_list.count(); ++i) {
         if (!rhs.containsId(m_list[i].id)) {
