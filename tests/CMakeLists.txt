@@ -905,6 +905,16 @@ set_tests_properties(qmlloadcompile PROPERTIES
     ENVIRONMENT "BUILD=${CMAKE_BINARY_DIR}"
     TIMEOUT 300)
 
+# The package-level QML suite: 546 cases that build real shell/containment/plasmoid
+# components out of a staged install. It reuses the shellpackage fixture rather than
+# installing a fourth copy of the tree, and runs against a scratch root so it never
+# touches the coverage harness's own stage.
+add_test(NAME qmlpkg COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/manual/qml_pkg_test.sh)
+set_tests_properties(qmlpkg PROPERTIES
+    ENVIRONMENT "BUILD=${CMAKE_BINARY_DIR};STAGE=${LATTE_SHELL_STAGE}"
+    FIXTURES_REQUIRED shellpackage
+    TIMEOUT 300)
+
 # Headless interaction tests (Qt Quick Test): instantiate self-contained Latte
 # controls offscreen and synthesize real clicks to assert behavior. New cases go
 # in tests/qml/tst_*.qml.

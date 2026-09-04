@@ -161,7 +161,8 @@ void ScriptGuardTest::manualRunners_doNotDefaultToTheStaleBuildTree()
     // ctest passes BUILD explicitly, so these defaults only ever bite someone running the
     // script by hand -- which is exactly when a two-month-old tree is hardest to notice.
     for (const QString &rel : {QStringLiteral("tests/manual/qml_load_compile.sh"),
-                               QStringLiteral("tests/manual/qml_interaction_test.sh")}) {
+                               QStringLiteral("tests/manual/qml_interaction_test.sh"),
+                               QStringLiteral("tests/manual/qml_pkg_test.sh")}) {
         const QString src = readScript(rel);
         QVERIFY2(!src.isEmpty(), qPrintable(rel + QStringLiteral(" unreadable")));
         QVERIFY2(!src.contains(QStringLiteral("${BUILD:-$REPO/build}")),

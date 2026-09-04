@@ -5,9 +5,9 @@
 # session" layer. Pairs with qml_load_compile.sh, which only compiles.
 #
 # Drop new tst_*.qml cases at the top of tests/qml/ and they run automatically.
-# The pkg/ subdir is deliberately excluded: those load Cov-instrumented staged
-# copies and are run by tests/coverage/qml_coverage.sh, not standalone here —
-# running them under a plain qmltestrunner fails on the missing Cov module.
+# The pkg/ subdir is excluded because those resolve their targets out of a staged
+# install tree rather than the source tree; qml_pkg_test.sh runs them, and the
+# coverage harness runs them again against an instrumented copy of that stage.
 #
 # Usage:
 #   tests/manual/qml_interaction_test.sh
