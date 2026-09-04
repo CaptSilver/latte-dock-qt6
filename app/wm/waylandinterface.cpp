@@ -281,13 +281,6 @@ WindowId WaylandInterface::activeWindow()
     return idFor(wid);
 }
 
-void WaylandInterface::skipTaskBar(const QDialog &dialog)
-{
-    Q_UNUSED(dialog);
-    //! TODO: set skip-taskbar via the Wayland window-management protocol
-    //! (KWindowSystem::setState/NET is X11-only and was removed from the Wayland path).
-}
-
 void WaylandInterface::slideWindow(QWindow &view, AbstractWindowInterface::Slide location)
 {
     auto slideLocation = KWindowEffects::NoEdge;

@@ -222,6 +222,7 @@ private Q_SLOTS:
     void dialog_dropsCommentedOutAdjustGeometry();
     void containmentInterface_appletExpansionTrackedThroughOneHelper();
     void containmentInterface_trackAppletExpansion_guardsBeforeConnecting();
+    void wm_skipTaskBarNoOpIsGone();
     void corona_dropsTheOrphanAboutDialog();
 };
 
@@ -1142,6 +1143,45 @@ void SourceGuardTest::containmentInterface_trackAppletExpansion_guardsBeforeConn
              "the write-only connection handle must be gone from the header");
     QVERIFY2(stripped(h).contains(QStringLiteral("QSet<PlasmaQuick::AppletQuickItem*>m_expansionTrackedApplets;")),
              "the tracked applets must be a plain QSet");
+}
+
+void SourceGuardTest::wm_skipTaskBarNoOpIsGone()
+{
+    // skipTaskBar's only implementation was an empty Q_UNUSED body plus a TODO, so the
+    // About dialog never skipped anything. The virtual, both overrides and the single
+    // call site have to go together -- any half of that edit is ill-formed.
+    const QStringList files = {QStringLiteral("app/wm/abstractwindowinterface.h"),
+                               QStringLiteral("app/wm/waylandinterface.h"),
+                               QStringLiteral("app/wm/waylandinterface.cpp"),
+                               QStringLiteral("app/lattecorona.cpp"),
+                               QStringLiteral("tests/lastactivewindowtest.cpp")};
+
+    for (const QString &rel : files) {
+        const QString src = readFile(rel);
+        QVERIFY2(!src.isEmpty(), qPrintable(QStringLiteral("%1 is unreadable").arg(rel)));
+        QVERIFY2(!src.contains(QStringLiteral("skipTaskBar")),
+                 qPrintable(QStringLiteral("%1 still mentions skipTaskBar").arg(rel)));
+    }
+
+    // Losing the QDialog parameter leaves five includes in a header 47 translation units deep
+    // that nothing below it reads.
+    const QString h = stripped(readFile(QStringLiteral("app/wm/abstractwindowinterface.h")));
+    QVERIFY2(!h.isEmpty(), "abstractwindowinterface.h is unreadable");
+    const QStringList dead = {QStringLiteral("#include<unordered_map>"),
+                              QStringLiteral("#include<list>"),
+                              QStringLiteral("#include<QDialog>"),
+                              QStringLiteral("#include<QMap>"),
+                              QStringLiteral("#include<QScreen>")};
+
+    for (const QString &inc : dead) {
+        QVERIFY2(!h.contains(inc),
+                 qPrintable(QStringLiteral("abstractwindowinterface.h still carries %1").arg(inc)));
+    }
+
+    // currentScreenGeometries() dereferences QScreen and used to get the type from its own
+    // header; pin the include so the removal above cannot silently break it.
+    QVERIFY2(stripped(readFile(QStringLiteral("app/wm/abstractwindowinterface.cpp"))).contains(QStringLiteral("#include<QScreen>")),
+             "abstractwindowinterface.cpp must include <QScreen> for its own use");
 }
 
 void SourceGuardTest::corona_dropsTheOrphanAboutDialog()

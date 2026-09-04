@@ -41,7 +41,6 @@ public:
     WindowInfoWrap requestInfo(WindowId wid) override { return registry.value(wid, WindowInfoWrap()); }
     WindowInfoWrap requestInfoActive() override { return WindowInfoWrap(); }
 
-    void skipTaskBar(const QDialog &) override {}
     void slideWindow(QWindow &, Slide) override {}
     void enableBlurBehind(QWindow &) override {}
     void setActiveEdge(QWindow *, bool) override {}

@@ -17,6 +17,7 @@
 
 // Qt
 #include <QDebug>
+#include <QScreen>
 #include <QtDBus>
 
 // KDE

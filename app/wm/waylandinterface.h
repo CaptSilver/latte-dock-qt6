@@ -52,7 +52,6 @@ public:
     WindowInfoWrap requestInfo(WindowId wid) override;
     WindowInfoWrap requestInfoActive() override;
 
-    void skipTaskBar(const QDialog &dialog) override;
     void slideWindow(QWindow &view, Slide location) override;
     void enableBlurBehind(QWindow &view) override;
 

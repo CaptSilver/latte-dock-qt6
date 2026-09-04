@@ -14,20 +14,13 @@
 #include "windowinfowrap.h"
 #include "tracker/windowstracker.h"
 
-// C++
-#include <unordered_map>
-#include <list>
-
 // Qt
 #include <QObject>
 #include <QWindow>
 #include <QDBusServiceWatcher>
-#include <QDialog>
-#include <QMap>
 #include <QRect>
 #include <QPoint>
 #include <QPointer>
-#include <QScreen>
 #include <QTimer>
 
 // KDE
@@ -79,7 +72,6 @@ public:
     virtual WindowInfoWrap requestInfo(WindowId wid) = 0;
     virtual WindowInfoWrap requestInfoActive() = 0;
 
-    virtual void skipTaskBar(const QDialog &dialog) = 0;
     virtual void slideWindow(QWindow &view, Slide location) = 0;
     virtual void enableBlurBehind(QWindow &view) = 0;
     virtual void setActiveEdge(QWindow *view, bool active) = 0;
