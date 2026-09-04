@@ -364,7 +364,7 @@ PlasmaComponents.Page {
                     property int group: tasks.configuration.launchersGroup
 
                     readonly property int buttonsCount: layoutGroupButton.visible ? 3 : 2
-                    readonly property int buttonSize: (dialog.optionsWidth - (spacing * buttonsCount-1)) / buttonsCount
+                    readonly property int buttonSize: (dialog.optionsWidth - (spacing * (buttonsCount - 1))) / buttonsCount
 
                     PlasmaComponents.Button {
                         Layout.minimumWidth: parent.buttonSize

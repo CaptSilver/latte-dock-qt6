@@ -1078,7 +1078,7 @@ PlasmaComponents.Page {
                     spacing: 2
                     visible: dialog.advancedLevel
 
-                    readonly property int buttonSize: (dialog.optionsWidth - (2 * spacing)) / children.length
+                    readonly property int buttonSize: (dialog.optionsWidth - ((children.length - 1) * spacing)) / children.length
 
                     PlasmaComponents.Button {
                         id: panelBlur

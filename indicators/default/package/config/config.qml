@@ -36,7 +36,7 @@ ColumnLayout {
         property int indicatorType: indicator.configuration.activeStyle
 
         readonly property int buttonsCount: 2
-        readonly property int buttonSize: (dialog.optionsWidth - (spacing * buttonsCount-1)) / buttonsCount
+        readonly property int buttonSize: (dialog.optionsWidth - (spacing * (buttonsCount - 1))) / buttonsCount
 
         PlasmaComponents.Button {
             Layout.minimumWidth: parent.buttonSize
@@ -245,7 +245,7 @@ ColumnLayout {
         property int option: indicator.configuration.glowApplyTo
 
         readonly property int buttonsCount: 2
-        readonly property int buttonSize: (dialog.optionsWidth - (spacing * buttonsCount-1)) / buttonsCount
+        readonly property int buttonSize: (dialog.optionsWidth - (spacing * (buttonsCount - 1))) / buttonsCount
 
         PlasmaComponents.Button {
             Layout.minimumWidth: parent.buttonSize
