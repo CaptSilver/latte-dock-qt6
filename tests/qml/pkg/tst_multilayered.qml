@@ -21,6 +21,7 @@
 // depend on them (onThemeChanged, Component.onDestruction) are reported live-only.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 import org.kde.latte.core 0.2 as LatteCore
 
@@ -128,7 +129,7 @@ TestCase {
         property QtObject visibility: QtObject { property bool isHidden: false }
     }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.containment/contents/ui/background/MultiLayered.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.containment/contents/ui/background/MultiLayered.qml")
 
     function make() {
         const c = Qt.createComponent(targetUrl);

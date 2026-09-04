@@ -12,13 +12,14 @@
 // six writable booleans the handlers assign.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
     name: "AbilityRequirements"
     when: windowShown
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/lib64/qt6/qml/org/kde/latte/abilities/client/Requirements.qml")
+    readonly property url targetUrl: Stage.qmlModule("org/kde/latte/abilities/client/Requirements.qml")
 
     // bridge mock: an Item so `property Item bridge` actually binds, exposing the
     // `applet` the handlers write to. The applet booleans start at the opposite of

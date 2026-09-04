@@ -4,7 +4,8 @@ Each `tst_*.qml` here drives a real Latte package QML component to produce hones
 execution coverage. A test earns a unit's coverage **only** if all of these hold:
 
 1. **Load the instrumented staged copy** — not the repo copy:
-   `readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/<staged-path>")`
+   `readonly property url targetUrl: Stage.share("plasma/plasmoids/<pkg>/contents/ui/<File>.qml")`
+   (or `Stage.qmlModule("org/kde/latte/<module-path>/<File>.qml")`), with `import Stage 1.0`
    (the staged tree carries the `Cov.tick` instrumentation; the repo copy does not).
 2. **Honest mock context.** Latte components read unqualified context names. QML resolves
    those against the component's *creation context*, so name the TestCase `id: root` and

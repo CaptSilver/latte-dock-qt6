@@ -15,6 +15,7 @@
 // shadows the context name, so we seed it on the instance in make()).
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -60,7 +61,7 @@ TestCase {
         }
     }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.containment/contents/ui/abilities/PositionShortcuts.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.containment/contents/ui/abilities/PositionShortcuts.qml")
 
     function make() {
         const c = Qt.createComponent(targetUrl);

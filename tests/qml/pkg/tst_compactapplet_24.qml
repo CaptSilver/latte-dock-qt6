@@ -10,6 +10,7 @@
 // signal (toolTipVisibleChanged). No execute-and-verify(true) credit.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 import org.kde.plasma.core 2.0 as PlasmaCore
 
@@ -21,7 +22,7 @@ TestCase {
     width: 400
     height: 400
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/shells/org.kde.latte.shell/contents/applet/CompactApplet.qml")
+    readonly property url targetUrl: Stage.share("plasma/shells/org.kde.latte.shell/contents/applet/CompactApplet.qml")
 
     // ---- mocks ---------------------------------------------------------------
 

@@ -12,6 +12,7 @@
 // earns no unit here so it is not driven.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -21,7 +22,7 @@ TestCase {
     width: 200
     height: 200
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/previews/ToolTipWindowMouseArea.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/previews/ToolTipWindowMouseArea.qml")
 
     // The handler's only effect: root.windowsHovered([winId], containsMouse).
     property var hoveredCalls: []

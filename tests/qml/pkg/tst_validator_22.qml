@@ -12,13 +12,14 @@
 // resolve to our mock and onTriggered can run end-to-end.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: tc
     name: "Validator22"
     when: windowShown
 
-    readonly property url target: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/abilities/launchers/Validator.qml")
+    readonly property url target: Stage.share("plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/abilities/launchers/Validator.qml")
 
     // Fresh wrapper per test: declares the ambient `_launchers` the validator
     // reads, with a fake ability that records move/sync calls and answers the

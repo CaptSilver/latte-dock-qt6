@@ -22,13 +22,14 @@
 // destruction entries already in live-only.md.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
     name: "PositionShortcutsClient"
     when: windowShown
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/lib64/qt6/qml/org/kde/latte/abilities/client/PositionShortcuts.qml")
+    readonly property url targetUrl: Stage.qmlModule("org/kde/latte/abilities/client/PositionShortcuts.qml")
 
     // A bridge host shaped like the real one. The component's `ref.shortcuts` is
     // a `property Item` bound to `bridge.shortcuts.host`, so that host MUST be an

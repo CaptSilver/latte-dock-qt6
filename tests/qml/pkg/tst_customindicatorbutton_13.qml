@@ -9,6 +9,7 @@
 // function/handler fires a Cov tick.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: tc
@@ -17,7 +18,7 @@ TestCase {
     width: 300
     height: 100
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/shells/org.kde.latte.shell/contents/controls/CustomIndicatorButton.qml")
+    readonly property url targetUrl: Stage.share("plasma/shells/org.kde.latte.shell/contents/controls/CustomIndicatorButton.qml")
 
     // Build the wrapper host inline so the wrapper scope is in effect when the
     // staged control is created inside the Loader; latteView/viewConfig then

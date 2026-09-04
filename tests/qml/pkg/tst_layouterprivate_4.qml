@@ -5,13 +5,14 @@
 // hand-built mock applet layouts, so each function call fires a Cov tick.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: testCase
     name: "LayouterPrivate"
     when: windowShown
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.containment/contents/ui/abilities/privates/LayouterPrivate.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.containment/contents/ui/abilities/privates/LayouterPrivate.qml")
 
     // A fake "AppletItem" with the metric properties the layout math reads.
     Component {

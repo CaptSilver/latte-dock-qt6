@@ -24,6 +24,7 @@
 // a live group ListView with real ToolTipInstance delegates -> live-only.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -51,7 +52,7 @@ TestCase {
         function makeModelIndex(rowIdx, idx) { return [rowIdx, idx]; }
     }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/previews/ToolTipDelegate2.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/previews/ToolTipDelegate2.qml")
 
     // isLauncher=true keeps the preview Loader inactive so the heavy
     // ToolTipInstance delegate is never instantiated; the ScrollView itself

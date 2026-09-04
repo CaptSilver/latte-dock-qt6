@@ -14,6 +14,7 @@
 // here (see tests/coverage/live-only.md).
 import QtQuick
 import QtTest
+import Stage 1.0
 
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.latte.core 0.2 as LatteCore
@@ -27,7 +28,7 @@ TestCase {
     width: 420
     height: 640
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/shells/org.kde.latte.shell/contents/configuration/pages/BehaviorConfig.qml")
+    readonly property url targetUrl: Stage.share("plasma/shells/org.kde.latte.shell/contents/configuration/pages/BehaviorConfig.qml")
 
     // Records every positioner.setNextLocation(...) the page makes so location/
     // screen handlers can be asserted on their real side effect.

@@ -12,13 +12,14 @@
 // with the right argument.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
     name: "ParabolicEffectBridge"
     when: windowShown
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/lib64/qt6/qml/org/kde/latte/abilities/bridge/ParabolicEffect.qml")
+    readonly property url targetUrl: Stage.qmlModule("org/kde/latte/abilities/bridge/ParabolicEffect.qml")
 
     // host mock: the bridge's client-request functions call sglUpdateLowerItemScale
     // / sglUpdateHigherItemScale on it, and its sglClearZoom signal is the

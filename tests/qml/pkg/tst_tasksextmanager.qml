@@ -12,6 +12,7 @@
 // for real instead of throwing ReferenceError.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -49,10 +50,9 @@ TestCase {
         function syncLaunchers() { syncCalls++; }
     }
 
-    // Load the instrumented component from the staged install tree. The
-    // stage lives at <repo>/build/_qmlcov/stage; from tests/qml/pkg that's
-    // up three (to the repo root) then down into the staged plasmoid package.
-    readonly property url target: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/TasksExtendedManager.qml")
+    // Load the component from the staged install tree, resolved through the Stage
+    // singleton the runner drops into that stage.
+    readonly property url target: Stage.share("plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/TasksExtendedManager.qml")
 
     function make() {
         const c = Qt.createComponent(target);

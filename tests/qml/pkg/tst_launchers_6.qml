@@ -26,6 +26,7 @@
 // onIsActiveChanged that registers itself the moment a bridge appears.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 import org.kde.latte.core 0.2 as LatteCore
 
@@ -34,7 +35,7 @@ TestCase {
     name: "Launchers6"
     when: windowShown
 
-    readonly property url target: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/abilities/Launchers.qml")
+    readonly property url target: Stage.share("plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/abilities/Launchers.qml")
 
     // ---- creation-context globals the component reads unqualified ----
 

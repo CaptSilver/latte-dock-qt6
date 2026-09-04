@@ -14,13 +14,14 @@
 // grid.children) and so the onContextMenuIsShownChanged Connections has a live target.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
     name: "ParabolicEffectPrivate"
     when: windowShown
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.containment/contents/ui/abilities/privates/ParabolicEffectPrivate.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.containment/contents/ui/abilities/privates/ParabolicEffectPrivate.qml")
 
     // ---- unqualified context names the component reads ----
 

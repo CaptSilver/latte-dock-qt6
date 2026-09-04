@@ -11,6 +11,7 @@
 import QtQuick
 import QtQuick.Window
 import QtTest
+import Stage 1.0
 import org.kde.latte.core 0.2 as LatteCore
 
 TestCase {
@@ -68,7 +69,7 @@ TestCase {
         property QtObject debug: QtObject { property bool spacersEnabled: false }
     }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.containment/contents/ui/applet/HiddenSpacer.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.containment/contents/ui/applet/HiddenSpacer.qml")
 
     function make(props) {
         const c = Qt.createComponent(targetUrl);

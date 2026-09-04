@@ -17,6 +17,7 @@
 // (the forwarded call landed) or the absence of that call on the no-op branch.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -51,7 +52,7 @@ TestCase {
         }
     }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/lib64/qt6/qml/org/kde/latte/abilities/bridge/Launchers.qml")
+    readonly property url targetUrl: Stage.qmlModule("org/kde/latte/abilities/bridge/Launchers.qml")
 
     // Build the bridge with host wired and client still null so a later client
     // assignment cleanly triggers onClientChanged. appletIndex defaults to -1

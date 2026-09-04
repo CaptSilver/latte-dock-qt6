@@ -14,6 +14,7 @@
 // don't need isActive) and leave the grow/shrink body to a live dock.
 import QtQuick
 import QtTest
+import Stage 1.0
 import org.kde.latte.core 0.2 as LatteCore
 import org.kde.plasma.plasmoid 2.0
 
@@ -83,7 +84,7 @@ TestCase {
         property QtObject positioner: positionerObj
     }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.containment/contents/ui/abilities/AutoSize.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.containment/contents/ui/abilities/AutoSize.qml")
 
     // Mock for the declared `property Item metrics`. inCalculatedIconSize reads
     // iconSize/maxIconSize; updateIconSize reads totals.length; the metrics

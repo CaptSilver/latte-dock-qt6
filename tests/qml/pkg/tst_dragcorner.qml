@@ -7,6 +7,7 @@
 // sequence drive the real handlers.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -18,7 +19,7 @@ TestCase {
     width: 300
     height: 300
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/shells/org.kde.latte.shell/contents/controls/DragCorner.qml")
+    readonly property url targetUrl: Stage.share("plasma/shells/org.kde.latte.shell/contents/controls/DragCorner.qml")
 
     // location 0 == Floating: none of the edge states matches, so the corner
     // keeps its default anchors and the LeftEdge special-casing stays off.

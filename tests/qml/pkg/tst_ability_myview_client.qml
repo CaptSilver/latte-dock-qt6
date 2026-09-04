@@ -21,6 +21,7 @@
 // bridge.myView.client mock side-effect the lifecycle handlers write.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -92,7 +93,7 @@ TestCase {
         property QtObject myView: bridgeMyView
     }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/lib64/qt6/qml/org/kde/latte/abilities/client/MyView.qml")
+    readonly property url targetUrl: Stage.qmlModule("org/kde/latte/abilities/client/MyView.qml")
 
     function make(props) {
         const c = Qt.createComponent(targetUrl);

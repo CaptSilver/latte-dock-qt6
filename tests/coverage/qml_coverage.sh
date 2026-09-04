@@ -13,7 +13,7 @@ MIRROR="${MIRROR:-$REPO/build/_qmlcov/instrumented}"
 STAGE="${STAGE:-$REPO/build/_qmlcov/stage}"
 OUT="${OUT:-$REPO/build/_coverage}"
 QMLTESTRUNNER="${QMLTESTRUNNER:-/usr/lib64/qt6/bin/qmltestrunner}"
-mkdir -p "$OUT" "$REPO/build/_qmlcov"
+mkdir -p "$OUT" "$(dirname "$STAGE")"
 
 # Ticks ride on console.warn; if Qt Test ever hits its warning cap and silences
 # output, every tick past that point vanishes and coverage reads falsely low
@@ -47,6 +47,11 @@ rm -rf "$STAGE_NEW"
 rm -rf "$STAGE"
 mv "$STAGE_NEW" "$STAGE"
 
+# The Stage singleton is what the package tests resolve their targets through, and
+# it reports the stage's own QML module dir so nothing below has to assume lib64.
+# Dropped outside every --include below, so it is neither instrumented nor counted.
+QMLREL="$("$REPO/tests/coverage/drop_stage_module.sh" "$STAGE")" || exit 1
+
 # ------------------------------------------------------------------ RUN 1 ----
 # Repo-relative instrumented mirror of tests/qml + production dirs, exercised by
 # the leaf-component suite. Covers the leaf components and the _covself fixture.
@@ -79,7 +84,7 @@ QT_QPA_PLATFORM=offscreen "$QMLTESTRUNNER" \
     -maxwarnings 0 \
     -input "$MIRROR/tests/qml" \
     -import /usr/lib64/qt6/qml \
-    -import "$STAGE/usr/lib64/qt6/qml" \
+    -import "$STAGE/$QMLREL" \
     -import "$MIRROR/tests/qml" \
     > "$RUN_MIRROR" 2>&1 || {
         echo "qmltestrunner (mirror) failed:"; tail -30 "$RUN_MIRROR"; exit 1; }
@@ -97,9 +102,9 @@ python3 "$REPO/tools/qmlcov/instrument.py" --root "$STAGE" \
     --include usr/share/plasma/plasmoids/org.kde.latte.plasmoid/contents \
     --include usr/share/plasma/plasmoids/org.kde.latte.containment/contents \
     --include usr/share/plasma/shells/org.kde.latte.shell/contents \
-    --include usr/lib64/qt6/qml/org/kde/latte/core \
-    --include usr/lib64/qt6/qml/org/kde/latte/components \
-    --include usr/lib64/qt6/qml/org/kde/latte/abilities \
+    --include "$QMLREL/org/kde/latte/core" \
+    --include "$QMLREL/org/kde/latte/components" \
+    --include "$QMLREL/org/kde/latte/abilities" \
     --out "$STAGE" --catalog "$CAT_STAGED"
 
 # The instrumenter injects `import Cov 1.0`; drop the Cov module where the staged
@@ -111,7 +116,7 @@ QT_QPA_PLATFORM=offscreen "$QMLTESTRUNNER" \
     -maxwarnings 0 \
     -input "$REPO/tests/qml/pkg" \
     -import /usr/lib64/qt6/qml \
-    -import "$STAGE/usr/lib64/qt6/qml" \
+    -import "$STAGE/$QMLREL" \
     -import "$STAGE" \
     > "$RUN_STAGED" 2>&1 || {
         echo "qmltestrunner (staged) failed:"; tail -40 "$RUN_STAGED"; exit 1; }

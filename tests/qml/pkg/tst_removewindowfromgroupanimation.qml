@@ -10,6 +10,7 @@
 // destruction from the animation's stop handler.
 import QtQuick
 import QtTest
+import Stage 1.0
 import org.kde.plasma.core 2.0 as PlasmaCore
 
 TestCase {
@@ -96,7 +97,7 @@ TestCase {
         }
     }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/task/animations/RemoveWindowFromGroupAnimation.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/task/animations/RemoveWindowFromGroupAnimation.qml")
 
     function make() {
         const c = Qt.createComponent(targetUrl);

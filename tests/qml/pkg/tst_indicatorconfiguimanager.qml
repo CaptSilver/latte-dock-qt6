@@ -21,6 +21,7 @@
 // observable. It needs a live config dialog with real indicator config UIs.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -93,7 +94,7 @@ TestCase {
         }
     }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/shells/org.kde.latte.shell/contents/controls/IndicatorConfigUiManager.qml")
+    readonly property url targetUrl: Stage.share("plasma/shells/org.kde.latte.shell/contents/controls/IndicatorConfigUiManager.qml")
 
     function resetCounters() {
         indicatorUiManagerObj.setParentItemCalls = 0;

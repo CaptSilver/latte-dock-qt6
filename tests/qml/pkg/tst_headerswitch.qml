@@ -8,6 +8,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -21,7 +22,7 @@ TestCase {
     // resolve when the item is parented inside a real Layout, so create into this.
     ColumnLayout { id: host }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/lib64/qt6/qml/org/kde/latte/components/HeaderSwitch.qml")
+    readonly property url targetUrl: Stage.qmlModule("org/kde/latte/components/HeaderSwitch.qml")
 
     function make(props) {
         const c = Qt.createComponent(targetUrl);

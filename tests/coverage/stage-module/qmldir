@@ -1,0 +1,2 @@
+module Stage
+singleton Stage 1.0 Stage.qml

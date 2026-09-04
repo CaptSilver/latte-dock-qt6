@@ -13,6 +13,7 @@
 // forwards, or the restore animation draining length back to 0.
 import QtQuick
 import QtTest
+import Stage 1.0
 import org.kde.latte.core 0.2 as LatteCore
 
 TestCase {
@@ -68,7 +69,7 @@ TestCase {
         property bool spacersEnabled: false
     }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.containment/contents/ui/layouts/ParabolicEdgeSpacer.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.containment/contents/ui/layouts/ParabolicEdgeSpacer.qml")
 
     // Each spacer lives in its own wrapper so parent.beginIndex is controllable
     // per spacer; index<beginIndex => tail, index>=beginIndex => head.

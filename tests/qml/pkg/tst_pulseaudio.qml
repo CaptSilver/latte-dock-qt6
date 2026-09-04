@@ -16,6 +16,7 @@
 // cover the function entries and the empty-set returns that DO run honestly.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -31,7 +32,7 @@ TestCase {
         function parentPid(pid) { lastPid = pid; return pid + 1000; }
     }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/PulseAudio.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/PulseAudio.qml")
 
     function make() {
         const c = Qt.createComponent(targetUrl);

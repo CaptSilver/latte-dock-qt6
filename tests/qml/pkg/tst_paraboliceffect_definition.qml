@@ -14,6 +14,7 @@
 // is recorded live-only.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -23,7 +24,7 @@ TestCase {
     // Load the instrumented component from the staged install tree. From
     // tests/qml/pkg that's up three (to the repo root) then down into the
     // staged abilities/definition package.
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/lib64/qt6/qml/org/kde/latte/abilities/definition/ParabolicEffect.qml")
+    readonly property url targetUrl: Stage.qmlModule("org/kde/latte/abilities/definition/ParabolicEffect.qml")
 
     function make() {
         const c = Qt.createComponent(targetUrl);

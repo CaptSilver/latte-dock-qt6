@@ -13,6 +13,7 @@
 // one of those handlers and asserts the resulting mapping.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -22,7 +23,7 @@ TestCase {
     width: 400
     height: 600
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/config/ConfigAppearance.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/config/ConfigAppearance.qml")
 
     // PlasmaCore.Types.Vertical == 3; the page compares plasmoid.formFactor against
     // it for `vertical`. Horizontal (2) keeps `vertical` false.

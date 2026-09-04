@@ -14,6 +14,7 @@
 // mock property mutation, or a signal emission captured by SignalSpy.
 import QtQuick
 import QtTest
+import Stage 1.0
 import org.kde.latte.core 0.2 as LatteCore
 
 TestCase {
@@ -39,7 +40,7 @@ TestCase {
         }
     }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.containment/contents/ui/applet/communicator/Actions.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.containment/contents/ui/applet/communicator/Actions.qml")
 
     function resetRequires() {
         mainCommunicator.requires.latteSideColoringEnabled = false;

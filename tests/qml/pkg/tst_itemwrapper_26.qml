@@ -13,6 +13,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -207,7 +208,7 @@ TestCase {
         function updateParabolicEffectIsSupported() { root.parabolicSupportedCalls++; }
     }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.containment/contents/ui/applet/ItemWrapper.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.containment/contents/ui/applet/ItemWrapper.qml")
 
     function make() {
         const c = Qt.createComponent(targetUrl);

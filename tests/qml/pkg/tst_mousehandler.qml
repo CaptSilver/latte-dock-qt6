@@ -23,13 +23,14 @@
 // live-only, not gamed.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
     name: "MouseHandler"
     when: windowShown
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/taskslayout/MouseHandler.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/taskslayout/MouseHandler.qml")
 
     // The Connections inside MouseHandler binds target: root and reads
     // dragSource unqualified; both resolve here. showPreviewForTasks is called

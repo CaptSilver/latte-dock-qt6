@@ -17,6 +17,7 @@
 // onClicked (not uniquely locatable among ~40 sibling MouseAreas).
 import QtQuick
 import QtTest
+import Stage 1.0
 import org.kde.latte.core 0.2 as LatteCore
 import org.kde.kirigami 2.20 as Kirigami
 
@@ -28,7 +29,7 @@ TestCase {
     width: 600
     height: 700
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/shells/org.kde.latte.shell/contents/configuration/LatteDockConfiguration.qml")
+    readonly property url targetUrl: Stage.share("plasma/shells/org.kde.latte.shell/contents/configuration/LatteDockConfiguration.qml")
 
     // ---- recorded side-effects --------------------------------------------
     property int setStickerCalls: 0

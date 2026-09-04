@@ -13,6 +13,7 @@
 // currentText/currentVisualParent, or a timer firing.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -26,7 +27,7 @@ TestCase {
     Item { id: parentA; width: 10; height: 10 }
     Item { id: parentB; width: 10; height: 10 }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/lib64/qt6/qml/org/kde/latte/abilities/host/ThinTooltip.qml")
+    readonly property url targetUrl: Stage.qmlModule("org/kde/latte/abilities/host/ThinTooltip.qml")
 
     function make() {
         const c = Qt.createComponent(targetUrl);

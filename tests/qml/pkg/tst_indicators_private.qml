@@ -11,13 +11,14 @@
 // Loaded from the staged (instrumented) package by file URL so each unit fires a Cov tick.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
     name: "IndicatorsPrivate"
     when: windowShown
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.containment/contents/ui/abilities/privates/IndicatorsPrivate.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.containment/contents/ui/abilities/privates/IndicatorsPrivate.qml")
 
     // Mock View::Indicator::Info — the writable forwarding target for the info.* Bindings.
     // Properties start at sentinel values opposite the source so a successful forward is

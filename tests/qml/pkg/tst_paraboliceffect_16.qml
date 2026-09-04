@@ -9,13 +9,14 @@
 // branches.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: tc
     name: "ParabolicEffect"
     when: windowShown
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/lib64/qt6/qml/org/kde/latte/abilities/client/ParabolicEffect.qml")
+    readonly property url targetUrl: Stage.qmlModule("org/kde/latte/abilities/client/ParabolicEffect.qml")
 
     // ----- mock host plumbing -------------------------------------------------
     // Records of what the host received, so assertions can be real.

@@ -14,6 +14,7 @@
 // are left to the live-only list; we don't bank their entry ticks here.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -202,7 +203,7 @@ TestCase {
         return obj;
     }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.containment/contents/ui/applet/AppletItem.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.containment/contents/ui/applet/AppletItem.qml")
 
     // Instantiation: Component.onCompleted runs checkIndex() (which now reaches
     // the real layout loops because layouter/layoutsContainer resolve) and wires

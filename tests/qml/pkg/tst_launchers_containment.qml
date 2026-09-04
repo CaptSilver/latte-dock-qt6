@@ -19,6 +19,7 @@
 // or a bound-property value.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -102,7 +103,7 @@ TestCase {
         property var launchers: []
     }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.containment/contents/ui/abilities/Launchers.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.containment/contents/ui/abilities/Launchers.qml")
 
     function make() {
         const c = Qt.createComponent(targetUrl);

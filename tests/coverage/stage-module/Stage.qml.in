@@ -1,0 +1,13 @@
+pragma Singleton
+import QtQuick
+
+// Resolves paths inside a staged install from this module's own URL, so the package
+// tests follow the stage wherever it is put instead of naming one build directory.
+// Dropped into the stage by tests/coverage/drop_stage_module.sh; @QMLREL@ is
+// substituted with the stage's own QML module directory, so nothing assumes lib64.
+QtObject {
+    readonly property url root: Qt.resolvedUrl("..")
+
+    function share(rel) { return Qt.resolvedUrl("../usr/share/" + rel); }
+    function qmlModule(rel) { return Qt.resolvedUrl("../@QMLREL@/" + rel); }
+}

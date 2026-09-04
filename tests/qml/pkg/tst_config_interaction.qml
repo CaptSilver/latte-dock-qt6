@@ -13,6 +13,7 @@
 // to cover that binding too.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.latte.private.tasks 0.1 as LatteTasks
@@ -25,7 +26,7 @@ TestCase {
     width: 400
     height: 500
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/config/ConfigInteraction.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/config/ConfigInteraction.qml")
 
     // The config object the page binds its aliases and the hover switch against.
     QtObject {

@@ -11,6 +11,7 @@
 // start), so the coverage is honest.
 import QtQuick
 import QtTest
+import Stage 1.0
 import org.kde.latte.core 0.2 as LatteCore
 
 TestCase {
@@ -135,7 +136,7 @@ TestCase {
         }
     }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/task/animations/ShowWindowAnimation.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/task/animations/ShowWindowAnimation.qml")
 
     function make() {
         const c = Qt.createComponent(targetUrl);

@@ -894,6 +894,13 @@ set_tests_properties(qmlloadcompile PROPERTIES
 # components out of a staged install. It reuses the shellpackage fixture rather than
 # installing a fourth copy of the tree, and runs against a scratch root so it never
 # touches the coverage harness's own stage.
+# Honest-coverage lint for the package tests: bans entry-tick banking, assertion-free
+# test bodies, error-swallowing catches and hardcoded stage paths. It was only ever a
+# reviewer aid; wiring it here makes those rules a gate.
+add_test(NAME lintpkgtests
+    COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/coverage/lint_pkg_tests.py
+            --dir ${CMAKE_CURRENT_SOURCE_DIR}/qml/pkg)
+
 add_test(NAME qmlpkg COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/manual/qml_pkg_test.sh)
 set_tests_properties(qmlpkg PROPERTIES
     ENVIRONMENT "BUILD=${CMAKE_BINARY_DIR};STAGE=${LATTE_SHELL_STAGE}"

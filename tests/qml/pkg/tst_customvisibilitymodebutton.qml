@@ -8,6 +8,7 @@
 // only compares them for equality).
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -21,7 +22,7 @@ TestCase {
     width: 300
     height: 100
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/shells/org.kde.latte.shell/contents/controls/CustomVisibilityModeButton.qml")
+    readonly property url targetUrl: Stage.share("plasma/shells/org.kde.latte.shell/contents/controls/CustomVisibilityModeButton.qml")
 
     readonly property var testModes: [
         { name: "Windows Go Below", tooltip: "wgb", pluginId: 10 },

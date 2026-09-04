@@ -26,6 +26,8 @@ def _matching_brace(text: str, open_pos: int) -> int:
 
 def flag_file(text: str) -> list[str]:
     flags = []
+    if "build/_qmlcov" in text:
+        flags.append("hardcoded stage path — use Stage.share()/Stage.qmlModule()")
     if "safe(" in text:
         flags.append("uses safe(...) — entry-tick banking is banned")
     for m in re.finditer(r"catch\s*\([^)]*\)\s*\{", text):

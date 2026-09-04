@@ -19,6 +19,7 @@
 // effect a headless assertion can observe.
 import QtQuick
 import QtTest
+import Stage 1.0
 import org.kde.latte.core 0.2 as LatteCore
 import org.kde.kirigami 2.20 as Kirigami
 
@@ -71,7 +72,7 @@ TestCase {
     Item { id: hostParent; property Item level: levelMock }
     Item { id: levelMock; property Item bridge: indicatorMock }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/lib64/qt6/qml/org/kde/latte/abilities/client/indicators/LatteIndicator.qml")
+    readonly property url targetUrl: Stage.qmlModule("org/kde/latte/abilities/client/indicators/LatteIndicator.qml")
 
     function make() {
         const c = Qt.createComponent(targetUrl);

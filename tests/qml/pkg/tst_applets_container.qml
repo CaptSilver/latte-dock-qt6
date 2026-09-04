@@ -6,13 +6,14 @@
 // then assign a hand-built grid of mock applet items and assert the Bindings recomputed.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
     name: "AppletsContainer"
     when: windowShown
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.containment/contents/ui/abilities/privates/layouter/AppletsContainer.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.containment/contents/ui/abilities/privates/layouter/AppletsContainer.qml")
 
     // --- context names the target reads unqualified (resolved against this creation context) ---
     // `root.*` reads in the target hit these properties / functions:

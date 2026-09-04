@@ -14,6 +14,7 @@
 // gamed here.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: tc
@@ -23,7 +24,7 @@ TestCase {
     width: 400
     height: 600
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/shells/org.kde.latte.shell/contents/configuration/pages/AppearanceConfig.qml")
+    readonly property url targetUrl: Stage.share("plasma/shells/org.kde.latte.shell/contents/configuration/pages/AppearanceConfig.qml")
 
     // LatteCore.Types.Alignment: Center=0, Justify=10. The page branches on these.
     readonly property int alignCenter: 0

@@ -10,13 +10,14 @@
 // run honestly headless.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
     name: "AnimationsTracker"
     when: windowShown
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/lib64/qt6/qml/org/kde/latte/abilities/definition/animations/Tracker.qml")
+    readonly property url targetUrl: Stage.qmlModule("org/kde/latte/abilities/definition/animations/Tracker.qml")
 
     function make() {
         const c = Qt.createComponent(targetUrl);

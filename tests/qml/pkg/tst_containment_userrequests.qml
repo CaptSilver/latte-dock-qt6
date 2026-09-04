@@ -10,6 +10,7 @@
 // SignalSpy. That exercises the onUserRequestedViewType handler body.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -25,7 +26,7 @@ TestCase {
         }
     }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.containment/contents/ui/abilities/UserRequests.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.containment/contents/ui/abilities/UserRequests.qml")
 
     function make(view) {
         const c = Qt.createComponent(targetUrl);

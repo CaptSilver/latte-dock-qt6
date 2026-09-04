@@ -18,6 +18,7 @@
 // pins an observable effect — a return value.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -81,7 +82,7 @@ TestCase {
         QtObject { property int appletIndex: -1 }
     }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.containment/contents/ui/abilities/Indexer.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.containment/contents/ui/abilities/Indexer.qml")
 
     // Build a fresh Indexer over a freshly-built layouts mock so no test shares
     // grid children with another (QML destroy() is deferred, so reusing one

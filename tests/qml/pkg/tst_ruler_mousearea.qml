@@ -12,6 +12,7 @@
 // object; each test asserts the resulting config values.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -21,7 +22,7 @@ TestCase {
     width: 200
     height: 200
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/shells/org.kde.latte.shell/contents/configuration/canvas/maxlength/RulerMouseArea.qml")
+    readonly property url targetUrl: Stage.share("plasma/shells/org.kde.latte.shell/contents/configuration/canvas/maxlength/RulerMouseArea.qml")
 
     // root.isHorizontal drives the cursorShape binding.
     property bool isHorizontal: true

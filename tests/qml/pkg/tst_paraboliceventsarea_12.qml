@@ -6,6 +6,7 @@
 // staged copy via a nested Loader, so each function/handler we drive fires a Cov tick.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: tc
@@ -15,7 +16,7 @@ TestCase {
     width: 200
     height: 200
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/lib64/qt6/qml/org/kde/latte/abilities/items/basicitem/ParabolicEventsArea.qml")
+    readonly property url targetUrl: Stage.qmlModule("org/kde/latte/abilities/items/basicitem/ParabolicEventsArea.qml")
 
     // ---- mock backing objects, shared by the wrapper instances ----
 

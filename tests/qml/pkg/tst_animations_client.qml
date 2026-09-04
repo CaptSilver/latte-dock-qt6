@@ -19,6 +19,7 @@
 // PositionShortcuts/ParabolicEffect destruction entries.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 import org.kde.latte.abilities.definition 0.1 as AbilityDefinition
 
@@ -27,7 +28,7 @@ TestCase {
     name: "AnimationsClient"
     when: windowShown
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/lib64/qt6/qml/org/kde/latte/abilities/client/Animations.qml")
+    readonly property url targetUrl: Stage.qmlModule("org/kde/latte/abilities/client/Animations.qml")
 
     // A bridge host shaped like the real one. The client binds its typed
     // duration/speedFactor/needBothAxis/... properties (AbilityDefinition.Duration

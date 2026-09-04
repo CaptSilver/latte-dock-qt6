@@ -22,6 +22,7 @@
 // are Top=3 Bottom=4 Left=5 Right=6.
 import QtQuick
 import QtTest
+import Stage 1.0
 import org.kde.plasma.core 2.0 as PlasmaCore
 
 TestCase {
@@ -32,7 +33,7 @@ TestCase {
     width: 500
     height: 60
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/shells/org.kde.latte.shell/contents/views/Panel.qml")
+    readonly property url targetUrl: Stage.share("plasma/shells/org.kde.latte.shell/contents/views/Panel.qml")
 
     // A stand-in for the containment graphic object. It is an Item (the
     // component's `property Item containment` slot requires one) carrying a

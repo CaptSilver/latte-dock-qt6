@@ -8,6 +8,7 @@
 // viewConfig.setSticker side-effect.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -17,7 +18,7 @@ TestCase {
     width: 400
     height: 600
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/shells/org.kde.latte.shell/contents/configuration/pages/EffectsConfig.qml")
+    readonly property url targetUrl: Stage.share("plasma/shells/org.kde.latte.shell/contents/configuration/pages/EffectsConfig.qml")
 
     property int stickerCalls: 0
     property var lastStickerArg: undefined

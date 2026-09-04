@@ -9,6 +9,7 @@
 // icon offset the stop handler must clear).
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -100,7 +101,7 @@ TestCase {
         }
     }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/task/animations/LauncherAnimation.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/task/animations/LauncherAnimation.qml")
 
     function make() {
         const c = Qt.createComponent(targetUrl);

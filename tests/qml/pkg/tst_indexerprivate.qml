@@ -16,6 +16,7 @@
 // values), then drive each function across its branches and assert the returns.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -27,7 +28,7 @@ TestCase {
     // of throwing; false keeps the binding active (matches a non-dragging dock).
     property bool appletIsDragged: false
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.containment/contents/ui/abilities/privates/IndexerPrivate.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.containment/contents/ui/abilities/privates/IndexerPrivate.qml")
 
     // ---- mock applet-item factory ----------------------------------------
     // Each applet item is an Item with the flags/index/communicator the bindings

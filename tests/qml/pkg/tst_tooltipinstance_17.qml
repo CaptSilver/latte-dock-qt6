@@ -16,13 +16,14 @@
 // end-to-end with assertable return values and side effects.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: tc
     name: "ToolTipInstance17"
     when: windowShown
 
-    readonly property url target: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/previews/ToolTipInstance.qml")
+    readonly property url target: Stage.share("plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/previews/ToolTipInstance.qml")
 
     // Fresh wrapper per test: declares every ambient name ToolTipInstance reads.
     // Recording objects (backend/tasksModel/windowsPreviewDlg/mpris2Source) let

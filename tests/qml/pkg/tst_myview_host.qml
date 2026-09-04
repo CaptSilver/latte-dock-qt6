@@ -18,6 +18,7 @@
 // and the view-present body.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -43,7 +44,7 @@ TestCase {
         function action(name) { actionCalls++; lastActionName = name; return "act:" + name; }
     }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/lib64/qt6/qml/org/kde/latte/abilities/host/MyView.qml")
+    readonly property url targetUrl: Stage.qmlModule("org/kde/latte/abilities/host/MyView.qml")
 
     function make() {
         const c = Qt.createComponent(targetUrl);

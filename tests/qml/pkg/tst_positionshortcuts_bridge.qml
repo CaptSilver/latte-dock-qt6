@@ -17,6 +17,7 @@
 // signal firing on a mock with the right argument.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -53,7 +54,7 @@ TestCase {
         }
     }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/lib64/qt6/qml/org/kde/latte/abilities/bridge/PositionShortcuts.qml")
+    readonly property url targetUrl: Stage.qmlModule("org/kde/latte/abilities/bridge/PositionShortcuts.qml")
 
     function makeBridge() {
         const c = Qt.createComponent(targetUrl);

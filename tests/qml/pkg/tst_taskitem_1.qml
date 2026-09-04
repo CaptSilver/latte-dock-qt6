@@ -11,6 +11,7 @@
 // observable effect (return value, property change, or mock side-effect).
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -20,7 +21,7 @@ TestCase {
     width: 300
     height: 300
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/task/TaskItem.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/task/TaskItem.qml")
 
     // ---- unqualified globals the component reads through its creation context ----
     // root.* names: the component literally uses `root.foo`; this TestCase is

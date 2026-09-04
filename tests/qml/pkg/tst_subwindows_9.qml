@@ -23,13 +23,14 @@
 import QtQuick
 import QtQml.Models
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: tc
     name: "SubWindows"
     when: windowShown
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/task/SubWindows.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/task/SubWindows.qml")
 
     // tasksModel: the source of the inner DelegateModel AND the object that gets
     // request* called on it. A ListModel can carry upper-case roles (via

@@ -21,6 +21,7 @@
 // empty layouts so its value block returns false cleanly without throwing.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -31,7 +32,7 @@ TestCase {
     // null keeps that binding's && short-circuit producing true.
     property var dragOverlay: null
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.containment/contents/ui/abilities/privates/MyViewPrivate.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.containment/contents/ui/abilities/privates/MyViewPrivate.qml")
 
     // Records the addBlockHidingEvent/removeBlockHidingEvent the handler makes.
     property int addCalls: 0

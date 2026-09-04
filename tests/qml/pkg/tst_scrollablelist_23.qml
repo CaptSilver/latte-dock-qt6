@@ -17,6 +17,7 @@
 // machine is checked against the expected LatteCore.Types enum per edge/align.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 import org.kde.plasma.plasmoid 2.0
 import org.kde.plasma.core 2.0 as PlasmaCore
@@ -30,7 +31,7 @@ TestCase {
     width: 400
     height: 400
 
-    readonly property string targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/taskslayout/ScrollableList.qml")
+    readonly property string targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/taskslayout/ScrollableList.qml")
 
     // The wrapper QML: declares the unqualified ids ScrollableList expects and
     // hosts it through a Loader. Sizing/sibling tasks live here too.

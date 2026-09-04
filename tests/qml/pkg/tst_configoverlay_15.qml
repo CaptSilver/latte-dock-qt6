@@ -10,6 +10,7 @@
 // a returned point, a property the handler set, or a mock side-effect counter.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: tc
@@ -19,7 +20,7 @@ TestCase {
     width: 500
     height: 500
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.containment/contents/ui/editmode/ConfigOverlay.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.containment/contents/ui/editmode/ConfigOverlay.qml")
 
     readonly property string hostQml:
         'import QtQuick\n'

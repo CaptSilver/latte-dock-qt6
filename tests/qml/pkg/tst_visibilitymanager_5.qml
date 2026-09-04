@@ -17,6 +17,7 @@
 // we assert. The edge-specific geometry needs a live containment -> live-only.
 import QtQuick
 import QtTest
+import Stage 1.0
 import org.kde.latte.core 0.2 as LatteCore
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.plasma.plasmoid 2.0
@@ -180,7 +181,7 @@ TestCase {
         property QtObject layout: QtObject { property string name: "MyLayout" }
     }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.containment/contents/ui/VisibilityManager.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.containment/contents/ui/VisibilityManager.qml")
 
     // Reset the mock state every test reads/writes, so deltas and absolute
     // assertions don't leak between tests (counters live on `root`).

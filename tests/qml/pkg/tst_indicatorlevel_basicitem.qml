@@ -15,6 +15,7 @@
 // bindings under test are independent of them.
 import QtQuick
 import QtTest
+import Stage 1.0
 import org.kde.plasma.core 2.0 as PlasmaCore
 
 TestCase {
@@ -63,7 +64,7 @@ TestCase {
         }
     }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/lib64/qt6/qml/org/kde/latte/abilities/items/basicitem/IndicatorLevel.qml")
+    readonly property url targetUrl: Stage.qmlModule("org/kde/latte/abilities/items/basicitem/IndicatorLevel.qml")
 
     function make() {
         const c = Qt.createComponent(targetUrl);

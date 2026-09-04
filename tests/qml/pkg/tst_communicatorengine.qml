@@ -31,6 +31,7 @@
 // that loader, so it is live-only.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -59,7 +60,7 @@ TestCase {
         Item { property string pluginName: "org.kde.someapplet" }
     }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.containment/contents/ui/applet/communicator/Engine.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.containment/contents/ui/applet/communicator/Engine.qml")
 
     function make() {
         const c = Qt.createComponent(targetUrl);

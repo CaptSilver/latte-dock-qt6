@@ -23,6 +23,7 @@
 //     re-runs the handler nor writes back here.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -32,7 +33,7 @@ TestCase {
     width: 500
     height: 800
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/shells/org.kde.latte.shell/contents/configuration/pages/TasksConfig.qml")
+    readonly property url targetUrl: Stage.share("plasma/shells/org.kde.latte.shell/contents/configuration/pages/TasksConfig.qml")
 
     // Context globals the page reads. A fresh cfg per test keeps writes isolated.
     property var cfg

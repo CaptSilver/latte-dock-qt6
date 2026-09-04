@@ -26,6 +26,7 @@
 // which is what flips containsMouse and fires entered/exited.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -35,7 +36,7 @@ TestCase {
     width: 300
     height: 300
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/task/TaskMouseArea.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/task/TaskMouseArea.qml")
 
     // hoverEnabled binding inputs — all must read "hoverable" or no hover
     // event ever reaches the handlers.

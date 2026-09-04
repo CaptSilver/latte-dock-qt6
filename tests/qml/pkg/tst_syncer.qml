@@ -20,6 +20,7 @@
 // during incubation/teardown where no assertion observes their host call.
 import QtQuick
 import QtTest
+import Stage 1.0
 
 TestCase {
     id: root
@@ -104,7 +105,7 @@ TestCase {
         function start() { startCalls++; }
     }
 
-    readonly property url targetUrl: Qt.resolvedUrl("../../../build/_qmlcov/stage/usr/share/plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/abilities/launchers/Syncer.qml")
+    readonly property url targetUrl: Stage.share("plasma/plasmoids/org.kde.latte.plasmoid/contents/ui/abilities/launchers/Syncer.qml")
 
     function make() {
         const c = Qt.createComponent(targetUrl);
