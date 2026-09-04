@@ -75,7 +75,6 @@
 #include <KLocalizedString>
 #include <KPackage/Package>
 #include <KPackage/PackageLoader>
-#include <KAboutData>
 #include <PlasmaActivities/Consumer>
 #include <PlasmaQuick/SharedQmlEngine>
 #include <KWindowSystem>
@@ -503,21 +502,6 @@ void Corona::quitApplication()
     QTimer::singleShot(800, [this]() {
         qGuiApp->quit();
     });
-}
-
-void Corona::aboutApplication()
-{
-    if (aboutDialog) {
-        aboutDialog->hide();
-        aboutDialog->deleteLater();
-    }
-
-    aboutDialog = new KAboutApplicationDialog(KAboutData::applicationData());
-    connect(aboutDialog.data(), &QDialog::finished, aboutDialog.data(), &QObject::deleteLater);
-    wm()->skipTaskBar(*aboutDialog);
-    wm()->setKeepAbove(aboutDialog->winId(), true);
-
-    aboutDialog->show();
 }
 
 void Corona::loadDefaultLayout()

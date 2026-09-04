@@ -21,9 +21,6 @@
 // Plasma
 #include <Plasma/Corona>
 
-// KDE
-#include <KAboutApplicationDialog>
-
 namespace PlasmaQuick {
 class SharedQmlEngine;
 }
@@ -153,7 +150,6 @@ public:
     QStringList viewTemplatesData();
 
 public Q_SLOTS:
-    void aboutApplication();
     void activateLauncherMenu();
     void loadDefaultLayout() override;
 
@@ -238,8 +234,6 @@ private:
     QList<PlasmaQuick::SharedQmlEngine *> m_alternativesObjects;
 
     QTimer m_viewsScreenSyncTimer;
-
-    QPointer<KAboutApplicationDialog> aboutDialog;
 
     //! Owns the collaborators and their loading; the shell forwards to it.
     CoronaEngine *m_engine{nullptr};

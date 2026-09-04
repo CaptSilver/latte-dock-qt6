@@ -222,6 +222,7 @@ private Q_SLOTS:
     void dialog_dropsCommentedOutAdjustGeometry();
     void containmentInterface_appletExpansionTrackedThroughOneHelper();
     void containmentInterface_trackAppletExpansion_guardsBeforeConnecting();
+    void corona_dropsTheOrphanAboutDialog();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -1141,6 +1142,44 @@ void SourceGuardTest::containmentInterface_trackAppletExpansion_guardsBeforeConn
              "the write-only connection handle must be gone from the header");
     QVERIFY2(stripped(h).contains(QStringLiteral("QSet<PlasmaQuick::AppletQuickItem*>m_expansionTrackedApplets;")),
              "the tracked applets must be a plain QSet");
+}
+
+void SourceGuardTest::corona_dropsTheOrphanAboutDialog()
+{
+    // Corona::aboutApplication and Layouts::Manager::showAboutDialog are leftovers from the
+    // switch to KHelpMenu: the QAction that reached them was deleted, so nothing called either
+    // one. Their only cost was dragging <KAboutApplicationDialog> through every translation
+    // unit that includes lattecorona.h.
+    const QString coronaHeader = readFile(QStringLiteral("app/lattecorona.h"));
+    QVERIFY2(!coronaHeader.isEmpty(), "lattecorona.h is unreadable");
+    QVERIFY2(!coronaHeader.contains(QStringLiteral("KAboutApplicationDialog")),
+             "lattecorona.h must not name KAboutApplicationDialog");
+    QVERIFY2(!coronaHeader.contains(QStringLiteral("aboutApplication")),
+             "lattecorona.h must not declare aboutApplication");
+
+    const QString coronaSource = readFile(QStringLiteral("app/lattecorona.cpp"));
+    QVERIFY2(!coronaSource.isEmpty(), "lattecorona.cpp is unreadable");
+    QVERIFY2(!coronaSource.contains(QStringLiteral("aboutDialog")),
+             "lattecorona.cpp must not keep the About dialog member alive");
+    QVERIFY2(!coronaSource.contains(QStringLiteral("KAboutData")),
+             "lattecorona.cpp must drop <KAboutData> once its only user is gone");
+
+    for (const QString &rel : {QStringLiteral("app/layouts/manager.h"), QStringLiteral("app/layouts/manager.cpp")}) {
+        const QString src = readFile(rel);
+        QVERIFY2(!src.isEmpty(), qPrintable(QStringLiteral("%1 is unreadable").arg(rel)));
+        QVERIFY2(!src.contains(QStringLiteral("showAboutDialog")),
+                 qPrintable(QStringLiteral("%1 still forwards to the orphaned About dialog").arg(rel)));
+    }
+
+    // The settings window's Help menu is the About surface users actually reach, which is why
+    // the code above is dead rather than missing. Anyone tempted to "restore" it should see
+    // this first: KHelpMenu already ships an About Latte entry, and nothing hides it.
+    const QString settings = readFile(QStringLiteral("app/settings/settingsdialog/settingsdialog.cpp"));
+    QVERIFY2(!settings.isEmpty(), "settingsdialog.cpp is unreadable");
+    QVERIFY2(settings.contains(QStringLiteral("new KHelpMenu(")),
+             "the settings window must still build a KHelpMenu");
+    QVERIFY2(!settings.contains(QStringLiteral("KHelpMenu::menuAboutApp")),
+             "nothing may hide the KHelpMenu About entry, it is the only About surface left");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

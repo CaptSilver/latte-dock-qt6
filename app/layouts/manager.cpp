@@ -376,11 +376,6 @@ void Manager::cleanupOnStartup(QString path)
 }
 
 
-void Manager::showAboutDialog()
-{
-    m_corona->aboutApplication();
-}
-
 void Manager::clearUnloadedContainmentsFromLinkedFile(QStringList containmentsIds, bool bypassChecks)
 {
     if (!m_corona || (memoryUsage() == MemoryUsage::SingleLayout && !bypassChecks)) {

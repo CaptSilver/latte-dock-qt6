@@ -93,8 +93,6 @@ public:
     void moveView(QString originLayoutName, uint originViewId, QString destinationLayoutName);
 
 public Q_SLOTS:
-    void showAboutDialog();
-
     void hideLatteSettingsDialog();
     Q_INVOKABLE void showLatteSettingsDialog(int firstPage = Settings::Dialog::LayoutPage, bool toggleCurrentPage = false);
     Q_INVOKABLE QStringList centralLayoutsNames();
