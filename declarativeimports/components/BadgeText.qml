@@ -128,7 +128,9 @@ Rectangle {
         text: {
             if (showNumber) {
                 if (numberValue > 9999) {
-                    return i18nc("Over 9999 new messages, overlay, keep short", "9,999+");
+                    //! This component is loaded into hosts with their own translation
+                    //! domain, so the domain has to be named rather than inherited.
+                    return i18ndc("latte-dock", "Over 9999 new messages, overlay, keep short", "9,999+");
                 } else if (numberValue > 0) {
                     return numberValue.toLocaleString(Qt.locale(), 'f', 0);
                 }
