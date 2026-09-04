@@ -333,11 +333,6 @@ void AbstractLayout::setLaunchers(QStringList launcherList)
     Q_EMIT launchersChanged();
 }
 
-Type AbstractLayout::type() const
-{
-    return Type::Abstract;
-}
-
 QString AbstractLayout::layoutName(const QString &fileName)
 {
     int lastSlash = fileName.lastIndexOf(QLatin1String("/"));

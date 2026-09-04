@@ -328,6 +328,9 @@ private Q_SLOTS:
     void latteQmlModulesShipNoUnreachableFiles();
     void qmldirExportsResolveToTheirFiles();
     void comboBoxDropsItsDeadMobileTextMachinery();
+    void layout_deadTypeEnumIsGone();
+    void view_isSingleIsOriginalViewOnly();
+    void layout_genericVirtualsMatchOverrides();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -2060,6 +2063,156 @@ void SourceGuardTest::comboBoxDropsItsDeadMobileTextMachinery()
     // Slider is the other live consumer of private/, and the reason the directory has to survive.
     QVERIFY2(withoutComments(readFile(QStringLiteral("declarativeimports/components/Slider.qml"))).contains(QStringLiteral("Private.RoundShadow")),
              "Slider.qml must keep the live Private.RoundShadow");
+}
+
+void SourceGuardTest::layout_deadTypeEnumIsGone()
+{
+    // Layout::Type existed to tell the three layout classes apart, and its Shared member named a
+    // subclass this fork does not have. Its one remaining reader was a qDebug on a pointer already
+    // statically typed CentralLayout*, so the enum answered a question nobody could ask. Enum,
+    // Q_ENUM_NS, the three type() declarations and the three definitions go together -- a leftover
+    // declaration with no definition only link-errors if something calls it.
+    const QStringList files = {QStringLiteral("app/layout/abstractlayout.h"),
+                               QStringLiteral("app/layout/abstractlayout.cpp"),
+                               QStringLiteral("app/layout/genericlayout.h"),
+                               QStringLiteral("app/layout/genericlayout.cpp"),
+                               QStringLiteral("app/layout/centrallayout.h"),
+                               QStringLiteral("app/layout/centrallayout.cpp")};
+
+    for (const QString &rel : files) {
+        const QString src = withoutComments(readFile(rel));
+        QVERIFY2(!src.isEmpty(), qPrintable(QStringLiteral("%1 is unreadable").arg(rel)));
+
+        // Matches every form the member took: `virtual Type type()`, `Type type() ... override`,
+        // `Layout::Type type() ... override` and the three `Type <Class>::type()` definitions.
+        // Anchoring on the RETURN type is what keeps this off View::type(), QEvent::type() and the
+        // rest of the tree's several dozen unrelated type() members.
+        QVERIFY2(!src.contains(QRegularExpression(QStringLiteral("\\bType\\s+(?:\\w+::)?type\\s*\\(\\s*\\)"))),
+                 qPrintable(QStringLiteral("%1 still declares or defines a Layout::Type type()").arg(rel)));
+        QVERIFY2(!stripped(src).contains(QStringLiteral("Q_ENUM_NS(Type)")),
+                 qPrintable(QStringLiteral("%1 still exposes Type to the meta-object system").arg(rel)));
+        QVERIFY2(!src.contains(QRegularExpression(QStringLiteral("\\benum\\s+Type\\b"))),
+                 qPrintable(QStringLiteral("%1 still declares enum Type").arg(rel)));
+    }
+
+    // Shared named a layout class this fork removed; abstractlayout.h holds the tree's only
+    // occurrence of the bare word, which makes it a sentinel that cannot collide.
+    const QString h = readFile(QStringLiteral("app/layout/abstractlayout.h"));
+    QVERIFY2(!h.contains(QRegularExpression(QStringLiteral("\\bShared\\b"))),
+             "abstractlayout.h still names the Shared layout type");
+
+    // The deletion must stop at the enum. Q_NAMESPACE and the namespace meta-object it declares are
+    // what BackgroundStyle's Q_ENUM_NS still needs, and BackgroundStyle is live.
+    QVERIFY2(stripped(h).contains(QStringLiteral("Q_NAMESPACE")),
+             "Layout's Q_NAMESPACE must survive, BackgroundStyle is registered against it");
+    QVERIFY2(stripped(h).contains(QStringLiteral("Q_ENUM_NS(BackgroundStyle)")),
+             "BackgroundStyle must stay registered in the Layout namespace meta-object");
+
+    // The only caller. Dropping the token but keeping the label leaves a log line whose text no
+    // longer matches what it prints.
+    const QString save = functionBody(readFile(QStringLiteral("app/settings/settingsdialog/layoutscontroller.cpp")),
+                                      QStringLiteral("void Layouts::save()"));
+    QVERIFY2(!save.isEmpty(), "Layouts::save() not found");
+    QVERIFY2(!save.contains(QStringLiteral("->type()")),
+             "Layouts::save() still calls a layout type()");
+    QVERIFY2(!save.contains(QStringLiteral("of Type:")),
+             "Layouts::save() still labels a log line with a layout type it no longer prints");
+}
+
+void SourceGuardTest::view_isSingleIsOriginalViewOnly()
+{
+    // Only OriginalView ever had an answer worth asking for -- ClonedView returned a constant false
+    // and the sole call site is OriginalView's own private syncClonesToScreens(). The base pure
+    // virtual and ClonedView's override have to go in the same edit: delete view.h's declaration
+    // alone and ClonedView is "marked override but does not override"; drop OriginalView's override
+    // keyword first and that one fails instead.
+    const QStringList cleared = {QStringLiteral("app/view/view.h"),
+                                 QStringLiteral("app/view/clonedview.h"),
+                                 QStringLiteral("app/view/clonedview.cpp")};
+
+    for (const QString &rel : cleared) {
+        const QString src = readFile(rel);
+        QVERIFY2(!src.isEmpty(), qPrintable(QStringLiteral("%1 is unreadable").arg(rel)));
+        QVERIFY2(!src.contains(QStringLiteral("isSingle")),
+                 qPrintable(QStringLiteral("%1 still mentions isSingle").arg(rel)));
+    }
+
+    // View stays abstract on its own account; nothing here should have taken the other three with it.
+    const QString view = stripped(readFile(QStringLiteral("app/view/view.h")));
+    for (const QString &pure : {QStringLiteral("virtualboolisCloned()const=0;"),
+                                QStringLiteral("virtualboolisOriginal()const=0;"),
+                                QStringLiteral("virtualLatte::Types::ScreensGroupscreensGroup()const=0;")}) {
+        QVERIFY2(view.contains(pure),
+                 qPrintable(QStringLiteral("view.h must keep %1").arg(pure)));
+    }
+
+    // The absence of `override` is the assertion: it is what proves the base virtual really went,
+    // rather than the declaration having merely moved.
+    const QString oh = stripped(readFile(QStringLiteral("app/view/originalview.h")));
+    QVERIFY2(oh.contains(QStringLiteral("boolisSingle()const;")),
+             "OriginalView must keep isSingle(), without an override keyword");
+    QVERIFY2(!oh.contains(QStringLiteral("boolisSingle()constoverride;")),
+             "OriginalView::isSingle() overrides nothing any more");
+
+    // Its one caller is a private Q_SLOT of the same class, so the declaration belongs below the
+    // public block -- keeping it public advertises an API nothing outside the class uses.
+    const int at = oh.indexOf(QStringLiteral("boolisSingle()const;"));
+    const int firstPrivate = oh.indexOf(QStringLiteral("private:"));
+    QVERIFY2(firstPrivate != -1, "originalview.h has no private section");
+    QVERIFY2(at > firstPrivate, "OriginalView::isSingle() is still declared in the public block");
+
+    QVERIFY2(stripped(readFile(QStringLiteral("app/view/originalview.cpp"))).contains(QStringLiteral("boolOriginalView::isSingle()const")),
+             "OriginalView::isSingle() lost its definition");
+}
+
+void SourceGuardTest::layout_genericVirtualsMatchOverrides()
+{
+    // GenericLayout carried `virtual` on eleven members while CentralLayout, its only subclass,
+    // overrode three. A virtual nobody overrides reads as an extension point and invites one.
+    // Going the other way is worse and compiles clean: strip `virtual` from isCurrent and every
+    // GenericLayout* call site silently stops reaching CentralLayout's answer.
+    const QString h = stripped(readFile(QStringLiteral("app/layout/genericlayout.h")));
+    QVERIFY2(!h.isEmpty(), "genericlayout.h is unreadable");
+
+    const QStringList deVirtualized = {QStringLiteral("QList<Latte::View*>viewsWithPlasmaShortcuts();"),
+                                       QStringLiteral("QList<Latte::View*>latteViews();"),
+                                       QStringLiteral("QList<Latte::View*>onlyOriginalViews();"),
+                                       QStringLiteral("voidsyncLatteViewsToScreens();"),
+                                       QStringLiteral("voidunloadContainments();"),
+                                       QStringLiteral("voidsetLastConfigViewFor(Latte::View*view);"),
+                                       QStringLiteral("Latte::View*lastConfigViewFor();"),
+                                       QStringLiteral("voidaddView(Plasma::Containment*containment);")};
+
+    for (const QString &decl : deVirtualized) {
+        QVERIFY2(h.contains(decl),
+                 qPrintable(QStringLiteral("genericlayout.h no longer declares %1").arg(decl)));
+        QVERIFY2(!h.contains(QStringLiteral("virtual%1").arg(decl)),
+                 qPrintable(QStringLiteral("%1 is virtual but nothing overrides it").arg(decl)));
+    }
+
+    // The three that stay virtual, paired with the override that earns each one.
+    const QString ch = stripped(readFile(QStringLiteral("app/layout/centrallayout.h")));
+    QVERIFY2(!ch.isEmpty(), "centrallayout.h is unreadable");
+
+    struct Kept
+    {
+        const char *base;
+        const char *derived;
+    };
+
+    static const Kept kept[] = {
+        // Pure, and the only reason GenericLayout cannot be instantiated.
+        {"virtualconstQStringListappliedActivities()=0;", "constQStringListappliedActivities()override;"},
+        {"virtualboolinitCorona();", "boolinitCorona()override;"},
+        {"virtualboolisCurrent();", "Q_INVOKABLEboolisCurrent()override;"},
+    };
+
+    for (const Kept &k : kept) {
+        QVERIFY2(h.contains(QString::fromUtf8(k.base)),
+                 qPrintable(QStringLiteral("genericlayout.h must keep %1").arg(QString::fromUtf8(k.base))));
+        QVERIFY2(ch.contains(QString::fromUtf8(k.derived)),
+                 qPrintable(QStringLiteral("centrallayout.h must keep %1").arg(QString::fromUtf8(k.derived))));
+    }
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

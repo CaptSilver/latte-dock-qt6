@@ -1001,7 +1001,7 @@ void Layouts::save()
     if (m_handler->corona()->layoutsManager()->memoryUsage() == MemoryUsage::MultipleLayouts) {
         for (const auto &newLayoutName : activeLayoutsToRename.keys()) {
             Latte::CentralLayout *layoutPtr = activeLayoutsToRename[newLayoutName];
-            qDebug() << " Active Layout of Type: " << layoutPtr->type() << " Is Renamed From : " << activeLayoutsToRename[newLayoutName]->name() << " TO :: " << newLayoutName;
+            qDebug() << " Active Layout Is Renamed From : " << activeLayoutsToRename[newLayoutName]->name() << " TO :: " << newLayoutName;
             layoutPtr->renameLayout(newLayoutName);
         }
     }

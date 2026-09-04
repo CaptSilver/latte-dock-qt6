@@ -57,7 +57,6 @@ public:
 
     const QStringList appliedActivities() override;
 
-    Layout::Type type() const override;
     Data::Layout data() const;
 
     Latte::WindowSystem::SchemeColors *scheme() const;

@@ -23,14 +23,6 @@ namespace Latte {
 namespace Layout {
 Q_NAMESPACE
 
-enum Type {
-    Abstract = 0,
-    Generic,
-    Central,
-    Shared
-};
-Q_ENUM_NS(Type);
-
 enum BackgroundStyle
 {
     ColorBackgroundStyle = 0,
@@ -109,8 +101,6 @@ public:
 
     QStringList launchers() const;
     void setLaunchers(QStringList launcherList);
-
-    virtual Type type() const;
 
     void syncSettings();
 

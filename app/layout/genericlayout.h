@@ -71,8 +71,6 @@ public:
 
     int viewsCount() const;
 
-    Type type() const override;
-
     Latte::Corona *corona() const;
 
     QStringList unloadedContainmentsIds();
@@ -94,25 +92,25 @@ public:
     static QList<Latte::View *> sortedLatteViews(QList<Latte::View *> views, QScreen *primaryScreen);
 
     QList<Latte::View *> sortedLatteViews();
-    virtual QList<Latte::View *> viewsWithPlasmaShortcuts();
-    virtual QList<Latte::View *> latteViews();
-    virtual QList<Latte::View *> onlyOriginalViews();
+    QList<Latte::View *> viewsWithPlasmaShortcuts();
+    QList<Latte::View *> latteViews();
+    QList<Latte::View *> onlyOriginalViews();
     ViewsMap validViewsMap();
-    virtual void syncLatteViewsToScreens();
+    void syncLatteViewsToScreens();
 
     void syncToLayoutFile(bool removeLayoutId = false);
 
     void lock(); //! make it only read-only
     void renameLayout(QString newName);
-    virtual void unloadContainments();
+    void unloadContainments();
     void unloadLatteViews();
     void unlock(); //! make it writable which it should be the default
 
-    virtual void setLastConfigViewFor(Latte::View *view);
-    virtual Latte::View *lastConfigViewFor();
+    void setLastConfigViewFor(Latte::View *view);
+    Latte::View *lastConfigViewFor();
 
     //! this function needs the layout to have first set the corona through setCorona() function
-    virtual void addView(Plasma::Containment *containment);
+    void addView(Plasma::Containment *containment);
     void recreateView(Plasma::Containment *containment, bool delayed = true);
     bool hasLatteView(Plasma::Containment *containment);
 

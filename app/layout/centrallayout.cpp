@@ -111,11 +111,6 @@ bool CentralLayout::isForFreeActivities() const
     return (m_activities.count() == 1 && m_activities[0] == QLatin1String(Data::Layout::FREEACTIVITIESID));
 }
 
-Layout::Type CentralLayout::type() const
-{
-    return Layout::Type::Central;
-}
-
 QStringList CentralLayout::activities() const
 {
     return m_activities;

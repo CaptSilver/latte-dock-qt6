@@ -28,7 +28,6 @@ public:
 
     bool isOriginal() const override;
     bool isCloned() const override;
-    bool isSingle() const override;
 
     int clonesCount() const;
 
@@ -57,6 +56,9 @@ private Q_SLOTS:
     void saveConfig();
 
 private:
+    //! not related to clones or screen groups; only syncClonesToScreens() asks
+    bool isSingle() const;
+
     void createClone(int screenId);
     void removeClone(Latte::ClonedView *view);
 

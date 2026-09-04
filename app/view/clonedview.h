@@ -26,7 +26,6 @@ public:
 
     bool isOriginal() const override;
     bool isCloned() const override;
-    bool isSingle() const override;
 
     bool isPreferredForShortcuts() const override;
     int groupId() const override;

@@ -93,11 +93,6 @@ void ClonedView::initSync()
     connect(m_originalView, &Latte::View::indicatorChanged, this, &ClonedView::indicatorChanged);
 }
 
-bool ClonedView::isSingle() const
-{
-    return false;
-}
-
 bool ClonedView::isOriginal() const
 {
     return false;
