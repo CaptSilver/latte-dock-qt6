@@ -8,6 +8,7 @@
 // local
 #include "config-latte.h"
 #include "apptypes.h"
+#include "debugoutput.h"
 #include "lattecorona.h"
 #include "layouts/importer.h"
 #include "templates/templatesmanager.h"
@@ -38,21 +39,9 @@
 #include <KDBusService>
 // KQuickAddons/QtQuickSettings removed: gone in KF6 (render backend now auto-configured)
 
-//! COLORS
-#define CNORMAL  "\033[0m"
-#define CIGREEN  "\033[1;32m"
-#define CGREEN   "\033[0;32m"
-#define CICYAN   "\033[1;36m"
-#define CCYAN    "\033[0;36m"
-#define CIRED    "\033[1;31m"
-#define CRED     "\033[0;31m"
 
 inline void configureAboutData();
 inline void detectPlatform(int argc, char **argv);
-inline void filterDebugMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg);
-
-QString filterDebugMessageText;
-QString filterDebugLogFile;
 
 int main(int argc, char **argv)
 {
@@ -390,21 +379,16 @@ int main(int argc, char **argv)
 
     //! text filter for debug messages
     if (parser.isSet(QStringLiteral("debug-text"))) {
-        filterDebugMessageText = parser.value(QStringLiteral("debug-text"));
+        Latte::DebugOutput::setMessageTextFilter(parser.value(QStringLiteral("debug-text")));
     }
 
     //! log file for debug output
     if (parser.isSet(QStringLiteral("log-file")) && !parser.value(QStringLiteral("log-file")).isEmpty()) {
-        filterDebugLogFile = parser.value(QStringLiteral("log-file"));
+        Latte::DebugOutput::setLogFile(parser.value(QStringLiteral("log-file")));
     }
 
     //! debug/mask options
-    if (parser.isSet(QStringLiteral("debug")) || parser.isSet(QStringLiteral("mask")) || parser.isSet(QStringLiteral("debug-text"))) {
-        qInstallMessageHandler(filterDebugMessageOutput);
-    } else {
-        const auto noMessageOutput = [](QtMsgType, const QMessageLogContext &, const QString &) {};
-        qInstallMessageHandler(noMessageOutput);
-    }
+    Latte::DebugOutput::installMessageHandler(Latte::DebugOutput::outputRequested(parser));
 
     auto signal_handler = [](int) {
         qGuiApp->exit();
@@ -420,77 +404,6 @@ int main(int argc, char **argv)
     KDBusService service(KDBusService::Unique);
 
     return app.exec();
-}
-
-inline void filterDebugMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
-{
-    if (msg.endsWith(QLatin1String("QML Binding: Not restoring previous value because restoreMode has not been set.This behavior is deprecated.In Qt < 6.0 the default is Binding.RestoreBinding.In Qt >= 6.0 the default is Binding.RestoreBindingOrValue."))
-        || msg.endsWith(QLatin1String("QML Binding: Not restoring previous value because restoreMode has not been set.\nThis behavior is deprecated.\nYou have to import QtQml 2.15 after any QtQuick imports and set\nthe restoreMode of the binding to fix this warning.\nIn Qt < 6.0 the default is Binding.RestoreBinding.\nIn Qt >= 6.0 the default is Binding.RestoreBindingOrValue.\n"))
-        || msg.endsWith(QLatin1String("QML Binding: Not restoring previous value because restoreMode has not been set.\nThis behavior is deprecated.\nYou have to import QtQml 2.15 after any QtQuick imports and set\nthe restoreMode of the binding to fix this warning.\nIn Qt < 6.0 the default is Binding.RestoreBinding.\nIn Qt >= 6.0 the default is Binding.RestoreBindingOrValue."))
-        || msg.endsWith(QLatin1String("QML Connections: Implicitly defined onFoo properties in Connections are deprecated. Use this syntax instead: function onFoo(<arguments>) { ... }"))) {
-        //! block warnings because they will be needed only after qt6.0 support. Currently Binding.restoreMode can not be supported because
-        //! qt5.9 is the minimum supported version.
-        return;
-    }
-
-    if (!filterDebugMessageText.isEmpty() && !msg.contains(filterDebugMessageText)) {
-        return;
-    }
-
-    const char *function = context.function ? context.function : "";
-
-    QString typeStr;
-    switch (type) {
-    case QtDebugMsg:
-        typeStr = QStringLiteral("Debug");
-        break;
-    case QtInfoMsg:
-        typeStr = QStringLiteral("Info");
-        break;
-    case QtWarningMsg:
-        typeStr = QStringLiteral("Warning");
-        break;
-    case QtCriticalMsg:
-        typeStr = QStringLiteral("Critical");
-        break;
-    case QtFatalMsg:
-        typeStr = QStringLiteral("Fatal");
-        break;
-    };
-
-    const char *TypeColor;
-
-    if (type == QtInfoMsg || type == QtWarningMsg) {
-        TypeColor = CGREEN;
-    } else if (type == QtCriticalMsg || type == QtFatalMsg) {
-        TypeColor = CRED;
-    } else {
-        TypeColor = CIGREEN;
-    }
-
-    if (filterDebugLogFile.isEmpty()) {
-        qDebug().nospace() << TypeColor << "[" << typeStr.toStdString().c_str() << " : " << CGREEN << QTime::currentTime().toString(QStringLiteral("h:mm:ss.zz")).toStdString().c_str() << TypeColor << "]" << CNORMAL
-                          #ifndef QT_NO_DEBUG
-                           << CIRED << " [" << CCYAN << function << CIRED << ":" << CCYAN << context.line << CIRED << "]"
-                          #endif
-                           << CICYAN << " - " << CNORMAL << msg;
-    } else {
-        const QString logline = QStringLiteral("[") + typeStr + QStringLiteral(" : ") + QTime::currentTime().toString(QStringLiteral("h:mm:ss.zz")) + QStringLiteral("] - ") + msg;
-
-        QFile logfile(filterDebugLogFile);
-
-        if (logfile.open(QIODevice::WriteOnly | QIODevice::Append)) {
-            QTextStream logts(&logfile);
-            logts << logline << Qt::endl;
-        } else {
-            //! a q*() call made from inside the installed handler skips the handler and lands in
-            //! Qt's raw fallback, losing the prefix and filtering applied above, so report straight
-            //! to stderr. Streaming into an unopened QFile instead drops the line and makes
-            //! QIODevice warn about the closed device on every message that follows.
-            QTextStream errts(stderr);
-            errts << logline << Qt::endl;
-        }
-    }
 }
 
 inline void configureAboutData()

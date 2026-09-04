@@ -201,7 +201,6 @@ private Q_SLOTS:
     void tabLayouts_onRawLayoutDropped_reportsAFailedImport();
     void layoutsController_addLayoutByText_guardsTheTemporaryFile();
     void importer_checksEveryArchiveOpen();
-    void filterDebugMessageOutput_survivesAnUnopenableLogFile();
     void abilityMemberReadsResolve();
 };
 
@@ -840,16 +839,6 @@ void SourceGuardTest::importer_checksEveryArchiveOpen()
     // a null entry when the archive never opened.
     QVERIFY2(!s.contains(QStringLiteral("archive.open(QIODevice::ReadOnly);")),
              "importer.cpp must not ignore the result of KArchive::open()");
-}
-
-void SourceGuardTest::filterDebugMessageOutput_survivesAnUnopenableLogFile()
-{
-    const QString s = stripped(readFile(QStringLiteral("app/main.cpp")));
-    QVERIFY2(!s.isEmpty(), "main.cpp unreadable");
-    // Writing into an unopened QFile makes QIODevice warn on every single message, and this
-    // function is the installed handler for those warnings.
-    QVERIFY2(s.contains(QStringLiteral("if(logfile.open(QIODevice::WriteOnly|QIODevice::Append))")),
-             "the --log-file writer must check that the log file actually opened");
 }
 
 void SourceGuardTest::abilityMemberReadsResolve()

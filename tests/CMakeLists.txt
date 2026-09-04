@@ -234,6 +234,17 @@ target_include_directories(generichandlertest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/settings/generic)
 set_tests_properties(generichandlertest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+# Drives the real diagnostic-output seam; main.cpp itself is excluded from the app
+# object list every other test links (duplicate main), which is why this lives in
+# its own translation unit.
+ecm_add_test(debugoutputtest.cpp
+    ${CMAKE_SOURCE_DIR}/app/debugoutput.cpp
+    TEST_NAME debugoutputtest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui
+)
+target_include_directories(debugoutputtest PRIVATE ${CMAKE_SOURCE_DIR}/app)
+set_tests_properties(debugoutputtest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 ecm_add_test(coretoolstest.cpp
     ${CMAKE_SOURCE_DIR}/declarativeimports/core/tools.cpp
     ${CMAKE_SOURCE_DIR}/declarativeimports/core/environment.cpp

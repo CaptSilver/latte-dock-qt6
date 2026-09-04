@@ -10,6 +10,7 @@ set(lattedock-app_SRCS
     startuplayoutplanner.cpp
     screenpool.cpp
     primaryoutputwatcher.cpp
+    debugoutput.cpp
     main.cpp    
     coretypes.h
 )
