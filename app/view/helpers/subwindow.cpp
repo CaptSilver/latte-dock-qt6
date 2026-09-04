@@ -22,6 +22,11 @@
 // Plasma
 #include <Plasma/Plasma>
 
+//! KWin hides the window when an Activity stops, so the reshow is tried twice: once as soon
+//! as the switch should have settled, and again late enough to outlast a slow one.
+constexpr int KWINHACKEARLYRETRYMS = 400;
+constexpr int KWINHACKLATERETRYMS = 2500;
+
 namespace Latte {
 namespace ViewPart {
 
@@ -67,8 +72,8 @@ SubWindow::SubWindow(Latte::View *view, QString debugType) :
     if (!KWindowSystem::isPlatformWayland()) {
         //! IMPORTANT!!! ::: This fixes a bug when closing an Activity all views from all Activities are
         //!  disappearing! With this code parts they reappear!!!
-        m_visibleHackTimer1.setInterval(400);
-        m_visibleHackTimer2.setInterval(2500);
+        m_visibleHackTimer1.setInterval(KWINHACKEARLYRETRYMS);
+        m_visibleHackTimer2.setInterval(KWINHACKLATERETRYMS);
         m_visibleHackTimer1.setSingleShot(true);
         m_visibleHackTimer2.setSingleShot(true);
 
@@ -83,25 +88,8 @@ SubWindow::SubWindow(Latte::View *view, QString debugType) :
             }
         });
 
-        connectionsHack << connect(&m_visibleHackTimer1, &QTimer::timeout, this, [&]() {
-            if (!m_inDelete && m_latteView && m_latteView->layout() && !isVisible()) {
-                show();
-                Q_EMIT forcedShown();
-                //qDebug() << m_debugType + ":: Enforce reshow from timer 1...";
-            } else {
-                //qDebug() << m_debugType + ":: No needed reshow from timer 1...";
-            }
-        });
-
-        connectionsHack << connect(&m_visibleHackTimer2, &QTimer::timeout, this, [&]() {
-            if (!m_inDelete && m_latteView && m_latteView->layout() && !isVisible()) {
-                show();
-                Q_EMIT forcedShown();
-                //qDebug() << m_debugType + ":: Enforce reshow from timer 2...";
-            } else {
-                //qDebug() << m_debugType + ":: No needed reshow from timer 2...";
-            }
-        });
+        connectionsHack << connect(&m_visibleHackTimer1, &QTimer::timeout, this, &SubWindow::enforceReshow);
+        connectionsHack << connect(&m_visibleHackTimer2, &QTimer::timeout, this, &SubWindow::enforceReshow);
 
         connectionsHack << connect(this, &SubWindow::forcedShown, this, [&]() {
             m_corona->wm()->unregisterIgnoredWindow(m_trackedWindowId);
@@ -137,6 +125,14 @@ SubWindow::~SubWindow()
     m_visibleHackTimer2.stop();
     for (auto &c : connectionsHack) {
         disconnect(c);
+    }
+}
+
+void SubWindow::enforceReshow()
+{
+    if (!m_inDelete && m_latteView && m_latteView->layout() && !isVisible()) {
+        show();
+        Q_EMIT forcedShown();
     }
 }
 

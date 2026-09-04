@@ -391,40 +391,18 @@ Loader {
 
                         property bool forwardSliding: true
 
-                        replaceEnter: Transition {
-                            ParallelAnimation {
-                                PropertyAnimation {
-                                    property: "x"
-                                    from: pagesStackView.forwardSliding ? -pagesBackground.width : pagesBackground.width
-                                    to: 0
-                                    duration: 350
-                                }
-
-                                PropertyAnimation {
-                                    property: "opacity"
-                                    from: 0
-                                    to: 1
-                                    duration: 350
-                                }
-                            }
+                        //! the pages travel the width of the background behind this stack; the
+                        //! stack's own width follows whatever page it happens to hold
+                        replaceEnter: LatteExtraControls.SlidingReplaceTransition {
+                            entering: true
+                            forward: pagesStackView.forwardSliding
+                            slideWidth: pagesBackground.width
                         }
 
-                        replaceExit: Transition {
-                            ParallelAnimation {
-                                PropertyAnimation {
-                                    property: "x"
-                                    from: 0
-                                    to: pagesStackView.forwardSliding ? pagesBackground.width : -pagesBackground.width
-                                    duration: 350
-                                }
-
-                                PropertyAnimation {
-                                    property: "opacity"
-                                    from: 1
-                                    to: 0
-                                    duration: 350
-                                }
-                            }
+                        replaceExit: LatteExtraControls.SlidingReplaceTransition {
+                            entering: false
+                            forward: pagesStackView.forwardSliding
+                            slideWidth: pagesBackground.width
                         }
 
                         onDepthChanged:  {

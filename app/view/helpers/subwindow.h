@@ -63,6 +63,9 @@ private Q_SLOTS:
     void fixGeometry();
     void updateWaylandId();
 
+    //!both KWin-hack retries land here
+    void enforceReshow();
+
 private:
     void setupWaylandIntegration();
 

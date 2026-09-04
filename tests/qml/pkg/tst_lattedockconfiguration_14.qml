@@ -183,6 +183,42 @@ TestCase {
         });
     }
 
+    // ---- page slide ---------------------------------------------------------
+
+    // Both halves of a page swap go through the shared SlidingReplaceTransition, with a
+    // real distance and a direction that keeps following forwardSliding -- the five tab
+    // handlers write it right before they call replace().
+    //
+    // The finder must exclude EffectsConfig's indicatorsStackView. It is a child page here,
+    // it satisfies push/replace/forwardSliding just as well, and collectAll's DFS reaches it
+    // FIRST -- so the obvious predicate silently tests EffectsConfig and passes even with this
+    // dialog's transitions deleted outright. deprecatedOptionsAreHidden is EffectsConfig's own.
+    function test_pageSlideGoesThroughTheSharedTransition() {
+        const loader = make();
+        const all = collectAll(loader);
+
+        const stack = findOne(all, function (o) {
+            return typeof o.push === "function" && typeof o.replace === "function"
+                && o.hasOwnProperty("forwardSliding")
+                && !o.hasOwnProperty("deprecatedOptionsAreHidden");
+        });
+        verify(stack, "pagesStackView not found in tree");
+
+        compare(stack.replaceEnter.entering, true, "replaceEnter must be the entering half");
+        compare(stack.replaceExit.entering, false, "replaceExit must be the leaving half");
+        verify(stack.replaceEnter.slideWidth > 0, "the pages must have somewhere to slide from");
+        compare(stack.replaceExit.slideWidth, stack.replaceEnter.slideWidth);
+
+        // The distance is pagesBackground's width, NOT the stack's own -- the two differ here,
+        // so this is checkable at runtime rather than only in the source.
+        verify(stack.replaceEnter.slideWidth !== stack.width,
+               "the slide distance must come from pagesBackground, not the stack");
+
+        stack.forwardSliding = false;
+        compare(stack.replaceEnter.forward, false, "the slide direction must follow forwardSliding");
+        compare(stack.replaceExit.forward, false);
+    }
+
     // ---- actions combo: updateModel / emptyModel / updateDuplicateText -----
     function test_actionsModelHelpers() {
         const loader = make();

@@ -63,6 +63,11 @@
 #include <Plasma/ContainmentActions>
 #include <PlasmaQuick/AppletQuickItem>
 
+//! KWin hides every View when an Activity stops, so the reshow is tried twice: once as soon
+//! as the switch should have settled, and again late enough to outlast a slow one.
+constexpr int KWINHACKEARLYRETRYMS = 400;
+constexpr int KWINHACKLATERETRYMS = 2500;
+
 #define BLOCKHIDINGDRAGTYPE QLatin1String("View::ContainsDrag()")
 #define BLOCKHIDINGNEEDSATTENTIONTYPE QLatin1String("View::Containment::NeedsAttentionState()")
 #define BLOCKHIDINGREQUESTSINPUTTYPE QLatin1String("View::Containment::RequestsInputState()")
@@ -1370,8 +1375,8 @@ void View::setLayout(Layout::GenericLayout *layout)
             //! IMPORTANT ::: Fixing KWin Faulty Behavior that KWin hides ALL Views when an Activity stops
             //! with no reason!!
 
-            m_visibleHackTimer1.setInterval(400);
-            m_visibleHackTimer2.setInterval(2500);
+            m_visibleHackTimer1.setInterval(KWINHACKEARLYRETRYMS);
+            m_visibleHackTimer2.setInterval(KWINHACKLATERETRYMS);
             m_visibleHackTimer1.setSingleShot(true);
             m_visibleHackTimer2.setSingleShot(true);
 
@@ -1382,17 +1387,8 @@ void View::setLayout(Layout::GenericLayout *layout)
                 }
             });
 
-            connectionsLayout << connect(&m_visibleHackTimer1, &QTimer::timeout, this, [&]() {
-                applyActivitiesToWindows();
-                showHiddenViewFromActivityStopping();
-                Q_EMIT activitiesChanged();
-            });
-
-            connectionsLayout << connect(&m_visibleHackTimer2, &QTimer::timeout, this, [&]() {
-                applyActivitiesToWindows();
-                showHiddenViewFromActivityStopping();
-                Q_EMIT activitiesChanged();
-            });
+            connectionsLayout << connect(&m_visibleHackTimer1, &QTimer::timeout, this, &View::restoreViewFromActivityStopping);
+            connectionsLayout << connect(&m_visibleHackTimer2, &QTimer::timeout, this, &View::restoreViewFromActivityStopping);
 
             //! END OF KWIN HACK
         }
@@ -1401,6 +1397,13 @@ void View::setLayout(Layout::GenericLayout *layout)
     } else {
         m_activities.clear();
     }
+}
+
+void View::restoreViewFromActivityStopping()
+{
+    applyActivitiesToWindows();
+    showHiddenViewFromActivityStopping();
+    Q_EMIT activitiesChanged();
 }
 
 void View::hideWindowsForSlidingOut()

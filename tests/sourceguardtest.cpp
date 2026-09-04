@@ -322,6 +322,8 @@ private Q_SLOTS:
     void configuredHeaderMacrosAreAllRead();
     void qmlSignalHandlersDeclareTheirParameters();
     void parabolicRelaysDropTheirUnreadScales();
+    void stackViewSlidesShareOneTransition();
+    void kwinReshowRetriesAreNamedAndHandledOnce();
     void latteQmlModulesShipNoUnreachableFiles();
     void qmldirExportsResolveToTheirFiles();
     void comboBoxDropsItsDeadMobileTextMachinery();
@@ -1794,6 +1796,86 @@ void SourceGuardTest::parabolicRelaysDropTheirUnreadScales()
         QVERIFY2(!src.contains(QRegularExpression(QStringLiteral("[^=!<>]=\\s*[^=;\\n]*\\bapplyParabolicEffect\\s*\\("))),
                  qPrintable(QStringLiteral("%1 assigns applyParabolicEffect's return to a local nothing reads").arg(rel)));
     }
+}
+
+void SourceGuardTest::stackViewSlidesShareOneTransition()
+{
+    // The settings dialog and the indicator sub-options run the same page slide. Written
+    // inline it was eight copies of `duration: 350` across two files, so retuning the slide
+    // meant finding all eight; miss one and the two halves of a swap disagree.
+    const QString componentRel = QStringLiteral("shell/package/contents/controls/SlidingReplaceTransition.qml");
+    const QString component = withoutComments(readFile(componentRel));
+    QVERIFY2(!component.isEmpty(), qPrintable(QStringLiteral("%1 unreadable").arg(componentRel)));
+    QCOMPARE(component.count(QStringLiteral("350")), 1);
+
+    const QRegularExpression duration(QStringLiteral("duration\\s*:\\s*350"));
+    const QRegularExpression inlineReplace(QStringLiteral("replace(Enter|Exit)\\s*:\\s*Transition\\b"));
+
+    QStringList strays;
+    QDirIterator it(QStringLiteral("%1/shell").arg(QStringLiteral(REPO_ROOT)),
+                    QStringList() << QStringLiteral("*.qml"), QDir::Files, QDirIterator::Subdirectories);
+    while (it.hasNext()) {
+        const QString abs = it.next();
+        const QString rel = relativeToRepo(abs);
+        if (rel == componentRel) {
+            continue;
+        }
+
+        const QString src = withoutComments(readAbsolute(abs));
+        if (src.contains(duration)) {
+            strays << QStringLiteral("%1  writes a raw 350ms animation; the page slide's duration belongs to the shared component").arg(rel);
+        }
+        if (src.contains(inlineReplace)) {
+            strays << QStringLiteral("%1  declares a replace transition inline").arg(rel);
+        }
+    }
+    QVERIFY2(strays.isEmpty(),
+             qPrintable(QStringLiteral("page slides that did not move to SlidingReplaceTransition:\n  %1").arg(strays.join(QStringLiteral("\n  ")))));
+
+    // The distance stays the caller's. The dock settings pages travel the width of the
+    // background behind the stack, not the stack's own -- that one is `currentItem ?
+    // currentItem.width : 0` and would collapse the slide into a motionless fade.
+    const QString dock = stripped(withoutComments(readFile(QStringLiteral("shell/package/contents/configuration/LatteDockConfiguration.qml"))));
+    QCOMPARE(dock.count(QStringLiteral("LatteExtraControls.SlidingReplaceTransition{")), 2);
+    QCOMPARE(dock.count(QStringLiteral("slideWidth:pagesBackground.width")), 2);
+    QCOMPARE(dock.count(QStringLiteral("forward:pagesStackView.forwardSliding")), 2);
+
+    const QString effects = stripped(withoutComments(readFile(QStringLiteral("shell/package/contents/configuration/pages/EffectsConfig.qml"))));
+    QCOMPARE(effects.count(QStringLiteral("LatteExtraControls.SlidingReplaceTransition{")), 2);
+    QCOMPARE(effects.count(QStringLiteral("slideWidth:indicatorsStackView.width")), 2);
+    QCOMPARE(effects.count(QStringLiteral("forward:indicatorsStackView.forwardSliding")), 2);
+}
+
+void SourceGuardTest::kwinReshowRetriesAreNamedAndHandledOnce()
+{
+    // KWin hides every view when an activity stops. The View and its SubWindow helpers each
+    // answer with two retries, one early and one late, and each wrote both raw millisecond
+    // counts and both timeout bodies out twice -- four edits to retune one delay, and two
+    // handlers that had already been kept in sync by hand.
+    const QString view = stripped(withoutComments(readFile(QStringLiteral("app/view/view.cpp"))));
+    QVERIFY2(!view.isEmpty(), "view.cpp unreadable");
+    QCOMPARE(view.count(QStringLiteral("constexprintKWINHACKEARLYRETRYMS=400;")), 1);
+    QCOMPARE(view.count(QStringLiteral("constexprintKWINHACKLATERETRYMS=2500;")), 1);
+    QCOMPARE(view.count(QStringLiteral("m_visibleHackTimer1.setInterval(KWINHACKEARLYRETRYMS);")), 1);
+    QCOMPARE(view.count(QStringLiteral("m_visibleHackTimer2.setInterval(KWINHACKLATERETRYMS);")), 1);
+    QCOMPARE(view.count(QStringLiteral("applyActivitiesToWindows();showHiddenViewFromActivityStopping();Q_EMITactivitiesChanged();")), 1);
+
+    // Both retries stay appended to connectionsLayout: that list is the only handle
+    // setLayout()'s disconnect sweep has, and a survivor fires against the replaced layout.
+    QCOMPARE(view.count(QStringLiteral("connectionsLayout<<connect(&m_visibleHackTimer1,&QTimer::timeout,this,&View::restoreViewFromActivityStopping);")), 1);
+    QCOMPARE(view.count(QStringLiteral("connectionsLayout<<connect(&m_visibleHackTimer2,&QTimer::timeout,this,&View::restoreViewFromActivityStopping);")), 1);
+
+    const QString sub = stripped(withoutComments(readFile(QStringLiteral("app/view/helpers/subwindow.cpp"))));
+    QVERIFY2(!sub.isEmpty(), "subwindow.cpp unreadable");
+    QCOMPARE(sub.count(QStringLiteral("constexprintKWINHACKEARLYRETRYMS=400;")), 1);
+    QCOMPARE(sub.count(QStringLiteral("constexprintKWINHACKLATERETRYMS=2500;")), 1);
+    QCOMPARE(sub.count(QStringLiteral("m_visibleHackTimer1.setInterval(KWINHACKEARLYRETRYMS);")), 1);
+    QCOMPARE(sub.count(QStringLiteral("m_visibleHackTimer2.setInterval(KWINHACKLATERETRYMS);")), 1);
+    QCOMPARE(sub.count(QStringLiteral("show();Q_EMITforcedShown();")), 1);
+
+    // Same constraint on the destructor's sweep over connectionsHack.
+    QCOMPARE(sub.count(QStringLiteral("connectionsHack<<connect(&m_visibleHackTimer1,&QTimer::timeout,this,&SubWindow::enforceReshow);")), 1);
+    QCOMPARE(sub.count(QStringLiteral("connectionsHack<<connect(&m_visibleHackTimer2,&QTimer::timeout,this,&SubWindow::enforceReshow);")), 1);
 }
 
 void SourceGuardTest::latteQmlModulesShipNoUnreachableFiles()

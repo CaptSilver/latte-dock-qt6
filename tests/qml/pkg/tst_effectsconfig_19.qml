@@ -254,6 +254,17 @@ TestCase {
                 "checking the Latte tab should write the default indicator type");
     }
 
+    function findStack(all) {
+        for (var i = 0; i < all.length; i++) {
+            const o = all[i];
+            if (o && typeof o.push === "function" && typeof o.replace === "function"
+                    && o.hasOwnProperty("currentItem")) {
+                return o;
+            }
+        }
+        return null;
+    }
+
     // The StackView Connections.onCurrentItemChanged routes the pushed item's
     // type back through tabBar.selectTab() when viewConfig.isReady.
     function test_stackview_routes_to_selecttab() {
@@ -263,15 +274,7 @@ TestCase {
         const tab = firstWith(all, "selectTab");
         verify(tab, "selectTab owner not found");
 
-        var stack = null;
-        for (var i = 0; i < all.length; i++) {
-            const o = all[i];
-            if (o && typeof o.push === "function" && typeof o.replace === "function"
-                    && o.hasOwnProperty("currentItem")) {
-                stack = o;
-                break;
-            }
-        }
+        const stack = findStack(all);
         verify(stack, "indicatorsStackView not found");
 
         tab.currentIndex = 0;
@@ -282,6 +285,27 @@ TestCase {
         // onCurrentItemChanged -> selectTab("org.kde.latte.plasma") -> index 1.
         tryCompare(tab, "currentIndex", 1, 2000,
                    "pushing a plasma item should route to tab 1");
+    }
+
+    // The sub-options stack hands both halves of a page swap to the shared
+    // SlidingReplaceTransition. This copy slides by its own width, and the direction has to
+    // stay a live binding: IndicatorConfigUiManager writes forwardSliding right before it
+    // calls replace().
+    function test_stackview_slides_through_the_shared_transition() {
+        const obj = make();
+        const all = collectAll(obj);
+
+        const stack = findStack(all);
+        verify(stack, "indicatorsStackView not found");
+
+        compare(stack.replaceEnter.entering, true, "replaceEnter must be the entering half");
+        compare(stack.replaceExit.entering, false, "replaceExit must be the leaving half");
+        compare(stack.replaceEnter.slideWidth, stack.width, "this stack slides by its own width");
+        compare(stack.replaceExit.slideWidth, stack.width);
+
+        stack.forwardSliding = false;
+        compare(stack.replaceEnter.forward, false, "the slide direction must follow forwardSliding");
+        compare(stack.replaceExit.forward, false);
     }
 
     // The three HeaderSwitch rows expose a pressed() signal the page binds with

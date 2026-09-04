@@ -495,40 +495,16 @@ PlasmaComponents.Page {
                     readonly property int optionsWidth: dialog.optionsWidth
                     readonly property bool deprecatedOptionsAreHidden: true // @since 0.10.0
 
-                    replaceEnter: Transition {
-                        ParallelAnimation {
-                            PropertyAnimation {
-                                property: "x"
-                                from: indicatorsStackView.forwardSliding ? -indicatorsStackView.width : indicatorsStackView.width
-                                to: 0
-                                duration: 350
-                            }
-
-                            PropertyAnimation {
-                                property: "opacity"
-                                from: 0
-                                to: 1
-                                duration: 350
-                            }
-                        }
+                    replaceEnter: LatteExtraControls.SlidingReplaceTransition {
+                        entering: true
+                        forward: indicatorsStackView.forwardSliding
+                        slideWidth: indicatorsStackView.width
                     }
 
-                    replaceExit: Transition {
-                        ParallelAnimation {
-                            PropertyAnimation {
-                                property: "x"
-                                from: 0
-                                to: indicatorsStackView.forwardSliding ? indicatorsStackView.width : -indicatorsStackView.width
-                                duration: 350
-                            }
-
-                            PropertyAnimation {
-                                property: "opacity"
-                                from: 1
-                                to: 0
-                                duration: 350
-                            }
-                        }
+                    replaceExit: LatteExtraControls.SlidingReplaceTransition {
+                        entering: false
+                        forward: indicatorsStackView.forwardSliding
+                        slideWidth: indicatorsStackView.width
                     }
                 } //! END: Indicator specific sub-options
             } //! END: Active Indicator General Settings
