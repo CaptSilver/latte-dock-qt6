@@ -31,6 +31,10 @@ private Q_SLOTS:
     void tasksModel_removeEmitsRemoveAndCount();
     void tasksModel_removeUnknownIsNoOp();
     void tasksModel_removeNullIsNoOp();
+    void tasksModel_addNullIsNoOp();
+    void tasksModel_addWhileWaitingDoesNotDuplicate();
+    void tasksModel_removeWhileWaitingClearsIt();
+    void tasksModel_rowCountOfAValidParentIsZero();
 
     // IndicatorPart::Info
     void info_defaults();
@@ -74,6 +78,70 @@ void ViewModelsTest::tasksModel_addEmitsInsertAndCount()
     const auto args = insertSpy.takeFirst();
     QCOMPARE(args.at(1).toInt(), 0);
     QCOMPARE(args.at(2).toInt(), 0);
+}
+
+//! A null plasmoid used to reach the applet connect, which dereferences it.
+void ViewModelsTest::tasksModel_addNullIsNoOp()
+{
+    TasksModel model;
+    QSignalSpy countSpy(&model, &TasksModel::countChanged);
+
+    model.addTask(nullptr);
+
+    QCOMPARE(model.count(), 0);
+    QCOMPARE(countSpy.count(), 0);
+}
+
+//! Removing a widget parks it in the waiting list so undo can bring it back. It
+//! is still known to the model while it sits there, so a second addTask must not
+//! append a row -- otherwise the restore appends another and one plasmoid ends up
+//! with two rows.
+void ViewModelsTest::tasksModel_addWhileWaitingDoesNotDuplicate()
+{
+    TasksModel model;
+    PlasmaQuick::AppletQuickItem item;
+
+    model.addTask(&item);
+    QCOMPARE(model.count(), 1);
+
+    QVERIFY(QMetaObject::invokeMethod(&model, "moveIntoWaitingTasks",
+                                      Q_ARG(PlasmaQuick::AppletQuickItem *, &item)));
+    QCOMPARE(model.count(), 0);
+
+    model.addTask(&item);
+    QCOMPARE(model.count(), 0);
+
+    QVERIFY(QMetaObject::invokeMethod(&model, "restoreFromWaitingTasks",
+                                      Q_ARG(PlasmaQuick::AppletQuickItem *, &item)));
+    QCOMPARE(model.count(), 1);
+}
+
+//! Removing for real while parked must forget it, or a later restore resurrects a
+//! widget the user already deleted.
+void ViewModelsTest::tasksModel_removeWhileWaitingClearsIt()
+{
+    TasksModel model;
+    PlasmaQuick::AppletQuickItem item;
+
+    model.addTask(&item);
+    QVERIFY(QMetaObject::invokeMethod(&model, "moveIntoWaitingTasks",
+                                      Q_ARG(PlasmaQuick::AppletQuickItem *, &item)));
+
+    model.removeTask(&item);
+
+    QVERIFY(QMetaObject::invokeMethod(&model, "restoreFromWaitingTasks",
+                                      Q_ARG(PlasmaQuick::AppletQuickItem *, &item)));
+    QCOMPARE(model.count(), 0);
+}
+
+void ViewModelsTest::tasksModel_rowCountOfAValidParentIsZero()
+{
+    TasksModel model;
+    PlasmaQuick::AppletQuickItem item;
+    model.addTask(&item);
+
+    QCOMPARE(model.rowCount(QModelIndex()), 1);
+    QCOMPARE(model.rowCount(model.index(0, 0)), 0);
 }
 
 void ViewModelsTest::tasksModel_addDedupesSamePlasmoid()

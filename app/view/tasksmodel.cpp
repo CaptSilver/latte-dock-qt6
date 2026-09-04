@@ -27,6 +27,11 @@ int TasksModel::count() const
 
 int TasksModel::rowCount(const QModelIndex &parent) const
 {
+    //! A list model has no children, so any valid parent has no rows.
+    if (parent.isValid()) {
+        return 0;
+    }
+
     return m_tasks.count();
 }
 
@@ -53,7 +58,11 @@ QHash<int, QByteArray> TasksModel::roleNames() const{
 
 void TasksModel::addTask(PlasmaQuick::AppletQuickItem *plasmoid)
 {
-    if (plasmoid && m_tasks.contains(plasmoid)) {
+    //! An item sitting in the waiting list is still known to the model, just not
+    //! shown: re-adding it there would append a second row for the same plasmoid
+    //! and the later restore would append a third. A null one has to stop here
+    //! too -- the applet connect below dereferences it.
+    if (!plasmoid || m_tasks.contains(plasmoid) || m_tasksWaiting.contains(plasmoid)) {
         return;
     }
 
@@ -110,20 +119,22 @@ void TasksModel::restoreFromWaitingTasks(PlasmaQuick::AppletQuickItem *plasmoid)
 
 void TasksModel::removeTask(PlasmaQuick::AppletQuickItem *plasmoid)
 {
-    if (!plasmoid || (plasmoid && !m_tasks.contains(plasmoid) && !m_tasksWaiting.contains(plasmoid))) {
+    if (!plasmoid) {
         return;
     }
 
-    if (m_tasks.contains(plasmoid)) {
-        int iex = m_tasks.indexOf(plasmoid);
+    m_tasksWaiting.removeAll(plasmoid);
 
+    int iex = m_tasks.indexOf(plasmoid);
+
+    if (iex >= 0) {
+        //! removeAt, not removeAll: the announced span is one row, and dropping
+        //! more than that breaks the model contract for anything listening.
         beginRemoveRows(QModelIndex(), iex, iex);
-        m_tasks.removeAll(plasmoid);
+        m_tasks.removeAt(iex);
         endRemoveRows();
 
         Q_EMIT countChanged();
-    } else if (m_tasksWaiting.contains(plasmoid)) {
-        m_tasksWaiting.removeAll(plasmoid);
     }
 }
 
