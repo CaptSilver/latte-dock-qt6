@@ -455,6 +455,7 @@ MouseArea {
                         id: configureButton
                         anchors.verticalCenter: parent.verticalCenter
                         icon.name: "configure"
+                        Accessible.name: i18n("Configure applet")
                         onClicked: {
                             tooltip.visible = false;
                             currentApplet.applet.plasmoid.internalAction("configure").trigger();
@@ -476,6 +477,9 @@ MouseArea {
                             id: colorizingButton
                             checkable: true
                             icon.name: "color-picker"
+                            //! The double space is in the msgid every catalog ships; do
+                            //! not tidy it or 35 translations go fuzzy.
+                            Accessible.name: i18n("Enable painting  for this applet")
 
                             onClicked: {
                                 fastLayoutManager.setOption(currentApplet.applet.plasmoid.id, "userBlocksColorizing", !checked);
@@ -486,6 +490,7 @@ MouseArea {
                             id: lockButton
                             checkable: true
                             icon.name: checked ? "lock" : "unlock"
+                            Accessible.name: i18n("Disable parabolic effect for this applet")
 
                             onClicked: {
                                 fastLayoutManager.setOption(currentApplet.applet.plasmoid.id, "lockZoom", checked);
@@ -496,6 +501,7 @@ MouseArea {
                             id: closeButton
                             anchors.verticalCenter: parent.verticalCenter
                             icon.name: "delete"
+                            Accessible.name: i18n("Remove applet")
                             onClicked: {
                                 tooltip.visible = false;
                                 if(currentApplet && currentApplet.applet)

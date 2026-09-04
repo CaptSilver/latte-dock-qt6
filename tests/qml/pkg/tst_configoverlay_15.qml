@@ -66,6 +66,8 @@ TestCase {
       + '    property alias overlay: ovLoader.item\n'
       + '    property alias flm: fastLayoutManager\n'
       + '    property alias lyt: layouter\n'
+      + '    function i18n() { return arguments.length > 0 ? "" + arguments[0] : ""; }\n'
+      + '    function i18nc() { return arguments.length > 1 ? "" + arguments[1] : ""; }\n'
       + '    Loader { id: ovLoader; anchors.fill: parent }\n'
       + '}\n';
 
@@ -289,6 +291,24 @@ TestCase {
     // The four tooltip buttons' onClicked handlers. Invoke each clicked() directly and
     // assert the side-effect it drives: configure/remove trigger their action, colorize
     // and lock call fastLayoutManager.setOption with the right key.
+    // The four handle buttons are icon-only, so their accessible name is the only
+    // thing a screen reader has to go on. Each name is a msgid the catalogs already
+    // carry -- including the double space in the colorize one, which 39 of them ship.
+    function test_accessibleNames() {
+        var ml = mainLayoutOf();
+        var a = appletMock.createObject(ml);
+        host.dragOverlay.currentApplet = a;
+        overlay.currentApplet = a;
+
+        var lock = findButton("lock") || findButton("unlock");
+        verify(lock, "lock button not found");
+
+        compare(findButton("configure").Accessible.name, "Configure applet");
+        compare(findButton("color-picker").Accessible.name, "Enable painting  for this applet");
+        compare(lock.Accessible.name, "Disable parabolic effect for this applet");
+        compare(findButton("delete").Accessible.name, "Remove applet");
+    }
+
     function test_tooltipButtons() {
         var ml = mainLayoutOf();
         var a = appletMock.createObject(ml);
