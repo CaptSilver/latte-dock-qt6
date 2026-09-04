@@ -76,11 +76,7 @@ find_package(QtWaylandScanner REQUIRED)
 find_package(PlasmaWaylandProtocols 1.6 REQUIRED)
 find_package(Wayland REQUIRED COMPONENTS Client)
 
-string(REGEX MATCH "\\.([^]]+)\\." KF6_VERSION_MINOR ${KF6Config_VERSION})
-string(REGEX REPLACE "\\." "" KF6_VERSION_MINOR ${KF6_VERSION_MINOR})
-
 message(STATUS "KF6 VERSION : ${KF6Config_VERSION}")
-message(STATUS "KF6 VERSION MINOR : ${KF6_VERSION_MINOR}")
 
 
 include(ECMFindQmlModule)

@@ -76,7 +76,6 @@ wayland-*-protocol.c
 /app/org.kde.latte-dock.appdata.xml
 /app/org.kde.latte-dock.desktop
 /containment/plugin/lattetypes.h
-/declarativeimports/core/config-latte-lib.h
 
 # Build-time copies of tracked sources, and kcfg output. Full paths only -- each
 # of these names a real file somewhere else in the tree.

@@ -6,9 +6,6 @@
 #ifndef EXTRAS_H
 #define EXTRAS_H
 
-// local
-#include <config-latte-lib.h>
-
 // C++
 #include <type_traits>
 #include <numeric>
@@ -25,19 +22,6 @@
 
 // Plasma
 #include <Plasma/Plasma>
-
-//! There are gcc versions that don't support yet that function even though they
-//! publish themselves as C++14 compatible. Such a case is gcc 4.8.x that openSUSE
-//! LEAP 42.2-3 is using. By enabling this flag such systems can be build correctly.
-#if ENABLE_MAKE_UNIQUE
-namespace std {
-template<class T, class... Args>
-unique_ptr<T> make_unique(Args &&... args)
-{
-    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-}
-}
-#endif
 
 /*!
  * @brief convert a QRect to a QString with format `(<x>, <y>) <width>x<height>`

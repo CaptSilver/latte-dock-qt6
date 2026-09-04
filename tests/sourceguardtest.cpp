@@ -28,13 +28,27 @@ class SourceGuardTest : public QObject
     Q_OBJECT
 
 private:
-    static QString readFile(const QString &rel)
+    static QString readAbsolute(const QString &abs)
     {
-        QFile f(QStringLiteral("%1/%2").arg(QStringLiteral(REPO_ROOT), rel));
+        QFile f(abs);
         if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
             return QString();
         }
         return QString::fromUtf8(f.readAll());
+    }
+
+    static QString readFile(const QString &rel)
+    {
+        return readAbsolute(QStringLiteral("%1/%2").arg(QStringLiteral(REPO_ROOT), rel));
+    }
+
+    // Absolute paths make a failure message unreadable and machine-specific; the tree-walking
+    // guards report what a reader can paste into an editor.
+    static QString relativeToRepo(const QString &abs)
+    {
+        QString rel = abs;
+        rel.remove(QStringLiteral("%1/").arg(QStringLiteral(REPO_ROOT)));
+        return rel;
     }
 
     // Brace-matched body (including the outer braces) of the first `sig { ... }`.
@@ -66,6 +80,78 @@ private:
         QString s = body;
         s.remove(QRegularExpression(QStringLiteral("\\s+")));
         return s;
+    }
+
+    // Comment-free copy of a C++ source, with string and char literals left alone so a `//` inside
+    // a URL cannot eat the rest of its line. A name that survives only in prose is not a use:
+    // generictoolstest.cpp writes ICONMARGIN three times in comments and never once in code, which
+    // is exactly the direction a raw text count reads backwards.
+    static QString withoutComments(const QString &src)
+    {
+        QString out;
+        out.reserve(src.size());
+
+        for (int i = 0; i < src.size();) {
+            const QChar c = src.at(i);
+
+            if (c == QLatin1Char('"') || c == QLatin1Char('\'')) {
+                const QChar quote = c;
+                out += c;
+                ++i;
+                while (i < src.size()) {
+                    if (src.at(i) == QLatin1Char('\\')) {
+                        out += QLatin1String("  ");
+                        i += 2;
+                        continue;
+                    }
+                    out += src.at(i);
+                    const bool closing = src.at(i) == quote;
+                    ++i;
+                    if (closing) {
+                        break;
+                    }
+                }
+                continue;
+            }
+
+            if (c == QLatin1Char('/') && i + 1 < src.size() && src.at(i + 1) == QLatin1Char('/')) {
+                while (i < src.size() && src.at(i) != QLatin1Char('\n')) {
+                    ++i;
+                }
+                continue;
+            }
+
+            if (c == QLatin1Char('/') && i + 1 < src.size() && src.at(i + 1) == QLatin1Char('*')) {
+                i += 2;
+                while (i < src.size() && !(src.at(i) == QLatin1Char('*') && i + 1 < src.size() && src.at(i + 1) == QLatin1Char('/'))) {
+                    //! newlines are kept so the line-anchored declaration scan still sees line starts
+                    if (src.at(i) == QLatin1Char('\n')) {
+                        out += src.at(i);
+                    }
+                    ++i;
+                }
+                i += 2;
+                continue;
+            }
+
+            out += c;
+            ++i;
+        }
+
+        return out;
+    }
+
+    // Emptied string and char literals, on top of withoutComments. A macro name inside a
+    // literal is not a use of the macro: settingsdialog.cpp prints "VERSION :::: " and would
+    // otherwise vouch for a #cmakedefine no translation unit reads.
+    static QString withoutStringBodies(const QString &commentFree)
+    {
+        // withoutComments has already flattened every escape, so a literal cannot contain
+        // its own delimiter by the time this runs.
+        static const QRegularExpression literal(QStringLiteral("\"[^\"]*\"|'[^']*'"));
+        QString out = commentFree;
+        out.remove(literal);
+        return out;
     }
 
     // Absolute paths of every file matching `glob` under the given REPO_ROOT-relative directories.
@@ -228,6 +314,8 @@ private Q_SLOTS:
     void alignmentStateSelfReadsResolve();
     void commonTools_standardPath_dropsTheDeadReverseSearch();
     void orphanHeaderDeclarationsAreGone();
+    void stdNamespaceIsNotReopened();
+    void configuredHeaderMacrosAreAllRead();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -1382,6 +1470,75 @@ void SourceGuardTest::orphanHeaderDeclarationsAreGone()
     // translation units pays for QQmlEngine and QQuickWindow again.
     QVERIFY2(!readFile(QStringLiteral("app/lattecorona.h")).contains(QStringLiteral("PlasmaQuick/ConfigView")),
              "lattecorona.h must not include <PlasmaQuick/ConfigView>, nothing in it needs the type");
+}
+
+void SourceGuardTest::stdNamespaceIsNotReopened()
+{
+    // Adding an overload to the standard library's own namespace is undefined behaviour, and
+    // for make_unique it is a plain redefinition against any C++14-or-later libstdc++. The one
+    // that lived in extras.h was reachable only through a build flag no supported entry point
+    // set, so it sat there as a landmine for whoever first turned it on.
+    const QStringList cppRoots = {QStringLiteral("app"), QStringLiteral("containment"), QStringLiteral("containmentactions"),
+                                  QStringLiteral("declarativeimports"), QStringLiteral("plasmoid"), QStringLiteral("shell"),
+                                  QStringLiteral("tests")};
+
+    //! written with escapes, so this file does not match its own guard and needs no exemption --
+    //! an exemption here would blind the guard to the one file most likely to grow a copy
+    static const QRegularExpression reopened(QStringLiteral("\\bnamespace\\s+std\\s*\\{"));
+
+    QStringList sources = sourcesUnder(cppRoots, QStringLiteral("*.cpp"));
+    sources << sourcesUnder(cppRoots, QStringLiteral("*.h"));
+    QVERIFY2(sources.size() > 100, qPrintable(QStringLiteral("only %1 C++ sources walked, the roots are wrong").arg(sources.size())));
+
+    for (const QString &path : std::as_const(sources)) {
+        QVERIFY2(!reopened.match(withoutComments(readAbsolute(path))).hasMatch(),
+                 qPrintable(QStringLiteral("%1 reopens the standard library namespace").arg(relativeToRepo(path))));
+    }
+}
+
+void SourceGuardTest::configuredHeaderMacrosAreAllRead()
+{
+    // A #cmakedefine nobody reads keeps its whole chain alive: the CMake variable behind it,
+    // whatever computes that variable, and the include path that lets the generated header
+    // resolve. KF6_VERSION_MINOR cost two string(REGEX) calls and a status line at configure
+    // time for a macro that appeared in no translation unit at all.
+    const QStringList configRoots = {QStringLiteral("app"), QStringLiteral("declarativeimports")};
+    const QStringList templates = sourcesUnder(configRoots, QStringLiteral("*.h.cmake"));
+    QVERIFY2(!templates.isEmpty(), "no configured header templates found");
+
+    // This tree configures in-source, so each generated header sits beside its own template and
+    // #defines every name in it. Scanning those would let the question answer itself.
+    QSet<QString> generated;
+    for (const QString &tmpl : templates) {
+        generated.insert(tmpl.chopped(QStringLiteral(".cmake").size()));
+    }
+
+    const QStringList cppRoots = {QStringLiteral("app"), QStringLiteral("containment"), QStringLiteral("containmentactions"),
+                                  QStringLiteral("declarativeimports"), QStringLiteral("plasmoid"), QStringLiteral("tests")};
+    QStringList sources = sourcesUnder(cppRoots, QStringLiteral("*.cpp"));
+    sources << sourcesUnder(cppRoots, QStringLiteral("*.h"));
+    QVERIFY2(sources.size() > 100, qPrintable(QStringLiteral("only %1 C++ sources walked, the roots are wrong").arg(sources.size())));
+
+    QString corpus;
+    for (const QString &path : std::as_const(sources)) {
+        if (generated.contains(path)) {
+            continue;
+        }
+        corpus += withoutStringBodies(withoutComments(readAbsolute(path)));
+    }
+
+    static const QRegularExpression cmakedefine(QStringLiteral("^#cmakedefine(?:01)?\\s+(\\w+)"), QRegularExpression::MultilineOption);
+    for (const QString &tmpl : templates) {
+        QRegularExpressionMatchIterator it = cmakedefine.globalMatch(readAbsolute(tmpl));
+        int names = 0;
+        while (it.hasNext()) {
+            const QString name = it.next().captured(1);
+            ++names;
+            QVERIFY2(corpus.contains(QRegularExpression(QStringLiteral("\\b%1\\b").arg(name))),
+                     qPrintable(QStringLiteral("%1 configures %2 and no C++ source reads it").arg(relativeToRepo(tmpl), name)));
+        }
+        QVERIFY2(names > 0, qPrintable(QStringLiteral("%1 parsed as having no #cmakedefine at all").arg(relativeToRepo(tmpl))));
+    }
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

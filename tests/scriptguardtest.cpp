@@ -17,8 +17,10 @@
 // through REPO_ROOT and assert the shape of the fix, the way sourceguardtest does for
 // one-token C++ fixes.
 
+#include <QDir>
 #include <QFile>
 #include <QProcess>
+#include <QRegularExpression>
 #include <QString>
 #include <QTemporaryDir>
 #include <QtTest>
@@ -58,6 +60,7 @@ private Q_SLOTS:
     void sceneprobeRunner_announcesAnUninstrumentedFallback();
     void qmlCoverage_honoursACoverageBuildOverride();
     void qmlCoverage_stagesBeforeDestroyingThePreviousStage();
+    void buildScripts_configureWithTheMandatoryQtPathsFlag();
 };
 
 void ScriptGuardTest::uninstall_doesNotReadTheStaleBuildManifest()
@@ -167,6 +170,31 @@ void ScriptGuardTest::manualRunners_doNotDefaultToTheStaleBuildTree()
         QVERIFY2(!src.isEmpty(), qPrintable(rel + QStringLiteral(" unreadable")));
         QVERIFY2(!src.contains(QStringLiteral("${BUILD:-$REPO/build}")),
                  qPrintable(rel + QStringLiteral(" still defaults to the stale $REPO/build")));
+    }
+}
+
+void ScriptGuardTest::buildScripts_configureWithTheMandatoryQtPathsFlag()
+{
+    // README calls -DKDE_INSTALL_USE_QT_SYS_PATHS=ON mandatory, and it is: without it the QML
+    // packages land where Plasma does not look and the dock comes up with no widgets. A build
+    // script that omits it produces an install that looks successful and does not work, which
+    // is why install.sh was worse than having no script at all.
+    static const QRegularExpression configureLine(QStringLiteral("^[ \\t]*(?:sudo[ \\t]+)?cmake\\b.*-DCMAKE_.*$"),
+                                                  QRegularExpression::MultilineOption);
+
+    const QStringList scripts = QDir(QStringLiteral(REPO_ROOT)).entryList(QStringList() << QStringLiteral("*.sh"), QDir::Files);
+    QVERIFY2(!scripts.isEmpty(), "no top-level shell scripts found, REPO_ROOT is wrong");
+
+    for (const QString &rel : scripts) {
+        const QString src = readScript(rel);
+        QVERIFY2(!src.isEmpty(), qPrintable(rel + QStringLiteral(" unreadable")));
+
+        QRegularExpressionMatchIterator it = configureLine.globalMatch(src);
+        while (it.hasNext()) {
+            const QString line = it.next().captured().trimmed();
+            QVERIFY2(line.contains(QStringLiteral("KDE_INSTALL_USE_QT_SYS_PATHS")),
+                     qPrintable(QStringLiteral("%1 configures without KDE_INSTALL_USE_QT_SYS_PATHS: %2").arg(rel, line)));
+        }
     }
 }
 

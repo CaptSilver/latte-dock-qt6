@@ -253,8 +253,7 @@ ecm_add_test(coretoolstest.cpp
     LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Qml Plasma::Plasma
 )
 target_include_directories(coretoolstest PRIVATE
-    ${CMAKE_SOURCE_DIR}/declarativeimports/core
-    ${CMAKE_BINARY_DIR}/declarativeimports/core)
+    ${CMAKE_SOURCE_DIR}/declarativeimports/core)
 
 ecm_add_test(bindingrestoremodetest.cpp
     TEST_NAME bindingrestoremodetest

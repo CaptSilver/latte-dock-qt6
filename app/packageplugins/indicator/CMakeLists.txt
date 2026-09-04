@@ -7,6 +7,5 @@ target_link_libraries(latte_packagestructure_indicator
    KF6::Package
 )
 
-# KDE_INSTALL_KSERVICETYPES5DIR is removed in Plasma 6; plugin registration is
-# handled by kcoreaddons_add_plugin(INSTALL_NAMESPACE) above. TODO: verify
-# latte-indicator.desktop is not needed, or migrate to JSON metadata.
+# KDE_INSTALL_KSERVICETYPES5DIR is removed in Plasma 6: the package structure is
+# registered from the JSON metadata K_PLUGIN_CLASS_WITH_JSON embeds in the plugin.
