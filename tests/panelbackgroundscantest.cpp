@@ -11,6 +11,8 @@
 
 #include <QtTest>
 
+#include <random>
+
 using namespace Latte::PlasmaExtended;
 
 class PanelBackgroundScanTest : public QObject
@@ -32,6 +34,88 @@ private:
         img.setPixel(x, y, qRgba(qRed(rgb), qGreen(rgb), qBlue(rgb), alpha));
     }
 
+    // Rotates by 180 degrees by copying raw premultiplied words, so no colour
+    // conversion can perturb the alphas the scanners key off.
+    static QImage rotated180(const QImage &src)
+    {
+        QImage in = src.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+        QImage out(in.width(), in.height(), QImage::Format_ARGB32_Premultiplied);
+
+        for (int y = 0; y < in.height(); ++y) {
+            const QRgb *sline = reinterpret_cast<const QRgb *>(in.constScanLine(y));
+            QRgb *dline = reinterpret_cast<QRgb *>(out.scanLine(in.height() - 1 - y));
+
+            for (int x = 0; x < in.width(); ++x) {
+                dline[in.width() - 1 - x] = sline[x];
+            }
+        }
+
+        return out;
+    }
+
+    // A bottomright (topLeftCorner=false) shadow whose per-row peak sits FURTHER OUT
+    // than the base line's peak. Every other shadow fixture here keeps the two in the
+    // same column, which is why none of them can see the base line being re-measured.
+    //
+    // Row 0 (base line): col 1 = 100, col 2 = 200 -> peak at col 2, baseLineLength = 3.
+    // Row 1: peak at col 5, well past the base line's reach of 3.
+    // Rows 2-3: ordinary rows peaking back at col 2.
+    // Row 4: col 0 opaque -> the row loop stops.
+    static QImage shadowCornerWithOutlyingRowPeak()
+    {
+        QImage img = argb(8, 8);
+
+        setA(img, 1, 0, 100);
+        setA(img, 2, 0, 200);
+
+        setA(img, 1, 1, 100);
+        setA(img, 5, 1, 250);
+
+        for (int r = 2; r <= 3; ++r) {
+            setA(img, 1, r, 100);
+            setA(img, 2, r, 200);
+        }
+
+        setA(img, 0, 4, 255);
+
+        return img;
+    }
+
+    // A bottomright shadow that ramps to its peak at col 2 on every row, base line
+    // included, so the per-row peak and the base line peak share a column.
+    static QImage shadowCornerMonotonicRamp()
+    {
+        QImage img = argb(8, 8);
+
+        for (int r = 0; r <= 3; ++r) {
+            setA(img, 1, r, 100);
+            setA(img, 2, r, 200);
+        }
+
+        setA(img, 0, 4, 255);
+
+        return img;
+    }
+
+    // The bottomright staircase used by maskRoundness_steppedCorner_returnsLineCount.
+    static QImage steppedMaskCorner()
+    {
+        QImage img = argb(8, 8);
+
+        for (int c = 0; c <= 5; ++c) {
+            setA(img, c, 0, 255);
+        }
+        for (int r = 1; r <= 4; ++r) {
+            setA(img, 0, r, 255);
+            for (int c = 1; c <= 4; ++c) {
+                setA(img, c, r, 128);
+            }
+            setA(img, 5, r, 200);
+        }
+
+        return img;
+    }
+
 private Q_SLOTS:
     // ---- maxOpacityFromCenter ----
 
@@ -46,6 +130,7 @@ private Q_SLOTS:
     void maskRoundness_squareCorner_returns0();
     void maskRoundness_steppedCorner_returnsLineCount();
     void maskRoundness_topLeft_mirrorsBottomRight();
+    void maskRoundness_mirrorEquivalence();
     void maskRoundness_singleRowTall_noCrash();
 
     // ---- roundnessFromShadowCorner ----
@@ -53,7 +138,14 @@ private Q_SLOTS:
     void shadowRoundness_emptyShadow_returns0();
     void shadowRoundness_zigZagCollapsesToZero();
     void shadowRoundness_monotonicRamp_returnsLineCount();
+    void shadowRoundness_mirrorEquivalence();
+    void shadowRoundness_perRowMaxBeyondBaseline_doesNotExtendBaseline();
     void shadowRoundness_singleRowTall_noCrash();
+
+    // ---- both roundness scanners ----
+
+    void roundness_nullCorner_returns0();
+    void roundness_mirrorEquivalence_overRandomCorners();
 
     // ---- shadowFromBorder ----
 
@@ -146,24 +238,7 @@ void PanelBackgroundScanTest::maskRoundness_steppedCorner_returnsLineCount()
     // Row r=5: col 0 transparent → outer loop breaks.
     //
     // Instrument-first: the actual result is pinned by running the test.
-    QImage img = argb(8, 8);
-
-    // Row 0 (baseRow): cols 0..5 opaque
-    for (int c = 0; c <= 5; ++c) {
-        setA(img, c, 0, 255);
-    }
-    // Rows 1..4: col 0 opaque (keeps the head-scan going), col 5 = 200 (not 255 → triggers tailLimitR), col 1..4 = 128
-    for (int r = 1; r <= 4; ++r) {
-        setA(img, 0, r, 255);
-        for (int c = 1; c <= 4; ++c) {
-            setA(img, c, r, 128);
-        }
-        setA(img, 5, r, 200);
-    }
-    // Row 5: col 0 transparent → outer loop breaks immediately (head scan stops here)
-    // Rows 5..7: transparent
-
-    int result = PanelBackgroundScan::roundnessFromMaskCorner(img, false);
+    int result = PanelBackgroundScan::roundnessFromMaskCorner(steppedMaskCorner(), false);
     // For the staircase above: headLimitR=1, tailLimitR=4 → 4-1+1=4.
     QCOMPARE(result, 4);
 }
@@ -174,7 +249,7 @@ void PanelBackgroundScanTest::maskRoundness_topLeft_mirrorsBottomRight()
     // isRoundedPoint is img(0,0) → keep transparent so roundness check proceeds.
     // Base row (r=7): col 7 opaque (basePoint alpha>0) → baseLineLength scan from col 7 down.
     // Make cols 2..7 opaque in row 7 → baseLineLength=6.
-    // Rows r=6..3: col 7 opaque (head scan continues); col qMax(0,8-6)=2 NOT 255 → sets tailLimitR.
+    // Rows r=6..3: col 7 opaque (head scan continues); col 8-6=2 NOT 255 → sets tailLimitR.
     QImage img = argb(8, 8);
 
     // Row 7 (baseRow for topleft): cols 2..7 opaque
@@ -197,6 +272,32 @@ void PanelBackgroundScanTest::maskRoundness_topLeft_mirrorsBottomRight()
     QCOMPARE(result, 4);
 }
 
+void PanelBackgroundScanTest::maskRoundness_mirrorEquivalence()
+{
+    // The two branches are supposed to be the same walk in opposite directions, so
+    // rotating the input 180 degrees and flipping the corner flag must not move the
+    // answer. maskRoundness_topLeft_mirrorsBottomRight hand-mirrors one image; this
+    // asserts the property instead of a pair of pinned numbers.
+    const QImage stepped = steppedMaskCorner();
+    QCOMPARE(PanelBackgroundScan::roundnessFromMaskCorner(rotated180(stepped), true),
+             PanelBackgroundScan::roundnessFromMaskCorner(stepped, false));
+
+    // A fully transparent corner and a fully opaque one both bail out early; they are
+    // here so a merge that broke the early exits could not hide behind the staircase.
+    const QImage transparent = argb(8, 8);
+    QCOMPARE(PanelBackgroundScan::roundnessFromMaskCorner(rotated180(transparent), true),
+             PanelBackgroundScan::roundnessFromMaskCorner(transparent, false));
+
+    QImage square = argb(8, 8);
+    for (int r = 0; r < 8; ++r) {
+        for (int c = 0; c < 8; ++c) {
+            setA(square, c, r, 255);
+        }
+    }
+    QCOMPARE(PanelBackgroundScan::roundnessFromMaskCorner(rotated180(square), true),
+             PanelBackgroundScan::roundnessFromMaskCorner(square, false));
+}
+
 void PanelBackgroundScanTest::maskRoundness_singleRowTall_noCrash()
 {
     // 8x1 image — both topLeftCorner=false and topLeftCorner=true must not over-read.
@@ -211,6 +312,19 @@ void PanelBackgroundScanTest::maskRoundness_singleRowTall_noCrash()
 
 // ---- roundnessFromShadowCorner ----
 
+void PanelBackgroundScanTest::roundness_nullCorner_returns0()
+{
+    // A theme can hand the scanners a null image: PanelBackground::hasMask() probes
+    // mask-topleft, but a Top/Left edge dock then asks for mask-bottomright, and
+    // svg->image() of a missing element is null. Both scanners must answer "no
+    // roundness" rather than walking a buffer that is not there.
+    const QImage none;
+    QCOMPARE(PanelBackgroundScan::roundnessFromMaskCorner(none, false), 0);
+    QCOMPARE(PanelBackgroundScan::roundnessFromMaskCorner(none, true), 0);
+    QCOMPARE(PanelBackgroundScan::roundnessFromShadowCorner(none, false), 0);
+    QCOMPARE(PanelBackgroundScan::roundnessFromShadowCorner(none, true), 0);
+}
+
 void PanelBackgroundScanTest::shadowRoundness_emptyShadow_returns0()
 {
     // All pixels transparent → basePoint alpha == 0 when at the expected "opaque" corner.
@@ -224,7 +338,6 @@ void PanelBackgroundScanTest::shadowRoundness_zigZagCollapsesToZero()
 {
     // The zig-zag reset (transPixels==baseLineLength → roundnessLines=0) is intended to
     // collapse spurious per-row increments when the shadow "wanders" back.
-    // Use the TOPLEFT branch where baseLineLength is fixed (not mutated per row).
     //
     // topLeftCorner=true: baseRow=h-1=7, baseCol=w-1=7.
     // Baseline (row 7): col 7 transparent (basePoint alpha=0 so baseline scan runs).
@@ -270,24 +383,35 @@ void PanelBackgroundScanTest::shadowRoundness_monotonicRamp_returnsLineCount()
     // Then each subsequent row: col 0 transparent, col 1 has max alpha, col 2 has lower alpha
     // → transPixels < baseLineLength → roundnessLines++.
     // Run 3 such rows before col 0 becomes opaque (breaking the outer loop).
-    QImage img = argb(8, 8);
-    // Row 0 (baseline): col 0 transparent, col 1=100, col 2=200 → peak at col 2, baseLineLength=3
-    setA(img, 1, 0, 100);
-    setA(img, 2, 0, 200);
-
-    // Rows 1..3: col 0 transparent, col 2=200 (rowMaxOpacity), col 1=100 (not max) →
-    // inner scan: transPixels counts non-max pixels before hitting max < baseLineLength → roundnessLines++
-    for (int r = 1; r <= 3; ++r) {
-        setA(img, 1, r, 100);
-        setA(img, 2, r, 200);
-        // col 0 stays transparent
-    }
-    // Row 4: col 0 opaque → outer loop breaks
-    setA(img, 0, 4, 255);
-
-    int result = PanelBackgroundScan::roundnessFromShadowCorner(img, false);
+    int result = PanelBackgroundScan::roundnessFromShadowCorner(shadowCornerMonotonicRamp(), false);
     // Instrument-first: run and pin. Expected 3 (one per row 1-3).
     QCOMPARE(result, 3);
+}
+
+void PanelBackgroundScanTest::shadowRoundness_mirrorEquivalence()
+{
+    // Same property as the mask mirror. The shadow scanner used to fail this: only the
+    // bottomright walk re-measured baseLineLength from each row's own peak, so a row
+    // peaking past the base line pulled the base line out with it.
+    const QImage outlying = shadowCornerWithOutlyingRowPeak();
+    QCOMPARE(PanelBackgroundScan::roundnessFromShadowCorner(rotated180(outlying), true),
+             PanelBackgroundScan::roundnessFromShadowCorner(outlying, false));
+
+    // The monotonic ramp keeps both peaks in one column, so it agreed all along; it is
+    // here as the regression net for the shared walk.
+    const QImage ramp = shadowCornerMonotonicRamp();
+    QCOMPARE(PanelBackgroundScan::roundnessFromShadowCorner(rotated180(ramp), true),
+             PanelBackgroundScan::roundnessFromShadowCorner(ramp, false));
+}
+
+void PanelBackgroundScanTest::shadowRoundness_perRowMaxBeyondBaseline_doesNotExtendBaseline()
+{
+    // The same fixture read without the mirror indirection: a row that peaks beyond the
+    // base line reaches no further than the base line does, so it fails the roundness
+    // test and the zig-zag reset drops what came before it. Rows 2-3 then count.
+    //
+    // Instrument-first: pinned from a run, not from tracing the loops.
+    QCOMPARE(PanelBackgroundScan::roundnessFromShadowCorner(shadowCornerWithOutlyingRowPeak(), false), 2);
 }
 
 void PanelBackgroundScanTest::shadowRoundness_singleRowTall_noCrash()
@@ -301,6 +425,40 @@ void PanelBackgroundScanTest::shadowRoundness_singleRowTall_noCrash()
 }
 
 // ---- shadowFromBorder ----
+
+void PanelBackgroundScanTest::roundness_mirrorEquivalence_overRandomCorners()
+{
+    // The hand-built fixtures above each pin one path. This sweeps the property itself
+    // across small random corners, which is what actually catches a direction being
+    // folded wrongly: the pre-fix shadow scanner broke this on roughly one image in
+    // forty, and no fixture in this file happened to be one of them.
+    //
+    // Fixed seed so a failure is reproducible; alphas are biased towards 0 and 255 so
+    // the transparency guards and the equality tests fire often.
+    std::mt19937 rng(12345);
+    const int palette[] = {0, 0, 0, 255, 255, 50, 100, 128, 200, 250};
+
+    for (int iteration = 0; iteration < 4000; ++iteration) {
+        const int w = 1 + static_cast<int>(rng() % 10);
+        const int h = 1 + static_cast<int>(rng() % 10);
+
+        QImage img = argb(w, h);
+        for (int y = 0; y < h; ++y) {
+            for (int x = 0; x < w; ++x) {
+                setA(img, x, y, palette[rng() % 10]);
+            }
+        }
+
+        const QImage mirror = rotated180(img);
+        const QString where = QStringLiteral("iteration %1, %2x%3").arg(iteration).arg(w).arg(h);
+
+        QVERIFY2(PanelBackgroundScan::roundnessFromMaskCorner(img, false) == PanelBackgroundScan::roundnessFromMaskCorner(mirror, true),
+                 qPrintable(QStringLiteral("mask corner disagrees with its mirror at %1").arg(where)));
+
+        QVERIFY2(PanelBackgroundScan::roundnessFromShadowCorner(img, false) == PanelBackgroundScan::roundnessFromShadowCorner(mirror, true),
+                 qPrintable(QStringLiteral("shadow corner disagrees with its mirror at %1").arg(where)));
+    }
+}
 
 void PanelBackgroundScanTest::shadow_horizontalBand_sizeIsSpan()
 {

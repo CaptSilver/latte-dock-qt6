@@ -259,7 +259,8 @@ private Q_SLOTS:
     void primaryScreen_dereferencesAreNullGuarded();
     void layoutsController_selectedLayoutOriginalData_guardsNegativeRow();
     void synchronizer_switchToLayoutInMultipleMode_guardsEmptyActivities();
-    void panelBackground_cornerLoopsUseExclusiveBound();
+    void panelBackground_cornerScansShareOneWalk();
+    void panelBackground_shadowRowScanKeepsTheBaseline();
     void genericLayout_recreateView_usesQPointerAndAlwaysDequeues();
     void addView_constructsViewsThroughFactory();
     void synchronizer_pauseLayout_guardsNullLayout();
@@ -407,13 +408,39 @@ void SourceGuardTest::synchronizer_switchToLayoutInMultipleMode_guardsEmptyActiv
              "switchToLayoutInMultipleMode must guard the empty-activities case");
 }
 
-void SourceGuardTest::panelBackground_cornerLoopsUseExclusiveBound()
+void SourceGuardTest::panelBackground_cornerScansShareOneWalk()
 {
-    const QString s = stripped(readFile(QStringLiteral("app/plasma/extended/panelbackgroundscan.cpp")));
-    QVERIFY2(!s.isEmpty(), "panelbackgroundscan.cpp not found");
-    // scanLine(corner.height()) reads one row past the image buffer.
-    QVERIFY2(!s.contains(QStringLiteral("r<=corner.height()")),
-             "a corner roundness loop still uses the inclusive r<=corner.height() bound");
+    // The topleft and bottomright corners are the same scan run in opposite directions.
+    // Both scanners take their bounds from the shared walk descriptor, so the exclusive
+    // row bound is written once instead of copied per branch — an inclusive copy is what
+    // once made scanLine() read a row past the image buffer.
+    const QString src = readFile(QStringLiteral("app/plasma/extended/panelbackgroundscan.cpp"));
+    QVERIFY2(!src.isEmpty(), "panelbackgroundscan.cpp not found");
+
+    const QStringList scanners{QStringLiteral("int roundnessFromMaskCorner(const QImage &corner, bool topLeftCorner)"),
+                               QStringLiteral("int roundnessFromShadowCorner(const QImage &corner, bool topLeftCorner)")};
+
+    for (const QString &sig : scanners) {
+        const QString s = stripped(functionBody(src, sig));
+        QVERIFY2(!s.isEmpty(), qPrintable(QStringLiteral("%1 not found").arg(sig)));
+        QVERIFY2(!s.contains(QStringLiteral("img.height()")) && !s.contains(QStringLiteral("img.width()")),
+                 qPrintable(QStringLiteral("%1 spells its own image bounds instead of asking the walk descriptor").arg(sig)));
+    }
+}
+
+void SourceGuardTest::panelBackground_shadowRowScanKeepsTheBaseline()
+{
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/plasma/extended/panelbackgroundscan.cpp")),
+                                            QStringLiteral("int roundnessFromShadowCorner(const QImage &corner, bool topLeftCorner)")));
+    QVERIFY2(!s.isEmpty(), "roundnessFromShadowCorner() not found");
+
+    // The base line is measured once, before the row scan; every later line is judged
+    // against THAT reach. Re-measuring baseLineLength inside the row scan compares a
+    // line against itself, which silently changes roundness for top/left docks.
+    const int rowScan = s.indexOf(QStringLiteral("for(intr="));
+    QVERIFY2(rowScan != -1, "the per-row scan loop was not found");
+    QVERIFY2(!s.mid(rowScan).contains(QStringLiteral("baseLineLength=")),
+             "the per-row scan reassigns baseLineLength; a line must be measured against the base line, not against itself");
 }
 
 void SourceGuardTest::genericLayout_recreateView_usesQPointerAndAlwaysDequeues()

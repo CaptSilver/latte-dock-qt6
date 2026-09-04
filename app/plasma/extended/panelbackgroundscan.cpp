@@ -44,265 +44,216 @@ float maxOpacityFromCenter(const QImage &center)
     return qMax(0.01f, result);
 }
 
+namespace {
+
+//! Both roundness scanners read the same corner twice over: for BottomEdge/RightEdge
+//! panels the interesting corner is the topleft one, walked from the bottom-right pixel
+//! back towards (0,0); for TopEdge/LeftEdge panels it is the bottomright corner, walked
+//! from (0,0) forwards. Only the direction differs, so it lives here and each scan is
+//! written once.
+struct CornerWalk
+{
+    int baseRow{0};
+    int baseCol{0};
+    int oppositeRow{0}; //! the corner diagonally across from the base pixel
+    int oppositeCol{0};
+    int step{1}; //! +1 walks away from (0,0), -1 walks back towards it
+
+    bool holdsRow(int r) const
+    {
+        return (step > 0 ? r <= oppositeRow : r >= 0);
+    }
+
+    bool holdsColumn(int c) const
+    {
+        return (step > 0 ? c <= oppositeCol : c >= 0);
+    }
+
+    //! How far column c sits from the base column, counted inclusively.
+    int reach(int c) const
+    {
+        return (step * (c - baseCol)) + 1;
+    }
+
+    //! The column that closes a run of `length` pixels starting at the base column.
+    int columnAtReach(int length) const
+    {
+        return baseCol + (step * (length - 1));
+    }
+};
+
+CornerWalk cornerWalk(const QImage &img, bool topLeftCorner)
+{
+    CornerWalk walk;
+    walk.baseRow = (topLeftCorner ? img.height() - 1 : 0);
+    walk.baseCol = (topLeftCorner ? img.width() - 1 : 0);
+    walk.oppositeRow = (topLeftCorner ? 0 : img.height() - 1);
+    walk.oppositeCol = (topLeftCorner ? 0 : img.width() - 1);
+    walk.step = (topLeftCorner ? -1 : 1);
+    return walk;
+}
+
+} // namespace
+
 int roundnessFromMaskCorner(const QImage &corner, bool topLeftCorner)
 {
     QImage img = ensurePremultiplied(corner);
 
-    int baseRow = (topLeftCorner ? img.height() - 1 : 0);
-    int baseCol = (topLeftCorner ? img.width() - 1 : 0);
+    //! A theme that is missing the corner element hands us a null image; there is no
+    //! roundness to find in one, and scanLine() would walk a buffer that is not there.
+    if (img.isNull()) {
+        return 0;
+    }
+
+    const CornerWalk walk = cornerWalk(img, topLeftCorner);
+
+    QRgb *line = (QRgb *)img.scanLine(walk.baseRow);
+    QRgb basePoint = line[walk.baseCol];
+
+    QRgb *isRoundedLine = (QRgb *)img.scanLine(walk.oppositeRow);
+    QRgb isRoundedPoint = isRoundedLine[walk.oppositeCol];
+
+    //! If the pixel across the diagonal is not fully transparent then the corner is
+    //! square and there is no roundness to measure.
+    if (qAlpha(isRoundedPoint) != 0) {
+        return 0;
+    }
 
     int baseLineLength = 0;
     int roundnessLines = 0;
 
-    if (topLeftCorner) {
-        //! TOPLEFT corner
-        QRgb *line = (QRgb *)img.scanLine(baseRow);
-        QRgb basePoint = line[baseCol];
+    if (qAlpha(basePoint) > 0) {
+        //! calculate the mask baseLine length
+        for (int c = walk.baseCol; walk.holdsColumn(c); c += walk.step) {
+            QRgb point = line[c];
 
-        QRgb *isRoundedLine = (QRgb *)img.scanLine(0);
-        QRgb isRoundedPoint = isRoundedLine[0];
-
-        //! If there is roundness, if that point is not fully transparent then
-        //! there is no roundness
-        if (qAlpha(isRoundedPoint) == 0) {
-            if (qAlpha(basePoint) > 0) {
-                //! calculate the mask baseLine length
-                for (int c = baseCol; c >= 0; --c) {
-                    QRgb point = line[c];
-
-                    if (qAlpha(point) > 0) {
-                        baseLineLength++;
-                    } else {
-                        break;
-                    }
-                }
-            }
-
-            if (baseLineLength > 0) {
-                int headLimitR = baseRow;
-                int tailLimitR = baseRow;
-
-                for (int r = baseRow - 1; r >= 0; --r) {
-                    QRgb *rline = (QRgb *)img.scanLine(r);
-                    QRgb fpoint = rline[baseCol];
-                    if (qAlpha(fpoint) == 0) {
-                        //! a line that is not part of the roundness because its first pixel is fully transparent
-                        break;
-                    }
-
-                    headLimitR = r;
-                }
-
-                int c = qMax(0, img.width() - baseLineLength);
-
-                for (int r = baseRow - 1; r >= 0; --r) {
-                    QRgb *rline = (QRgb *)img.scanLine(r);
-                    QRgb point = rline[c];
-
-                    if (qAlpha(point) != 255) {
-                        tailLimitR = r;
-                        break;
-                    }
-                }
-
-                if (headLimitR != tailLimitR) {
-                    roundnessLines = tailLimitR - headLimitR + 1;
-                }
+            if (qAlpha(point) > 0) {
+                baseLineLength++;
+            } else {
+                break;
             }
         }
-    } else {
-        //! BOTTOMRIGHT CORNER
-        //! it should be TOPRIGHT corner in that case
-        QRgb *line = (QRgb *)img.scanLine(baseRow);
-        QRgb basePoint = line[baseCol];
+    }
 
-        QRgb *isRoundedLine = (QRgb *)img.scanLine(img.height() - 1);
-        QRgb isRoundedPoint = isRoundedLine[img.width() - 1];
+    if (baseLineLength > 0) {
+        int headLimitR = walk.baseRow;
+        int tailLimitR = walk.baseRow;
 
-        //! If there is roundness, if that point is not fully transparent then
-        //! there is no roundness
-        if (qAlpha(isRoundedPoint) == 0) {
-            if (qAlpha(basePoint) > 0) {
-                //! calculate the mask baseLine length
-                for (int c = baseCol; c < img.width(); ++c) {
-                    QRgb point = line[c];
-
-                    if (qAlpha(point) > 0) {
-                        baseLineLength++;
-                    } else {
-                        break;
-                    }
-                }
+        for (int r = walk.baseRow + walk.step; walk.holdsRow(r); r += walk.step) {
+            QRgb *rline = (QRgb *)img.scanLine(r);
+            QRgb fpoint = rline[walk.baseCol];
+            if (qAlpha(fpoint) == 0) {
+                //! a line that is not part of the roundness because its first pixel is fully transparent
+                break;
             }
 
-            if (baseLineLength > 0) {
-                int headLimitR = 0;
-                int tailLimitR = 0;
+            headLimitR = r;
+        }
 
-                for (int r = baseRow + 1; r < img.height(); ++r) {
-                    QRgb *rline = (QRgb *)img.scanLine(r);
-                    QRgb fpoint = rline[baseCol];
-                    if (qAlpha(fpoint) == 0) {
-                        //! a line that is not part of the roundness because its first pixel is not transparent
-                        break;
-                    }
+        const int c = walk.columnAtReach(baseLineLength);
 
-                    headLimitR = r;
-                }
+        for (int r = walk.baseRow + walk.step; walk.holdsRow(r); r += walk.step) {
+            QRgb *rline = (QRgb *)img.scanLine(r);
+            QRgb point = rline[c];
 
-                int c = baseLineLength - 1;
-
-                for (int r = baseRow + 1; r < img.height(); ++r) {
-                    QRgb *rline = (QRgb *)img.scanLine(r);
-                    QRgb point = rline[c];
-
-                    if (qAlpha(point) != 255) {
-                        tailLimitR = r;
-                        break;
-                    }
-                }
-
-                if (headLimitR != tailLimitR) {
-                    roundnessLines = headLimitR - tailLimitR + 1;
-                }
+            if (qAlpha(point) != 255) {
+                tailLimitR = r;
+                break;
             }
+        }
+
+        if (headLimitR != tailLimitR) {
+            roundnessLines = (walk.step * (headLimitR - tailLimitR)) + 1;
         }
     }
 
     return roundnessLines;
 }
 
+//! 1.  The caller picks which corner shadow to read from the panel location.
+//! 2.  For that corner discover the maxOpacity (most solid shadow point) and how many
+//!     pixels (distance) it takes to reach it, that is called [baseLineLength]
+//! 3.  After [2] for each next line calculate the maxOpacity for that line and how many
+//!     points are needed to reach there. If the points to reach the line max opacity are
+//!     shorter than baseLineLength then that line is considered part of the roundness
+//! 3.1 Avoid zig-zag cases such as the Air plasma theme case. When the shadow is not
+//!     following a straight line until reaching the rounded part only the last part of
+//!     the discovered roundness counts and everything before it is ignored.
+//! 4.  The lines that are shorter than the baseline are the discovered roundness
 int roundnessFromShadowCorner(const QImage &corner, bool topLeftCorner)
 {
     QImage img = ensurePremultiplied(corner);
 
-    int baseRow = (topLeftCorner ? img.height() - 1 : 0);
-    int baseCol = (topLeftCorner ? img.width() - 1 : 0);
+    //! A theme that is missing the corner element hands us a null image; there is no
+    //! roundness to find in one, and scanLine() would walk a buffer that is not there.
+    if (img.isNull()) {
+        return 0;
+    }
+
+    const CornerWalk walk = cornerWalk(img, topLeftCorner);
+
+    QRgb *line = (QRgb *)img.scanLine(walk.baseRow);
+    QRgb basePoint = line[walk.baseCol];
 
     int baseLineLength = 0;
     int roundnessLines = 0;
 
-    if (topLeftCorner) {
-        //! TOPLEFT corner
-        QRgb *line = (QRgb *)img.scanLine(baseRow);
-        QRgb basePoint = line[baseCol];
-
+    if (qAlpha(basePoint) == 0) {
+        //! 2. the shadow maxOpacity in the base line and the pixels needed to reach it
         int baseShadowMaxOpacity = 0;
 
-        if (qAlpha(basePoint) == 0) {
-            //! calculate the shadow maxOpacity in the base line
-            //! and number of pixels to reach there
-            for (int c = baseCol; c >= 0; --c) {
-                QRgb point = line[c];
+        for (int c = walk.baseCol; walk.holdsColumn(c); c += walk.step) {
+            QRgb point = line[c];
 
-                if (qAlpha(point) > baseShadowMaxOpacity) {
-                    baseShadowMaxOpacity = qAlpha(point);
-                    baseLineLength = (baseCol - c + 1);
-                }
+            if (qAlpha(point) > baseShadowMaxOpacity) {
+                baseShadowMaxOpacity = qAlpha(point);
+                baseLineLength = walk.reach(c);
+            }
+        }
+    }
+
+    if (baseLineLength <= 0) {
+        return 0;
+    }
+
+    for (int r = walk.baseRow + walk.step; walk.holdsRow(r); r += walk.step) {
+        QRgb *rline = (QRgb *)img.scanLine(r);
+        QRgb fpoint = rline[walk.baseCol];
+        if (qAlpha(fpoint) != 0) {
+            //! a line that is not part of the roundness because its first pixel is not transparent
+            break;
+        }
+
+        //! 3. this line's own most solid shadow point
+        int rowMaxOpacity = 0;
+
+        for (int c = walk.baseCol; walk.holdsColumn(c); c += walk.step) {
+            QRgb point = rline[c];
+
+            if (qAlpha(point) > rowMaxOpacity) {
+                rowMaxOpacity = qAlpha(point);
             }
         }
 
-        if (baseLineLength > 0) {
-            for (int r = baseRow - 1; r >= 0; --r) {
-                QRgb *rline = (QRgb *)img.scanLine(r);
-                QRgb fpoint = rline[baseCol];
-                if (qAlpha(fpoint) != 0) {
-                    //! a line that is not part of the roundness because its first pixel is not transparent
-                    break;
-                }
+        int transPixels = 0;
 
-                int transPixels = 0;
-                int rowMaxOpacity = 0;
+        for (int c = walk.baseCol; walk.reach(c) <= baseLineLength; c += walk.step) {
+            QRgb point = rline[c];
 
-                for (int c = baseCol; c >= 0; --c) {
-                    QRgb point = rline[c];
-
-                    if (qAlpha(point) > rowMaxOpacity) {
-                        rowMaxOpacity = qAlpha(point);
-                        continue;
-                    }
-                }
-
-                for (int c = baseCol; c >= (baseCol - baseLineLength + 1); --c) {
-                    QRgb point = rline[c];
-
-                    if (qAlpha(point) != rowMaxOpacity) {
-                        transPixels++;
-                        continue;
-                    }
-
-                    if (transPixels != baseLineLength) {
-                        roundnessLines++;
-                        break;
-                    }
-                }
-
-                if (transPixels == baseLineLength) {
-                    //! 3.1 avoid zig-zag shadows Air plasma theme case
-                    roundnessLines = 0;
-                }
+            if (qAlpha(point) != rowMaxOpacity) {
+                transPixels++;
+                continue;
             }
-        }
-    } else {
-        //! BOTTOMRIGHT CORNER
-        //! it should be TOPRIGHT corner in that case
-        QRgb *line = (QRgb *)img.scanLine(baseRow);
-        QRgb basePoint = line[baseCol];
 
-        int baseShadowMaxOpacity = 0;
-
-        if (qAlpha(basePoint) == 0) {
-            //! calculate the base line transparent pixels
-            for (int c = baseCol; c < img.width(); ++c) {
-                QRgb point = line[c];
-
-                if (qAlpha(point) > baseShadowMaxOpacity) {
-                    baseShadowMaxOpacity = qAlpha(point);
-                    baseLineLength = c + 1;
-                }
+            if (transPixels != baseLineLength) {
+                roundnessLines++;
+                break;
             }
         }
 
-        if (baseLineLength > 0) {
-            for (int r = baseRow + 1; r < img.height(); ++r) {
-                QRgb *rline = (QRgb *)img.scanLine(r);
-                QRgb fpoint = rline[baseCol];
-                if (qAlpha(fpoint) != 0) {
-                    //! a line that is not part of the roundness because its first pixel is not transparent
-                    break;
-                }
-
-                int transPixels = 0;
-                int rowMaxOpacity = 0;
-
-                for (int c = baseCol; c < img.width(); ++c) {
-                    QRgb point = rline[c];
-
-                    if (qAlpha(point) > rowMaxOpacity) {
-                        rowMaxOpacity = qAlpha(point);
-                        baseLineLength = c + 1;
-                    }
-                }
-
-                for (int c = baseCol; c < baseLineLength; ++c) {
-                    QRgb point = rline[c];
-
-                    if (qAlpha(point) != rowMaxOpacity) {
-                        transPixels++;
-                        continue;
-                    }
-
-                    if (transPixels != baseLineLength) {
-                        roundnessLines++;
-                        break;
-                    }
-                }
-
-                if (transPixels == baseLineLength) {
-                    //! 3.1 avoid zig-zag shadows Air plasma theme case
-                    roundnessLines = 0;
-                }
-            }
+        if (transPixels == baseLineLength) {
+            //! 3.1 avoid zig-zag shadows Air plasma theme case
+            roundnessLines = 0;
         }
     }
 
