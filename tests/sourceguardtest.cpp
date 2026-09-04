@@ -219,6 +219,7 @@ private Q_SLOTS:
     void eventsSink_mouseCasesShareOneBody();
     void notifyrcEventsMatchTheirEmitters();
     void factory_removeIndicator_reportsAFailedRemoval();
+    void dialog_dropsCommentedOutAdjustGeometry();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -1054,6 +1055,34 @@ void SourceGuardTest::factory_removeIndicator_reportsAFailedRemoval()
     QVERIFY2(!s.isEmpty(), "Factory::removeIndicator() not found");
     QVERIFY2(s.contains(QStringLiteral("if(process.exitCode()==0){showRemovedSucceed(pluginName);}else{showRemovedFailed(pluginName);}")),
              "a kpackagetool6 removal that fails must report it, not return silently");
+}
+
+void SourceGuardTest::dialog_dropsCommentedOutAdjustGeometry()
+{
+    const QString h = readFile(QStringLiteral("declarativeimports/core/dialog.h"));
+    const QString cpp = readFile(QStringLiteral("declarativeimports/core/dialog.cpp"));
+    QVERIFY2(!h.isEmpty() && !cpp.isEmpty(), "dialog sources not found");
+
+    // Popup placement moved to popupPosition() in 2021 and the superseded adjustGeometry() override
+    // was left behind commented out. Every fix since landed in popupPosition() only, so the copy had
+    // drifted into a decoy: it clamped x to screengeometry.right()-1, pinning a popup's LEFT edge one
+    // pixel inside the screen edge and pushing the rest of it off-screen.
+    QVERIFY2(!cpp.contains(QStringLiteral("Dialog::adjustGeometry")),
+             "the commented-out adjustGeometry copy must stay out of dialog.cpp");
+    QVERIFY2(!h.contains(QStringLiteral("adjustGeometry")),
+             "the commented-out adjustGeometry declaration must stay out of dialog.h");
+
+    // The arithmetic the dead copy never grew, and the reason resurrecting it would regress placement.
+    const QString s = stripped(functionBody(cpp, QStringLiteral("QPoint Dialog::popupPosition(QQuickItem *item, const QSize &size)")));
+    QVERIFY2(!s.isEmpty(), "popupPosition() not found");
+    QVERIFY2(s.contains(QStringLiteral("screengeometry-=QMargins(0,popupmargin,0,popupmargin)")),
+             "popupPosition must inset the screen by the popup margin on the vertical edges");
+    QVERIFY2(s.contains(QStringLiteral("screengeometry-=QMargins(popupmargin,0,popupmargin,0)")),
+             "popupPosition must inset the screen by the popup margin on the horizontal edges");
+    QVERIFY2(s.contains(QStringLiteral("screengeometry.right()-size.width()+1")),
+             "popupPosition must clamp x so the popup's right edge stays on screen, not its left");
+    QVERIFY2(s.contains(QStringLiteral("screengeometry.bottom()-size.height()+1")),
+             "popupPosition must clamp y so the popup's bottom edge stays on screen, not its top");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

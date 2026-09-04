@@ -43,8 +43,6 @@ Q_SIGNALS:
     void edgeChanged();
 
 protected:
-  //  void adjustGeometry(const QRect &geom) override;
-
     bool event(QEvent *e) override;
 
 private Q_SLOTS:
