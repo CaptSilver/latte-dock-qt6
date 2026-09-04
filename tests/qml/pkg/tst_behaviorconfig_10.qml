@@ -187,6 +187,54 @@ TestCase {
 
     // ---- Tests ----------------------------------------------------------------
 
+    // The alignment row is driven by a real synthesised click rather than by
+    // emitting clicked(): these handlers gate on the button's pressed state, which
+    // only a delivered press changes.
+    function test_alignment_buttons_setNextLocation() {
+        const page = make();
+        const btns = collect(page, function (o) {
+            return o.hasOwnProperty("alignment") && typeof o.alignment === "number"
+                    && typeof o.checkable === "boolean";
+        });
+        verify(btns.length >= 3, "expected the alignment buttons, got " + btns.length);
+
+        var exercised = 0;
+        for (var i = 0; i < btns.length; i++) {
+            if (!btns[i].visible || btns[i].width <= 0)
+                continue;
+            root.locationCalls = [];
+            mouseClick(btns[i], btns[i].width / 2, btns[i].height / 2);
+            compare(root.locationCalls.length, 1,
+                    "alignment=" + btns[i].alignment + " recorded no setNextLocation");
+            compare(root.locationCalls[0].alignment, btns[i].alignment);
+            exercised++;
+        }
+        // Guards against the loop skipping every button and passing on nothing.
+        verify(exercised >= 3, "only exercised " + exercised + " alignment buttons");
+    }
+
+    // The visibility row writes straight through to visibility.mode.
+    function test_visibility_buttons_setMode() {
+        const page = make();
+        const btns = collect(page, function (o) {
+            return o.hasOwnProperty("mode") && typeof o.mode === "number"
+                    && o.modes === undefined && typeof o.checkable === "boolean";
+        });
+        verify(btns.length >= 3, "expected the visibility buttons, got " + btns.length);
+
+        var exercised = 0;
+        for (var i = 0; i < btns.length; i++) {
+            if (!btns[i].visible || btns[i].width <= 0)
+                continue;
+            visibilityObj.mode = -1;
+            mouseClick(btns[i], btns[i].width / 2, btns[i].height / 2);
+            compare(visibilityObj.mode, btns[i].mode,
+                    "visibility button mode=" + btns[i].mode + " did not apply");
+            exercised++;
+        }
+        verify(exercised >= 3, "only exercised " + exercised + " visibility buttons");
+    }
+
     // Each location button's onClicked calls setNextLocation with its edge when
     // viewConfig.isReady and plasmoid.location !== edge. location starts at
     // Floating(0), so all four edges differ and every click records.

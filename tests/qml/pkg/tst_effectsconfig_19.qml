@@ -75,7 +75,7 @@ TestCase {
     function make() {
         const c = Qt.createComponent(targetUrl);
         verify(c.status === Component.Ready, "compile failed: " + c.errorString());
-        const obj = createTemporaryObject(c, root, {});
+        const obj = createTemporaryObject(c, root, {width: 460, height: 900, visible: true});
         verify(obj, "instantiate failed: " + c.errorString());
         return obj;
     }
@@ -129,6 +129,51 @@ TestCase {
 
     // Both shadow sliders own update*() that writes plasmoid.configuration when
     // the slider is not under the pointer. Call it directly and assert the write.
+    // The shadow-colour and animation-duration rows gate on the button's pressed
+    // state, so they need a delivered click rather than an emitted clicked().
+    function test_durationButtonsWriteDurationTime() {
+        const page = make();
+        const btns = collectAll(page).filter(function (o) {
+            return o.hasOwnProperty("duration") && typeof o.duration === "number"
+                    && typeof o.checkable === "boolean";
+        });
+        verify(btns.length >= 3, "expected the duration buttons, got " + btns.length);
+
+        var exercised = 0;
+        for (var i = 0; i < btns.length; i++) {
+            if (!btns[i].visible || btns[i].width <= 0)
+                continue;
+            plasmoid.configuration.durationTime = -1;
+            mouseClick(btns[i], btns[i].width / 2, btns[i].height / 2);
+            compare(plasmoid.configuration.durationTime, btns[i].duration);
+            exercised++;
+        }
+        verify(exercised >= 3, "only exercised " + exercised + " duration buttons");
+    }
+
+    function test_shadowTypeButtonsWriteShadowColorType() {
+        // The whole shadow-colour row is bound to enabled: showAppletShadow.checked,
+        // and a disabled button takes no mouse events.
+        plasmoid.configuration.appletShadowsEnabled = true;
+        const page = make();
+        const btns = collectAll(page).filter(function (o) {
+            return o.hasOwnProperty("type") && typeof o.type === "number"
+                    && typeof o.checkable === "boolean";
+        });
+        verify(btns.length >= 2, "expected the shadow buttons, got " + btns.length);
+
+        var exercised = 0;
+        for (var i = 0; i < btns.length; i++) {
+            if (!btns[i].visible || btns[i].width <= 0)
+                continue;
+            plasmoid.configuration.shadowColorType = -1;
+            mouseClick(btns[i], btns[i].width / 2, btns[i].height / 2);
+            compare(plasmoid.configuration.shadowColorType, btns[i].type);
+            exercised++;
+        }
+        verify(exercised >= 2, "only exercised " + exercised + " shadow buttons");
+    }
+
     function test_update_functions() {
         const obj = make();
         const all = collectAll(obj);

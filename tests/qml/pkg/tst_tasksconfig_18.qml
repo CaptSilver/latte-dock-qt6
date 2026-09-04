@@ -133,7 +133,7 @@ TestCase {
         const c = Qt.createComponent(targetUrl);
         tryVerify(function() { return c.status === Component.Ready || c.status === Component.Error; }, 6000);
         verify(c.status === Component.Ready, c.errorString());
-        const page = createTemporaryObject(c, root, {});
+        const page = createTemporaryObject(c, root, {width: 480, height: 780, visible: true});
         verify(page, "no page item");
         return page;
     }
@@ -190,6 +190,30 @@ TestCase {
 
     // disableAllWindowsFunctionality is the page's one declared property: a live
     // binding onto tasks.configuration.hideAllTasks. Prove it tracks both ways.
+    // The launcher-group row gates on the button's pressed state, so it needs a
+    // delivered click rather than an emitted clicked().
+    function test_launcherGroupButtonsWriteLaunchersGroup() {
+        cfg = makeConfig();
+        const page = loadPage();
+        const btns = [];
+        collect(page, function (o) {
+            return o.hasOwnProperty("group") && typeof o.group === "number"
+                    && typeof o.checkable === "boolean";
+        }, btns, []);
+        verify(btns.length >= 2, "expected the launcher group buttons, got " + btns.length);
+
+        var exercised = 0;
+        for (var i = 0; i < btns.length; i++) {
+            if (!btns[i].visible || btns[i].width <= 0)
+                continue;
+            cfg.launchersGroup = -1;
+            mouseClick(btns[i], btns[i].width / 2, btns[i].height / 2);
+            compare(cfg.launchersGroup, btns[i].group);
+            exercised++;
+        }
+        verify(exercised >= 2, "only exercised " + exercised + " launcher group buttons");
+    }
+
     function test_disable_all_windows_binding() {
         cfg = makeConfig();
         const page = loadPage();
