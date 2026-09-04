@@ -314,6 +314,8 @@ private Q_SLOTS:
     void alignmentStateSelfReadsResolve();
     void commonTools_standardPath_dropsTheDeadReverseSearch();
     void orphanHeaderDeclarationsAreGone();
+    void namespaceConstantsNobodyReadsAreDeleted();
+    void delegatePaintDropsItsUnreadLocals();
     void stdNamespaceIsNotReopened();
     void configuredHeaderMacrosAreAllRead();
     void qmlSignalHandlersDeclareTheirParameters();
@@ -1475,6 +1477,99 @@ void SourceGuardTest::orphanHeaderDeclarationsAreGone()
     // translation units pays for QQmlEngine and QQuickWindow again.
     QVERIFY2(!readFile(QStringLiteral("app/lattecorona.h")).contains(QStringLiteral("PlasmaQuick/ConfigView")),
              "lattecorona.h must not include <PlasmaQuick/ConfigView>, nothing in it needs the type");
+}
+
+void SourceGuardTest::namespaceConstantsNobodyReadsAreDeleted()
+{
+    // A const at namespace scope has internal linkage, so a SHOUTY name that appears exactly once
+    // in its own .cpp -- the definition -- cannot be read from anywhere at all. Nothing in the
+    // build says so: app/ compiles with -Wextra and no -Wall, and GCC leaves C++ out of
+    // -Wunused-const-variable regardless, which is how eleven copy-pasted drawing margins piled up
+    // unnoticed. Being dead was the lesser problem -- layoutnamedelegate.cpp declared
+    // INDICATORCHANGESMARGIN = 2 beside the 5 that generictools.cpp actually draws that indicator
+    // with, so reading the delegate told you the wrong geometry.
+    //
+    // Headers are deliberately out of scope: a constant declared there exists to be read from
+    // other translation units, so the appears-once rule means nothing.
+    static const QRegularExpression declaration(QStringLiteral("^(?:static\\s+)?const(?:expr)?\\s+[\\w:]+(?:\\s*<[^>]*>)?\\s*[*&]?\\s*([A-Z][A-Z0-9_]{2,})\\s*(?:=|\\{)"));
+
+    const QStringList cppRoots = {QStringLiteral("app"), QStringLiteral("containment"), QStringLiteral("containmentactions"), QStringLiteral("declarativeimports"), QStringLiteral("plasmoid")};
+    const QStringList sources = sourcesUnder(cppRoots, QStringLiteral("*.cpp"));
+    QVERIFY2(sources.size() > 100, qPrintable(QStringLiteral("only %1 C++ sources walked, the roots are wrong").arg(sources.size())));
+
+    int declarations = 0;
+    QStringList unread;
+
+    for (const QString &path : sources) {
+        QFile f(path);
+        if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            continue;
+        }
+
+        const QString src = withoutComments(QString::fromUtf8(f.readAll()));
+        const QStringList lines = src.split(QLatin1Char('\n'));
+
+        for (const QString &line : lines) {
+            const QRegularExpressionMatch m = declaration.match(line);
+            if (!m.hasMatch()) {
+                continue;
+            }
+            ++declarations;
+
+            const QString name = m.captured(1);
+            int uses = 0;
+            QRegularExpressionMatchIterator it = QRegularExpression(QStringLiteral("\\b%1\\b").arg(name)).globalMatch(src);
+            while (it.hasNext()) {
+                it.next();
+                ++uses;
+            }
+
+            if (uses == 1) {
+                unread << QStringLiteral("%1: %2").arg(QFileInfo(path).fileName(), name);
+            }
+        }
+    }
+
+    //! a regex that has quietly stopped matching would report a spotless tree forever
+    QVERIFY2(declarations > 20, qPrintable(QStringLiteral("only %1 namespace-scope constants recognised, the declaration pattern has drifted").arg(declarations)));
+
+    unread.sort();
+    QVERIFY2(unread.isEmpty(),
+             qPrintable(QStringLiteral("namespace-scope constants nothing reads: %1").arg(unread.join(QStringLiteral(", ")))));
+}
+
+void SourceGuardTest::delegatePaintDropsItsUnreadLocals()
+{
+    // paint() runs per cell per repaint, and both of these threw their result away.
+    // backgrounddelegate copied a whole QStyleOptionViewItem and then handed `option` to the draw
+    // helpers anyway; layoutnamedelegate paid for a virtual model data() call and a QVariant
+    // convert for a flag it never branched on. -Wunused-variable is off in this build, so a
+    // reader is the only thing that catches them coming back.
+    struct DeadLocal
+    {
+        const char *file;
+        const char *signature;
+        const char *local;
+    };
+
+    static const DeadLocal deadLocals[] = {
+        {"app/settings/settingsdialog/delegates/backgrounddelegate.cpp",
+         "void BackgroundDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const",
+         "myOptions"},
+        {"app/settings/settingsdialog/delegates/layoutnamedelegate.cpp",
+         "void LayoutName::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const",
+         "inMultiple"},
+    };
+
+    for (const DeadLocal &dead : deadLocals) {
+        const QString rel = QString::fromUtf8(dead.file);
+        const QString body = functionBody(withoutComments(readFile(rel)), QString::fromUtf8(dead.signature));
+        QVERIFY2(!body.isEmpty(), qPrintable(QStringLiteral("%1 paint() not found").arg(rel)));
+
+        const QString local = QString::fromUtf8(dead.local);
+        QVERIFY2(!QRegularExpression(QStringLiteral("\\b%1\\b").arg(local)).match(body).hasMatch(),
+                 qPrintable(QStringLiteral("%1 paint() computes %2 and never reads it").arg(rel, local)));
+    }
 }
 
 void SourceGuardTest::stdNamespaceIsNotReopened()

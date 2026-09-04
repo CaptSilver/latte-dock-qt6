@@ -19,7 +19,6 @@ namespace Latte {
 namespace Settings {
 
 const int MARGIN = 2;
-const int VERTMARGIN = 3;
 
 LayoutsComboBox::LayoutsComboBox(QWidget *parent)
     : QComboBox (parent)

@@ -24,7 +24,6 @@ namespace Latte {
 namespace WindowSystem {
 namespace Tracker {
 
-const int INVALIDWID = -1;
 const int PREFHISTORY = 14;
 const int MAXHISTORY = 22;
 

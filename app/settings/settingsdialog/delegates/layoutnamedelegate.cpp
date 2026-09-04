@@ -25,9 +25,6 @@ namespace Settings {
 namespace Layout {
 namespace Delegate {
 
-const int INDICATORCHANGESLENGTH = 6;
-const int INDICATORCHANGESMARGIN = 2;
-
 LayoutName::LayoutName(QObject *parent)
     : QStyledItemDelegate(parent)
 {
@@ -63,8 +60,6 @@ void LayoutName::setModelData(QWidget *editor, QAbstractItemModel *model, const 
 
 void LayoutName::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-    bool inMultiple = index.data(Model::Layouts::INMULTIPLELAYOUTSROLE).toBool();
-
     bool isLocked = index.data(Model::Layouts::ISLOCKEDROLE).toBool();
     bool isActive = index.data(Model::Layouts::ISACTIVEROLE).toBool();
     bool isConsideredActive = index.data(Model::Layouts::ISCONSIDEREDACTIVEROLE).toBool();

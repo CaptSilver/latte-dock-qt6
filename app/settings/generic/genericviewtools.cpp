@@ -8,18 +8,7 @@
 // local
 #include "generictools.h"
 
-// Qt
-#include <QApplication>
-#include <QDebug>
-#include <QStyle>
-#include <QTextDocument>
-
 namespace Latte {
-
-const int ICONMARGIN = 1;
-const int INDICATORCHANGESLENGTH = 6;
-const int INDICATORCHANGESMARGIN = 5;
-const int MARGIN = 2;
 
 void drawView(QPainter *painter, const QStyleOption &option, const Latte::Data::View &view, const QRect &availableScreenRect, const float brushOpacity)
 {
