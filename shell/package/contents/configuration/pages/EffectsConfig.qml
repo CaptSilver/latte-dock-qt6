@@ -184,10 +184,8 @@ PlasmaComponents.Page {
 
                         readonly property int type: LatteContainment.Types.DefaultColorShadow
 
-                        onPressedChanged: {
-                            if (pressed) {
-                                plasmoid.configuration.shadowColorType = type;
-                            }
+                        onClicked: {
+                            plasmoid.configuration.shadowColorType = type;
                         }
                     }
 
@@ -203,10 +201,8 @@ PlasmaComponents.Page {
 
                         readonly property int type: LatteContainment.Types.ThemeColorShadow
 
-                        onPressedChanged: {
-                            if (pressed) {
-                                plasmoid.configuration.shadowColorType = type;
-                            }
+                        onClicked: {
+                            plasmoid.configuration.shadowColorType = type;
                         }
                     }
 
@@ -225,10 +221,8 @@ PlasmaComponents.Page {
 
                         readonly property int type: LatteContainment.Types.UserColorShadow
 
-                        onPressedChanged: {
-                            if (pressed) {
-                                plasmoid.configuration.shadowColorType = type;
-                            }
+                        onClicked: {
+                            plasmoid.configuration.shadowColorType = type;
                         }
 
                         Rectangle{
@@ -335,10 +329,8 @@ PlasmaComponents.Page {
 
                             readonly property int duration: 3
 
-                            onPressedChanged: {
-                                if (pressed) {
-                                    plasmoid.configuration.durationTime = duration;
-                                }
+                            onClicked: {
+                                plasmoid.configuration.durationTime = duration;
                             }
                         }
                         PlasmaComponents.Button {
@@ -349,10 +341,8 @@ PlasmaComponents.Page {
 
                             readonly property int duration: 2
 
-                            onPressedChanged: {
-                                if (pressed) {
-                                    plasmoid.configuration.durationTime = duration;
-                                }
+                            onClicked: {
+                                plasmoid.configuration.durationTime = duration;
                             }
                         }
                         PlasmaComponents.Button {
@@ -363,10 +353,8 @@ PlasmaComponents.Page {
 
                             readonly property int duration: 1
 
-                            onPressedChanged: {
-                                if (pressed) {
-                                    plasmoid.configuration.durationTime = duration;
-                                }
+                            onClicked: {
+                                plasmoid.configuration.durationTime = duration;
                             }
                         }
                     }

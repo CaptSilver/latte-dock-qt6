@@ -213,6 +213,27 @@ TestCase {
         verify(exercised >= 3, "only exercised " + exercised + " alignment buttons");
     }
 
+    // Pressing a button and dragging off it before releasing must not commit: these
+    // rows write a persistent config value, and the press half of a cancelled click
+    // is not a decision. The location row already behaves this way.
+    function test_draggingOffAnAlignmentButtonCancels() {
+        const page = make();
+        const btns = collect(page, function (o) {
+            return o.hasOwnProperty("alignment") && typeof o.alignment === "number"
+                    && typeof o.checkable === "boolean";
+        });
+        verify(btns.length >= 1, "expected the alignment buttons");
+
+        const btn = btns[0];
+        root.locationCalls = [];
+        mousePress(btn, btn.width / 2, btn.height / 2);
+        mouseMove(btn, btn.width + 400, btn.height + 400);
+        mouseRelease(btn, btn.width + 400, btn.height + 400);
+
+        compare(root.locationCalls.length, 0,
+                "a press dragged off the button still wrote the alignment");
+    }
+
     // The visibility row writes straight through to visibility.mode.
     function test_visibility_buttons_setMode() {
         const page = make();

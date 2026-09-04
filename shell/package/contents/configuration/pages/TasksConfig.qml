@@ -377,10 +377,8 @@ PlasmaComponents.Page {
 
                         readonly property int group: LatteCore.Types.UniqueLaunchers
 
-                        onPressedChanged: {
-                            if (pressed) {
-                                tasks.configuration.launchersGroup = group;
-                            }
+                        onClicked: {
+                            tasks.configuration.launchersGroup = group;
                         }
                     }
 
@@ -398,10 +396,8 @@ PlasmaComponents.Page {
 
                         readonly property int group: LatteCore.Types.LayoutLaunchers
 
-                        onPressedChanged: {
-                            if (pressed) {
-                                tasks.configuration.launchersGroup = group;
-                            }
+                        onClicked: {
+                            tasks.configuration.launchersGroup = group;
                         }
                     }
 
@@ -416,10 +412,8 @@ PlasmaComponents.Page {
 
                         readonly property int group: LatteCore.Types.GlobalLaunchers
 
-                        onPressedChanged: {
-                            if (pressed) {
-                                tasks.configuration.launchersGroup = group;
-                            }
+                        onClicked: {
+                            tasks.configuration.launchersGroup = group;
                         }
                     }
                 }

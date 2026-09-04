@@ -49,10 +49,8 @@ ColumnLayout {
 
             readonly property int indicatorType: 0 /*Line*/
 
-            onPressedChanged: {
-                if (pressed) {
-                    indicator.configuration.activeStyle = indicatorType;
-                }
+            onClicked: {
+                indicator.configuration.activeStyle = indicatorType;
             }
         }
 
@@ -67,10 +65,8 @@ ColumnLayout {
 
             readonly property int indicatorType: 1 /*Dot*/
 
-            onPressedChanged: {
-                if (pressed) {
-                    indicator.configuration.activeStyle = indicatorType;
-                }
+            onClicked: {
+                indicator.configuration.activeStyle = indicatorType;
             }
         }
     }
@@ -258,10 +254,8 @@ ColumnLayout {
 
             readonly property int option: 1 /*OnActive*/
 
-            onPressedChanged: {
-                if (pressed) {
-                    indicator.configuration.glowApplyTo = option;
-                }
+            onClicked: {
+                indicator.configuration.glowApplyTo = option;
             }
         }
 
@@ -276,10 +270,8 @@ ColumnLayout {
 
             readonly property int option: 2 /*All*/
 
-            onPressedChanged: {
-                if (pressed) {
-                    indicator.configuration.glowApplyTo = option;
-                }
+            onClicked: {
+                indicator.configuration.glowApplyTo = option;
             }
         }
     }

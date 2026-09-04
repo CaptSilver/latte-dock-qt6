@@ -285,10 +285,8 @@ PlasmaComponents.Page {
 
                     property int alignment: panelIsVertical ? LatteCore.Types.Top : LatteCore.Types.Left
 
-                    onPressedChanged: {
-                        if (pressed) {
-                            latteView.positioner.setNextLocation("", latteView.screensGroup, "", PlasmaCore.Types.Floating, alignment);
-                        }
+                    onClicked: {
+                        latteView.positioner.setNextLocation("", latteView.screensGroup, "", PlasmaCore.Types.Floating, alignment);
                     }
                 }
                 PlasmaComponents.Button {
@@ -301,10 +299,8 @@ PlasmaComponents.Page {
 
                     property int alignment: LatteCore.Types.Center
 
-                    onPressedChanged: {
-                        if (pressed) {
-                            latteView.positioner.setNextLocation("", latteView.screensGroup, "", PlasmaCore.Types.Floating, alignment);
-                        }
+                    onClicked: {
+                        latteView.positioner.setNextLocation("", latteView.screensGroup, "", PlasmaCore.Types.Floating, alignment);
                     }
                 }
                 PlasmaComponents.Button {
@@ -317,10 +313,8 @@ PlasmaComponents.Page {
 
                     property int alignment: panelIsVertical ? LatteCore.Types.Bottom : LatteCore.Types.Right
 
-                    onPressedChanged: {
-                        if (pressed) {
-                            latteView.positioner.setNextLocation("", latteView.screensGroup, "", PlasmaCore.Types.Floating, alignment);
-                        }
+                    onClicked: {
+                        latteView.positioner.setNextLocation("", latteView.screensGroup, "", PlasmaCore.Types.Floating, alignment);
                     }
                 }
 
@@ -334,10 +328,8 @@ PlasmaComponents.Page {
 
                     property int alignment: LatteCore.Types.Justify
 
-                    onPressedChanged: {
-                        if (pressed) {
-                            latteView.positioner.setNextLocation("", latteView.screensGroup, "", PlasmaCore.Types.Floating, alignment);
-                        }
+                    onClicked: {
+                        latteView.positioner.setNextLocation("", latteView.screensGroup, "", PlasmaCore.Types.Floating, alignment);
                     }
                 }
             }
@@ -375,10 +367,8 @@ PlasmaComponents.Page {
 
                     property int mode: LatteCore.Types.AlwaysVisible
 
-                    onPressedChanged: {
-                        if (pressed) {
-                            latteView.visibility.mode = mode;
-                        }
+                    onClicked: {
+                        latteView.visibility.mode = mode;
                     }
                 }
                 PlasmaComponents.Button {
@@ -390,10 +380,8 @@ PlasmaComponents.Page {
 
                     property int mode: LatteCore.Types.AutoHide
 
-                    onPressedChanged: {
-                        if (pressed) {
-                            latteView.visibility.mode = mode;
-                        }
+                    onClicked: {
+                        latteView.visibility.mode = mode;
                     }
                 }
                 PlasmaComponents.Button {
@@ -405,10 +393,8 @@ PlasmaComponents.Page {
 
                     property int mode: LatteCore.Types.DodgeActive
 
-                    onPressedChanged: {
-                        if (pressed) {
-                            latteView.visibility.mode = mode;
-                        }
+                    onClicked: {
+                        latteView.visibility.mode = mode;
                     }
                 }
 
