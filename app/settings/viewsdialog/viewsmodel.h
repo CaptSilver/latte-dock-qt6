@@ -135,7 +135,9 @@ private:
     int sortingFactorForAlignment(const Data::View &view) const;
     int sortingFactorForSubContainments(const Data::View &view) const;
 
-    //! based on priority a sortable text is returned
+    //! the sorting weight for a cell: a number for the columns the proxy compares
+    //! numerically, a sortable text for the id and name ones
+    QVariant sortingPriority(const int &column, const int &row) const;
 
     Latte::Data::Screen screenData(const QString &viewId) const;
 

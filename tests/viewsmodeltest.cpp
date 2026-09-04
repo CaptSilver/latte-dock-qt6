@@ -63,6 +63,7 @@ private Q_SLOTS:
     void alteredAndNewViews();
     void rowForIdAndLookups();
     void choicesRolesReturnTables();
+    void sortingRolePerColumn();
 
 private:
     static Data::View makeView(const QString &id, const QString &name,
@@ -252,6 +253,155 @@ void ViewsModelTest::displayRolesPerColumn()
     // SORTINGROLE produces a non-empty sortable token on the id column.
     QVERIFY(!model.data(model.index(0, Settings::Model::Views::IDCOLUMN), Settings::Model::Views::SORTINGROLE)
                  .toString().isEmpty());
+}
+
+//! Every SORTINGROLE arm folds the same handful of factors, and the four numeric
+//! columns differ only in which factor lands on HIGH, MEDIUM and NORMAL. Nothing
+//! else pins those orderings, so each permutation is written out longhand here --
+//! a transposed term reorders the docks table without failing anything otherwise.
+void ViewsModelTest::sortingRolePerColumn()
+{
+    using VModel = Settings::Model::Views;
+
+    Settings::Model::Views model(nullptr, m_corona);
+
+    // Factors picked so all five come out distinct -- active is state 1, an explicit
+    // screen is 2, bottom is edge 3, justify is alignment 4 and four subcontainments
+    // make 5 -- which is what makes swapping any two terms change the weight.
+    Data::View v = makeView(QStringLiteral("1"), QStringLiteral("Bottom Justify"),
+                            Plasma::Types::BottomEdge, Latte::Types::Justify);
+    v.isActive = true;
+    v.onPrimary = false;
+
+    for (int i = 0; i < 4; ++i) {
+        v.subcontainments << Data::Generic(QStringLiteral("1%1").arg(i), QStringLiteral("Sub"));
+    }
+
+    Data::ViewsTable table;
+    table << v;
+    model.setOriginalData(table);
+
+    const int fsta = 1;
+    const int fscr = 2;
+    const int fedg = 3;
+    const int fali = 4;
+    const int fsub = 5;
+
+    const QVariant idKey = model.data(model.index(0, VModel::IDCOLUMN), VModel::SORTINGROLE);
+    const QVariant nameKey = model.data(model.index(0, VModel::NAMECOLUMN), VModel::SORTINGROLE);
+    const QVariant screen = model.data(model.index(0, VModel::SCREENCOLUMN), VModel::SORTINGROLE);
+    const QVariant edge = model.data(model.index(0, VModel::EDGECOLUMN), VModel::SORTINGROLE);
+    const QVariant alignment = model.data(model.index(0, VModel::ALIGNMENTCOLUMN), VModel::SORTINGROLE);
+    const QVariant subcontainments = model.data(model.index(0, VModel::SUBCONTAINMENTSCOLUMN), VModel::SORTINGROLE);
+
+    // The two text columns carry the state factor only, then the cell text.
+    QCOMPARE(idKey.toString(), Latte::sortKeyPrefix(fsta * VModel::HIGHESTPRIORITY) + QStringLiteral("1"));
+    QCOMPARE(nameKey.toString(), Latte::sortKeyPrefix(fsta * VModel::HIGHESTPRIORITY) + QStringLiteral("Bottom Justify"));
+
+    QCOMPARE(screen.toInt(), fsta * VModel::HIGHESTPRIORITY + fscr * VModel::HIGHPRIORITY
+                             + fedg * VModel::MEDIUMPRIORITY + fali * VModel::NORMALPRIORITY);
+    QCOMPARE(edge.toInt(), fsta * VModel::HIGHESTPRIORITY + fedg * VModel::HIGHPRIORITY
+                           + fscr * VModel::MEDIUMPRIORITY + fali * VModel::NORMALPRIORITY);
+    QCOMPARE(alignment.toInt(), fsta * VModel::HIGHESTPRIORITY + fali * VModel::HIGHPRIORITY
+                                + fscr * VModel::MEDIUMPRIORITY + fedg * VModel::NORMALPRIORITY);
+    QCOMPARE(subcontainments.toInt(), fsta * VModel::HIGHESTPRIORITY + fsub * VModel::HIGHPRIORITY
+                                      + fscr * VModel::MEDIUMPRIORITY + fedg * VModel::NORMALPRIORITY);
+
+    // Type lock. Pushing the numeric columns through sortKeyPrefix() too would still
+    // satisfy toInt(), and the subcontainments factor is unbounded -- once its weight
+    // outgrows the six-digit padding a text key compares in the wrong order.
+    QCOMPARE(idKey.typeId(), int(QMetaType::QString));
+    QCOMPARE(nameKey.typeId(), int(QMetaType::QString));
+    QCOMPARE(screen.typeId(), int(QMetaType::Int));
+    QCOMPARE(edge.typeId(), int(QMetaType::Int));
+    QCOMPARE(alignment.typeId(), int(QMetaType::Int));
+    QCOMPARE(subcontainments.typeId(), int(QMetaType::Int));
+
+    auto weight = [](const Settings::Model::Views &m, int row, int column) {
+        return m.data(m.index(row, column), VModel::SORTINGROLE).toInt();
+    };
+
+    //! One factor varied at a time -- this is what proves the permutation rather
+    //! than the arithmetic.
+    Settings::Model::Views edgeModel(nullptr, m_corona);
+    Data::ViewsTable edgeTable;
+    edgeTable << makeView(QStringLiteral("1"), QStringLiteral("T"), Plasma::Types::TopEdge, Latte::Types::Center);
+    edgeTable << makeView(QStringLiteral("2"), QStringLiteral("L"), Plasma::Types::LeftEdge, Latte::Types::Center);
+    edgeTable << makeView(QStringLiteral("3"), QStringLiteral("B"), Plasma::Types::BottomEdge, Latte::Types::Center);
+    edgeTable << makeView(QStringLiteral("4"), QStringLiteral("R"), Plasma::Types::RightEdge, Latte::Types::Center);
+    edgeModel.setOriginalData(edgeTable);
+
+    for (int row = 1; row < edgeTable.rowCount(); ++row) {
+        QVERIFY2(weight(edgeModel, row - 1, VModel::EDGECOLUMN) < weight(edgeModel, row, VModel::EDGECOLUMN),
+                 "the edge column must run top, left, bottom, right");
+        // The edge is only the NORMAL term on the alignment column, so these rows
+        // stay tied inside one band instead of crossing it.
+        QVERIFY(qAbs(weight(edgeModel, row, VModel::ALIGNMENTCOLUMN)
+                     - weight(edgeModel, row - 1, VModel::ALIGNMENTCOLUMN)) < VModel::HIGHPRIORITY);
+    }
+
+    Settings::Model::Views alignModel(nullptr, m_corona);
+    Data::ViewsTable alignTable;
+    alignTable << makeView(QStringLiteral("1"), QStringLiteral("A"), Plasma::Types::BottomEdge, Latte::Types::Left);
+    alignTable << makeView(QStringLiteral("2"), QStringLiteral("B"), Plasma::Types::BottomEdge, Latte::Types::Center);
+    alignTable << makeView(QStringLiteral("3"), QStringLiteral("C"), Plasma::Types::BottomEdge, Latte::Types::Right);
+    alignTable << makeView(QStringLiteral("4"), QStringLiteral("D"), Plasma::Types::BottomEdge, Latte::Types::Justify);
+    alignModel.setOriginalData(alignTable);
+
+    for (int row = 1; row < alignTable.rowCount(); ++row) {
+        QVERIFY2(weight(alignModel, row - 1, VModel::ALIGNMENTCOLUMN) < weight(alignModel, row, VModel::ALIGNMENTCOLUMN),
+                 "the alignment column must run left, center, right, justify");
+    }
+
+    Settings::Model::Views screenModel(nullptr, m_corona);
+    Data::View onPrimary = makeView(QStringLiteral("1"), QStringLiteral("P"));
+    Data::View onExplicit = makeView(QStringLiteral("2"), QStringLiteral("E"));
+    onExplicit.onPrimary = false;
+    Data::View withSub = makeView(QStringLiteral("3"), QStringLiteral("S"));
+    withSub.subcontainments << Data::Generic(QStringLiteral("31"), QStringLiteral("Sub"));
+
+    Data::ViewsTable screenTable;
+    screenTable << onPrimary << onExplicit << withSub;
+    screenModel.setOriginalData(screenTable);
+
+    QVERIFY(weight(screenModel, 0, VModel::SCREENCOLUMN) < weight(screenModel, 1, VModel::SCREENCOLUMN));
+    QVERIFY(weight(screenModel, 0, VModel::SUBCONTAINMENTSCOLUMN) < weight(screenModel, 2, VModel::SUBCONTAINMENTSCOLUMN));
+
+    //! The state factor leads all six columns, so it has to beat a worse screen,
+    //! edge, alignment and subcontainment count on the row that owns it.
+    Settings::Model::Views stateModel(nullptr, m_corona);
+
+    Data::View active = makeView(QStringLiteral("3"), QStringLiteral("C"), Plasma::Types::RightEdge, Latte::Types::Justify);
+    active.isActive = true;
+    active.onPrimary = false;
+    active.subcontainments << Data::Generic(QStringLiteral("31"), QStringLiteral("Sub"));
+    active.subcontainments << Data::Generic(QStringLiteral("32"), QStringLiteral("Sub"));
+
+    Data::View created = makeView(QStringLiteral("2"), QStringLiteral("B"), Plasma::Types::BottomEdge, Latte::Types::Right);
+    created.subcontainments << Data::Generic(QStringLiteral("21"), QStringLiteral("Sub"));
+
+    Data::View temporary = makeView(QStringLiteral("1"), QStringLiteral("A"), Plasma::Types::TopEdge, Latte::Types::Top);
+    temporary.setState(Data::View::OriginFromViewTemplate);
+
+    Data::ViewsTable stateTable;
+    stateTable << active << created << temporary;
+    stateModel.setOriginalData(stateTable);
+
+    for (int column : {VModel::SCREENCOLUMN, VModel::EDGECOLUMN, VModel::ALIGNMENTCOLUMN, VModel::SUBCONTAINMENTSCOLUMN}) {
+        QVERIFY2(weight(stateModel, 0, column) < weight(stateModel, 1, column)
+                 && weight(stateModel, 1, column) < weight(stateModel, 2, column),
+                 qPrintable(QStringLiteral("the state factor did not lead column %1").arg(column)));
+    }
+
+    // Ids and names run backwards against the state order here, so these two only
+    // sort right while the state prefix outweighs the text glued behind it.
+    for (int column : {VModel::IDCOLUMN, VModel::NAMECOLUMN}) {
+        const QString first = stateModel.data(stateModel.index(0, column), VModel::SORTINGROLE).toString();
+        const QString second = stateModel.data(stateModel.index(1, column), VModel::SORTINGROLE).toString();
+        const QString third = stateModel.data(stateModel.index(2, column), VModel::SORTINGROLE).toString();
+        QVERIFY2(first < second && second < third,
+                 qPrintable(first + QStringLiteral(" / ") + second + QStringLiteral(" / ") + third));
+    }
 }
 
 void ViewsModelTest::flagsEditableColumns()
