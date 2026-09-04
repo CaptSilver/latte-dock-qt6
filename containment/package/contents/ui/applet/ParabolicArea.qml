@@ -150,7 +150,7 @@ Item {
         }
 
         //use the new parabolic effect manager in order to handle all parabolic effect messages
-        var scales = parabolic.applyParabolicEffect(index, currentMousePosition, length);
+        parabolic.applyParabolicEffect(index, currentMousePosition, length);
         wrapper.zoomScale = parabolic.factor.zoom;
     } //scale
 
@@ -201,9 +201,9 @@ Item {
 
             if (!clearrequestedfromlastacceptedsignal) {              //send remaining scales in the stack as long as this is not the clearrequestedfromlastacceptedsignal, in order to not send twice
                 if (islower) {
-                    parabolic.sglUpdateLowerItemScale(appletItem.index-1, nextscales);
+                    parabolic.sglUpdateLowerItemScale(sideindex, nextscales);
                 } else {
-                    parabolic.sglUpdateHigherItemScale(appletItem.index+1, nextscales);
+                    parabolic.sglUpdateHigherItemScale(sideindex, nextscales);
                 }
             }
         } else if (islower && clearrequestedfromlastacceptedsignal && (appletItem.index < delegateIndex)) { //accept requestedfromlastacceptedsignal in lower direction if that is the case

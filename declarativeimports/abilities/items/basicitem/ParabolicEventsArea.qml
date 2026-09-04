@@ -69,7 +69,7 @@ Item {
         }
     }
 
-    onParabolicEntered: {
+    onParabolicEntered: (mouseX, mouseY) => {
         lastMouseX = mouseX;
         lastMouseY = mouseY;
 
@@ -87,7 +87,7 @@ Item {
         }
     }
 
-    onParabolicMove: {
+    onParabolicMove: (mouseX, mouseY) => {
         lastMouseX = mouseX;
         lastMouseY = mouseY;
 
@@ -139,7 +139,7 @@ Item {
         }
 
         //use the new parabolic ability in order to handle all parabolic effect messages
-        var scales = abilityItem.abilities.parabolic.applyParabolicEffect(index, currentMousePosition, length);
+        abilityItem.abilities.parabolic.applyParabolicEffect(index, currentMousePosition, length);
 
         if (!parabolicItem.isUpdatingOnlySpacers) {
             abilityItem.parabolicItem.zoom = abilityItem.abilities.parabolic.factor.zoom;

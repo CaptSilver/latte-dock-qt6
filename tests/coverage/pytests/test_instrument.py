@@ -65,3 +65,42 @@ def test_overlapping_includes_no_double_count(tmp_path):
     keys = [u["key"] for u in data["units"]]
     assert sum(1 for k in keys if k.startswith("a/sub/Deep.qml::f@")) == 1
     assert (out / "a" / "sub" / "Deep.qml").read_text().count("import Cov 1.0") == 1
+
+
+def test_arrow_signal_handlers_are_tracked(tmp_path):
+    # Qt 6 wants `onFoo: (a, b) => { ... }` over the parameter-injecting block form, and the
+    # hover hot paths were ported to it. Without a pattern for the arrow shape those handlers
+    # vanish from the catalog instead of reading as uncovered, so a hand-ported file silently
+    # improves the percentage while measuring less.
+    root = tmp_path / "repo"
+    _write(root / "ui" / "Area.qml",
+           'import QtQuick\n'
+           'Item {\n'
+           '  signal moved(real mouseX, real mouseY)\n'
+           '  onMoved: (mouseX, mouseY) => {\n'
+           '    var x = mouseX;\n'
+           '    return x + mouseY;\n'
+           '  }\n'
+           '  onWheeled: wheel => {\n'
+           '    var d = wheel.angleDelta;\n'
+           '    return d;\n'
+           '  }\n'
+           '}\n')
+
+    out = tmp_path / "mirror"
+    cat = tmp_path / "catalog.json"
+    r = subprocess.run(
+        [sys.executable, str(TOOL), "--root", str(root), "--include", "ui",
+         "--out", str(out), "--catalog", str(cat)],
+        capture_output=True, text=True,
+    )
+    assert r.returncode == 0, r.stderr
+
+    units = {u["name"]: u for u in json.loads(cat.read_text())["units"]}
+    assert "onMoved" in units, "parenthesised arrow handler missing from the catalog"
+    assert "onWheeled" in units, "single-parameter arrow handler missing from the catalog"
+    assert units["onMoved"]["loc"] == 4
+
+    mirrored = (out / "ui" / "Area.qml").read_text()
+    assert 'Cov.tick("ui/Area.qml::onMoved@' in mirrored
+    assert 'Cov.tick("ui/Area.qml::onWheeled@' in mirrored

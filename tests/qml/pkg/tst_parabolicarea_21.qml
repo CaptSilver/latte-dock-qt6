@@ -414,4 +414,54 @@ TestCase {
         // Slot disconnected at destruction -> no write to the shared wrapper.
         compare(wrapper.zoomScale, 1);
     }
+
+    // ----- sltUpdateItemScale neighbour-clear branches (delegateIndex != index) -
+    // A clear request ([1]) travelling past this item releases its zoom. The two
+    // directions are separate branches because each forwards to its own bridge
+    // method, so every case below asserts the other direction stayed untouched.
+    function test_q_neighbour_clear_lower_releases_zoom() {
+        resetLog();
+        const p = make();
+        communicator.parabolicEffectIsSupported = false;
+        wrapper.zoomScale = 1.9;
+        // islower, clear stack, appletItem.index < delegateIndex -> updateScale(index, 1)
+        p.sltUpdateLowerItemScale(appletItem.index + 3, [1.0]);
+        compare(wrapper.zoomScale, 1);
+    }
+
+    function test_r_neighbour_clear_higher_releases_zoom() {
+        resetLog();
+        const p = make();
+        communicator.parabolicEffectIsSupported = false;
+        wrapper.zoomScale = 1.9;
+        // ishigher, clear stack, appletItem.index > delegateIndex -> updateScale(index, 1)
+        p.sltUpdateHigherItemScale(appletItem.index - 3, [1.0]);
+        compare(wrapper.zoomScale, 1);
+    }
+
+    function test_s_neighbour_clear_lower_routes_to_lower_host() {
+        resetLog();
+        const p = make();
+        communicator.parabolicEffectIsSupported = true;
+        wrapper.zoomScale = 1.9;
+        p.sltUpdateLowerItemScale(appletItem.index + 3, [1.0]);
+        verify(root.log.hostLower !== undefined, "lower clear forwarded to the lower host hook");
+        // Routing this through the higher hook would leave a bridged applet's own
+        // items stuck enlarged after the mouse left.
+        compare(root.log.hostHigher, undefined);
+        compare(wrapper.zoomScale, 1.9); // bridged, so nothing applied locally
+        communicator.parabolicEffectIsSupported = false;
+    }
+
+    function test_t_neighbour_clear_higher_routes_to_higher_host() {
+        resetLog();
+        const p = make();
+        communicator.parabolicEffectIsSupported = true;
+        wrapper.zoomScale = 1.9;
+        p.sltUpdateHigherItemScale(appletItem.index - 3, [1.0]);
+        verify(root.log.hostHigher !== undefined, "higher clear forwarded to the higher host hook");
+        compare(root.log.hostLower, undefined);
+        compare(wrapper.zoomScale, 1.9);
+        communicator.parabolicEffectIsSupported = false;
+    }
 }

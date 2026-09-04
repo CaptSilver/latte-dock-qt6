@@ -316,6 +316,8 @@ private Q_SLOTS:
     void orphanHeaderDeclarationsAreGone();
     void stdNamespaceIsNotReopened();
     void configuredHeaderMacrosAreAllRead();
+    void qmlSignalHandlersDeclareTheirParameters();
+    void parabolicRelaysDropTheirUnreadScales();
     void latteQmlModulesShipNoUnreachableFiles();
     void qmldirExportsResolveToTheirFiles();
     void comboBoxDropsItsDeadMobileTextMachinery();
@@ -1541,6 +1543,77 @@ void SourceGuardTest::configuredHeaderMacrosAreAllRead()
                      qPrintable(QStringLiteral("%1 configures %2 and no C++ source reads it").arg(relativeToRepo(tmpl), name)));
         }
         QVERIFY2(names > 0, qPrintable(QStringLiteral("%1 parsed as having no #cmakedefine at all").arg(relativeToRepo(tmpl))));
+    }
+}
+
+void SourceGuardTest::qmlSignalHandlersDeclareTheirParameters()
+{
+    // `onFoo: { ... mouseX ... }` only sees mouseX because Qt injects the signal's parameters into
+    // the handler's scope, which Qt 6 deprecated and will eventually drop. The day it goes, the
+    // read does not throw -- it resolves to undefined, so the hover anchor silently pins to 0 and
+    // the parabolic effect stops following the mouse. Nothing compiles or lints this: the handler
+    // stays valid QML either way. So require the arrow/function form, which names its parameters.
+    //
+    // Only the brace-bodied shape is injection-prone. An expression handler like
+    // `onPressedChanged: button.pressedChanged(pressed)` reads its own object's property and is
+    // not what this is after.
+    const QStringList shippedQml = qmlSourcesUnder({QStringLiteral("containment"),
+                                                    QStringLiteral("plasmoid"),
+                                                    QStringLiteral("declarativeimports"),
+                                                    QStringLiteral("shell"),
+                                                    QStringLiteral("indicators")});
+    QVERIFY2(shippedQml.size() > 100, "found suspiciously few QML sources to scan");
+
+    static const QRegularExpression signalDecl(QStringLiteral("^\\s*signal\\s+([A-Za-z_]\\w*)\\s*\\(\\s*[^)\\s][^)]*\\)"),
+                                               QRegularExpression::MultilineOption);
+
+    QStringList injected;
+    for (const QString &abs : shippedQml) {
+        const QString src = withoutComments(readAbsolute(abs));
+        QSet<QString> handlers;
+        QRegularExpressionMatchIterator it = signalDecl.globalMatch(src);
+        while (it.hasNext()) {
+            const QString name = it.next().captured(1);
+            handlers.insert(QStringLiteral("on%1%2").arg(name.left(1).toUpper(), name.mid(1)));
+        }
+        if (handlers.isEmpty()) {
+            continue;
+        }
+
+        const QStringList lines = src.split(QLatin1Char('\n'));
+        for (int i = 0; i < lines.size(); ++i) {
+            for (const QString &handler : std::as_const(handlers)) {
+                if (lines.at(i).contains(QRegularExpression(QStringLiteral("^\\s*%1\\s*:\\s*\\{\\s*$").arg(handler)))) {
+                    injected << QStringLiteral("%1:%2  %3").arg(relativeToRepo(abs)).arg(i + 1).arg(handler);
+                }
+            }
+        }
+    }
+
+    QVERIFY2(injected.isEmpty(),
+             qPrintable(QStringLiteral("signal handlers relying on deprecated parameter injection:\n  %1")
+                            .arg(injected.join(QStringLiteral("\n  ")))));
+}
+
+void SourceGuardTest::parabolicRelaysDropTheirUnreadScales()
+{
+    // Both scale relays banked applyParabolicEffect's return in a `var scales` nothing ever read.
+    // The trap is that the call is not a getter: it emits sglUpdateLower/HigherItemScale and IS the
+    // relay, so "delete the dead assignment" reads as "delete the line" and quietly reduces the
+    // parabolic effect to zooming the hovered item alone. Pin both halves -- the call stays, the
+    // local does not come back.
+    static const char *relays[] = {"containment/package/contents/ui/applet/ParabolicArea.qml",
+                                   "declarativeimports/abilities/items/basicitem/ParabolicEventsArea.qml"};
+
+    for (const char *relay : relays) {
+        const QString rel = QString::fromUtf8(relay);
+        const QString src = withoutComments(readFile(rel));
+        QVERIFY2(!src.isEmpty(), qPrintable(QStringLiteral("%1 unreadable").arg(rel)));
+
+        QVERIFY2(src.contains(QRegularExpression(QStringLiteral("\\bapplyParabolicEffect\\s*\\("))),
+                 qPrintable(QStringLiteral("%1 no longer relays through applyParabolicEffect").arg(rel)));
+        QVERIFY2(!src.contains(QRegularExpression(QStringLiteral("[^=!<>]=\\s*[^=;\\n]*\\bapplyParabolicEffect\\s*\\("))),
+                 qPrintable(QStringLiteral("%1 assigns applyParabolicEffect's return to a local nothing reads").arg(rel)));
     }
 }
 

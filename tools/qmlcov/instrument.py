@@ -25,6 +25,7 @@ from typing import Iterable
 #   function foo(...) { ... }
 #   onSomething: { ... }
 #   onSomething: function(...) { ... }
+#   onSomething: (...) => { ... }
 #   Component.onCompleted: { ... }
 #   Component.onDestruction: { ... }
 #
@@ -55,6 +56,17 @@ _HANDLER_FUNC = re.compile(
     (?P<indent> ^ [ \t]* )
     (?P<name> on[A-Z][A-Za-z0-9_]* | Component\.onCompleted | Component\.onDestruction )
     \s* : \s* function \s* \( [^)]* \) \s* \{
+    """,
+    re.VERBOSE | re.MULTILINE,
+)
+
+_HANDLER_ARROW = re.compile(
+    r"""
+    (?P<indent> ^ [ \t]* )
+    (?P<name> on[A-Z][A-Za-z0-9_]* | Component\.onCompleted | Component\.onDestruction )
+    \s* : \s*
+    (?: \( [^)]* \) | [A-Za-z_$][A-Za-z0-9_$]* )   # (a, b) or a bare single parameter
+    \s* => \s* \{
     """,
     re.VERBOSE | re.MULTILINE,
 )
@@ -138,9 +150,9 @@ def instrument(text: str, file_rel: str) -> tuple[str, list[Unit]]:
     units: list[Unit] = []
     insertions: list[tuple[int, str]] = []  # (pos_after_open_brace, snippet)
 
-    # Collect matches from all three patterns.
+    # Collect matches from every pattern.
     matches = []
-    for pat in (_FUNC, _HANDLER_BLOCK, _HANDLER_FUNC, _PROP_ANON_FUNC):
+    for pat in (_FUNC, _HANDLER_BLOCK, _HANDLER_FUNC, _HANDLER_ARROW, _PROP_ANON_FUNC):
         for m in pat.finditer(text):
             open_brace_pos = m.end() - 1
             assert text[open_brace_pos] == "{", (
