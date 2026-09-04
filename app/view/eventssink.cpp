@@ -131,43 +131,14 @@ QEvent *EventsSink::onEvent(QEvent *e)
         break;
 
     case QEvent::MouseMove:
-        if (auto me = dynamic_cast<QMouseEvent *>(e)) {
-            if (m_view->positioner() && m_view->positioner()->isCursorInsideView() && originSinksContain(me->scenePosition())) {
-                auto positionadjusted = positionAdjustedForDestination(me->scenePosition());
-                auto me2 = new QMouseEvent(me->type(),
-                                           positionadjusted,
-                                           positionadjusted,
-                                           positionadjusted + m_view->position(),
-                                           me->button(), me->buttons(), me->modifiers());
-
-                sunkevent = me2;
-            } else if (!destinationContains(me->scenePosition())) {
-                release();
-            }
-        }
-        break;
-
     case QEvent::MouseButtonPress:
-        if (auto me = dynamic_cast<QMouseEvent *>(e)) {
-            if (originSinksContain(me->scenePosition())) {
-                auto positionadjusted = positionAdjustedForDestination(me->scenePosition());
-                auto me2 = new QMouseEvent(me->type(),
-                                           positionadjusted,
-                                           positionadjusted,
-                                           positionadjusted + m_view->position(),
-                                           me->button(), me->buttons(), me->modifiers());
-
-                qDebug() << "Sunk Event:: sunk event pressed...";
-                sunkevent = me2;
-            } else if (!destinationContains(me->scenePosition())) {
-                release();
-            }
-        }
-        break;
-
     case QEvent::MouseButtonRelease:
         if (auto me = dynamic_cast<QMouseEvent *>(e)) {
-            if (originSinksContain(me->scenePosition())) {
+            //! only moves ask the positioner where the cursor is; keeping that read on the right
+            //! of the || leaves presses and releases free of the m_view dereference they never did
+            const bool cursorSinks = (me->type() != QEvent::MouseMove) || (m_view->positioner() && m_view->positioner()->isCursorInsideView());
+
+            if (cursorSinks && originSinksContain(me->scenePosition())) {
                 auto positionadjusted = positionAdjustedForDestination(me->scenePosition());
                 auto me2 = new QMouseEvent(me->type(),
                                            positionadjusted,

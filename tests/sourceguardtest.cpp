@@ -216,6 +216,7 @@ private Q_SLOTS:
     void importer_checksEveryArchiveOpen();
     void abilityMemberReadsResolve();
     void shippedJavaScriptIsImported();
+    void eventsSink_mouseCasesShareOneBody();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -961,6 +962,35 @@ void SourceGuardTest::shippedJavaScriptIsImported()
 
     QVERIFY2(orphans.isEmpty(),
              qPrintable(QStringLiteral("shipped JavaScript no QML imports:\n  %1").arg(orphans.join(QStringLiteral("\n  ")))));
+}
+
+void SourceGuardTest::eventsSink_mouseCasesShareOneBody()
+{
+    const QString body = functionBody(readFile(QStringLiteral("app/view/eventssink.cpp")),
+                                      QStringLiteral("QEvent *EventsSink::onEvent(QEvent *e)"));
+    QVERIFY2(!body.isEmpty(), "EventsSink::onEvent() not found");
+
+    // Move, press and release all clone the mouse event the same way; three copies of that
+    // clone is three places for the argument list to drift apart.
+    QCOMPARE(body.count(QStringLiteral("new QMouseEvent")), 1);
+
+    const QString s = stripped(body);
+    QVERIFY2(s.contains(QStringLiteral("caseQEvent::MouseMove:caseQEvent::MouseButtonPress:caseQEvent::MouseButtonRelease:")),
+             "the three mouse cases must fall through to one shared body");
+
+    // The cursor check belongs to moves alone. Applying it to press and release would swallow
+    // clicks, and dropping the null test dereferences a positioner that teardown already took.
+    QVERIFY2(s.contains(QStringLiteral("(me->type()!=QEvent::MouseMove)||(m_view->positioner()&&m_view->positioner()->isCursorInsideView())")),
+             "presses and releases must sink unconditionally; only a move may consult the positioner, and only behind its null check");
+
+    QVERIFY2(!body.contains(QStringLiteral("qDebug")),
+             "onEvent must not print on every sunk press");
+
+    // Wheel reads position() rather than scenePosition() and builds a different event, so it
+    // stays out of the shared body.
+    QCOMPARE(body.count(QStringLiteral("new QWheelEvent")), 1);
+    QVERIFY2(s.contains(QStringLiteral("caseQEvent::Wheel:if(autowe=dynamic_cast<QWheelEvent*>(e))")),
+             "the wheel case must keep its own cast and body");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)
