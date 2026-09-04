@@ -220,6 +220,8 @@ private Q_SLOTS:
     void notifyrcEventsMatchTheirEmitters();
     void factory_removeIndicator_reportsAFailedRemoval();
     void dialog_dropsCommentedOutAdjustGeometry();
+    void containmentInterface_appletExpansionTrackedThroughOneHelper();
+    void containmentInterface_trackAppletExpansion_guardsBeforeConnecting();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -1083,6 +1085,62 @@ void SourceGuardTest::dialog_dropsCommentedOutAdjustGeometry()
              "popupPosition must clamp x so the popup's right edge stays on screen, not its left");
     QVERIFY2(s.contains(QStringLiteral("screengeometry.bottom()-size.height()+1")),
              "popupPosition must clamp y so the popup's bottom edge stays on screen, not its top");
+}
+
+void SourceGuardTest::containmentInterface_appletExpansionTrackedThroughOneHelper()
+{
+    const QString cpp = readFile(QStringLiteral("app/view/containmentinterface.cpp"));
+    QVERIFY2(!cpp.isEmpty(), "containmentinterface.cpp not found");
+
+    const QString body = functionBody(cpp, QStringLiteral("void ContainmentInterface::onAppletAdded"));
+    QVERIFY2(!body.isEmpty(), "onAppletAdded() not found");
+
+    // The sub-containment host, each of its internal applets and the plain-applet arm all register
+    // the same pair of connections. Three verbatim pastes is three places for one to drift.
+    QCOMPARE(body.count(QStringLiteral("trackAppletExpansion(")), 3);
+    QVERIFY2(!body.contains(QStringLiteral("expandedChanged")),
+             "onAppletAdded must not wire expandedChanged itself; that belongs to trackAppletExpansion");
+
+    const QString s = stripped(body);
+    // Tasks applets must stay out of expansion tracking. appletIsExpandable() does not exclude them,
+    // so calling the helper above these two tests would flip hasExpandedApplet on every task popup
+    // and repaint the panel background -- with nothing headless to catch it.
+    QVERIFY2(s.contains(QStringLiteral("org.kde.latte.plasmoid")) && s.contains(QStringLiteral("org.kde.plasma.multitasking")),
+             "the tasks branches must keep claiming their applets before expansion tracking");
+    QVERIFY2(s.contains(QStringLiteral("}else{trackAppletExpansion(ai);}")),
+             "the plain-applet registration must stay the else arm of the tasks chain");
+    QVERIFY2(s.lastIndexOf(QStringLiteral("trackAppletExpansion(")) > s.indexOf(QStringLiteral("org.kde.plasma.multitasking")),
+             "expansion tracking must be reached only after both tasks tests have failed");
+}
+
+void SourceGuardTest::containmentInterface_trackAppletExpansion_guardsBeforeConnecting()
+{
+    const QString h = readFile(QStringLiteral("app/view/containmentinterface.h"));
+    const QString cpp = readFile(QStringLiteral("app/view/containmentinterface.cpp"));
+    QVERIFY2(!h.isEmpty() && !cpp.isEmpty(), "containmentinterface sources not found");
+
+    const QString s = stripped(functionBody(cpp, QStringLiteral("void ContainmentInterface::trackAppletExpansion")));
+    QVERIFY2(!s.isEmpty(), "trackAppletExpansion() not found");
+
+    // updateAppletsTracking() replays onAppletAdded over every applet on a timer, so the membership
+    // guard is the only thing stopping the connects from stacking up.
+    QVERIFY2(s.contains(QStringLiteral("m_expansionTrackedApplets.contains(appletQuickItem)")),
+             "trackAppletExpansion must skip an applet it already tracks");
+    QVERIFY2(s.contains(QStringLiteral("{return;}")),
+             "the already-tracked guard must early-return");
+    QVERIFY2(s.contains(QStringLiteral("m_expansionTrackedApplets.insert(appletQuickItem);")),
+             "an applet must join the tracked set, or the guard above can never fire");
+    QVERIFY2(s.contains(QStringLiteral("AppletQuickItem::expandedChanged")) && s.contains(QStringLiteral("QObject::destroyed")),
+             "trackAppletExpansion must make both the expandedChanged and the destroyed connection");
+    QVERIFY2(!s.contains(QStringLiteral("[&,")),
+             "the destroyed lambda reads nothing by reference; capture this and the pointer by value");
+
+    // Membership is all the code ever asked of the container: the stored QMetaObject::Connection was
+    // written at three sites, read at none, and no disconnect() ever consumed it.
+    QVERIFY2(!stripped(h).contains(QStringLiteral("QHash<PlasmaQuick::AppletQuickItem*,QMetaObject::Connection>")),
+             "the write-only connection handle must be gone from the header");
+    QVERIFY2(stripped(h).contains(QStringLiteral("QSet<PlasmaQuick::AppletQuickItem*>m_expansionTrackedApplets;")),
+             "the tracked applets must be a plain QSet");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

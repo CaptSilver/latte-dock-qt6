@@ -15,6 +15,7 @@
 #include <QObject>
 #include <QPointer>
 #include <QQuickItem>
+#include <QSet>
 #include <QTimer>
 #include <QUrl>
 
@@ -168,6 +169,7 @@ private Q_SLOTS:
 private:
     void addExpandedApplet(PlasmaQuick::AppletQuickItem * appletQuickItem);
     void removeExpandedApplet(PlasmaQuick::AppletQuickItem *appletQuickItem);
+    void trackAppletExpansion(PlasmaQuick::AppletQuickItem *appletQuickItem);
     void initAppletConfigurationSignals(const int &id, KConfigPropertyMap *configuration);
 
     bool appletIsExpandable(PlasmaQuick::AppletQuickItem *appletQuickItem) const;
@@ -203,7 +205,10 @@ private:
 
     //!keep record of applet ids and avoid crashes when trying to access ids for already destroyed applets
     QHash<PlasmaQuick::AppletQuickItem *, int> m_expandedAppletIds;
-    QHash<PlasmaQuick::AppletQuickItem *, QMetaObject::Connection> m_appletsExpandedConnections;
+
+    //!applets already wired for expansion tracking; only membership is ever asked of this, both
+    //!connections use this as context object and Qt drops them with the applet
+    QSet<PlasmaQuick::AppletQuickItem *> m_expansionTrackedApplets;
 
     //!all applet data
     QList<int> m_appletOrder; //includes justify splitters
