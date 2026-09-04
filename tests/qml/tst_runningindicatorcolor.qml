@@ -85,12 +85,13 @@ TestCase {
         }
     }
 
-    // IndicatorItem resolves `indicator` from parent.level.bridge; onLevelChanged
+    // IndicatorItem resolves `indicator` from parent.level.indicator.publicApi; onLevelChanged
     // writes level.requested.*, so the level mock provides a requested object.
     Item { id: hostParent; property Item level: levelMock }
+    Item { id: indicatorHolder; readonly property Item publicApi: indicatorMock }
     Item {
         id: levelMock
-        property Item bridge: indicatorMock
+        property Item indicator: indicatorHolder
         property QtObject requested: QtObject {
             property int iconOffsetX: 0
             property int iconOffsetY: 0

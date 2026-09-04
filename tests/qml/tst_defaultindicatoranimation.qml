@@ -6,8 +6,8 @@
 // event loop lets the animation move — so the armed flags are still observable.
 //
 // The mock context mirrors tst_runningindicatorcolor.qml: IndicatorItem resolves
-// `indicator` through parent.level.bridge, so the host parent carries a level
-// whose bridge is the indicator mock.
+// `indicator` through parent.level.indicator.publicApi, so the host parent carries
+// a level whose indicator exposes the indicator mock.
 import QtQuick
 import QtTest
 
@@ -73,9 +73,10 @@ TestCase {
     }
 
     Item { id: hostParent; property Item level: levelMock }
+    Item { id: indicatorHolder; readonly property Item publicApi: indicatorMock }
     Item {
         id: levelMock
-        property Item bridge: indicatorMock
+        property Item indicator: indicatorHolder
         property QtObject requested: QtObject {
             property int iconOffsetX: 0
             property int iconOffsetY: 0

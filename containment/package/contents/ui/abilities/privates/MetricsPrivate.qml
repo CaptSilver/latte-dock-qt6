@@ -85,8 +85,6 @@ AbilityHost.Metrics {
 
     readonly property int extraThicknessFromIndicators: indicators.info.extraMaskThickness
 
-    readonly property real mediumFactor: (1 + (0.65 * (parabolic.factor.maxZoom-1)))
-    readonly property real mediumMarginsFactor: 1 + ((mediumFactor-1) * parabolic.factor.marginThicknessZoomInPercentage)
     readonly property real maxMarginsFactor: 1 + ((parabolic.factor.maxZoom-1) * parabolic.factor.marginThicknessZoomInPercentage)
 
     //! BEHAVIORS

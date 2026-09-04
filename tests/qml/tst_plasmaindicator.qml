@@ -17,7 +17,7 @@ TestCase {
     height: 60
 
     // The per-task indicator object; typed Item because IndicatorItem.indicator
-    // and level.bridge are Item properties.
+    // and IndicatorObject.publicApi are Item properties.
     Item {
         id: indicatorMock
         property bool isTask: true
@@ -39,13 +39,14 @@ TestCase {
         }
     }
 
-    // IndicatorItem resolves `indicator` from parent.level.bridge; onLevelChanged
-    // writes level.requested.*, so the level mock provides a requested object.
-    // isBackground/isForeground false keep every layer Loader unloaded.
+    // IndicatorItem resolves `indicator` from parent.level.indicator.publicApi;
+    // onLevelChanged writes level.requested.*, so the level mock provides a requested
+    // object. isBackground/isForeground false keep every layer Loader unloaded.
     Item { id: hostParent; property Item level: levelMock }
+    Item { id: indicatorHolder; readonly property Item publicApi: indicatorMock }
     Item {
         id: levelMock
-        property Item bridge: indicatorMock
+        property Item indicator: indicatorHolder
         property bool isBackground: false
         property bool isForeground: false
         property QtObject requested: QtObject {

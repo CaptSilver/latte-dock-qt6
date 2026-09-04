@@ -7,19 +7,9 @@ import QtQuick 2.7
 
 Item {
     readonly property Item level: parent && parent.hasOwnProperty("level") ? parent.level : null
-    readonly property Item indicator: {
-        if (!level) {
-            return null;
-        }
-
-        if (level.hasOwnProperty("bridge")) {
-            return level.bridge;
-        } else if (level.hasOwnProperty("indicator")) {
-            return level.indicator.publicApi;
-        }
-
-        return null;
-    }
+    //! LevelOptions.indicator is null until the level is wired up, and hasOwnProperty() cannot
+    //! tell that apart from a live one, so the null is what has to be tested.
+    readonly property Item indicator: level && level.indicator ? level.indicator.publicApi : null
 
     //! indicator is using main colors from icon e.g. unity style
     property bool needsIconColors: false

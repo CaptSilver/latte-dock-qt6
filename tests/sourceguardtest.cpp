@@ -332,6 +332,7 @@ private Q_SLOTS:
     void layout_deadTypeEnumIsGone();
     void view_isSingleIsOriginalViewOnly();
     void layout_genericVirtualsMatchOverrides();
+    void unreadAbilityMembersAndHostApiAreGone();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -2286,6 +2287,78 @@ void SourceGuardTest::layout_genericVirtualsMatchOverrides()
                  qPrintable(QStringLiteral("genericlayout.h must keep %1").arg(QString::fromUtf8(k.base))));
         QVERIFY2(ch.contains(QString::fromUtf8(k.derived)),
                  qPrintable(QStringLiteral("centrallayout.h must keep %1").arg(QString::fromUtf8(k.derived))));
+    }
+}
+
+void SourceGuardTest::unreadAbilityMembersAndHostApiAreGone()
+{
+    // QML answers a missing property with `undefined` rather than failing, so an ability member
+    // nothing reads rots in place and no part of the build can say so. Three of these were worse
+    // than merely dead: the containment kept recomputing mask.thickness.medium/maxMedium/maxZoomed
+    // on every zoom change for a reader that never existed. host/ParabolicEffect's publicApi is
+    // unreachable for a subtler reason -- LatteBridge passes `host: appletItem.parabolic`, the raw
+    // host, where every sibling entry passes `.publicApi` -- and IndicatorItem's `bridge` branch
+    // matches no level object, because the only thing ever bound to a Loader's `level` is
+    // LevelOptions, which declares `indicator` and has never declared `bridge`.
+    struct Rule
+    {
+        const char *file;
+        const char *needle;
+        const char *why;
+    };
+
+    static const Rule gone[] = {
+        {"declarativeimports/abilities/definition/metrics/mask/Thickness.qml", "propertyintmedium:", "no reader tree-wide"},
+        {"declarativeimports/abilities/definition/metrics/mask/Thickness.qml", "propertyintmaxMedium:", "no reader tree-wide"},
+        {"declarativeimports/abilities/definition/metrics/mask/Thickness.qml", "propertyintmaxZoomed:", "no reader tree-wide"},
+        {"declarativeimports/abilities/definition/metrics/mask/Thickness.qml", "propertyintmediumForItems:", "an unbound placeholder 48"},
+        {"declarativeimports/abilities/definition/metrics/mask/Thickness.qml", "propertyintmaxMediumForItems:", "an unbound placeholder 48"},
+        // The grouped initializer must lose the same members: assigning to a property that no longer
+        // exists is a hard QML compile error, unlike reading one.
+        {"declarativeimports/abilities/definition/Metrics.qml", "medium:48", "initializer for a deleted member"},
+        {"declarativeimports/abilities/definition/Metrics.qml", "maxMedium:48", "initializer for a deleted member"},
+        {"declarativeimports/abilities/definition/Metrics.qml", "maxZoomed:48", "initializer for a deleted member"},
+        {"declarativeimports/abilities/definition/Metrics.qml", "mediumForItems:48", "initializer for a deleted member"},
+        {"declarativeimports/abilities/definition/Metrics.qml", "maxMediumForItems:48", "initializer for a deleted member"},
+        {"containment/package/contents/ui/abilities/Metrics.qml", "mask.thickness.medium:", "bound for nobody"},
+        {"containment/package/contents/ui/abilities/Metrics.qml", "mask.thickness.maxMedium:", "bound for nobody"},
+        {"containment/package/contents/ui/abilities/Metrics.qml", "mask.thickness.maxZoomed:", "bound for nobody"},
+        {"containment/package/contents/ui/abilities/privates/MetricsPrivate.qml", "mediumFactor:", "only the deleted medium bindings used it"},
+        {"containment/package/contents/ui/abilities/privates/MetricsPrivate.qml", "mediumMarginsFactor:", "only the deleted medium bindings used it"},
+        {"declarativeimports/abilities/host/ParabolicEffect.qml", "publicApi", "LatteBridge passes the raw host, so nothing can reach it"},
+        {"declarativeimports/components/IndicatorItem.qml", "hasOwnProperty(\"bridge\")", "no level object declares bridge"},
+        {"declarativeimports/components/IndicatorItem.qml", "level.bridge", "no level object declares bridge"},
+        {"containment/package/contents/ui/VisibilityManager.qml", "floatingInternalGapAcceptsInput", "assigned and never read"},
+    };
+
+    for (const Rule &r : gone) {
+        const QString rel = QString::fromUtf8(r.file);
+        const QString s = stripped(withoutComments(readFile(rel)));
+        QVERIFY2(!s.isEmpty(), qPrintable(QStringLiteral("%1 not found").arg(rel)));
+        QVERIFY2(!s.contains(QString::fromUtf8(r.needle)),
+                 qPrintable(QStringLiteral("%1 still carries %2 -- %3").arg(rel, QString::fromUtf8(r.needle), QString::fromUtf8(r.why))));
+    }
+
+    // The live neighbours. Each sits inside or beside a block being deleted, and QML would answer a
+    // block-delete with undefined rather than an error: maxMarginsFactor shares three contiguous
+    // lines with the two factors that die, and taking it out turns the plasmoid's clip thickness
+    // into NaN on a live dock while every test still passes.
+    static const Rule kept[] = {
+        {"containment/package/contents/ui/abilities/Metrics.qml", "mask.thickness.zoomed:", "read by plasmoid main.qml, and it sits between two deleted bindings"},
+        {"containment/package/contents/ui/abilities/Metrics.qml", "mask.thickness.maxZoomedForItemsWithoutScreenEdge:", "feeds maxZoomedForItems, which the plasmoid clips against"},
+        {"containment/package/contents/ui/abilities/privates/MetricsPrivate.qml", "readonlypropertyrealmaxMarginsFactor:", "still read by the zoomed and maxZoomedForItemsWithoutScreenEdge bindings"},
+        {"declarativeimports/abilities/host/ParabolicEffect.qml", "readonlypropertybooldirectRenderingEnabled:", "ten live readers across the containment, items and client layers"},
+        {"declarativeimports/abilities/definition/metrics/mask/Thickness.qml", "propertyintzoomed:", "live, and spelled like the deleted maxZoomed"},
+        {"declarativeimports/abilities/definition/metrics/mask/Thickness.qml", "propertyintmaxZoomedForItems:", "live, and spelled like the deleted maxMediumForItems"},
+        {"declarativeimports/components/IndicatorItem.qml", "level.indicator", "the branch that actually resolves an indicator"},
+    };
+
+    for (const Rule &r : kept) {
+        const QString rel = QString::fromUtf8(r.file);
+        const QString s = stripped(withoutComments(readFile(rel)));
+        QVERIFY2(!s.isEmpty(), qPrintable(QStringLiteral("%1 not found").arg(rel)));
+        QVERIFY2(s.contains(QString::fromUtf8(r.needle)),
+                 qPrintable(QStringLiteral("%1 must keep %2 -- %3").arg(rel, QString::fromUtf8(r.needle), QString::fromUtf8(r.why))));
     }
 }
 

@@ -51,19 +51,14 @@ Item {
         thickness {
             hidden: 1
             normal: 48
-            medium: 48
             zoomed: 48
 
             maxNormal: 48
-            maxMedium: 48
-            maxZoomed: 48
 
             normalForItems: 48
-            mediumForItems: 48
             zoomedForItems: 48
 
             maxNormalForItems: 48
-            maxMediumForItems: 48
             maxZoomedForItems: 48
 
             maxNormalForItemsWithoutScreenEdge: 48

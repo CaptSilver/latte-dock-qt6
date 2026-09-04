@@ -81,12 +81,8 @@ Ability.MetricsPrivate {
 
     mask.thickness.hidden: LatteCore.WindowSystem.compositingActive ?  2 : 1
     mask.thickness.normal: mask.screenEdge + Math.max(totals.thickness + extraThicknessForNormal, background.thickness + background.shadows.headThickness)
-    mask.thickness.medium: mask.screenEdge + mediumFactor*(iconSize+extraThicknessForZoomed) + mediumMarginsFactor*totals.thicknessEdges
     mask.thickness.zoomed: mask.screenEdge + ((iconSize+extraThicknessForZoomed) * parabolic.factor.maxZoom) + maxMarginsFactor*totals.thicknessEdges + 2
     mask.thickness.maxNormal: mask.maxScreenEdge + maxIconSize + (margin.maxTailThickness + margin.maxHeadThickness) + extraThicknessForNormal
-    mask.thickness.maxMedium: mask.maxScreenEdge + Math.max(mask.thickness.maxNormalForItems, extraThicknessForNormal + (mediumFactor*maxIconSize)+(mediumMarginsFactor*margin.tailThickness))
-    mask.thickness.maxZoomed: mask.maxScreenEdge + Math.max( ((maxIconSize*parabolic.factor.maxZoom) + ((margin.maxTailThickness + margin.maxHeadThickness)*maxMarginsFactor)) + extraThicknessForZoomed,
-                                                                    background.thickness + background.shadows.headThickness)
 
     mask.thickness.normalForItems: margin.screenEdge + totals.thickness
     mask.thickness.zoomedForItems: margin.screenEdge + (parabolic.factor.zoom * iconSize) + (parabolic.factor.marginThicknessZoom * totals.thicknessEdges)

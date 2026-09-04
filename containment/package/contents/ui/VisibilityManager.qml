@@ -330,7 +330,6 @@ Item{
             //! clear input mask
             latteView.effects.inputMask = Qt.rect(0, 0, -1, -1);
         } else {
-            var floatingInternalGapAcceptsInput = behaveAsDockWithMask && floatingInternalGapIsForced;
             var inputThickness;
 
             if (latteView.visibility.isHidden) {

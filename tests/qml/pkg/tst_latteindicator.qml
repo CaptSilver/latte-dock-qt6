@@ -1,10 +1,11 @@
 // Coverage for the Latte client indicator LatteIndicator.qml. It subclasses
 // LatteComponents.IndicatorItem, whose `indicator` is a readonly Item resolved
-// from `parent.level.bridge`. So the creation context the component reads is the
-// `indicator` object: every binding/handler dereferences indicator.<x>. We give
-// it a real Item-typed indicator mock by parenting the component under an Item
-// whose `level.bridge` is that mock; with that wired, indicator resolves and the
-// firstPoint GlowPoint's handlers run against concrete values.
+// from `parent.level.indicator.publicApi`. So the creation context the component
+// reads is the `indicator` object: every binding/handler dereferences
+// indicator.<x>. We give it a real Item-typed indicator mock by parenting the
+// component under an Item whose level.indicator exposes that mock as its
+// publicApi; with that wired, indicator resolves and the firstPoint GlowPoint's
+// handlers run against concrete values.
 //
 // firstPoint lives at obj.children[0] (mainIndicatorElement) -> .children[0]
 // (flowItem) -> .children[0]. Its NumberAnimation (activeAndReverseAnimation) is
@@ -67,10 +68,12 @@ TestCase {
         }
     }
 
-    // parent.level.bridge is how IndicatorItem discovers the indicator. Both
-    // `level` and `bridge` are Item-typed in the base, so the mocks are Items.
+    // parent.level.indicator.publicApi is how IndicatorItem discovers the
+    // indicator, mirroring the real IndicatorObject. `level`, `indicator` and
+    // `publicApi` are all Item-typed in the base, so the mocks are Items.
     Item { id: hostParent; property Item level: levelMock }
-    Item { id: levelMock; property Item bridge: indicatorMock }
+    Item { id: indicatorHolder; readonly property Item publicApi: indicatorMock }
+    Item { id: levelMock; property Item indicator: indicatorHolder }
 
     readonly property url targetUrl: Stage.qmlModule("org/kde/latte/abilities/client/indicators/LatteIndicator.qml")
 

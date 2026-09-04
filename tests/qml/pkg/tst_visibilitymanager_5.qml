@@ -76,7 +76,6 @@ TestCase {
                 property real normal: 40
                 property real hidden: 1
                 property real zoomedForItems: 80
-                property real maxZoomed: 80
             }
         }
         property QtObject totals: QtObject { property real thickness: 44 }
