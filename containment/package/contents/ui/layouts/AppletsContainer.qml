@@ -66,7 +66,7 @@ Grid {
             }
             PropertyChanges{
                 target: appletsContainer; horizontalItemAlignment: Grid.AlignLeft; verticalItemAlignment: Grid.AlignVCenter;
-                anchors.leftMargin: 0;    anchors.rightMargin:0;     anchors.topMargin:appletsContainer.offset;    anchors.bottomMargin:appletsContainer.lastMargin;
+                anchors.leftMargin: 0;    anchors.rightMargin:0;     anchors.topMargin:appletsContainer.offset;    anchors.bottomMargin:0;
                 anchors.horizontalCenterOffset: 0; anchors.verticalCenterOffset: 0;
             }
         },
@@ -80,7 +80,7 @@ Grid {
             }
             PropertyChanges{
                 target: appletsContainer; horizontalItemAlignment: Grid.AlignLeft; verticalItemAlignment: Grid.AlignVCenter;
-                anchors.leftMargin: 0;    anchors.rightMargin:0;     anchors.topMargin:appletsContainer.lastMargin;    anchors.bottomMargin:appletsContainer.offset;
+                anchors.leftMargin: 0;    anchors.rightMargin:0;     anchors.topMargin:0;    anchors.bottomMargin:appletsContainer.offset;
                 anchors.horizontalCenterOffset: 0; anchors.verticalCenterOffset: 0;
             }
         },
@@ -109,7 +109,7 @@ Grid {
             }
             PropertyChanges{
                 target: appletsContainer; horizontalItemAlignment: Grid.AlignRight; verticalItemAlignment: Grid.AlignVCenter;
-                anchors.leftMargin: 0;    anchors.rightMargin:0;     anchors.topMargin:appletsContainer.offset;    anchors.bottomMargin:appletsContainer.lastMargin;
+                anchors.leftMargin: 0;    anchors.rightMargin:0;     anchors.topMargin:appletsContainer.offset;    anchors.bottomMargin:0;
                 anchors.horizontalCenterOffset: 0; anchors.verticalCenterOffset: 0;
             }
         },
@@ -123,7 +123,7 @@ Grid {
             }
             PropertyChanges{
                 target: appletsContainer; horizontalItemAlignment: Grid.AlignRight; verticalItemAlignment: Grid.AlignVCenter;
-                anchors.leftMargin: 0;    anchors.rightMargin:0;     anchors.topMargin:appletsContainer.lastMargin;    anchors.bottomMargin:appletsContainer.offset;
+                anchors.leftMargin: 0;    anchors.rightMargin:0;     anchors.topMargin:0;    anchors.bottomMargin:appletsContainer.offset;
                 anchors.horizontalCenterOffset: 0; anchors.verticalCenterOffset: 0;
             }
         },
@@ -152,7 +152,7 @@ Grid {
             }
             PropertyChanges{
                 target: appletsContainer; horizontalItemAlignment: Grid.AlignHCenter; verticalItemAlignment: Grid.AlignBottom
-                anchors.leftMargin: appletsContainer.offset;    anchors.rightMargin:appletsContainer.lastMargin;     anchors.topMargin:0;    anchors.bottomMargin:0;
+                anchors.leftMargin: appletsContainer.offset;    anchors.rightMargin:0;     anchors.topMargin:0;    anchors.bottomMargin:0;
                 anchors.horizontalCenterOffset: 0; anchors.verticalCenterOffset: 0;
             }
         },
@@ -166,7 +166,7 @@ Grid {
             }
             PropertyChanges{
                 target: appletsContainer; horizontalItemAlignment: Grid.AlignHCenter; verticalItemAlignment: Grid.AlignBottom
-                anchors.leftMargin: appletsContainer.lastMargin;    anchors.rightMargin:appletsContainer.offset;     anchors.topMargin:0;    anchors.bottomMargin:0;
+                anchors.leftMargin: 0;    anchors.rightMargin:appletsContainer.offset;     anchors.topMargin:0;    anchors.bottomMargin:0;
                 anchors.horizontalCenterOffset: 0; anchors.verticalCenterOffset: 0;
             }
         },
@@ -195,7 +195,7 @@ Grid {
             }
             PropertyChanges{
                 target: appletsContainer; horizontalItemAlignment: Grid.AlignHCenter; verticalItemAlignment: Grid.AlignTop
-                anchors.leftMargin: appletsContainer.offset;    anchors.rightMargin:appletsContainer.lastMargin;     anchors.topMargin:0;    anchors.bottomMargin:0;
+                anchors.leftMargin: appletsContainer.offset;    anchors.rightMargin:0;     anchors.topMargin:0;    anchors.bottomMargin:0;
                 anchors.horizontalCenterOffset: 0; anchors.verticalCenterOffset: 0;
             }
         },
@@ -209,7 +209,7 @@ Grid {
             }
             PropertyChanges{
                 target: appletsContainer; horizontalItemAlignment: Grid.AlignHCenter; verticalItemAlignment: Grid.AlignTop
-                anchors.leftMargin: appletsContainer.lastMargin;    anchors.rightMargin:appletsContainer.offset;     anchors.topMargin:0;    anchors.bottomMargin:0;
+                anchors.leftMargin: 0;    anchors.rightMargin:appletsContainer.offset;     anchors.topMargin:0;    anchors.bottomMargin:0;
                 anchors.horizontalCenterOffset: 0; anchors.verticalCenterOffset: 0;
             }
         }

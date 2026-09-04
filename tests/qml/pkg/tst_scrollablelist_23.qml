@@ -69,7 +69,6 @@ TestCase {
         '    property Item nearTask: Item { x: -20; y: -20; width: 40; height: 40; property int itemIndex: 1 }\n' +
         '    property Item farTask: Item { x: 500; y: 500; width: 40; height: 40; property int itemIndex: 2 }\n' +
         '    property Item list: null\n' +
-        '    property real lastMargin: 0\n' +
         '    Loader {\n' +
         '        id: ld\n' +
         '        anchors.fill: parent\n' +
@@ -337,5 +336,45 @@ TestCase {
         // no animation pending on a freshly settled list
         settle(f);
         compare(f.animationsFinished, true);
+    }
+
+    // ----- what each state does to the anchor margins -----------------------
+    // An aligned state pins one end of the list to its edge and leaves the other
+    // floating, so the offset belongs on the pinned side and the floating side has
+    // to stay flush. The floating side used to read a `lastMargin` property deleted
+    // in 2019, which resolved to undefined and reset the margin without warning.
+    function test_13_state_margins() {
+        const w = makeWrapper(); tc.wrapper = w;
+        const f = w.list;
+        const r = w.root;
+        f.offset = 7;
+
+        // location, alignment, the margin carrying the offset, the margin on the free edge
+        const cases = [
+            [PlasmaCore.Types.LeftEdge, LatteCore.Types.Top, "topMargin", "bottomMargin"],
+            [PlasmaCore.Types.LeftEdge, LatteCore.Types.Bottom, "bottomMargin", "topMargin"],
+            [PlasmaCore.Types.RightEdge, LatteCore.Types.Top, "topMargin", "bottomMargin"],
+            [PlasmaCore.Types.RightEdge, LatteCore.Types.Bottom, "bottomMargin", "topMargin"],
+            [PlasmaCore.Types.BottomEdge, LatteCore.Types.Left, "leftMargin", "rightMargin"],
+            [PlasmaCore.Types.BottomEdge, LatteCore.Types.Right, "rightMargin", "leftMargin"],
+            [PlasmaCore.Types.TopEdge, LatteCore.Types.Left, "leftMargin", "rightMargin"],
+            [PlasmaCore.Types.TopEdge, LatteCore.Types.Right, "rightMargin", "leftMargin"]
+        ];
+
+        for (let i = 0; i < cases.length; ++i) {
+            r.location = cases[i][0];
+            r.alignment = cases[i][1];
+
+            compare(f.anchors[cases[i][2]], 7, f.state + ": the anchored edge carries the offset");
+            compare(f.anchors[cases[i][3]], 0, f.state + ": the free edge takes no margin");
+        }
+
+        // centered states steer with centerOffset, so no side margin moves
+        r.alignment = LatteCore.Types.Center;
+        compare(f.anchors.leftMargin, 0, f.state + ": left margin");
+        compare(f.anchors.rightMargin, 0, f.state + ": right margin");
+        compare(f.anchors.topMargin, 0, f.state + ": top margin");
+        compare(f.anchors.bottomMargin, 0, f.state + ": bottom margin");
+        compare(f.anchors.horizontalCenterOffset, 7, f.state + ": the offset steers the center");
     }
 }

@@ -225,6 +225,7 @@ private Q_SLOTS:
     void wm_skipTaskBarNoOpIsGone();
     void corona_dropsTheOrphanAboutDialog();
     void dataTables_dropDeadCopyAndRedundantEarlyOuts();
+    void alignmentStateSelfReadsResolve();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -1258,6 +1259,37 @@ void SourceGuardTest::dataTables_dropDeadCopyAndRedundantEarlyOuts()
              "LayoutsTable::subtracted must not keep an early-out that cannot change its result");
     QVERIFY2(!stripped(layouts).contains(QStringLiteral("#include<QDebug>")),
              "layoutstable.cpp must drop <QDebug>, nothing in it logs");
+}
+
+void SourceGuardTest::alignmentStateSelfReadsResolve()
+{
+    // Same silent-undefined class as abilityMemberReadsResolve, one scope down: these two
+    // alignment state machines address their own root by id, so a member the file no longer
+    // declares still parses and still binds. `lastMargin` was exactly that -- deleted in 2019,
+    // read by both files for years afterwards. It never warned, because QQuickAnchors gives
+    // every side margin a RESET, so an undefined result resets the margin instead of failing
+    // the assignment. ScrollableList.qml is a copy of AppletsContainer.qml, so anything that
+    // rots in one rots in both.
+    struct RootScope
+    {
+        QString file;
+        QString id;
+    };
+
+    const QList<RootScope> scopes = {
+        {QStringLiteral("containment/package/contents/ui/layouts/AppletsContainer.qml"), QStringLiteral("appletsContainer")},
+        {QStringLiteral("plasmoid/package/contents/ui/taskslayout/ScrollableList.qml"), QStringLiteral("flickableContainer")}};
+
+    QStringList unresolved;
+    for (const RootScope &scope : scopes) {
+        const QSet<QString> declared = declaredMembers({scope.file});
+        QVERIFY2(!declared.isEmpty(), qPrintable(QStringLiteral("no declarations found in %1").arg(scope.file)));
+        unresolved << unresolvedReads(scope.id, declared, {QStringLiteral("%1/%2").arg(QStringLiteral(REPO_ROOT), scope.file)});
+    }
+
+    QVERIFY2(unresolved.isEmpty(),
+             qPrintable(QStringLiteral("alignment-state reads that resolve to undefined:\n  %1")
+                            .arg(unresolved.join(QStringLiteral("\n  ")))));
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)
