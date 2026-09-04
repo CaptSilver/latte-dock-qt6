@@ -13,7 +13,6 @@ import org.kde.latte.core 0.2 as LatteCore
 import org.kde.latte.private.app 0.1 as LatteApp
 import org.kde.latte.private.containment 0.1 as LatteContainment
 
-import "../../code/ColorizerTools.js" as ColorizerTools
 
 Loader{
     id: manager
@@ -29,17 +28,17 @@ Loader{
     //! colorizer compares against and switches between).
     readonly property QtObject plasmaTheme: themeExtended ? themeExtended.defaultTheme : null
 
-    readonly property real originalThemeTextColorBrightness: ColorizerTools.colorBrightness(plasmaTheme ? plasmaTheme.textColor : Kirigami.Theme.textColor)
+    readonly property real originalThemeTextColorBrightness: LatteCore.Tools.colorBrightness(plasmaTheme ? plasmaTheme.textColor : Kirigami.Theme.textColor)
     readonly property color originalLightTextColor: {
         var base = plasmaTheme ? plasmaTheme : Kirigami.Theme;
         return originalThemeTextColorBrightness > 127.5 ? base.textColor : base.backgroundColor;
     }
 
-    readonly property real themeTextColorBrightness: ColorizerTools.colorBrightness(textColor)
-    readonly property real backgroundColorBrightness: ColorizerTools.colorBrightness(backgroundColor)
+    readonly property real themeTextColorBrightness: LatteCore.Tools.colorBrightness(textColor)
+    readonly property real backgroundColorBrightness: LatteCore.Tools.colorBrightness(backgroundColor)
 
     readonly property color outlineColorBase: backgroundColor
-    readonly property real outlineColorBaseBrightness: ColorizerTools.colorBrightness(outlineColorBase)
+    readonly property real outlineColorBaseBrightness: LatteCore.Tools.colorBrightness(outlineColorBase)
     readonly property color outlineColor: {
         if (!root.panelOutline) {
             return backgroundColor;
@@ -52,7 +51,7 @@ Loader{
         }
     }
 
-    readonly property bool editModeTextColorIsBright: ColorizerTools.colorBrightness(editModeTextColor) > 127.5
+    readonly property bool editModeTextColorIsBright: LatteCore.Tools.colorBrightness(editModeTextColor) > 127.5
     readonly property color editModeTextColor: latteView && latteView.layout ? latteView.layout.textColor : "white"
 
     readonly property bool mustBeShown: (applyTheme && applyTheme !== plasmaTheme)

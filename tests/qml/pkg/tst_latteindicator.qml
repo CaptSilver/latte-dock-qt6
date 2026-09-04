@@ -20,6 +20,7 @@
 import QtQuick
 import QtTest
 import org.kde.latte.core 0.2 as LatteCore
+import org.kde.kirigami 2.20 as Kirigami
 
 TestCase {
     id: root
@@ -105,26 +106,22 @@ TestCase {
         indicatorMock.configuration.activeStyle = 0;
     }
 
-    // colorBrightnessFromRGB is the W3C luminance formula; assert exact outputs.
-    function test_colorBrightnessFromRGB() {
+    // The W3C luminance arithmetic moved to the LatteCore.Tools singleton, so what
+    // is worth asserting here is that the indicator still reaches it and still picks
+    // its minimized colour off the resulting brightness.
+    function test_textColorBrightnessDrivesMinimizedColour() {
         resetMock();
         const m = make();
-        // (255*299 + 255*587 + 255*114) / 1000 == 255
-        compare(m.colorBrightnessFromRGB(255, 255, 255), 255);
-        // pure red channel: 255*299/1000
-        compare(m.colorBrightnessFromRGB(255, 0, 0), 76.245);
-        compare(m.colorBrightnessFromRGB(0, 0, 0), 0);
-    }
 
-    // colorBrightness scales a QColor's 0..1 channels to 0..255 then calls
-    // colorBrightnessFromRGB; white -> 255, black -> 0.
-    function test_colorBrightness() {
-        resetMock();
-        const m = make();
-        compare(m.colorBrightness(Qt.rgba(1, 1, 1, 1)), 255);
-        compare(m.colorBrightness(Qt.rgba(0, 0, 0, 1)), 0);
-        // green channel weight 587: 1.0 green -> 255*587/1000
-        compare(m.colorBrightness(Qt.rgba(0, 1, 0, 1)), 149.685);
+        compare(m.textColorBrightness, LatteCore.Tools.colorBrightness(Kirigami.Theme.textColor));
+
+        indicatorMock.configuration.minimizedTaskColoredDifferently = true;
+        const expected = m.textColorBrightness > 127.5 ? Qt.darker(Kirigami.Theme.textColor, 1.7)
+                                                       : Qt.lighter(Kirigami.Theme.textColor, 7);
+        compare(m.minimizedColor, expected);
+
+        indicatorMock.configuration.minimizedTaskColoredDifferently = false;
+        compare(m.minimizedColor, m.isActiveColor);
     }
 
     // updateInitialSizes sizes firstPoint from root.size when inactive, and to

@@ -247,7 +247,7 @@ Loader {
                             //! it must remain or be changed
                             text: i18nc("advanced settings", "Advanced")
 
-                            readonly property real textColorBrightness: colorBrightness(Kirigami.Theme.textColor)
+                            readonly property real textColorBrightness: LatteCore.Tools.colorBrightness(Kirigami.Theme.textColor)
                             readonly property real basicOpacity: textColorBrightness > 127 ? 0.7 : 0.3
 
                             color: {
@@ -256,16 +256,6 @@ Loader {
                                 }
 
                                 return Kirigami.Theme.textColor;
-                            }
-
-                            function colorBrightness(color) {
-                                return colorBrightnessFromRGB(color.r * 255, color.g * 255, color.b * 255);
-                            }
-
-                            // formula for brightness according to:
-                            // https://www.w3.org/TR/AERT/#color-contrast
-                            function colorBrightnessFromRGB(r, g, b) {
-                                return (r * 299 + g * 587 + b * 114) / 1000
                             }
 
                             MouseArea {

@@ -29,7 +29,7 @@ LatteComponents.IndicatorItem{
 
     readonly property int thicknessMargin: screenEdgeMargin + thickLocalMargin + (glowEnabled ? 1 : 0)
 
-    property real textColorBrightness: colorBrightness(indicator.colorPalette.textColor)
+    property real textColorBrightness: LatteCore.Tools.colorBrightness(indicator.colorPalette.textColor)
 
     //! buttonFocusColor is a Plasma color-group name; a Kirigami.Theme fallback palette
     //! (used when no colorization is active) lacks it and would read undefined -> black.
@@ -67,16 +67,6 @@ LatteComponents.IndicatorItem{
         border.color: "blue"
         color: "transparent"
     }*/
-
-    function colorBrightness(color) {
-        return colorBrightnessFromRGB(color.r * 255, color.g * 255, color.b * 255);
-    }
-
-    // formula for brightness according to:
-    // https://www.w3.org/TR/AERT/#color-contrast
-    function colorBrightnessFromRGB(r, g, b) {
-        return (r * 299 + g * 587 + b * 114) / 1000
-    }
 
     Grid{
         id: grid

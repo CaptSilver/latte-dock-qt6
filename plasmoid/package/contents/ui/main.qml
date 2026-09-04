@@ -31,7 +31,6 @@ import "task" as Task
 import "taskslayout" as TasksLayout
 import "../code/tools.js" as TaskTools
 import "../code/activitiesTools.js" as ActivitiesTools
-import "../code/ColorizerTools.js" as ColorizerTools
 
 PlasmoidItem {
     id:root
@@ -89,7 +88,7 @@ PlasmoidItem {
 
     readonly property int minimumLength: inPlasma ? (root.isHorizontal ? tasksWidth : tasksHeight) : -1;
 
-    property real textColorBrightness: ColorizerTools.colorBrightness(themeTextColor)
+    property real textColorBrightness: LatteCore.Tools.colorBrightness(themeTextColor)
 
     property color themeTextColor: Kirigami.Theme.textColor
     property color themeBackgroundColor: Kirigami.Theme.backgroundColor

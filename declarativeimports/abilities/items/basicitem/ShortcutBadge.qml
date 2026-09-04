@@ -8,6 +8,7 @@ import QtQuick 2.7
 import org.kde.plasma.plasmoid 2.0
 import org.kde.kirigami 2.20 as Kirigami
 import org.kde.latte.components 1.0 as LatteComponents
+import org.kde.latte.core 0.2 as LatteCore
 
 Loader{
     id: shorcutBadge
@@ -18,7 +19,7 @@ Loader{
     property int fixedIndex:-1
 
     readonly property int maxFixedIndex: abilityItem.abilities.shortcuts.badges.length
-    readonly property real textColorBrightness: colorBrightness(Kirigami.Theme.textColor)
+    readonly property real textColorBrightness: LatteCore.Tools.colorBrightness(Kirigami.Theme.textColor)
     readonly property string badgeString: (shorcutBadge.fixedIndex>=1 && shorcutBadge.fixedIndex<=maxFixedIndex) ?
                                               abilityItem.abilities.shortcuts.badges[shorcutBadge.fixedIndex-1] : ""
     readonly property color lightTextColor: textColorBrightness > 127.5 ? Kirigami.Theme.textColor : Kirigami.Theme.backgroundColor
@@ -36,16 +37,6 @@ Loader{
         } else {
             fixedIndex = -1;
         }
-    }
-
-    function colorBrightness(color) {
-        return colorBrightnessFromRGB(color.r * 255, color.g * 255, color.b * 255);
-    }
-
-    // formula for brightness according to:
-    // https://www.w3.org/TR/AERT/#color-contrast
-    function colorBrightnessFromRGB(r, g, b) {
-        return (r * 299 + g * 587 + b * 114) / 1000
     }
 
     sourceComponent: Item{

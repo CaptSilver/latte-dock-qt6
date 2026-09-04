@@ -17,6 +17,8 @@
 // onClicked (not uniquely locatable among ~40 sibling MouseAreas).
 import QtQuick
 import QtTest
+import org.kde.latte.core 0.2 as LatteCore
+import org.kde.kirigami 2.20 as Kirigami
 
 TestCase {
     id: root
@@ -294,26 +296,21 @@ TestCase {
         compare(dialog.userScaleHeight, 0.4);
     }
 
-    // colorBrightnessFromRGB(r,g,b) = (r*299 + g*587 + b*114) / 1000, and
-    // colorBrightness(color) feeds it color.r*255, color.g*255, color.b*255.
-    function test_colorBrightnessHelpers() {
+    // The luminance arithmetic moved to the LatteCore.Tools singleton. What still
+    // matters here is that the Advanced label reaches it and derives its basic-mode
+    // opacity from the resulting brightness.
+    function test_advancedLabelBrightnessComesFromTheSingleton() {
         const loader = make();
         const all = collectAll(loader);
         const lbl = findOne(all, function (o) {
-            return typeof o.colorBrightness === "function"
-                && typeof o.colorBrightnessFromRGB === "function";
+            return o.hasOwnProperty("textColorBrightness") && o.hasOwnProperty("basicOpacity");
         });
-        verify(lbl, "advanced label with brightness helpers not found");
+        verify(lbl, "advanced label not found");
 
-        // Pure white -> (255*299 + 255*587 + 255*114)/1000 = 255.
-        fuzzyCompare(lbl.colorBrightnessFromRGB(255, 255, 255), 255, 0.001);
-        // Single red channel -> 255*299/1000 = 76.245.
-        fuzzyCompare(lbl.colorBrightnessFromRGB(255, 0, 0), 76.245, 0.001);
-
-        // colorBrightness(white) routes through the same formula.
-        fuzzyCompare(lbl.colorBrightness(Qt.rgba(1, 1, 1, 1)), 255, 0.001);
-        // colorBrightness(green) -> 587*255/1000 / ... i.e. 149.685.
-        fuzzyCompare(lbl.colorBrightness(Qt.rgba(0, 1, 0, 1)), 149.685, 0.001);
+        fuzzyCompare(lbl.textColorBrightness,
+                     LatteCore.Tools.colorBrightness(Kirigami.Theme.textColor), 0.001);
+        verify(lbl.textColorBrightness >= 0 && lbl.textColorBrightness <= 255);
+        compare(lbl.basicOpacity, lbl.textColorBrightness > 127 ? 0.7 : 0.3);
     }
 
     // pinButton.Component.onCompleted seeds the toggle from the saved sticker

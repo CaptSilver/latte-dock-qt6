@@ -26,7 +26,7 @@ LatteComponents.IndicatorItem{
 
     readonly property int screenEdgeMargin: Plasmoid.location === PlasmaCore.Types.Floating || reversedEnabled ? 0 : indicator.screenEdgeMargin
 
-    property real textColorBrightness: colorBrightness(Kirigami.Theme.textColor)
+    property real textColorBrightness: LatteCore.Tools.colorBrightness(Kirigami.Theme.textColor)
 
     property color isActiveColor: Kirigami.Theme.focusColor
     property color minimizedColor: {
@@ -59,16 +59,6 @@ LatteComponents.IndicatorItem{
         color: "transparent"
         opacity:0.6
     }*/
-
-    function colorBrightness(color) {
-        return colorBrightnessFromRGB(color.r * 255, color.g * 255, color.b * 255);
-    }
-
-    // formula for brightness according to:
-    // https://www.w3.org/TR/AERT/#color-contrast
-    function colorBrightnessFromRGB(r, g, b) {
-        return (r * 299 + g * 587 + b * 114) / 1000
-    }
 
     Item{
         id: mainIndicatorElement
@@ -147,7 +137,6 @@ LatteComponents.IndicatorItem{
                             width = root.size;
                     }
                 }
-
 
                 onIsActiveChanged: {
                     if (activeStyle === 0 /*Line*/)

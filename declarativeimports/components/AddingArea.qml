@@ -8,8 +8,8 @@ import QtQuick 2.7
 import org.kde.plasma.plasmoid 2.0
 import org.kde.plasma.core 2.0 as PlasmaCore
 
-import "code/ColorizerTools.js" as ColorizerTools
 import org.kde.kirigami 2.20 as Kirigami
+import org.kde.latte.core 0.2 as LatteCore
 
 Rectangle{
     id: addingArea
@@ -22,7 +22,7 @@ Rectangle{
     property int iconSize: 64
 
     readonly property color outlineColorBase: Kirigami.Theme.backgroundColor
-    readonly property real outlineColorBaseBrightness: ColorizerTools.colorBrightness(outlineColorBase)
+    readonly property real outlineColorBaseBrightness: LatteCore.Tools.colorBrightness(outlineColorBase)
     readonly property color outlineColor: {
         if (outlineColorBaseBrightness > 127.5) {
             return Qt.darker(outlineColorBase, 1.5);

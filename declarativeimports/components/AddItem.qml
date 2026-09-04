@@ -7,8 +7,8 @@ import QtQuick 2.1
 
 import org.kde.plasma.plasmoid 2.0
 import org.kde.kirigami 2.20 as Kirigami
+import org.kde.latte.core 0.2 as LatteCore
 
-import "code/ColorizerTools.js" as ColorizerTools
 
 Item{
     id: addItem
@@ -29,7 +29,7 @@ Item{
         property int crossSize: Math.min(0.4*parent.width, 0.4 * parent.height)
 
         readonly property color outlineColorBase: Kirigami.Theme.backgroundColor
-        readonly property real outlineColorBaseBrightness: ColorizerTools.colorBrightness(outlineColorBase)
+        readonly property real outlineColorBaseBrightness: LatteCore.Tools.colorBrightness(outlineColorBase)
         readonly property color outlineColor: {
             if (outlineColorBaseBrightness > 127.5) {
                 return Qt.darker(outlineColorBase, 1.5);

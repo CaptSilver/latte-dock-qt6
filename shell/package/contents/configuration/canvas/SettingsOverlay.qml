@@ -15,7 +15,6 @@ import org.kde.latte.components 1.0 as LatteComponents
 import "controls" as SettingsControls
 import "maxlength" as MaximumLength
 
-//import "../../code/ColorizerTools.js" as ColorizerTools
 
 Item{
     id: settingsRoot
