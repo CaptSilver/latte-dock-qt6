@@ -32,8 +32,8 @@ public:
     };
 
     Activity();
-    Activity(Activity &&o);
-    Activity(const Activity &o);
+    Activity(Activity &&o) = default;
+    Activity(const Activity &o) = default;
 
     //! Layout data
     bool isCurrent{false};
@@ -44,8 +44,8 @@ public:
     bool isRunning() const;
 
     //! Operators
-    Activity &operator=(const Activity &rhs);
-    Activity &operator=(Activity &&rhs);
+    Activity &operator=(const Activity &rhs) = default;
+    Activity &operator=(Activity &&rhs) = default;
 };
 
 //! This is an Activities map in the following structure:

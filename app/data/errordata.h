@@ -29,14 +29,14 @@ public:
     static constexpr const char* APPLETANDCONTAINMENTWITHSAMEID = "W205";
 
     Error();
-    Error(Error &&o);
-    Error(const Error &o);
+    Error(Error &&o) = default;
+    Error(const Error &o) = default;
 
     bool isValid() const;
 
     //! Operators
-    Error &operator=(const Error &rhs);
-    Error &operator=(Error &&rhs);
+    Error &operator=(const Error &rhs) = default;
+    Error &operator=(Error &&rhs) = default;
     bool operator==(const Error &rhs) const;
     bool operator!=(const Error &rhs) const;
 

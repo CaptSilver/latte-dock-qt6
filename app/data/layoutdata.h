@@ -29,8 +29,8 @@ public:
     static constexpr const char* DEFAULTSCHEMEFILE = "kdeglobals";
 
     Layout();
-    Layout(Layout &&o);
-    Layout(const Layout &o);
+    Layout(Layout &&o) = default;
+    Layout(const Layout &o) = default;
 
     //! Layout data
     QString icon;
@@ -66,8 +66,8 @@ public:
     bool hasWarnings() const;
 
     //! Operators
-    Layout &operator=(const Layout &rhs);
-    Layout &operator=(Layout &&rhs);
+    Layout &operator=(const Layout &rhs) = default;
+    Layout &operator=(Layout &&rhs) = default;
     bool operator==(const Layout &rhs) const;
     bool operator!=(const Layout &rhs) const;
 };

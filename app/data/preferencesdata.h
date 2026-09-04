@@ -32,8 +32,8 @@ public:
     static const Settings::MouseSensitivity MOUSESENSITIVITY = Settings::HighMouseSensitivity;
 
     Preferences();
-    Preferences(Preferences &&o);
-    Preferences(const Preferences &o);
+    Preferences(Preferences &&o) = default;
+    Preferences(const Preferences &o) = default;
 
     //! Preferences data
     bool badgeStyle3D{BADGE3DSTYLE};
@@ -53,8 +53,8 @@ public:
     void setToDefaults();
 
     //! Operators
-    Preferences &operator=(const Preferences &rhs);
-    Preferences &operator=(Preferences &&rhs);
+    Preferences &operator=(const Preferences &rhs) = default;
+    Preferences &operator=(Preferences &&rhs) = default;
     bool operator==(const Preferences &rhs) const;
     bool operator!=(const Preferences &rhs) const;
 };

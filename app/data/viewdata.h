@@ -35,8 +35,8 @@ public:
     static const int ISCLONEDNULL;
 
     View();
-    View(View &&o);
-    View(const View &o);
+    View(View &&o) = default;
+    View(const View &o) = default;
     View(const QString &newid, const QString &newname);
 
     //! View data
@@ -79,8 +79,8 @@ public:
     void setState(View::State state, QString file = QString(), QString layout = QString(), QString view = QString());
 
     //! Operators
-    View &operator=(const View &rhs);
-    View &operator=(View &&rhs);
+    View &operator=(const View &rhs) = default;
+    View &operator=(View &&rhs) = default;
     bool operator==(const View &rhs) const;
     bool operator!=(const View &rhs) const;
     operator QString() const;

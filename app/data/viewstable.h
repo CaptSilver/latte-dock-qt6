@@ -21,8 +21,8 @@ class ViewsTable : public GenericTable<View>
 
 public:
     ViewsTable();
-    ViewsTable(ViewsTable &&o);
-    ViewsTable(const ViewsTable &o);
+    ViewsTable(ViewsTable &&o) = default;
+    ViewsTable(const ViewsTable &o) = default;
 
     bool isInitialized{false};
 
@@ -33,8 +33,8 @@ public:
     bool hasContainmentId(const QString &cid) const;
 
     //! Operators
-    ViewsTable &operator=(const ViewsTable &rhs);
-    ViewsTable &operator=(ViewsTable &&rhs);
+    ViewsTable &operator=(const ViewsTable &rhs) = default;
+    ViewsTable &operator=(ViewsTable &&rhs) = default;
     bool operator==(const ViewsTable &rhs) const;
     bool operator!=(const ViewsTable &rhs) const;
     ViewsTable subtracted(const ViewsTable &rhs) const;

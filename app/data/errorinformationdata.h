@@ -21,8 +21,8 @@ class ErrorInformation : public Generic
 {
 public:
     ErrorInformation();
-    ErrorInformation(ErrorInformation &&o);
-    ErrorInformation(const ErrorInformation &o);
+    ErrorInformation(ErrorInformation &&o) = default;
+    ErrorInformation(const ErrorInformation &o) = default;
 
     //! error data
     Data::Applet containment;
@@ -31,8 +31,8 @@ public:
     bool isValid() const;
 
     //! Operators
-    ErrorInformation &operator=(const ErrorInformation &rhs);
-    ErrorInformation &operator=(ErrorInformation &&rhs);
+    ErrorInformation &operator=(const ErrorInformation &rhs) = default;
+    ErrorInformation &operator=(ErrorInformation &&rhs) = default;
     bool operator==(const ErrorInformation &rhs) const;
     bool operator!=(const ErrorInformation &rhs) const;
 };

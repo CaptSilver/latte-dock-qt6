@@ -22,8 +22,8 @@ class Applet : public Generic
 {
 public:
     Applet();
-    Applet(Applet &&o);
-    Applet(const Applet &o);
+    Applet(Applet &&o) = default;
+    Applet(const Applet &o) = default;
 
     //! Layout data
     bool isSelected{false};
@@ -38,8 +38,8 @@ public:
     QString visibleName() const;
 
     //! Operators
-    Applet &operator=(const Applet &rhs);
-    Applet &operator=(Applet &&rhs);
+    Applet &operator=(const Applet &rhs) = default;
+    Applet &operator=(Applet &&rhs) = default;
     bool operator==(const Applet &rhs) const;
     bool operator!=(const Applet &rhs) const;
 };

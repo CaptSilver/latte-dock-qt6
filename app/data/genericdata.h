@@ -19,8 +19,8 @@ class Generic
 {
 public:
     Generic() = default;
-    Generic(Generic &&o);
-    Generic(const Generic &o);
+    Generic(Generic &&o) = default;
+    Generic(const Generic &o) = default;
     Generic(const QString &newid, const QString &newname);
 
     //! Layout data
@@ -28,8 +28,8 @@ public:
     QString name;
 
     //! Operators
-    Generic &operator=(const Generic &rhs);
-    Generic &operator=(Generic &&rhs);
+    Generic &operator=(const Generic &rhs) = default;
+    Generic &operator=(Generic &&rhs) = default;
     bool operator==(const Generic &rhs) const;
     bool operator!=(const Generic &rhs) const;
 };

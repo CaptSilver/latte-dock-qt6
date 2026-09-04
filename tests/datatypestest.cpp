@@ -7,6 +7,7 @@
 #include "data/appletdata.h"
 #include "data/errordata.h"
 #include "data/errorinformationdata.h"
+#include "data/genericbasictable.h"
 #include "data/genericdata.h"
 #include "data/generictable.h"
 #include "data/layoutcolordata.h"
@@ -21,6 +22,8 @@
 #include <QtTest>
 
 #include <cstring>
+#include <type_traits>
+#include <utility>
 #include <new>
 
 using namespace Latte;
@@ -29,6 +32,8 @@ class DataTypesTest : public QObject
 {
     Q_OBJECT
 private Q_SLOTS:
+    void dataTypes_movesAreRealMoves();
+    void dataTypes_moveLeavesTheSourceEmpty();
     void generic_equality();
     void activity_isRunning_truthTable();
     void applet_visibleNameAndInstalled();
@@ -53,6 +58,43 @@ private Q_SLOTS:
     void viewsTable_appendTemporaryView();
     void layoutsTable_subtractedAndFreeActivities();
 };
+
+//! These types are passed and returned by value all over the settings layer. Their
+//! copy and move members were written out by hand, and every hand-written move
+//! copied the underlying QList instead of moving it -- so a "move" of a Layout
+//! deep-copied its whole views table. Defaulting them restores the real thing;
+//! the trait is what says so, rather than the spelling of a declaration.
+void DataTypesTest::dataTypes_movesAreRealMoves()
+{
+    QVERIFY(std::is_nothrow_move_constructible_v<Latte::Data::Generic>);
+    QVERIFY(std::is_nothrow_move_constructible_v<Latte::Data::View>);
+    QVERIFY(std::is_nothrow_move_constructible_v<Latte::Data::Layout>);
+    QVERIFY(std::is_nothrow_move_constructible_v<Latte::Data::GenericTable<Latte::Data::Generic>>);
+    QVERIFY(std::is_nothrow_move_constructible_v<Latte::Data::ViewsTable>);
+    QVERIFY(std::is_nothrow_move_constructible_v<Latte::Data::LayoutsTable>);
+
+    //! GenericBasicTable declared copy and move constructors and no assignment, which
+    //! left assignment deleted. Defaulting them would not have fixed that -- a
+    //! user-declared move constructor still suppresses it -- so the declarations went.
+    QVERIFY(std::is_copy_assignable_v<Latte::Data::GenericBasicTable>);
+    QVERIFY(std::is_move_assignable_v<Latte::Data::GenericBasicTable>);
+}
+
+//! Asserts moved-from state, which is valid-but-unspecified in general; it holds
+//! here because Qt6's QList nulls its d-pointer on move. Today the hand-written
+//! move copies, so the source keeps its rows.
+void DataTypesTest::dataTypes_moveLeavesTheSourceEmpty()
+{
+    Latte::Data::View src;
+    src.id = QStringLiteral("1");
+    src.subcontainments << Latte::Data::Generic(QStringLiteral("2"), QStringLiteral("applet"));
+    QCOMPARE(src.subcontainments.rowCount(), 1);
+
+    Latte::Data::View dst(std::move(src));
+
+    QCOMPARE(dst.subcontainments.rowCount(), 1);
+    QCOMPARE(src.subcontainments.rowCount(), 0);
+}
 
 void DataTypesTest::generic_equality()
 {

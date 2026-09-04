@@ -30,8 +30,8 @@ public:
     static constexpr const char* ONALLSECONDARYSCREENSNAME = "{all-secondary-screens}";
 
     Screen();
-    Screen(Screen &&o);
-    Screen(const Screen &o);
+    Screen(Screen &&o) = default;
+    Screen(const Screen &o) = default;
     Screen(const QString &screenId, const QString &serialized);
 
     //! Screen data
@@ -42,8 +42,8 @@ public:
     QRect geometry;
 
     //! Operators
-    Screen &operator=(const Screen &rhs);
-    Screen &operator=(Screen &&rhs);
+    Screen &operator=(const Screen &rhs) = default;
+    Screen &operator=(Screen &&rhs) = default;
     bool operator==(const Screen &rhs) const;
     bool operator!=(const Screen &rhs) const;
 

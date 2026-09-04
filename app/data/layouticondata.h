@@ -20,8 +20,8 @@ class LayoutIcon : public Generic
 {
 public:
     LayoutIcon();
-    LayoutIcon(LayoutIcon &&o);
-    LayoutIcon(const LayoutIcon &o);
+    LayoutIcon(LayoutIcon &&o) = default;
+    LayoutIcon(const LayoutIcon &o) = default;
 
     //! Layout data
     bool isBackgroundFile{true};
@@ -29,8 +29,8 @@ public:
     bool isEmpty() const;
 
     //! Operators
-    LayoutIcon &operator=(const LayoutIcon &rhs);
-    LayoutIcon &operator=(LayoutIcon &&rhs);
+    LayoutIcon &operator=(const LayoutIcon &rhs) = default;
+    LayoutIcon &operator=(LayoutIcon &&rhs) = default;
     bool operator==(const LayoutIcon &rhs) const;
     bool operator!=(const LayoutIcon &rhs) const;
 };

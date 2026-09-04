@@ -21,12 +21,12 @@ class GenericTable
 
 public:
     GenericTable();
-    GenericTable(GenericTable<T> &&o);
-    GenericTable(const GenericTable<T> &o);
+    GenericTable(GenericTable<T> &&o) = default;
+    GenericTable(const GenericTable<T> &o) = default;
 
     //! Operators
-    GenericTable<T> &operator=(const GenericTable<T> &rhs);
-    GenericTable<T> &operator=(GenericTable<T> &&rhs);
+    GenericTable<T> &operator=(const GenericTable<T> &rhs) = default;
+    GenericTable<T> &operator=(GenericTable<T> &&rhs) = default;
     GenericTable<T> &operator<<(const T &rhs);
     GenericTable<T> &operator<<(const GenericTable<T> &rhs);
     GenericTable<T> &insert(const int &pos, const T &rhs);
