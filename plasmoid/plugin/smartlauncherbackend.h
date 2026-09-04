@@ -42,6 +42,10 @@ public:
     bool hasLauncher(const QString &storageId) const;
 
     int count(const QString &uri) const;
+
+    //! Unity peers can send any numeric type; saturate while the value is still
+    //! 64-bit, because QVariant::value<int>() wraps it negative instead.
+    static int sanitizedCount(const QVariant &value);
     bool countVisible(const QString &uri) const;
     int progress(const QString &uri) const;
     bool progressVisible(const QString &uri) const;

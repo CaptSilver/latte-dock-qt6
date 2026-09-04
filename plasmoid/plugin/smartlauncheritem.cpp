@@ -11,6 +11,8 @@
 #include <KDesktopFile>
 #include <KService>
 
+#include <algorithm>
+
 using namespace SmartLauncher;
 
 Item::Item(QObject *parent)

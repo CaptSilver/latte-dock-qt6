@@ -7,6 +7,9 @@
 #include <QtTest>
 
 #include "smartlauncheritem.h"
+#include "smartlauncherbackend.h"
+
+#include <limits>
 
 class SmartLauncherItemTest : public QObject
 {
@@ -14,6 +17,7 @@ class SmartLauncherItemTest : public QObject
 private Q_SLOTS:
     void defaultsAreEmpty();
     void retainsLauncherUrl();
+    void sanitizesCount();
 };
 
 void SmartLauncherItemTest::defaultsAreEmpty()
@@ -38,4 +42,25 @@ void SmartLauncherItemTest::retainsLauncherUrl()
 }
 
 QTEST_GUILESS_MAIN(SmartLauncherItemTest)
+//! Unity badge counts arrive over D-Bus as whatever numeric type the peer felt
+//! like sending. Anything past INT_MAX used to reach the entry through
+//! QVariant::value<int>(), which wraps: 3000000000 came out as -1294967296.
+void SmartLauncherItemTest::sanitizesCount()
+{
+    using SmartLauncher::Backend;
+
+    QCOMPARE(Backend::sanitizedCount(QVariant(42)), 42);
+    QCOMPARE(Backend::sanitizedCount(QVariant(0)), 0);
+
+    QCOMPARE(Backend::sanitizedCount(QVariant(qlonglong(3000000000))), std::numeric_limits<int>::max());
+    QCOMPARE(Backend::sanitizedCount(QVariant(double(3e9))), std::numeric_limits<int>::max());
+    QCOMPARE(Backend::sanitizedCount(QVariant(std::numeric_limits<int>::max())), std::numeric_limits<int>::max());
+
+    //! A badge count is a quantity; negatives are not a smaller badge, they are junk.
+    QCOMPARE(Backend::sanitizedCount(QVariant(-7)), 0);
+
+    QCOMPARE(Backend::sanitizedCount(QVariant(QStringLiteral("42"))), 42);
+    QCOMPARE(Backend::sanitizedCount(QVariant(QStringLiteral("foo"))), 0);
+}
+
 #include "smartlauncheritemtest.moc"

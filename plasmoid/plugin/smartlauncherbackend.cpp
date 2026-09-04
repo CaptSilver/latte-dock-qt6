@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 #include <settings.h>
 
@@ -142,6 +143,11 @@ QHash<QString, QString> Backend::unityMappingRules() const
     return m_unityMappingRules;
 }
 
+int Backend::sanitizedCount(const QVariant &value)
+{
+    return int(std::clamp<qint64>(value.toLongLong(), 0, std::numeric_limits<int>::max()));
+}
+
 void Backend::update(const QString &uri, const QMap<QString, QVariant> &properties)
 {
     Q_ASSERT(calledFromDBus());
@@ -182,20 +188,22 @@ void Backend::update(const QString &uri, const QMap<QString, QVariant> &properti
 
     auto propertiesEnd = properties.constEnd();
 
+    //! Not updateLauncherProperty here: the payload has to be saturated while it is
+    //! still 64-bit, and value<int>() would wrap it negative first. Sampling the
+    //! getter either side is what keeps the badge gate honest -- it returns 0 while
+    //! badges are off, Do Not Disturb is on, or the app is blacklisted.
     auto foundCount = properties.constFind(QStringLiteral("count"));
     if (foundCount != propertiesEnd) {
-        qint64 newCount = foundCount->toLongLong();
-        // 2 billion unread emails ought to be enough for anybody
-        if (newCount < std::numeric_limits<int>::max()) {
-            int saneCount = static_cast<int>(newCount);
-            if (saneCount != foundEntry->count) {
-                foundEntry->count = saneCount;
-                Q_EMIT countChanged(storageId, saneCount);
-            }
+        const int oldSanitizedCount = count(storageId);
+
+        foundEntry->count = sanitizedCount(*foundCount);
+
+        const int newSanitizedCount = count(storageId);
+
+        if (newSanitizedCount != oldSanitizedCount) {
+            Q_EMIT countChanged(storageId, newSanitizedCount);
         }
     }
-
-    updateLauncherProperty(storageId, properties, QStringLiteral("count"), &foundEntry->count, &Backend::count, &Backend::countChanged);
     updateLauncherProperty(storageId,
                            properties,
                            QStringLiteral("count-visible"),

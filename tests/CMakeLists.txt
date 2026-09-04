@@ -868,6 +868,12 @@ ecm_add_test(smartlauncheritemtest.cpp
 )
 target_include_directories(smartlauncheritemtest PRIVATE ${CMAKE_SOURCE_DIR}/plasmoid/plugin)
 
+# Constructing a SmartLauncher::Item builds the process-wide Backend, which
+# registers com.canonical.Unity and subscribes to the wildcard Update signal. On a
+# real bus that is the developer's session, reacting to live Unity traffic.
+set_tests_properties(smartlauncheritemtest PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;${LATTE_NO_SESSION_BUS}")
+
 set(tasksbackendtest_SRCS tasksbackendtest.cpp ${CMAKE_SOURCE_DIR}/plasmoid/plugin/backend.cpp)
 kconfig_add_kcfg_files(tasksbackendtest_SRCS ${CMAKE_SOURCE_DIR}/plasmoid/plugin/kactivitymanagerd_plugins_settings.kcfgc)
 ecm_add_test(${tasksbackendtest_SRCS}
