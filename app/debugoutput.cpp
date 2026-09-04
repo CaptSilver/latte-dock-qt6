@@ -8,9 +8,13 @@
 #include <QFile>
 #include <QIODevice>
 #include <QLoggingCategory>
+#include <QStandardPaths>
 #include <QString>
 #include <QTextStream>
 #include <QTime>
+
+#include <cstdio>
+#include <fcntl.h>
 
 //! COLORS
 #define CNORMAL  "\033[0m"
@@ -131,6 +135,34 @@ void messageHandler(QtMsgType type, const QMessageLogContext &context, const QSt
             errts << logline << Qt::endl;
         }
     }
+}
+
+void editModeLog(const QString &msg)
+{
+    if (!qEnvironmentVariableIsSet("LATTE_DEBUG_EDITMODE")) {
+        return;
+    }
+
+    //! Open once in the user-private runtime dir (XDG_RUNTIME_DIR, mode 0700), not world-shared /tmp,
+    //! refusing to follow a pre-planted symlink (O_NOFOLLOW) with a private mode (0600) — avoids the
+    //! predictable-temp-path symlink/permission hazard.
+    static FILE *logfile = []() -> FILE * {
+        QString dir = QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation);
+        if (dir.isEmpty()) {
+            dir = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+        }
+        const QString path = dir + QStringLiteral("/latte-editmode.log");
+        const int fd = open(QFile::encodeName(path).constData(),
+                            O_WRONLY | O_CREAT | O_APPEND | O_NOFOLLOW | O_CLOEXEC, 0600);
+        return fd >= 0 ? fdopen(fd, "a") : nullptr;
+    }();
+
+    if (logfile) {
+        fprintf(logfile, "LATTE-DBG %s\n", qPrintable(msg));
+        fflush(logfile);
+    }
+    fprintf(stderr, "LATTE-DBG %s\n", qPrintable(msg));
+    fflush(stderr);
 }
 
 bool outputRequested(const QCommandLineParser &parser)

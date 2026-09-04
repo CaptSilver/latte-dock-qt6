@@ -314,6 +314,7 @@ private Q_SLOTS:
     void alignmentStateSelfReadsResolve();
     void commonTools_standardPath_dropsTheDeadReverseSearch();
     void orphanHeaderDeclarationsAreGone();
+    void editModeLogSinkExistsOnlyInDebugOutput();
     void namespaceConstantsNobodyReadsAreDeleted();
     void delegatePaintDropsItsUnreadLocals();
     void stdNamespaceIsNotReopened();
@@ -1477,6 +1478,46 @@ void SourceGuardTest::orphanHeaderDeclarationsAreGone()
     // translation units pays for QQmlEngine and QQuickWindow again.
     QVERIFY2(!readFile(QStringLiteral("app/lattecorona.h")).contains(QStringLiteral("PlasmaQuick/ConfigView")),
              "lattecorona.h must not include <PlasmaQuick/ConfigView>, nothing in it needs the type");
+}
+
+void SourceGuardTest::editModeLogSinkExistsOnlyInDebugOutput()
+{
+    // View::debugLog and Interfaces::debugLog each carried a private copy of the same
+    // O_NOFOLLOW/fdopen sink, so the process held two never-closed handles on one file.
+    // Both must now forward to the single implementation in debugoutput.cpp.
+    const QString sink = readFile(QStringLiteral("app/debugoutput.cpp"));
+    QVERIFY2(sink.contains(QStringLiteral("O_NOFOLLOW")) && sink.contains(QStringLiteral("fdopen")),
+             "the edit-mode log sink must live in debugoutput.cpp");
+
+    // One handle for the process lifetime is the whole point of the merge, and no behavioural
+    // test can see it: O_APPEND plus a per-line fflush makes N handles byte-identical to one.
+    // Drop the static and every call leaks a fresh descriptor, which is worse than the two this
+    // replaced -- so pin it here.
+    QVERIFY2(stripped(functionBody(sink, QStringLiteral("void editModeLog(const QString &msg)"))).contains(QStringLiteral("staticFILE*logfile")),
+             "the sink must be a single process-lifetime handle, not one per call");
+
+    struct Forwarder
+    {
+        const char *file;
+        const char *signature;
+    };
+
+    static const Forwarder forwarders[] = {
+        {"app/view/view.cpp", "void View::debugLog(const QString &msg) const"},
+        {"app/declarativeimports/interfaces.cpp", "void Interfaces::debugLog(const QString &msg) const"},
+    };
+
+    for (const Forwarder &forwarder : forwarders) {
+        const QString rel = QString::fromUtf8(forwarder.file);
+        const QString src = readFile(rel);
+        QVERIFY2(!src.isEmpty(), qPrintable(QStringLiteral("%1 is unreadable").arg(rel)));
+        QVERIFY2(!src.contains(QStringLiteral("O_NOFOLLOW")) && !src.contains(QStringLiteral("fdopen")),
+                 qPrintable(QStringLiteral("%1 has grown its own copy of the edit-mode log sink").arg(rel)));
+
+        const QString body = stripped(functionBody(src, QString::fromUtf8(forwarder.signature)));
+        QVERIFY2(body.contains(QStringLiteral("DebugOutput::editModeLog(msg)")),
+                 qPrintable(QStringLiteral("%1 must forward debugLog to DebugOutput::editModeLog").arg(rel)));
+    }
 }
 
 void SourceGuardTest::namespaceConstantsNobodyReadsAreDeleted()

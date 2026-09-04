@@ -18,6 +18,7 @@
 #include <QFile>
 #include <QLoggingCategory>
 #include <QString>
+#include <QStringList>
 #include <QTemporaryDir>
 #include <QtTest>
 
@@ -33,6 +34,11 @@ private:
     //! same names the user types.
     void addOptions(QCommandLineParser &parser);
     QString captureStderr(const std::function<void()> &emitMessages);
+    QStringList editModeLogLines() const;
+
+    //! editModeLog() resolves its sink once per process, so XDG_RUNTIME_DIR has to point
+    //! here before the first gated call -- see initTestCase().
+    QTemporaryDir m_runtimeDir;
 
 private Q_SLOTS:
     void initTestCase();
@@ -43,6 +49,9 @@ private Q_SLOTS:
     void handlerWritesToTheLogFile();
     void unopenableLogFileFallsBackToStderr();
     void deprecationNoiseIsSuppressed();
+    void editModeLogIsSilentWithoutTheEnvGate();
+    void editModeLogReachesStderrWhenGated();
+    void editModeLogAppendsThroughOneSink();
 };
 
 void DebugOutputTest::addOptions(QCommandLineParser &parser)
@@ -86,6 +95,22 @@ void DebugOutputTest::initTestCase()
     // Assert independence from whatever the host's qtlogging.ini says: this is the
     // rule Fedora ships, and it is what made --debug silent.
     QLoggingCategory::setFilterRules(QStringLiteral("default.debug=false"));
+
+    // Keep the edit-mode log out of the real runtime dir. QTemporaryDir is already 0700,
+    // which is what QStandardPaths demands of a runtime location.
+    QVERIFY(m_runtimeDir.isValid());
+    qputenv("XDG_RUNTIME_DIR", m_runtimeDir.path().toLocal8Bit());
+}
+
+QStringList DebugOutputTest::editModeLogLines() const
+{
+    QFile log(m_runtimeDir.filePath(QStringLiteral("latte-editmode.log")));
+
+    if (!log.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return QStringList();
+    }
+
+    return QString::fromUtf8(log.readAll()).split(QLatin1Char('\n'), Qt::SkipEmptyParts);
 }
 
 void DebugOutputTest::logFileAloneSelectsTheRealHandler()
@@ -172,6 +197,51 @@ void DebugOutputTest::deprecationNoiseIsSuppressed()
 
     QVERIFY(Latte::DebugOutput::isSuppressedDeprecationMessage(onFoo));
     QVERIFY(!Latte::DebugOutput::isSuppressedDeprecationMessage(QStringLiteral("a real warning")));
+}
+
+void DebugOutputTest::editModeLogIsSilentWithoutTheEnvGate()
+{
+    qunsetenv("LATTE_DEBUG_EDITMODE");
+
+    const QString captured = captureStderr([]() {
+        Latte::DebugOutput::editModeLog(QStringLiteral("probe-off"));
+    });
+
+    QVERIFY2(!captured.contains(QStringLiteral("LATTE-DBG")),
+             qPrintable(QStringLiteral("edit-mode logging must stay silent unguarded; got: ") + captured));
+    QVERIFY2(editModeLogLines().isEmpty(), "an ungated call must not even create the log file");
+}
+
+void DebugOutputTest::editModeLogReachesStderrWhenGated()
+{
+    qputenv("LATTE_DEBUG_EDITMODE", "1");
+
+    const QString captured = captureStderr([]() {
+        Latte::DebugOutput::editModeLog(QStringLiteral("probe-on"));
+    });
+
+    qunsetenv("LATTE_DEBUG_EDITMODE");
+
+    QVERIFY2(captured.contains(QStringLiteral("LATTE-DBG probe-on")),
+             qPrintable(QStringLiteral("nothing reached stderr; got: ") + captured));
+}
+
+void DebugOutputTest::editModeLogAppendsThroughOneSink()
+{
+    // One sink for the whole process: the second call must append to the file the first
+    // one opened, not reopen and truncate it.
+    const int before = editModeLogLines().size();
+    QVERIFY2(before > 0, "the gated call above should already have written a line");
+
+    qputenv("LATTE_DEBUG_EDITMODE", "1");
+    Latte::DebugOutput::editModeLog(QStringLiteral("probe-first"));
+    Latte::DebugOutput::editModeLog(QStringLiteral("probe-second"));
+    qunsetenv("LATTE_DEBUG_EDITMODE");
+
+    const QStringList lines = editModeLogLines();
+    QCOMPARE(lines.size(), before + 2);
+    QCOMPARE(lines.at(before), QStringLiteral("LATTE-DBG probe-first"));
+    QCOMPARE(lines.at(before + 1), QStringLiteral("LATTE-DBG probe-second"));
 }
 
 QTEST_MAIN(DebugOutputTest)

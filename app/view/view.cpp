@@ -19,6 +19,7 @@
 #include "../lattecorona.h"
 #include "../data/layoutdata.h"
 #include "../data/viewstable.h"
+#include "../debugoutput.h"
 #include "../declarativeimports/interfaces.h"
 #include "../indicator/factory.h"
 #include "../layout/genericlayout.h"
@@ -44,10 +45,6 @@
 #include <QQmlProperty>
 #include <QQuickItem>
 #include <QMenu>
-#include <QFile>
-#include <QStandardPaths>
-
-#include <fcntl.h>
 
 // KDe
 #include <KActionCollection>
@@ -1710,34 +1707,7 @@ QAction *View::action(const QString &name)
 
 void View::debugLog(const QString &msg) const
 {
-    //! Dependable diagnostic sink for the QML edit-mode/interaction paths: QML console.log() and even
-    //! qDebug() get eaten by Latte's message handler and inconsistent journald routing. Write straight
-    //! to a dedicated file (and stderr) so the output is captured no matter how the process is launched.
-    //! Gated by LATTE_DEBUG_EDITMODE so the call sites stay in the tree long-term, silent by default.
-    if (!qEnvironmentVariableIsSet("LATTE_DEBUG_EDITMODE")) {
-        return;
-    }
-
-    //! Open once in the user-private runtime dir (XDG_RUNTIME_DIR, mode 0700), not world-shared /tmp,
-    //! refusing to follow a pre-planted symlink (O_NOFOLLOW) with a private mode (0600) — avoids the
-    //! predictable-temp-path symlink/permission hazard.
-    static FILE *logfile = []() -> FILE * {
-        QString dir = QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation);
-        if (dir.isEmpty()) {
-            dir = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
-        }
-        const QString path = dir + QStringLiteral("/latte-editmode.log");
-        const int fd = open(QFile::encodeName(path).constData(),
-                            O_WRONLY | O_CREAT | O_APPEND | O_NOFOLLOW | O_CLOEXEC, 0600);
-        return fd >= 0 ? fdopen(fd, "a") : nullptr;
-    }();
-
-    if (logfile) {
-        fprintf(logfile, "LATTE-DBG %s\n", qPrintable(msg));
-        fflush(logfile);
-    }
-    fprintf(stderr, "LATTE-DBG %s\n", qPrintable(msg));
-    fflush(stderr);
+    DebugOutput::editModeLog(msg);
 }
 
 QVariantList View::containmentActions() const

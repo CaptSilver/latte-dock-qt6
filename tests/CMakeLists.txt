@@ -945,6 +945,7 @@ if(LATTE_COVERAGE)
         windowinfowraptest windowindextest visibilityrevealtest coretypesenumtest appletzoomsizetest
         panelbackgroundtest panelbackgroundscantest configcontrolstest contextmenudefaulttest
         editmodehandleactiontest smartlauncheritemtest tasksbackendtest covselftest
+        debugoutputtest
         datatypestest commontoolstest layoutmanagertest settingsmodelstest wmtoolstest
         shortcutstest viewmodelstest screenpooltest coretoolstest generictoolstest
         addviewdecisiontest viewcontainertransitiontest activitysetalgebratest
