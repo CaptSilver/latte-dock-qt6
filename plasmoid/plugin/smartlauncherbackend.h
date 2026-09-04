@@ -69,7 +69,6 @@ private Q_SLOTS:
 private:
     void reload();
     void setupUnity();
-    void setupApplicationJobs();
 
     void onServiceUnregistered(const QString &service);
 

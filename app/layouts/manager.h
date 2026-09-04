@@ -115,8 +115,6 @@ private:
 
     void loadLatteLayout(QString layoutPath);
 
-    void setMenuLayouts(QStringList layouts);
-
 private:
     QPointer<Latte::Settings::Dialog::SettingsDialog> m_latteSettingsDialog;
 

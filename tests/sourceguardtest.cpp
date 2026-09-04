@@ -227,6 +227,7 @@ private Q_SLOTS:
     void dataTables_dropDeadCopyAndRedundantEarlyOuts();
     void alignmentStateSelfReadsResolve();
     void commonTools_standardPath_dropsTheDeadReverseSearch();
+    void orphanHeaderDeclarationsAreGone();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -1314,6 +1315,73 @@ void SourceGuardTest::commonTools_standardPath_dropsTheDeadReverseSearch()
     QVERIFY2(!header.isEmpty(), "commontools.h is unreadable");
     QVERIFY2(header.contains(QStringLiteral("QStringstandardPath(QStringsubPath);")),
              "commontools.h must declare standardPath without the localFirst parameter");
+}
+
+void SourceGuardTest::orphanHeaderDeclarationsAreGone()
+{
+    // Declarations left behind by the port: no definition anywhere, no caller anywhere.
+    // The private member functions cost nothing but a reader's time -- the linker would
+    // have caught anyone calling them. The signals are the reason this guard exists: moc
+    // defines them, so a stale signal keeps a meta-object slot alive and reads as a live
+    // notification that nothing ever emits.
+    //
+    // This list is a known set, NOT an inventory of the tree. Finding these by "the name
+    // occurs once tree-wide" structurally cannot see an orphan whose name collides with a
+    // live symbol on another class, which is how the second half of this table stayed
+    // hidden through two passes -- GlobalShortcuts::modifiersChanged behind
+    // ModifierTracker's, View::containmentById behind ContextMenuLayerQuickItem's. Search
+    // for `<Class>::<name>(` instead, and remember a declared-but-undefined member only
+    // link-errors if something calls it.
+    struct Orphan
+    {
+        const char *header;
+        const char *name;
+    };
+
+    static const Orphan orphans[] = {
+        {"app/lattecorona.h", "configurationShown"},
+        {"app/wm/tracker/windowstracker.h", "enabledChangedForLayout"},
+        {"app/layouts/synchronizer.h", "runningActicitiesChanged"},
+        {"app/settings/universalsettings.h", "downloadWindowSizeChanged"},
+        {"app/settings/universalsettings.h", "layoutsColumnWidthsChanged"},
+        {"app/settings/universalsettings.h", "layoutsWindowSizeChanged"},
+        {"app/view/effects.h", "backgroundRadiusIsEnabled"},
+        {"app/plasma/extended/theme.h", "loadCompositingRoundness"},
+        {"app/layout/centrallayout.h", "importLocalLayout"},
+        {"app/layouts/manager.h", "setMenuLayouts"},
+        {"app/settings/exporttemplatedialog/exporttemplatehandler.h", "loadViewApplets"},
+        {"app/settings/settingsdialog/settingsdialog.h", "setCurrentFreeActivitiesLayout"},
+        {"app/shortcuts/globalshortcuts.h", "initModifiers"},
+        {"containment/plugin/layoutmanager.h", "saveOption"},
+        {"declarativeimports/core/environment.h", "loadPlasmaDesktopVersion"},
+        {"plasmoid/plugin/smartlauncherbackend.h", "setupApplicationJobs"},
+        //! found only by class-qualified search -- each of these shares its name with a live
+        //! member of an unrelated class, so a bare grep reports the sibling and moves on
+        {"app/shortcuts/globalshortcuts.h", "modifiersChanged"},
+        {"app/settings/settingsdialog/settingsdialog.h", "initLayoutMenu"},
+        {"app/layout/abstractlayout.h", "setTextColor"},
+        {"app/view/view.h", "initSignalingForLocationChangeSliding"},
+        {"app/view/view.h", "updateAppletContainsMethod"},
+        {"app/view/view.h", "containmentById"},
+        {"app/settings/viewsdialog/viewscontroller.h", "sortByColumn"},
+    };
+
+    for (const Orphan &orphan : orphans) {
+        const QString rel = QString::fromUtf8(orphan.header);
+        const QString name = QString::fromUtf8(orphan.name);
+        const QString src = readFile(rel);
+        QVERIFY2(!src.isEmpty(), qPrintable(QStringLiteral("%1 is unreadable").arg(rel)));
+        // Word-bounded, not contains(): saveOption is a prefix of the live saveOptions()
+        // sitting a few lines above it in the same header.
+        QVERIFY2(!src.contains(QRegularExpression(QStringLiteral("\\b%1\\b").arg(name))),
+                 qPrintable(QStringLiteral("%1 still declares the orphan %2").arg(rel, name)));
+    }
+
+    // configurationShown was the only thing in lattecorona.h naming a PlasmaQuick type, and
+    // that header reaches most of app/ -- put the include back and every one of those
+    // translation units pays for QQmlEngine and QQuickWindow again.
+    QVERIFY2(!readFile(QStringLiteral("app/lattecorona.h")).contains(QStringLiteral("PlasmaQuick/ConfigView")),
+             "lattecorona.h must not include <PlasmaQuick/ConfigView>, nothing in it needs the type");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

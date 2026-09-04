@@ -122,7 +122,6 @@ public Q_SLOTS:
 Q_SIGNALS:
     void centralLayoutsChanged();
     void layoutsChanged();
-    void runningActicitiesChanged();
     void initializationFinished();
 
     void currentLayoutIsSwitching(QString layoutName);

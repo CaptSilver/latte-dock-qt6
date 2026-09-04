@@ -103,7 +103,6 @@ public:
     void setSchemeFile(const QString &file);
 
     virtual QString textColor() const;
-    void setTextColor(QString color);
 
     BackgroundStyle backgroundStyle() const;
     void setBackgroundStyle(const BackgroundStyle &style);

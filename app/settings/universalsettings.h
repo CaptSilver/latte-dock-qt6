@@ -144,11 +144,8 @@ Q_SIGNALS:
     void badges3DStyleChanged();
     void canDisableBordersChanged();
     void colorsScriptIsPresentChanged();
-    void downloadWindowSizeChanged();
     void inAdvancedModeForEditSettingsChanged();
     void inConfigureAppletsModeChanged();
-    void layoutsColumnWidthsChanged();
-    void layoutsWindowSizeChanged();
     void launchersChanged();
     void layoutsMemoryUsageChanged();
     void isAvailableGeometryBroadcastedToPlasmaChanged();

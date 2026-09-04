@@ -17,6 +17,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QPainter>
+#include <QQmlEngine>
 
 // KDE
 #include <KDirWatch>

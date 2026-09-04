@@ -49,8 +49,6 @@ Q_SIGNALS:
     void shortDurationChanged();
 
 private:
-    void loadPlasmaDesktopVersion();
-
     uint identifyPlasmaDesktopVersion();
 
 private:

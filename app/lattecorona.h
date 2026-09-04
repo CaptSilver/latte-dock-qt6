@@ -10,7 +10,6 @@
 
 // local
 #include <coretypes.h>
-#include <PlasmaQuick/ConfigView>
 #include "layouts/storage.h"
 #include "view/panelshadows_p.h"
 
@@ -29,10 +28,6 @@ namespace Plasma {
 class Corona;
 class Containment;
 class Types;
-}
-
-namespace PlasmaQuick {
-class ConfigView;
 }
 
 namespace KActivities {
@@ -179,7 +174,6 @@ public Q_SLOTS:
     void unload();
 
 Q_SIGNALS:
-    void configurationShown(PlasmaQuick::ConfigView *configView);
     void viewLocationChanged();
     void raiseViewsTemporaryChanged();
     void availableScreenRectChangedFrom(Latte::View *origin);

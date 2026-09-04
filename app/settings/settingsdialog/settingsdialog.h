@@ -103,12 +103,10 @@ private Q_SLOTS:
 
 private:
     void initGlobalMenu();
-    void initLayoutMenu();
     void initFileMenu();
     void initHelpMenu();
 
     void save();
-    void setCurrentFreeActivitiesLayout(const int &row);
 
     bool saveChanges();
     QSize storedWindowSize() const;

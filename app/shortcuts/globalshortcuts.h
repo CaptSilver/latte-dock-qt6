@@ -49,15 +49,11 @@ public:
 
     ShortcutsPart::ShortcutsTracker *shortcutsTracker() const;
 
-Q_SIGNALS:
-    void modifiersChanged();
-
 private Q_SLOTS:
     void hideViewsTimerSlot();
 
 private:
     void init();
-    void initModifiers();
     void activateEntry(int index, Qt::Key modifier);
     void showViews();
     void showSettings();

@@ -147,7 +147,6 @@ private Q_SLOTS:
     void updateBackgroundCorners();
 
 private:
-    bool backgroundRadiusIsEnabled() const;
     qreal currentMidValue(const qreal &max, const qreal &factor, const qreal &min) const;
     QRegion customMask(const QRect &rect);
 

@@ -12,6 +12,9 @@
 #include "../../data/genericdata.h"
 #include "../../data/screendata.h"
 
+// Qt
+#include <QFont>
+
 // KDE
 #include <KLocalizedString>
 

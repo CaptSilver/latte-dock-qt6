@@ -96,7 +96,6 @@ Q_SIGNALS:
     void informationAnnounced(const Latte::View *view);
 
     //! Layouts
-    void enabledChangedForLayout(const Latte::Layout::GenericLayout *layout);
     void activeWindowMaximizedChangedForLayout(const Latte::Layout::GenericLayout *layout);
     void existsWindowActiveChangedForLayout(const Latte::Layout::GenericLayout *layout);
     void existsWindowMaximizedChangedForLayout(const Latte::Layout::GenericLayout *layout);

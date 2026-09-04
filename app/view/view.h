@@ -388,15 +388,11 @@ private Q_SLOTS:
     void saveConfig();
 
 private:
-    void initSignalingForLocationChangeSliding();
     void setupWaylandIntegration();
-    void updateAppletContainsMethod();
 
     void setContainsDrag(bool contains);
 
 private:
-    Plasma::Containment *containmentById(uint id);
-
     bool m_alternativesIsShown{false};
     bool m_behaveAsPlasmaPanel{false};
     bool m_byPassWM{true};

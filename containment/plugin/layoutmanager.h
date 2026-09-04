@@ -144,7 +144,6 @@ private Q_SLOTS:
 private:
     void restoreOptions();
     void restoreOption(const QString &option);
-    void saveOption(const char *option);
 
     void destroyAppletContainer(QObject *applet);
 

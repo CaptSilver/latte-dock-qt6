@@ -112,7 +112,6 @@ private Q_SLOTS:
 
 private:
     void loadThemePaths();
-    void loadCompositingRoundness();
     void updateBackgrounds();
 
     void setOriginalSchemeFile(const QString &file);

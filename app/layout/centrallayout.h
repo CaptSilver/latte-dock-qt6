@@ -78,7 +78,6 @@ private Q_SLOTS:
 
 private:
     void init();
-    void importLocalLayout(QString file);
 
     void setScheme(Latte::WindowSystem::SchemeColors *_scheme);
 

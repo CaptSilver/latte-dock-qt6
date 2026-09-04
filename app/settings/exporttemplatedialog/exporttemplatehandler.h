@@ -75,7 +75,6 @@ private:
     void initDefaults();
 
     void loadApplets(const QString &file);
-    void loadViewApplets(Latte::View *view);
 
     void setFilepath(const QString &filepath);
 
