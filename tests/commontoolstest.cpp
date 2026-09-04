@@ -25,6 +25,9 @@ private Q_SLOTS:
     void luminaBlackIsZero();
     void luminaWhiteIsOne();
     void luminaOverloadsAgree();
+
+    void sortKeyPrefixPadsToSixDigits();
+    void sortKeyPrefixOrdersLexicographicallyByNumber();
     void luminaMonotonic();
 
     void rectToStringKnownValue();
@@ -33,6 +36,39 @@ private Q_SLOTS:
 
     void configPathNonEmpty();
 };
+
+//! The models concatenate variable-width text after this prefix, so a lexicographic
+//! compare only matches numeric order while the width is fixed.
+void CommonToolsTest::sortKeyPrefixPadsToSixDigits()
+{
+    QCOMPARE(Latte::sortKeyPrefix(0), QStringLiteral("000000"));
+    QCOMPARE(Latte::sortKeyPrefix(7), QStringLiteral("000007"));
+    QCOMPARE(Latte::sortKeyPrefix(42), QStringLiteral("000042"));
+    QCOMPARE(Latte::sortKeyPrefix(999), QStringLiteral("000999"));
+    QCOMPARE(Latte::sortKeyPrefix(1000), QStringLiteral("001000"));
+    QCOMPARE(Latte::sortKeyPrefix(99999), QStringLiteral("099999"));
+
+    // The ladder this replaces produced an empty prefix from here up, which would
+    // have dropped the number out of the key entirely.
+    QCOMPARE(Latte::sortKeyPrefix(100000), QStringLiteral("100000"));
+    QCOMPARE(Latte::sortKeyPrefix(1234567), QStringLiteral("1234567"));
+}
+
+void CommonToolsTest::sortKeyPrefixOrdersLexicographicallyByNumber()
+{
+    const QList<int> ascending{0, 1, 9, 10, 99, 100, 1000, 99999};
+
+    for (int i = 1; i < ascending.count(); ++i) {
+        const QString lower = Latte::sortKeyPrefix(ascending.at(i - 1));
+        const QString higher = Latte::sortKeyPrefix(ascending.at(i));
+        QVERIFY2(lower < higher, qPrintable(lower + QStringLiteral(" !< ") + higher));
+    }
+
+    // Every caller passes a positive priority -- the lowest reachable value is the
+    // layouts model's 2000 less its 1000 active adjustment -- so no assertion here
+    // pins negative input, which neither this nor the ladder it replaces orders
+    // numerically.
+}
 
 void CommonToolsTest::brightnessBlackIsZero()
 {

@@ -5,6 +5,7 @@
 */
 
 #include "screensmodel.h"
+#include "../../tools/commontools.h"
 
 // Qt
 #include <QFont>
@@ -133,25 +134,6 @@ QString Screens::sortableId(const QString &id) const
     }
 
     return QString::number(999 - sid);
-}
-
-QString Screens::sortableText(const int &priority, const QString &text) const
-{
-    QString numberPart;
-
-    if (priority < 10) {
-        numberPart = QStringLiteral("00000") + QString::number(priority);
-    } else if (priority < 100) {
-        numberPart = QStringLiteral("0000") + QString::number(priority);
-    } else if (priority < 1000) {
-        numberPart = QStringLiteral("000") + QString::number(priority);
-    } else if (priority < 10000) {
-        numberPart = QStringLiteral("00") + QString::number(priority);
-    } else if (priority < 100000) {
-        numberPart = QStringLiteral("0") + QString::number(priority);
-    }
-
-    return (numberPart + text);
 }
 
 void Screens::setData(const Latte::Data::ScreensTable &screens)
@@ -296,12 +278,12 @@ QVariant Screens::data(const QModelIndex &index, int role) const
         QString idstr = sortableId(c_screens[row].id);
 
         if (c_screens[row].isActive) {
-            return sortableText(HIGHESTPRIORITY, idstr);
+            return QString(Latte::sortKeyPrefix(HIGHESTPRIORITY) + idstr);
         } else if (!c_screens[row].isRemovable) {
-            return sortableText(HIGHPRIORITY, idstr);
+            return QString(Latte::sortKeyPrefix(HIGHPRIORITY) + idstr);
         }
 
-        return sortableText(NORMALPRIORITY, idstr);
+        return QString(Latte::sortKeyPrefix(NORMALPRIORITY) + idstr);
     }
 
     return QVariant{};

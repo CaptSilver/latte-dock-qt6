@@ -4,6 +4,7 @@
 */
 
 #include "layoutsmodel.h"
+#include "../../tools/commontools.h"
 
 // local
 #include "../../data/activitiesinfo.h"
@@ -406,33 +407,13 @@ const Latte::Data::LayoutIcon Layouts::currentLayoutIcon(const QString &id) cons
     return Latte::Data::LayoutIcon();
 }
 
-QString Layouts::sortableText(const int &priority, const int &row) const
-{
-    QString numberPart;
-
-    if (priority < 10) {
-        numberPart = QStringLiteral("00000") + QString::number(priority);
-    } else if (priority < 100) {
-        numberPart = QStringLiteral("0000") + QString::number(priority);
-    } else if (priority < 1000) {
-        numberPart = QStringLiteral("000") + QString::number(priority);
-    } else if (priority < 10000) {
-        numberPart = QStringLiteral("00") + QString::number(priority);
-    } else if (priority < 100000) {
-        numberPart = QStringLiteral("0") + QString::number(priority);
-    }
-
-    return (numberPart + m_layoutsTable[row].name);
-}
-
-
 QString Layouts::sortingPriority(const SortingPriority &priority, const int &row) const
 {
     int iPriority = (int)priority;
 
     iPriority = (m_layoutsTable[row].isActive && inMultipleMode() ? iPriority - 1000 : iPriority);
 
-    return sortableText(iPriority, row);
+    return Latte::sortKeyPrefix(iPriority) + m_layoutsTable[row].name;
 }
 
 QVariant Layouts::data(const QModelIndex &index, int role) const

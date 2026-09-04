@@ -4,6 +4,7 @@
 */
 
 #include "viewsmodel.h"
+#include "../../tools/commontools.h"
 
 // local
 #include <coretypes.h>
@@ -152,25 +153,6 @@ int Views::sortingFactorForAlignment(const Data::View &view) const
 int Views::sortingFactorForSubContainments(const Data::View &view) const
 {
     return view.subcontainments.rowCount()+1;
-}
-
-QString Views::sortableText(const int &priority, const QString &text) const
-{
-    QString numberPart;
-
-    if (priority < 10) {
-        numberPart = QStringLiteral("00000") + QString::number(priority);
-    } else if (priority < 100) {
-        numberPart = QStringLiteral("0000") + QString::number(priority);
-    } else if (priority < 1000) {
-        numberPart = QStringLiteral("000") + QString::number(priority);
-    } else if (priority < 10000) {
-        numberPart = QStringLiteral("00") + QString::number(priority);
-    } else if (priority < 100000) {
-        numberPart = QStringLiteral("0") + QString::number(priority);
-    }
-
-    return (numberPart + text);
 }
 
 void Views::clear()
@@ -843,7 +825,7 @@ QVariant Views::data(const QModelIndex &index, int role) const
             int fali = sortingFactorForAlignment(m_viewsTable[row]);
 
             int priority = (fsta * HIGHESTPRIORITY);
-            return sortableText(priority, m_viewsTable[row].id);
+            return QString(Latte::sortKeyPrefix(priority) + m_viewsTable[row].id);
         }
         break;
     case NAMECOLUMN:
@@ -858,7 +840,7 @@ QVariant Views::data(const QModelIndex &index, int role) const
             int fali = sortingFactorForAlignment(m_viewsTable[row]);
 
             int priority = (fsta * HIGHESTPRIORITY);
-            return sortableText(priority, m_viewsTable[row].name);
+            return QString(Latte::sortKeyPrefix(priority) + m_viewsTable[row].name);
         }
         break;
     case SCREENCOLUMN:

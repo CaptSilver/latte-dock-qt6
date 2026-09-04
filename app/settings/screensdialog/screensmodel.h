@@ -82,7 +82,6 @@ private:
     void clear();
 
     QString sortableId(const QString &id) const;
-    QString sortableText(const int &priority, const QString &text) const;
 
 private:
     Latte::Data::ScreensTable o_screens;

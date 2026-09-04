@@ -136,7 +136,6 @@ private:
     int sortingFactorForSubContainments(const Data::View &view) const;
 
     //! based on priority a sortable text is returned
-    QString sortableText(const int &priority, const QString &text) const;
 
     Latte::Data::Screen screenData(const QString &viewId) const;
 

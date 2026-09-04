@@ -21,6 +21,10 @@ float colorLumina(QColor color);
 float colorLumina(QRgb rgb);
 float colorLumina(float r, float g, float b);
 
+//! Fixed-width numeric key: callers concatenate variable-width text after it, so a
+//! lexicographic compare only matches numeric order while the width stays constant.
+QString sortKeyPrefix(int priority);
+
 QString rectToString(const QRect &rect);
 QRect stringToRect(const QString &str);
 

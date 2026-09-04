@@ -61,6 +61,13 @@ float colorLumina(float r, float g, float b)
     return luminosity;
 }
 
+QString sortKeyPrefix(int priority)
+{
+    //! QLatin1Char, not '0': the build defines QT_NO_CAST_FROM_ASCII, which drops
+    //! QChar's char constructor.
+    return QString::number(priority).rightJustified(6, QLatin1Char('0'));
+}
+
 QString rectToString(const QRect &rect)
 {
     QString result;
