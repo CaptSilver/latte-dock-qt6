@@ -28,7 +28,6 @@
 #include <KArchive/KArchiveDirectory>
 #include <KConfigGroup>
 #include <KLocalizedString>
-#include <KNotification>
 
 
 enum SessionType

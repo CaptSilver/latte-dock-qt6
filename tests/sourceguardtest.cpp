@@ -217,6 +217,8 @@ private Q_SLOTS:
     void abilityMemberReadsResolve();
     void shippedJavaScriptIsImported();
     void eventsSink_mouseCasesShareOneBody();
+    void notifyrcEventsMatchTheirEmitters();
+    void factory_removeIndicator_reportsAFailedRemoval();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -991,6 +993,67 @@ void SourceGuardTest::eventsSink_mouseCasesShareOneBody()
     QCOMPARE(body.count(QStringLiteral("new QWheelEvent")), 1);
     QVERIFY2(s.contains(QStringLiteral("caseQEvent::Wheel:if(autowe=dynamic_cast<QWheelEvent*>(e))")),
              "the wheel case must keep its own cast and body");
+}
+
+void SourceGuardTest::notifyrcEventsMatchTheirEmitters()
+{
+    // The two halves of a notification live in different files and neither one checks the other.
+    // A [Event/id] block nobody raises is dead weight that still lists itself in System Settings >
+    // Notifications as if the user could configure something, and a KNotification whose id has no
+    // block is worse -- KNotification answers a missing id with library defaults rather than an
+    // error, so the popup silently stops appearing. Tie the two sides together here.
+    const QString notifyrc = readFile(QStringLiteral("app/lattedock.notifyrc"));
+    QVERIFY2(!notifyrc.isEmpty(), "app/lattedock.notifyrc not found");
+
+    static const QRegularExpression eventHeader(QStringLiteral("^\\[Event/([^\\]]+)\\]"),
+                                                QRegularExpression::MultilineOption);
+    QSet<QString> declared;
+    QRegularExpressionMatchIterator dit = eventHeader.globalMatch(notifyrc);
+    while (dit.hasNext()) {
+        declared.insert(dit.next().captured(1));
+    }
+    QVERIFY2(!declared.isEmpty(), "no [Event/...] blocks parsed out of lattedock.notifyrc");
+
+    //! matches every spelling that reaches KNotification with a literal id: the QStringLiteral
+    //! ctor, a bare "..." ctor, and the static KNotification::event()
+    static const QRegularExpression emitterId(QStringLiteral("KNotification(?:::event)?\\s*\\(\\s*(?:QStringLiteral\\s*\\(\\s*)?\"([^\"]+)\""));
+    QSet<QString> emitted;
+    const QStringList cppRoots = {QStringLiteral("app"), QStringLiteral("plasmoid"), QStringLiteral("containment"), QStringLiteral("declarativeimports")};
+    for (const QString &cpp : sourcesUnder(cppRoots, QStringLiteral("*.cpp"))) {
+        QFile f(cpp);
+        if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            continue;
+        }
+        QRegularExpressionMatchIterator eit = emitterId.globalMatch(QString::fromUtf8(f.readAll()));
+        while (eit.hasNext()) {
+            emitted.insert(eit.next().captured(1));
+        }
+    }
+    QVERIFY2(!emitted.isEmpty(), "found no KNotification event ids in any C++ source");
+
+    QStringList unraised(declared.cbegin(), declared.cend());
+    unraised.removeIf([&emitted](const QString &id) { return emitted.contains(id); });
+    unraised.sort();
+    QVERIFY2(unraised.isEmpty(),
+             qPrintable(QStringLiteral("lattedock.notifyrc declares events nothing raises: %1").arg(unraised.join(QStringLiteral(", ")))));
+
+    QStringList undeclared(emitted.cbegin(), emitted.cend());
+    undeclared.removeIf([&declared](const QString &id) { return declared.contains(id); });
+    undeclared.sort();
+    QVERIFY2(undeclared.isEmpty(),
+             qPrintable(QStringLiteral("KNotification ids with no lattedock.notifyrc block: %1").arg(undeclared.join(QStringLiteral(", ")))));
+}
+
+void SourceGuardTest::factory_removeIndicator_reportsAFailedRemoval()
+{
+    // removeIndicator() shells out to kpackagetool6 behind a modal confirmation, so there is no
+    // headless repro. What matters is that both outcomes speak: a bare `if (exitCode == 0)` leaves
+    // the user staring at an indicator they just told the dialog to delete, with no message at all.
+    const QString s = stripped(functionBody(readFile(QStringLiteral("app/indicator/factory.cpp")),
+                                            QStringLiteral("void Factory::removeIndicator(QString id)")));
+    QVERIFY2(!s.isEmpty(), "Factory::removeIndicator() not found");
+    QVERIFY2(s.contains(QStringLiteral("if(process.exitCode()==0){showRemovedSucceed(pluginName);}else{showRemovedFailed(pluginName);}")),
+             "a kpackagetool6 removal that fails must report it, not return silently");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

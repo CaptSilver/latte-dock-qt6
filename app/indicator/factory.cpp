@@ -445,6 +445,12 @@ void Factory::removeIndicator(QString id)
                 notification->sendEvent();
             };
 
+            auto showRemovedFailed = [](QString name) {
+                auto notification = new KNotification(QStringLiteral("remove-fail"), KNotification::CloseOnTimeout);
+                notification->setText(i18nc("indicator_name, removed failed", "<b>%1</b> indicator removal failed", name));
+                notification->sendEvent();
+            };
+
             qDebug() << "Trying to remove indicator :: " << id;
             QProcess process;
             process.start(QStringLiteral("kpackagetool6"), {QStringLiteral("-r"), id, QStringLiteral("-t"), QStringLiteral("Latte/Indicator")});
@@ -452,6 +458,8 @@ void Factory::removeIndicator(QString id)
 
             if (process.exitCode() == 0) {
                 showRemovedSucceed(pluginName);
+            } else {
+                showRemovedFailed(pluginName);
             }
         });
 
