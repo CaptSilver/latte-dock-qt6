@@ -11,7 +11,6 @@ set(lattedock-app_SRCS
     screenpool.cpp
     primaryoutputwatcher.cpp
     debugoutput.cpp
-    main.cpp    
     coretypes.h
 )
 
@@ -61,11 +60,18 @@ ecm_add_qtwayland_client_protocol(lattedock-app_SRCS
     BASENAME kde-primary-output-v1
 )
 
-add_executable(latte-dock ${lattedock-app_SRCS})
+# Everything except main.cpp builds once into an object library, so the tests can
+# link the app's objects as a real target dependency instead of globbing the build
+# directory for *.o at configure time -- which matched nothing in a build tree where
+# the app had not been compiled yet.
+add_library(lattedock-objs OBJECT ${lattedock-app_SRCS})
+add_executable(latte-dock main.cpp)
 
 include(FakeTarget.cmake)
 
-target_link_libraries(latte-dock
+# PUBLIC so the tests that link lattedock-objs inherit these rather than each
+# repeating the whole list.
+target_link_libraries(lattedock-objs PUBLIC
     Qt6::DBus
     Qt6::Quick
     Qt6::Qml
@@ -96,9 +102,18 @@ target_link_libraries(latte-dock
     Wayland::Client
 )
 
+target_include_directories(lattedock-objs PUBLIC
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
+
+target_link_libraries(latte-dock PRIVATE lattedock-objs)
+
 # Instrument the app itself under coverage builds so its line coverage is measured:
 # the behavioral tests link these objects and the live-dock capture runs this binary.
 if(LATTE_COVERAGE)
+    target_compile_options(lattedock-objs PRIVATE ${LATTE_COV_COMPILE_FLAGS})
+    # INTERFACE: the flags belong on whatever links these objects, not on the
+    # object compile step, which does no linking.
+    target_link_options(lattedock-objs INTERFACE ${LATTE_COV_LINK_FLAGS})
     target_compile_options(latte-dock PRIVATE ${LATTE_COV_COMPILE_FLAGS})
     target_link_options(latte-dock PRIVATE ${LATTE_COV_LINK_FLAGS})
 endif()

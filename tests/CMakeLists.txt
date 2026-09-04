@@ -390,7 +390,11 @@ ecm_add_test(screenpooltest.cpp
         KF6::ConfigCore KF6::CoreAddons KF6::I18n KF6::WindowSystem
         Plasma::Plasma Plasma::KWaylandClient Wayland::Client
 )
-add_dependencies(screenpooltest latte-dock)
+# screenpooltest compiles the generated Wayland protocol sources itself rather than
+# linking the app objects, so it still needs the target that generates them ordered
+# before it.
+add_dependencies(screenpooltest lattedock-objs)
+
 target_include_directories(screenpooltest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/data ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(screenpooltest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
@@ -555,11 +559,6 @@ set_tests_properties(shortcutstest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offsc
 # objects the latte-dock executable already built (everything except main.cpp),
 # and drive them through the header. This is a genuine real-link against the
 # shipped universalsettings.cpp.o.
-set(_latte_app_objdir ${CMAKE_BINARY_DIR}/app/CMakeFiles/latte-dock.dir)
-file(GLOB_RECURSE _latte_app_objs
-    "${_latte_app_objdir}/*.cpp.o"
-    "${_latte_app_objdir}/*.c.o")
-list(REMOVE_ITEM _latte_app_objs "${_latte_app_objdir}/main.cpp.o")
 
 ecm_add_test(universalsettingstest.cpp
     TEST_NAME universalsettingstest
@@ -573,8 +572,7 @@ ecm_add_test(universalsettingstest.cpp
 )
 # Pull in the prebuilt application objects (minus main) as a link dependency so the
 # test rebuilds whenever they change, and so the test only links after the app does.
-target_link_libraries(universalsettingstest ${_latte_app_objs})
-add_dependencies(universalsettingstest latte-dock)
+target_link_libraries(universalsettingstest lattedock-objs)
 target_include_directories(universalsettingstest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/settings ${CMAKE_BINARY_DIR}/app)
 # The kwin_ setters ask KWin to re-read its config; an unreachable bus address keeps
@@ -595,8 +593,7 @@ ecm_add_test(coronaenginegeometrytest.cpp
         Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
         Wayland::Client
 )
-target_link_libraries(coronaenginegeometrytest ${_latte_app_objs})
-add_dependencies(coronaenginegeometrytest latte-dock)
+target_link_libraries(coronaenginegeometrytest lattedock-objs)
 target_include_directories(coronaenginegeometrytest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(coronaenginegeometrytest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
@@ -614,8 +611,7 @@ ecm_add_test(storagetest.cpp
         Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
         Wayland::Client
 )
-target_link_libraries(storagetest ${_latte_app_objs})
-add_dependencies(storagetest latte-dock)
+target_link_libraries(storagetest lattedock-objs)
 target_include_directories(storagetest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/layouts ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(storagetest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
@@ -634,8 +630,7 @@ ecm_add_test(wmtoolstest.cpp
         Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
         KF6::Service Wayland::Client
 )
-target_link_libraries(wmtoolstest ${_latte_app_objs})
-add_dependencies(wmtoolstest latte-dock)
+target_link_libraries(wmtoolstest lattedock-objs)
 target_include_directories(wmtoolstest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/wm ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(wmtoolstest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
@@ -655,8 +650,7 @@ ecm_add_test(schemesmodeltest.cpp
         Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
         KF6::Service Wayland::Client
 )
-target_link_libraries(schemesmodeltest ${_latte_app_objs})
-add_dependencies(schemesmodeltest latte-dock)
+target_link_libraries(schemesmodeltest lattedock-objs)
 target_include_directories(schemesmodeltest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/settings ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(schemesmodeltest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
@@ -675,8 +669,7 @@ ecm_add_test(colorsmodeltest.cpp
         Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
         KF6::Service Wayland::Client
 )
-target_link_libraries(colorsmodeltest ${_latte_app_objs})
-add_dependencies(colorsmodeltest latte-dock)
+target_link_libraries(colorsmodeltest lattedock-objs)
 target_include_directories(colorsmodeltest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/settings/detailsdialog ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(colorsmodeltest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
@@ -695,8 +688,7 @@ ecm_add_test(importerlogictest.cpp
         Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
         KF6::Service Wayland::Client
 )
-target_link_libraries(importerlogictest ${_latte_app_objs})
-add_dependencies(importerlogictest latte-dock)
+target_link_libraries(importerlogictest lattedock-objs)
 target_include_directories(importerlogictest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/layouts ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(importerlogictest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
@@ -713,8 +705,7 @@ ecm_add_test(indicatorfactorytest.cpp
         Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
         KF6::Service Wayland::Client
 )
-target_link_libraries(indicatorfactorytest ${_latte_app_objs})
-add_dependencies(indicatorfactorytest latte-dock)
+target_link_libraries(indicatorfactorytest lattedock-objs)
 target_include_directories(indicatorfactorytest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/indicator ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(indicatorfactorytest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
@@ -733,8 +724,7 @@ ecm_add_test(lastactivewindowtest.cpp
         Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
         KF6::Service Wayland::Client
 )
-target_link_libraries(lastactivewindowtest ${_latte_app_objs})
-add_dependencies(lastactivewindowtest latte-dock)
+target_link_libraries(lastactivewindowtest lattedock-objs)
 target_include_directories(lastactivewindowtest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/wm ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(lastactivewindowtest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
@@ -781,8 +771,7 @@ ecm_add_test(layoutsmodeltest.cpp
         Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
         KF6::Service Wayland::Client
 )
-target_link_libraries(layoutsmodeltest ${_latte_app_objs})
-add_dependencies(layoutsmodeltest latte-dock)
+target_link_libraries(layoutsmodeltest lattedock-objs)
 target_include_directories(layoutsmodeltest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/settings
     ${CMAKE_SOURCE_DIR}/app/settings/settingsdialog ${CMAKE_BINARY_DIR}/app)
@@ -803,8 +792,7 @@ ecm_add_test(layoutsmanagertest.cpp
         Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
         KF6::Service Wayland::Client
 )
-target_link_libraries(layoutsmanagertest ${_latte_app_objs})
-add_dependencies(layoutsmanagertest latte-dock)
+target_link_libraries(layoutsmanagertest lattedock-objs)
 target_include_directories(layoutsmanagertest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(layoutsmanagertest PROPERTIES
@@ -824,8 +812,7 @@ ecm_add_test(templatesmanagertest.cpp
         Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
         KF6::Service Wayland::Client
 )
-target_link_libraries(templatesmanagertest ${_latte_app_objs})
-add_dependencies(templatesmanagertest latte-dock)
+target_link_libraries(templatesmanagertest lattedock-objs)
 target_include_directories(templatesmanagertest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(templatesmanagertest PROPERTIES
@@ -845,8 +832,7 @@ ecm_add_test(layoutssynchronizertest.cpp
         Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
         KF6::Service Wayland::Client
 )
-target_link_libraries(layoutssynchronizertest ${_latte_app_objs})
-add_dependencies(layoutssynchronizertest latte-dock)
+target_link_libraries(layoutssynchronizertest lattedock-objs)
 target_include_directories(layoutssynchronizertest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(layoutssynchronizertest PROPERTIES
@@ -866,8 +852,7 @@ ecm_add_test(viewsmodeltest.cpp
         Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
         KF6::Service Wayland::Client
 )
-target_link_libraries(viewsmodeltest ${_latte_app_objs})
-add_dependencies(viewsmodeltest latte-dock)
+target_link_libraries(viewsmodeltest lattedock-objs)
 target_include_directories(viewsmodeltest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/settings
     ${CMAKE_SOURCE_DIR}/app/settings/viewsdialog ${CMAKE_BINARY_DIR}/app)
