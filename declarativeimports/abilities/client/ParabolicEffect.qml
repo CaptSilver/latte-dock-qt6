@@ -73,7 +73,7 @@ AbilityDefinition.ParabolicEffect {
     Connections {
         target: parabolic
         onRestoreZoomIsBlockedChanged: {
-            if (!(bridge || bridge.host)) {
+            if (!parabolic.bridge) {
                 if (!parabolic.restoreZoomIsBlocked) {
                     parabolic.startRestoreZoomTimer();
                 } else {
@@ -83,7 +83,7 @@ AbilityDefinition.ParabolicEffect {
         }
 
         onCurrentParabolicItemChanged: {
-            if (!parabolic.bridge || !parabolic.bridge.host) {
+            if (!parabolic.bridge) {
                 if (!parabolic.currentParabolicItem) {
                     parabolic.startRestoreZoomTimer();
                 } else {
@@ -190,8 +190,10 @@ AbilityDefinition.ParabolicEffect {
         interval: 50
 
         onTriggered: {
-            if(parabolic.bridge) {
-                console.log("Plasmoid, restoreZoomTimer was called, even though it shouldn't...");
+            //! The host guards its own copy of this timer the same way: restoring every
+            //! item to 1.0 while one is still hovered would undo the zoom under the cursor.
+            if (parabolic.restoreZoomIsBlocked || parabolic.currentParabolicItem) {
+                return;
             }
 
             setDirectRenderingEnabled(false);

@@ -43,8 +43,6 @@ TestCase {
             function clientRequestUpdateLowerItemScale(scales) { tc.hostLog.lowerScales = scales; }
             function clientRequestUpdateHigherItemScale(scales) { tc.hostLog.higherScales = scales; }
         }
-        // some client paths read bridge.host directly
-        property Item host: hostObj
 
         Item {
             id: hostObj
@@ -161,19 +159,51 @@ TestCase {
         resetLog();
         const p = makeLocal();
         verify(p.local, "local fallback ability missing");
-        // The client's restoreZoomIsBlocked binds to local.restoreZoomIsBlocked
-        // when there is no bridge. Toggling the source re-evaluates the binding,
-        // which fires the Connections.onRestoreZoomIsBlockedChanged handler.
-        //
-        // NOTE: the handler guard is `if (!(bridge || bridge.host))`. With no
-        // bridge, `bridge` is null and the guard dereferences `bridge.host`,
-        // throwing TypeError before any timer call (a real source bug). So the
-        // only honest observable here is the binding propagation, asserted below;
-        // the handler never reaches its start/stopRestoreZoomTimer body.
+        // With no bridge the client drives its own restore-zoom timer from this
+        // handler: blocking stops it, unblocking starts it again.
         p.local.restoreZoomIsBlocked = true;
         verify(p.restoreZoomIsBlocked);
+        verify(!restoreZoomTimerRunning(p), "blocking restore zoom must stop the timer");
+
         p.local.restoreZoomIsBlocked = false;
         verify(!p.restoreZoomIsBlocked);
+        verify(restoreZoomTimerRunning(p), "unblocking restore zoom must start the timer");
+    }
+
+    // The timer restores every item to scale 1.0, so it must not fire while an item
+    // is still hovered or while restore-zoom is blocked -- the host guards its own
+    // copy of this timer the same way.
+    function test_local_restoreZoomTimer_doesNotClearWhileAnItemIsCurrent() {
+        resetLog();
+        const p = makeLocal();
+
+        p.setCurrentParabolicItem(mockLayout);
+        p.local.restoreZoomIsBlocked = true;
+        p.local.restoreZoomIsBlocked = false;
+
+        var cleared = 0;
+        p.sglClearZoom.connect(function() { cleared++; });
+
+        const t = findRestoreZoomTimer(p);
+        verify(t, "restore zoom timer not found");
+        t.interval = 1;
+        t.restart();
+        wait(60);
+
+        compare(cleared, 0, "the timer cleared zoom while an item was still current");
+    }
+
+    // The host runs its own identical handler, so a bridged client must not drive
+    // the host's timer a second time.
+    function test_bridged_doesNotRedriveTheHostTimer() {
+        resetLog();
+        const p = makeBridged();
+
+        hostObj.currentParabolicItem = mockLayout;
+        hostObj.currentParabolicItem = null;
+
+        compare(tc.hostLog.startTimer, 0, "client re-drove the host's restore zoom timer");
+        compare(tc.hostLog.stopTimer, 0, "client re-drove the host's restore zoom timer");
     }
 
     function test_local_invkClearZoom() {
