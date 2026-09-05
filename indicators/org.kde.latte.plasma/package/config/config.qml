@@ -121,11 +121,8 @@ ColumnLayout {
         LatteComponents.CheckBox {
             Layout.maximumWidth: dialog.optionsWidth
             text: i18n("Growing circle animation when clicked")
-            value: indicator.configuration.clickedAnimationEnabled
-
-            onClicked: {
-                indicator.configuration.clickedAnimationEnabled = !indicator.configuration.clickedAnimationEnabled;
-            }
+            bindTarget: root.indicatorConfig
+            bindProperty: "clickedAnimationEnabled"
         }
 
       /*  LatteComponents.CheckBox {

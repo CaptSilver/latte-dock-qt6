@@ -739,11 +739,8 @@ PlasmaComponents.Page {
                         Layout.maximumWidth: dialog.optionsWidth
                         text: i18n("Thin title tooltips on hovering")
                         tooltip: i18n("Show narrow tooltips produced by Latte for items.\nThese tooltips are not drawn when applets zoom effect is disabled");
-                        value: plasmoid.configuration.titleTooltips
-
-                        onClicked: {
-                            plasmoid.configuration.titleTooltips = !plasmoid.configuration.titleTooltips;
-                        }
+                        bindTarget: plasmoid.configuration
+                        bindProperty: "titleTooltips"
                     }
 
                     LatteComponents.CheckBox {
@@ -751,12 +748,9 @@ PlasmaComponents.Page {
                         Layout.maximumWidth: dialog.optionsWidth
                         text: i18n("Expand popup through mouse wheel")
                         tooltip: i18n("Show or Hide applet popup through mouse wheel action")
-                        value: plasmoid.configuration.mouseWheelActions
+                        bindTarget: plasmoid.configuration
+                        bindProperty: "mouseWheelActions"
                         visible: dialog.advancedLevel
-
-                        onClicked: {
-                            plasmoid.configuration.mouseWheelActions = !plasmoid.configuration.mouseWheelActions;
-                        }
                     }
 
                     LatteComponents.CheckBox {
@@ -764,12 +758,9 @@ PlasmaComponents.Page {
                         Layout.maximumWidth: dialog.optionsWidth
                         text: i18n("Adjust size automatically when needed")
                         tooltip: i18n("Items decrease their size when exceed maximum length and increase it when they can fit in")
-                        value: plasmoid.configuration.autoSizeEnabled
+                        bindTarget: plasmoid.configuration
+                        bindProperty: "autoSizeEnabled"
                         visible: dialog.advancedLevel
-
-                        onClicked: {
-                            plasmoid.configuration.autoSizeEnabled = !plasmoid.configuration.autoSizeEnabled;
-                        }
                     }
 
                     LatteComponents.CheckBox {
@@ -805,23 +796,17 @@ PlasmaComponents.Page {
                         Layout.maximumWidth: dialog.optionsWidth
                         text: i18n("Always use floating gap for user interaction")
                         tooltip: i18n("Floating gap is always used for applets and window interaction")
-                        value: plasmoid.configuration.floatingInternalGapIsForced
+                        bindTarget: plasmoid.configuration
+                        bindProperty: "floatingInternalGapIsForced"
                         enabled: plasmoid.configuration.zoomLevel === 0
-
-                        onClicked: {
-                            plasmoid.configuration.floatingInternalGapIsForced = !plasmoid.configuration.floatingInternalGapIsForced;
-                        }
                     }
 
                     LatteComponents.CheckBox {
                         Layout.maximumWidth: dialog.optionsWidth
                         text: i18n("Hide floating gap for maximized windows")
                         tooltip: i18n("Floating gap is disabled when there are maximized windows")
-                        value: plasmoid.configuration.hideFloatingGapForMaximized
-
-                        onClicked: {
-                            plasmoid.configuration.hideFloatingGapForMaximized = !plasmoid.configuration.hideFloatingGapForMaximized;
-                        }
+                        bindTarget: plasmoid.configuration
+                        bindProperty: "hideFloatingGapForMaximized"
                     }
 
                     LatteComponents.CheckBox {
@@ -829,11 +814,8 @@ PlasmaComponents.Page {
                         enabled: plasmoid.configuration.hideFloatingGapForMaximized
                         text: i18n("Delay floating gap hiding until mouse leaves")
                         tooltip: i18n("to avoid clicking on adjacent items accidentally in some cases")
-                        value: plasmoid.configuration.floatingGapHidingWaitsMouse
-
-                        onClicked: {
-                            plasmoid.configuration.floatingGapHidingWaitsMouse = !plasmoid.configuration.floatingGapHidingWaitsMouse;
-                        }
+                        bindTarget: plasmoid.configuration
+                        bindProperty: "floatingGapHidingWaitsMouse"
                     }
 
                     LatteComponents.CheckBox {
@@ -841,11 +823,8 @@ PlasmaComponents.Page {
                         enabled: latteView.visibility.mode === LatteCore.Types.AlwaysVisible
                         text: i18n("Mirror floating gap when it is shown")
                         tooltip: i18n("Floating gap is mirrored when it is shown in Always Visible mode")
-                        value: plasmoid.configuration.floatingGapIsMirrored
-
-                        onClicked: {
-                            plasmoid.configuration.floatingGapIsMirrored = !plasmoid.configuration.floatingGapIsMirrored;
-                        }
+                        bindTarget: plasmoid.configuration
+                        bindProperty: "floatingGapIsMirrored"
                     }
                 }
             }
@@ -878,42 +857,30 @@ PlasmaComponents.Page {
                              && !latteView.byPassWM
                              && latteView.visibility.mode !== LatteCore.Types.SidebarOnDemand
                              && latteView.visibility.mode !== LatteCore.Types.SidebarAutoHide
-                    value: latteView.visibility.enableKWinEdges
-
-                    onClicked: {
-                        latteView.visibility.enableKWinEdges = !latteView.visibility.enableKWinEdges;
-                    }
+                    bindTarget: latteView.visibility
+                    bindProperty: "enableKWinEdges"
                 }
 
                 LatteComponents.CheckBox {
                     Layout.maximumWidth: dialog.optionsWidth
                     text: i18n("Can be above fullscreen windows")
                     tooltip: i18n("BypassWindowManagerHint flag for the window. The view will be above all windows even those set as 'Always On Top'")
-                    value: latteView.byPassWM
-
-                    onClicked: {
-                        latteView.byPassWM = !latteView.byPassWM;
-                    }
+                    bindTarget: latteView
+                    bindProperty: "byPassWM"
                 }
 
                 LatteComponents.CheckBox {
                     Layout.maximumWidth: dialog.optionsWidth
                     text: i18n("Raise on desktop change")
-                    value: latteView.visibility.raiseOnDesktop
-
-                    onClicked: {
-                        latteView.visibility.raiseOnDesktop = !latteView.visibility.raiseOnDesktop;
-                    }
+                    bindTarget: latteView.visibility
+                    bindProperty: "raiseOnDesktop"
                 }
 
                 LatteComponents.CheckBox {
                     Layout.maximumWidth: dialog.optionsWidth
                     text: i18n("Raise on activity change")
-                    value: latteView.visibility.raiseOnActivity
-
-                    onClicked: {
-                        latteView.visibility.raiseOnActivity = !latteView.visibility.raiseOnActivity;
-                    }
+                    bindTarget: latteView.visibility
+                    bindProperty: "raiseOnActivity"
                 }
             }
         }

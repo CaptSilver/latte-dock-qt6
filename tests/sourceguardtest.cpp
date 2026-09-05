@@ -289,11 +289,14 @@ private Q_SLOTS:
     void view_isSingleIsOriginalViewOnly();
     void layout_genericVirtualsMatchOverrides();
     void unreadAbilityMembersAndHostApiAreGone();
+    void checkBoxesNameTheirConfigKeyOnce();
+    void checkBoxesDoNotReadTheShadowedIndicatorName();
+    void checkBoxBindPropertiesResolveToABoolConfigKey();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/view/visibilitymanager.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/view/visibilitymanager.cpp")),
                                             QStringLiteral("void VisibilityManager::updateSidebarState()")));
     QVERIFY2(!s.isEmpty(), "updateSidebarState() not found");
     // Must ASSIGN the freshly computed state before emitting, not compare-and-discard.
@@ -2308,11 +2311,162 @@ void SourceGuardTest::unreadAbilityMembersAndHostApiAreGone()
 
     for (const Rule &r : kept) {
         const QString rel = QString::fromUtf8(r.file);
-        const QString s = stripped(withoutComments(readFile(rel)));
+        const QString s = stripped(withoutComments(readRepoFile(rel)));
         QVERIFY2(!s.isEmpty(), qPrintable(QStringLiteral("%1 not found").arg(rel)));
         QVERIFY2(s.contains(QString::fromUtf8(r.needle)),
                  qPrintable(QStringLiteral("%1 must keep %2 -- %3").arg(rel, QString::fromUtf8(r.needle), QString::fromUtf8(r.why))));
     }
+}
+
+void SourceGuardTest::checkBoxesNameTheirConfigKeyOnce()
+{
+    // A settings checkbox used to spell its config key three times: once in `value:`, twice more
+    // in a hand-written `key = !key` onClicked. Three chances to name the wrong key, and nothing
+    // catches the mismatch -- QML answers a misspelled key with undefined, so the box just renders
+    // permanently unchecked and writes nowhere. The key is now named once, in bindProperty.
+    const QStringList packages = {QStringLiteral("shell"), QStringLiteral("indicators"), QStringLiteral("declarativeimports"), QStringLiteral("containment"), QStringLiteral("plasmoid")};
+
+    const QRegularExpression checkBox(QStringLiteral("LatteComponents\\.CheckBox\\s*\\{"));
+    // The same identifier on both sides of `= !`, which is the whole hand-written toggle.
+    const QRegularExpression selfInversion(QStringLiteral("([A-Za-z_][A-Za-z0-9_.]*)\\s*=\\s*!\\s*\\1\\s*;"));
+
+    QStringList handWrittenToggles;
+    QStringList stackedHandlers;
+    int blocks = 0;
+
+    for (const QString &path : qmlSourcesUnder(packages)) {
+        // Commented-out blocks are not code: two dead CheckBoxes sit inside /* */ in the Plasma
+        // indicator's config page and would otherwise be reported forever. String bodies go too,
+        // so a brace inside a translated label cannot throw off the block match.
+        const QString src = withoutStringBodies(withoutComments(readFile(path)));
+
+        QRegularExpressionMatchIterator it = checkBox.globalMatch(src);
+        while (it.hasNext()) {
+            const QRegularExpressionMatch m = it.next();
+            const QString block = bracedBlockAfter(src, m.capturedStart());
+            if (block.isEmpty()) {
+                continue;
+            }
+            ++blocks;
+
+            const QString where = QStringLiteral("%1:%2").arg(relativeToRepo(path)).arg(src.left(m.capturedStart()).count(QLatin1Char('\n')) + 1);
+
+            if (block.contains(selfInversion)) {
+                handWrittenToggles << where;
+            }
+
+            // A handler declared in CheckBox.qml is a separate connection from one declared at a
+            // use site -- the use site does not override it, both run. Two inverting handlers
+            // cancel, so the config value never moves while QQC2 has already flipped `checked`:
+            // the box ticks on screen and reverts on the next reload. Carrying both is the bug.
+            if (block.contains(QStringLiteral("bindTarget:")) && block.contains(QStringLiteral("onClicked:"))) {
+                stackedHandlers << where;
+            }
+        }
+    }
+
+    QVERIFY2(blocks >= 40, qPrintable(QStringLiteral("only %1 CheckBox blocks walked, the roots are wrong").arg(blocks)));
+
+    QVERIFY2(handWrittenToggles.isEmpty(),
+             qPrintable(QStringLiteral("%1 checkboxes still invert their config key by hand instead of naming it once in bindProperty: %2")
+                            .arg(handWrittenToggles.size())
+                            .arg(handWrittenToggles.join(QStringLiteral(", ")))));
+
+    QVERIFY2(stackedHandlers.isEmpty(),
+             qPrintable(QStringLiteral("%1 checkboxes declare both bindTarget and their own onClicked -- both handlers fire and the two writes cancel: %2")
+                            .arg(stackedHandlers.size())
+                            .arg(stackedHandlers.join(QStringLiteral(", ")))));
+}
+
+void SourceGuardTest::checkBoxesDoNotReadTheShadowedIndicatorName()
+{
+    // QQC2 declares `indicator` on AbstractButton -- the tick/mark delegate -- so EVERY button-like
+    // control shadows it, not just CheckBox. Inside such a block the control is the scope object and
+    // wins the unqualified lookup over the settings view's `indicator` context object, so every
+    // `indicator.configuration.x` read there comes back undefined. QML does not call that an error:
+    // the two indicator config pages rendered fine while none of their checkboxes showed a saved
+    // value, and the style and glow buttons did nothing at all. Reach the configuration through the
+    // page root, where the name is not shadowed.
+    const QStringList packages = {QStringLiteral("shell"), QStringLiteral("indicators"), QStringLiteral("declarativeimports"), QStringLiteral("containment"), QStringLiteral("plasmoid")};
+
+    const QRegularExpression checkBox(QStringLiteral("(?:LatteComponents|PlasmaComponents|QQC2)\\.(?:CheckBox|Button|ToolButton|RadioButton|Switch)\\s*\\{"));
+    //! not preceded by a dot or word character, so `root.indicatorConfig` and `latteView.indicator` are fine
+    const QRegularExpression shadowed(QStringLiteral("(?<![.\\w])indicator\\."));
+
+    QStringList offenders;
+
+    for (const QString &path : qmlSourcesUnder(packages)) {
+        const QString src = withoutStringBodies(withoutComments(readFile(path)));
+
+        QRegularExpressionMatchIterator it = checkBox.globalMatch(src);
+        while (it.hasNext()) {
+            const QRegularExpressionMatch m = it.next();
+            const QString block = bracedBlockAfter(src, m.capturedStart());
+            if (block.contains(shadowed)) {
+                offenders << QStringLiteral("%1:%2").arg(relativeToRepo(path)).arg(src.left(m.capturedStart()).count(QLatin1Char('\n')) + 1);
+            }
+        }
+    }
+
+    QVERIFY2(offenders.isEmpty(),
+             qPrintable(QStringLiteral("%1 controls read an unqualified `indicator.` inside a button-like block, where it resolves to the control's own delegate and not the settings view's indicator: %2")
+                            .arg(offenders.size())
+                            .arg(offenders.join(QStringLiteral(", ")))));
+}
+
+void SourceGuardTest::checkBoxBindPropertiesResolveToABoolConfigKey()
+{
+    // bindProperty is a string, and QML answers a key the target does not have with undefined
+    // rather than an error: a typo renders the checkbox permanently unchecked and writes nowhere,
+    // with no warning anywhere. The click tests catch that against their mocks; this ties every
+    // key to the config definition that actually ships. Bool matters too -- the toggle is `!key`,
+    // which is nonsense on an Enum or a Double.
+    struct Page {
+        const char *qml;
+        const char *target;
+        const char *schema;
+    };
+
+    static const Page pages[] = {
+        {"shell/package/contents/configuration/pages/TasksConfig.qml", "tasks.configuration", "plasmoid/package/contents/config/main.xml"},
+        {"shell/package/contents/configuration/pages/BehaviorConfig.qml", "plasmoid.configuration", "containment/package/contents/config/main.xml"},
+        {"shell/package/contents/configuration/pages/AppearanceConfig.qml", "plasmoid.configuration", "containment/package/contents/config/main.xml"},
+        {"indicators/default/package/config/config.qml", "root.indicatorConfig", "indicators/default/package/config/main.xml"},
+        {"indicators/org.kde.latte.plasma/package/config/config.qml", "root.indicatorConfig", "indicators/org.kde.latte.plasma/package/config/main.xml"},
+    };
+
+    const QRegularExpression binding(QStringLiteral("bindTarget:\\s*([^\\n]+?)\\s*\\n\\s*bindProperty:\\s*\"([^\"]+)\""));
+    int checked = 0;
+
+    for (const Page &page : pages) {
+        const QString qml = withoutComments(readRepoFile(QString::fromUtf8(page.qml)));
+        QVERIFY2(!qml.isEmpty(), page.qml);
+
+        const QString schema = readRepoFile(QString::fromUtf8(page.schema));
+        QVERIFY2(!schema.isEmpty(), page.schema);
+
+        QSet<QString> boolKeys;
+        const QRegularExpression entry(QStringLiteral("<entry name=\"([^\"]+)\"\\s+type=\"Bool\""));
+        QRegularExpressionMatchIterator entries = entry.globalMatch(schema);
+        while (entries.hasNext()) {
+            boolKeys.insert(entries.next().captured(1));
+        }
+        QVERIFY2(boolKeys.size() >= 3, qPrintable(QStringLiteral("%1 parsed to %2 Bool entries, the schema did not parse").arg(QString::fromUtf8(page.schema)).arg(boolKeys.size())));
+
+        QRegularExpressionMatchIterator it = binding.globalMatch(qml);
+        while (it.hasNext()) {
+            const QRegularExpressionMatch m = it.next();
+            //! only the sites this page's schema answers for; latteView's are C++ Q_PROPERTYs
+            if (m.captured(1) != QString::fromUtf8(page.target)) {
+                continue;
+            }
+            ++checked;
+            QVERIFY2(boolKeys.contains(m.captured(2)),
+                     qPrintable(QStringLiteral("%1 binds %2, which is not a Bool entry in %3").arg(QString::fromUtf8(page.qml), m.captured(2), QString::fromUtf8(page.schema))));
+        }
+    }
+
+    QVERIFY2(checked >= 35, qPrintable(QStringLiteral("only %1 bindProperty keys checked, the pages or targets are wrong").arg(checked)));
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

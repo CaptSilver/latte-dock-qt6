@@ -19,6 +19,12 @@ ColumnLayout {
     id: root
     Layout.fillWidth: true
 
+    //! QQC2's CheckBox declares an `indicator` property of its own -- the tick delegate --
+    //! so an unqualified `indicator` inside a CheckBox block resolves to that item instead
+    //! of the settings view's indicator object, and the configuration read comes back
+    //! undefined. Reach the map through the page root, where the name is not shadowed.
+    readonly property QtObject indicatorConfig: indicator.configuration
+
     TextMetrics {
         id: defaultFontMetrics
         text: "M"
@@ -50,7 +56,7 @@ ColumnLayout {
             readonly property int indicatorType: 0 /*Line*/
 
             onClicked: {
-                indicator.configuration.activeStyle = indicatorType;
+                root.indicatorConfig.activeStyle = indicatorType;
             }
         }
 
@@ -66,7 +72,7 @@ ColumnLayout {
             readonly property int indicatorType: 1 /*Dot*/
 
             onClicked: {
-                indicator.configuration.activeStyle = indicatorType;
+                root.indicatorConfig.activeStyle = indicatorType;
             }
         }
     }
@@ -255,7 +261,7 @@ ColumnLayout {
             readonly property int option: 1 /*OnActive*/
 
             onClicked: {
-                indicator.configuration.glowApplyTo = option;
+                root.indicatorConfig.glowApplyTo = option;
             }
         }
 
@@ -271,7 +277,7 @@ ColumnLayout {
             readonly property int option: 2 /*All*/
 
             onClicked: {
-                indicator.configuration.glowApplyTo = option;
+                root.indicatorConfig.glowApplyTo = option;
             }
         }
     }
@@ -339,23 +345,17 @@ ColumnLayout {
             LatteComponents.CheckBox {
                 Layout.maximumWidth: dialog.optionsWidth
                 text: i18n("Different color for minimized windows")
-                value: indicator.configuration.minimizedTaskColoredDifferently
-
-                onClicked: {
-                    indicator.configuration.minimizedTaskColoredDifferently = !indicator.configuration.minimizedTaskColoredDifferently;
-                }
+                bindTarget: root.indicatorConfig
+                bindProperty: "minimizedTaskColoredDifferently"
             }
 
             LatteComponents.CheckBox {
                 Layout.maximumWidth: dialog.optionsWidth
                 text: i18n("Show an extra dot for grouped windows when active")
                 tooltip: i18n("Grouped windows show both a line and a dot when one of them is active and the Line Active Indicator is enabled")
-                enabled: indicator.configuration.activeStyle === 0 /*Line*/
-                value: indicator.configuration.extraDotOnActive
-
-                onClicked: {
-                    indicator.configuration.extraDotOnActive = !indicator.configuration.extraDotOnActive;
-                }
+                enabled: root.indicatorConfig.activeStyle === 0 /*Line*/
+                bindTarget: root.indicatorConfig
+                bindProperty: "extraDotOnActive"
             }
         }
     }
@@ -369,20 +369,14 @@ ColumnLayout {
         Layout.maximumWidth: dialog.optionsWidth
         text: i18n("Show indicators for applets")
         tooltip: i18n("Indicators are shown for applets")
-        value: indicator.configuration.enabledForApplets
-
-        onClicked: {
-            indicator.configuration.enabledForApplets = !indicator.configuration.enabledForApplets;
-        }
+        bindTarget: root.indicatorConfig
+        bindProperty: "enabledForApplets"
     }
 
     LatteComponents.CheckBox {
         Layout.maximumWidth: dialog.optionsWidth
         text: i18n("Reverse indicator style")
-        value: indicator.configuration.reversed
-
-        onClicked: {
-            indicator.configuration.reversed = !indicator.configuration.reversed;
-        }
+        bindTarget: root.indicatorConfig
+        bindProperty: "reversed"
     }
 }

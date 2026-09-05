@@ -585,11 +585,8 @@ PlasmaComponents.Page {
                     tooltip: i18n("Change panel length to maximum screen size when there is a maximized window present on the screen")
                     enabled: showBackground.checked
                     visible: dialog.advancedLevel
-                    value: plasmoid.configuration.maximizeWhenMaximized
-
-                    onClicked: {
-                        plasmoid.configuration.maximizeWhenMaximized = !plasmoid.configuration.maximizeWhenMaximized;
-                    }
+                    bindTarget: plasmoid.configuration
+                    bindProperty: "maximizeWhenMaximized"
                 }
             }
         }
@@ -1170,11 +1167,8 @@ PlasmaComponents.Page {
                         tooltip: i18n("Background removes its transparency setting when a window is touching")
                         enabled: showBackground.checked
                         visible: dialog.advancedLevel
-                        value: plasmoid.configuration.solidBackgroundForMaximized
-
-                        onClicked: {
-                            plasmoid.configuration.solidBackgroundForMaximized = !plasmoid.configuration.solidBackgroundForMaximized;
-                        }
+                        bindTarget: plasmoid.configuration
+                        bindProperty: "solidBackgroundForMaximized"
                     }
 
                     LatteComponents.CheckBox {
@@ -1184,11 +1178,8 @@ PlasmaComponents.Page {
                         tooltip: i18n("Background becomes hidden except when a window is touching or the desktop background is busy")
                         enabled: showBackground.checked
                         visible: dialog.advancedLevel
-                        value: plasmoid.configuration.backgroundOnlyOnMaximized
-
-                        onClicked: {
-                            plasmoid.configuration.backgroundOnlyOnMaximized = !plasmoid.configuration.backgroundOnlyOnMaximized;
-                        }
+                        bindTarget: plasmoid.configuration
+                        bindProperty: "backgroundOnlyOnMaximized"
                     }
 
                     LatteComponents.CheckBox {
@@ -1198,11 +1189,8 @@ PlasmaComponents.Page {
                         tooltip: i18n("Background shadows become hidden when an active maximized window is touching the view")
                         enabled: showBackground.checked
                         visible: dialog.advancedLevel
-                        value: plasmoid.configuration.disablePanelShadowForMaximized
-
-                        onClicked: {
-                            plasmoid.configuration.disablePanelShadowForMaximized = !plasmoid.configuration.disablePanelShadowForMaximized;
-                        }
+                        bindTarget: plasmoid.configuration
+                        bindProperty: "disablePanelShadowForMaximized"
                     }
                 }
 
@@ -1219,11 +1207,8 @@ PlasmaComponents.Page {
                     tooltip: i18n("Background becomes opaque in plasma style when applets are expanded")
                     enabled: showBackground.checked
                     visible: dialog.advancedLevel
-                    value: plasmoid.configuration.plasmaBackgroundForPopups
-
-                    onClicked: {
-                        plasmoid.configuration.plasmaBackgroundForPopups = !plasmoid.configuration.plasmaBackgroundForPopups;
-                    }
+                    bindTarget: plasmoid.configuration
+                    bindProperty: "plasmaBackgroundForPopups"
                 }
             }
         }
