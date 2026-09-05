@@ -60,8 +60,6 @@ private:
     QList<int> translateToClonesOrder(const QList<int> &originalIds);
 
 private:
-    static QStringList CONTAINMENTMANUALSYNCEDPROPERTIES;
-
     QPointer<Latte::OriginalView> m_originalView;
     QHash<int, int> m_currentAppletIds;
 };

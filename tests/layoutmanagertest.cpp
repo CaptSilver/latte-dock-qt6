@@ -41,6 +41,7 @@ private Q_SLOTS:
     void splitterSearch_scansAllThreeLayouts();
     void splitterSearch_findsSplitterInMainOrEndLayout();
     void splitterSearch_toleratesUnsetLayouts();
+    void itemPredicates_classifySplittersAndSpacers();
     void requestAppletsOrder_withoutLayoutsIsNoOp();
     void quickItemProperties_setAndSignal();
     void quickItemProperties_noSignalOnRedundantSet();
@@ -266,6 +267,44 @@ void LayoutManagerTest::splitterSearch_toleratesUnsetLayouts()
 
     QCOMPARE(lm.firstSplitter(), only);
     QCOMPARE(lm.lastSplitter(), only);
+}
+
+//! Mirrors ParabolicEdgeSpacer.qml, which answers isParabolicEdgeSpacer the way
+//! JustifySplitter.qml answers isInternalViewSplitter.
+static QQuickItem *addParabolicSpacer(QQuickItem *parent, bool isSpacer)
+{
+    QQuickItem *item = new QQuickItem(parent);
+    item->setProperty("isParabolicEdgeSpacer", isSpacer);
+    return item;
+}
+
+void LayoutManagerTest::itemPredicates_classifySplittersAndSpacers()
+{
+    // Every layout scan asks these two questions of each child, and both answers steer whether
+    // the item is treated as a real applet. A splitter that reads as an applet lands in the
+    // saved order and corrupts the config; a spacer that reads as an applet shifts every
+    // drag-and-drop index by one.
+    QQuickItem parent;
+    QQuickItem *splitter = addSplitter(&parent, true);
+    QQuickItem *plainChild = addSplitter(&parent, false);
+    QQuickItem *spacer = addParabolicSpacer(&parent, true);
+    QQuickItem *notSpacer = addParabolicSpacer(&parent, false);
+
+    QVERIFY(LayoutManager::isJustifySplitter(splitter));
+    QVERIFY(!LayoutManager::isJustifySplitter(plainChild));
+    QVERIFY(!LayoutManager::isJustifySplitter(spacer));
+
+    QVERIFY(LayoutManager::isParabolicSpacer(spacer));
+    QVERIFY(!LayoutManager::isParabolicSpacer(notSpacer));
+    QVERIFY(!LayoutManager::isParabolicSpacer(splitter));
+
+    // A bare item never declares either property, so the read yields an invalid QVariant.
+    QQuickItem undeclared;
+    QVERIFY(!LayoutManager::isJustifySplitter(&undeclared));
+    QVERIFY(!LayoutManager::isParabolicSpacer(&undeclared));
+
+    QVERIFY(!LayoutManager::isJustifySplitter(nullptr));
+    QVERIFY(!LayoutManager::isParabolicSpacer(nullptr));
 }
 
 void LayoutManagerTest::requestAppletsOrder_withoutLayoutsIsNoOp()

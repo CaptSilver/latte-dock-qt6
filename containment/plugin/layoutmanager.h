@@ -86,6 +86,13 @@ public:
     QQuickItem *firstSplitter();
     QQuickItem *lastSplitter();
 
+    //! The two questions every layout scan asks of a child item, kept in one place so the
+    //! property names JustifySplitter.qml and ParabolicEdgeSpacer.qml answer are typed once.
+    //! Static because save() classifies from a capture-less lambda; public for the same
+    //! testability reason as the splitter search above.
+    static bool isJustifySplitter(const QQuickItem *item);
+    static bool isParabolicSpacer(const QQuickItem *item);
+
 public Q_SLOTS:
     Q_INVOKABLE void restore();
     Q_INVOKABLE void save();
@@ -173,7 +180,6 @@ private:
     void reorderSplitterInStartLayout();
     void reorderSplitterInEndLayout();
 
-    bool isJustifySplitter(const QQuickItem *item) const;
     bool isValidApplet(const int &id);
     bool insertAtLayoutCoordinates(QQuickItem *layout, QQuickItem *item, int x, int y);
 

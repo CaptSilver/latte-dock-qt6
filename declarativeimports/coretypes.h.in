@@ -10,6 +10,8 @@
 #include <QObject>
 #include <QMetaEnum>
 #include <QMetaType>
+#include <QString>
+#include <QStringList>
 
 namespace Latte {
 
@@ -117,6 +119,31 @@ public:
     };
     Q_ENUM(PopupPlacement)
 };
+
+//! Containment [General] config entry names, shared verbatim by the app and the containment
+//! plugin. They are frozen by the on-disk layout format - the shipped .latte templates write
+//! them literally and containment/package/contents/config/main.xml declares them for
+//! KConfigLoader - so they can never be renamed, only spelled in one place. The plugin is
+//! loaded separately from the app, so a divergence between the two is silent: the entry is
+//! simply never found.
+namespace ConfigKeys {
+
+inline const QString APPLETORDER = QStringLiteral("appletOrder");
+inline const QString LOCKEDZOOMAPPLETS = QStringLiteral("lockedZoomApplets");
+inline const QString USERBLOCKSCOLORIZINGAPPLETS = QStringLiteral("userBlocksColorizingApplets");
+
+//! Every [General] entry whose value is a ;-separated list of applet ids. Importing a layout
+//! rewrites the ids in all of them, and a cloned view must not blind-sync any of them from its
+//! original, because the clone's applets carry different ids.
+//! A function, not a constant: an inline variable built out of the three above would be
+//! dynamically initialized in unspecified order relative to them.
+inline const QStringList &appletIdListKeys()
+{
+    static const QStringList keys{APPLETORDER, LOCKEDZOOMAPPLETS, USERBLOCKSCOLORIZINGAPPLETS};
+    return keys;
+}
+
+}//end of ConfigKeys namespace
 
 }//end of namespace
 

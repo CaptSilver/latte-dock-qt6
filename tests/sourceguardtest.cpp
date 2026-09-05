@@ -292,6 +292,9 @@ private Q_SLOTS:
     void checkBoxesNameTheirConfigKeyOnce();
     void checkBoxesDoNotReadTheShadowedIndicatorName();
     void checkBoxBindPropertiesResolveToABoolConfigKey();
+    void appletIdListKeys_areSpelledOnce();
+    void layoutManager_classifiesChildrenThroughOnePredicate();
+    void containmentInterface_reflectedLayoutManagerNamesResolve();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -2467,6 +2470,112 @@ void SourceGuardTest::checkBoxBindPropertiesResolveToABoolConfigKey()
     }
 
     QVERIFY2(checked >= 35, qPrintable(QStringLiteral("only %1 bindProperty keys checked, the pages or targets are wrong").arg(checked)));
+}
+
+void SourceGuardTest::appletIdListKeys_areSpelledOnce()
+{
+    // appletOrder / lockedZoomApplets / userBlocksColorizingApplets are frozen on-disk [General]
+    // entry names - the shipped .latte templates and the containment's main.xml carry them
+    // literally, so they can never be renamed, only spelled in one place. The app (import
+    // remapping, cloned-view sync) and the separately loaded containment plugin both write them,
+    // and a divergence there is silent: the config entry is simply never found.
+    const QString shared = readRepoFile(QStringLiteral("declarativeimports/coretypes.h.in"));
+    QVERIFY2(!shared.isEmpty(), "coretypes.h.in not found");
+
+    struct Key
+    {
+        const char *constant;
+        const char *spelling;
+    };
+    const QList<Key> keys{{"APPLETORDER", "appletOrder"},
+                          {"LOCKEDZOOMAPPLETS", "lockedZoomApplets"},
+                          {"USERBLOCKSCOLORIZINGAPPLETS", "userBlocksColorizingApplets"}};
+
+    for (const Key &key : keys) {
+        const QString decl = QStringLiteral("%1 = QStringLiteral(\"%2\")").arg(QString::fromUtf8(key.constant), QString::fromUtf8(key.spelling));
+        QVERIFY2(shared.contains(decl), qPrintable(QStringLiteral("coretypes.h.in must own the %1 spelling as %2").arg(QString::fromUtf8(key.spelling), QString::fromUtf8(key.constant))));
+    }
+
+    const QStringList consumers{QStringLiteral("app/layouts/storage.cpp"),
+                                QStringLiteral("app/view/clonedview.cpp"),
+                                QStringLiteral("app/view/clonedview.h"),
+                                QStringLiteral("containment/plugin/layoutmanager.cpp")};
+
+    for (const QString &rel : consumers) {
+        const QString src = readRepoFile(rel);
+        QVERIFY2(!src.isEmpty(), qPrintable(rel + QStringLiteral(" not found")));
+
+        for (const Key &key : keys) {
+            const QString literal = QStringLiteral("QStringLiteral(\"%1\")").arg(QString::fromUtf8(key.spelling));
+            QVERIFY2(!src.contains(literal),
+                     qPrintable(QStringLiteral("%1 must reach for Latte::ConfigKeys, not a bare %2").arg(rel, literal)));
+        }
+    }
+
+    // The two callers that need all three at once must share the one list, not rebuild it.
+    for (const QString &rel : {QStringLiteral("app/layouts/storage.cpp"), QStringLiteral("app/view/clonedview.cpp")}) {
+        const QString src = readRepoFile(rel);
+        QVERIFY2(src.contains(QStringLiteral("ConfigKeys::appletIdListKeys()")),
+                 qPrintable(QStringLiteral("%1 must use the shared ConfigKeys::appletIdListKeys() list").arg(rel)));
+    }
+}
+
+void SourceGuardTest::layoutManager_classifiesChildrenThroughOnePredicate()
+{
+    // Every layout scan asks whether a child is a justify splitter or a parabolic edge spacer.
+    // Those two property names must be typed once each, inside the predicates, so the reads stay
+    // null-safe and a QML rename has a single C++ site to follow.
+    const QString cpp = readRepoFile(QStringLiteral("containment/plugin/layoutmanager.cpp"));
+    QVERIFY2(!cpp.isEmpty(), "layoutmanager.cpp not found");
+
+    const int splitterreads = cpp.count(QStringLiteral("property(\"isInternalViewSplitter\")"));
+    QVERIFY2(splitterreads == 1,
+             qPrintable(QStringLiteral("layoutmanager.cpp reads isInternalViewSplitter %1 times, expected only isJustifySplitter()").arg(splitterreads)));
+
+    const int spacerreads = cpp.count(QStringLiteral("property(\"isParabolicEdgeSpacer\")"));
+    QVERIFY2(spacerreads == 1,
+             qPrintable(QStringLiteral("layoutmanager.cpp reads isParabolicEdgeSpacer %1 times, expected only isParabolicSpacer()").arg(spacerreads)));
+}
+
+void SourceGuardTest::containmentInterface_reflectedLayoutManagerNamesResolve()
+{
+    // ContainmentInterface reaches the containment plugin's LayoutManager only by name: the two
+    // live in separately loaded binaries, so the compiler checks nothing. A misspelling makes
+    // indexOfProperty() answer -1 and the whole connect block is skipped in silence - the dock
+    // simply stops reacting to applet reordering. A shared C++ constant cannot fix this, because
+    // Q_PROPERTY takes a bare token and not a string, so the contract is pinned here instead.
+    const QString cpp = readRepoFile(QStringLiteral("app/view/containmentinterface.cpp"));
+    const QString managerh = readRepoFile(QStringLiteral("containment/plugin/layoutmanager.h"));
+    QVERIFY2(!cpp.isEmpty(), "containmentinterface.cpp not found");
+    QVERIFY2(!managerh.isEmpty(), "layoutmanager.h not found");
+
+    // Names the notify-signal wiring resolves; these additionally need a NOTIFY to connect to.
+    QStringList reflected;
+    QRegularExpressionMatchIterator it = QRegularExpression(QStringLiteral("m_layoutManager->metaObject\\(\\)->indexOfProperty\\(\"([^\"]+)\"\\)")).globalMatch(cpp);
+    while (it.hasNext()) {
+        reflected << it.next().captured(1);
+    }
+    QVERIFY2(reflected.count() >= 3, qPrintable(QStringLiteral("only %1 indexOfProperty() names parsed out of containmentinterface.cpp").arg(reflected.count())));
+
+    for (const QString &name : reflected) {
+        const QRegularExpression declared(QStringLiteral("Q_PROPERTY\\([^)]*\\b%1 READ [^)]*NOTIFY").arg(name));
+        QVERIFY2(declared.match(managerh).hasMatch(),
+                 qPrintable(QStringLiteral("containmentinterface.cpp connects to LayoutManager's \"%1\", which is not a NOTIFYing Q_PROPERTY in layoutmanager.h").arg(name)));
+    }
+
+    // Names the value reads resolve; a NOTIFY is not required for these.
+    QStringList read;
+    it = QRegularExpression(QStringLiteral("m_layoutManager->property\\(\"([^\"]+)\"\\)")).globalMatch(cpp);
+    while (it.hasNext()) {
+        read << it.next().captured(1);
+    }
+    QVERIFY2(read.count() >= 3, qPrintable(QStringLiteral("only %1 property() names parsed out of containmentinterface.cpp").arg(read.count())));
+
+    for (const QString &name : read) {
+        const QRegularExpression declared(QStringLiteral("Q_PROPERTY\\([^)]*\\b%1 READ ").arg(name));
+        QVERIFY2(declared.match(managerh).hasMatch(),
+                 qPrintable(QStringLiteral("containmentinterface.cpp reads LayoutManager's \"%1\", which is not a Q_PROPERTY in layoutmanager.h").arg(name)));
+    }
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

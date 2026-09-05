@@ -30,8 +30,8 @@ const int LayoutManager::JUSTIFYSPLITTERID;
 LayoutManager::LayoutManager(QObject *parent)
     : QObject(parent)
 {
-    m_option[ISAPPLETLOCKEDOPTION] = QStringLiteral("lockedZoomApplets");
-    m_option[ISCOLORINGBLOCKEDOPTION] = QStringLiteral("userBlocksColorizingApplets");
+    m_option[ISAPPLETLOCKEDOPTION] = Latte::ConfigKeys::LOCKEDZOOMAPPLETS;
+    m_option[ISCOLORINGBLOCKEDOPTION] = Latte::ConfigKeys::USERBLOCKSCOLORIZINGAPPLETS;
 
     connect(this, &LayoutManager::rootItemChanged, this, &LayoutManager::onRootItemChanged);
 
@@ -351,7 +351,7 @@ bool LayoutManager::isValidApplet(const int &id)
 //! Actions
 void LayoutManager::restore()
 {
-    QList<int> appletIdsOrder = toIntList((*m_configuration)[QStringLiteral("appletOrder")].toString());
+    QList<int> appletIdsOrder = toIntList((*m_configuration)[Latte::ConfigKeys::APPLETORDER].toString());
     QList<QObject *> applets = appletObjects();
 
     Latte::Types::Alignment alignment = static_cast<Latte::Types::Alignment>((*m_configuration)[QStringLiteral("alignment")].toInt());
@@ -522,9 +522,14 @@ void LayoutManager::restoreOption(const QString &option)
     }
 }
 
-bool LayoutManager::isJustifySplitter(const QQuickItem *item) const
+bool LayoutManager::isJustifySplitter(const QQuickItem *item)
 {
     return item && (item->property("isInternalViewSplitter").toBool() == true);
+}
+
+bool LayoutManager::isParabolicSpacer(const QQuickItem *item)
+{
+    return item && (item->property("isParabolicEdgeSpacer").toBool() == true);
 }
 
 bool LayoutManager::isMasqueradedIndex(const int &x, const int &y)
@@ -565,9 +570,7 @@ void LayoutManager::save()
         int childCount = 0;
         for (int i=0; i<layout->childItems().count(); ++i) {
             QQuickItem *item = layout->childItems()[i];
-            bool isInternalSplitter = item->property("isInternalViewSplitter").toBool();
-            bool isParabolicEdgeSpacer = item->property("isParabolicEdgeSpacer").toBool();
-            if (!isInternalSplitter && !isParabolicEdgeSpacer) {
+            if (!isJustifySplitter(item) && !isParabolicSpacer(item)) {
                 QVariant appletVariant = item->property("applet");
                 if (!appletVariant.isValid()) {
                     continue;
@@ -610,7 +613,7 @@ void LayoutManager::save()
     //! are not writing in config file for some cases mentioned in class header so they are not used
     //(*m_configuration)[QStringLiteral("splitterPosition")] = QVariant(startChilds + 1);
     //(*m_configuration)[QStringLiteral("splitterPosition2")] = QVariant(startChilds + 1 + mainChilds + 1);
-    //(*m_configuration)[QStringLiteral("appletOrder")] = appletIds.join(QLatin1Char(';'));
+    //(*m_configuration)[Latte::ConfigKeys::APPLETORDER] = appletIds.join(QLatin1Char(';'));
 
     setAppletOrder(appletIds);
 
@@ -620,9 +623,9 @@ void LayoutManager::save()
     //! save applet order
     QString appletsserialized = toStr(appletIds);
 
-    if ((*m_configuration)[QStringLiteral("appletOrder")] != appletsserialized) {
-        m_configuration->insert(QStringLiteral("appletOrder"), appletsserialized);
-        Q_EMIT m_configuration->valueChanged(QStringLiteral("appletOrder"), appletsserialized);
+    if ((*m_configuration)[Latte::ConfigKeys::APPLETORDER] != appletsserialized) {
+        m_configuration->insert(Latte::ConfigKeys::APPLETORDER, appletsserialized);
+        Q_EMIT m_configuration->valueChanged(Latte::ConfigKeys::APPLETORDER, appletsserialized);
     }
 }
 
@@ -887,9 +890,7 @@ QQuickItem *LayoutManager::appletItemInLayout(QQuickItem *layout, const int &id)
 
     for(int i=0; i<layout->childItems().count(); ++i) {
         QQuickItem *item = layout->childItems()[i];
-        bool isInternalSplitter = item->property("isInternalViewSplitter").toBool();
-        bool isParabolicEdgeSpacer = item->property("isParabolicEdgeSpacer").toBool();
-        if (!isInternalSplitter && !isParabolicEdgeSpacer) {
+        if (!isJustifySplitter(item) && !isParabolicSpacer(item)) {
             QVariant appletVariant = item->property("applet");
             if (!appletVariant.isValid()) {
                 continue;
@@ -941,9 +942,7 @@ int LayoutManager::dndSpacerIndex()
     if (alignment == Latte::Types::Justify) {
         for(int i=0; i<m_startLayout->childItems().count(); ++i) {
             QQuickItem *item = m_startLayout->childItems()[i];
-            bool isparabolicspacer = item->property("isParabolicEdgeSpacer").toBool();
-
-            if (isparabolicspacer) {
+            if (isParabolicSpacer(item)) {
                 continue;
             }
 
@@ -956,9 +955,7 @@ int LayoutManager::dndSpacerIndex()
 
     for(int i=0; i<m_mainLayout->childItems().count(); ++i) {
         QQuickItem *item = m_mainLayout->childItems()[i];       
-        bool isparabolicspacer = item->property("isParabolicEdgeSpacer").toBool();
-
-        if (isparabolicspacer) {
+        if (isParabolicSpacer(item)) {
             continue;
         }
 
@@ -971,9 +968,7 @@ int LayoutManager::dndSpacerIndex()
     if (alignment == Latte::Types::Justify) {
         for(int i=0; i<m_endLayout->childItems().count(); ++i) {
             QQuickItem *item = m_endLayout->childItems()[i];
-            bool isparabolicspacer = item->property("isParabolicEdgeSpacer").toBool();
-
-            if (isparabolicspacer) {
+            if (isParabolicSpacer(item)) {
                 continue;
             }
 
@@ -1320,8 +1315,7 @@ void LayoutManager::destroyAppletContainer(QObject *applet)
                 int size = layout->childItems().count();
                 for (int j=size-1; j>=0; --j) {
                     QQuickItem *item = layout->childItems()[j];
-                    bool issplitter = item->property("isInternalViewSplitter").toBool();
-                    if (issplitter) {
+                    if (isJustifySplitter(item)) {
                         continue;
                     }
 
@@ -1363,9 +1357,7 @@ void LayoutManager::reorderSplitterInStartLayout()
 
         for (int i=0; i<size; ++i) {
             QQuickItem *item = m_startLayout->childItems()[i];
-            bool issplitter = item->property("isInternalViewSplitter").toBool();
-
-            if (issplitter && i<size-1) {
+            if (isJustifySplitter(item) && i<size-1) {
                 splitter = item;
                 break;
             }
@@ -1392,9 +1384,7 @@ void LayoutManager::reorderSplitterInEndLayout()
 
         for (int i=0; i<size; ++i) {
             QQuickItem *item = m_endLayout->childItems()[i];
-            bool issplitter = item->property("isInternalViewSplitter").toBool();
-
-            if (issplitter && i!=0) {
+            if (isJustifySplitter(item) && i!=0) {
                 splitter = item;
                 break;
             }
@@ -1484,8 +1474,7 @@ void LayoutManager::destroyJustifySplitters()
             int size = layout->childItems().count();
             for (int j=size-1; j>=0; --j) {
                 QQuickItem *item = layout->childItems()[j];
-                bool issplitter = item->property("isInternalViewSplitter").toBool();
-                if (issplitter) {
+                if (isJustifySplitter(item)) {
                     item->deleteLater();
                 }
             }
@@ -1550,8 +1539,7 @@ void LayoutManager::moveAppletsBasedOnJustifyAlignment()
     int splitter2{-1};
 
     for(int i=0; i<appletlist.count(); ++i) {
-        bool issplitter = appletlist[i]->property("isInternalViewSplitter").toBool();
-        bool isparabolicspacer = appletlist[i]->property("isParabolicEdgeSpacer").toBool();
+        bool issplitter = isJustifySplitter(appletlist[i]);
 
         if (!firstSplitterFound) {
             insertAtLayoutIndex(m_startLayout, appletlist[i], i);
@@ -1578,8 +1566,8 @@ void LayoutManager::moveAppletsBasedOnJustifyAlignment()
 void LayoutManager::printAppletList(QList<QQuickItem *> list)
 {
     for(int i=0; i<list.count(); ++i) {
-        bool issplitter = list[i]->property("isInternalViewSplitter").toBool();
-        bool isparabolicspacer = list[i]->property("isParabolicEdgeSpacer").toBool();
+        bool issplitter = isJustifySplitter(list[i]);
+        bool isparabolicspacer = isParabolicSpacer(list[i]);
 
         if (issplitter) {
             qDebug() << i << " __ JUSTIFY SPLITTER";

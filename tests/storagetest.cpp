@@ -63,6 +63,11 @@ private:
         c1.group(QStringLiteral("General")).writeEntry(QStringLiteral("maxLength"), (float)80.0);
         c1.group(QStringLiteral("General")).writeEntry(QStringLiteral("alignment"), 3);
         c1.group(QStringLiteral("General")).writeEntry(QStringLiteral("screenEdgeMargin"), 7);
+        // The three [General] entries that hold ;-separated applet ids; importing the layout
+        // has to rewrite every one of them to the freshly assigned ids.
+        c1.group(QStringLiteral("General")).writeEntry(QStringLiteral("appletOrder"), QStringLiteral("2;3"));
+        c1.group(QStringLiteral("General")).writeEntry(QStringLiteral("lockedZoomApplets"), QStringLiteral("2"));
+        c1.group(QStringLiteral("General")).writeEntry(QStringLiteral("userBlocksColorizingApplets"), QStringLiteral("3"));
 
         KConfigGroup applets = c1.group(QStringLiteral("Applets"));
         KConfigGroup a2 = applets.group(QStringLiteral("2"));
@@ -567,6 +572,32 @@ void StorageTest::newUniqueIdsFileRemapsInactiveLayout()
     QCOMPARE(table.rowCount(), 2);
     QVERIFY(table.containsId(QStringLiteral("1")));
     QVERIFY(table.containsId(added.id));
+
+    // The [General] entries that name applet ids must follow the remap. A key spelled
+    // differently here than in the containment plugin is skipped in silence and the imported
+    // view keeps pointing at the origin's applet ids, which belong to somebody else now.
+    KSharedConfigPtr destPtr = KSharedConfig::openConfig(destPath);
+    destPtr->reparseConfiguration();
+    KConfigGroup imported = KConfigGroup(destPtr, QStringLiteral("Containments")).group(added.id);
+    const QStringList newappletids = imported.group(QStringLiteral("Applets")).groupList();
+    QCOMPARE(newappletids.count(), 2);
+
+    KConfigGroup general = imported.group(QStringLiteral("General"));
+    const QString order = general.readEntry(QStringLiteral("appletOrder"), QString());
+    const QString locked = general.readEntry(QStringLiteral("lockedZoomApplets"), QString());
+    const QString blocked = general.readEntry(QStringLiteral("userBlocksColorizingApplets"), QString());
+
+    QVERIFY(!order.isEmpty());
+    QCOMPARE(QStringList(order.split(QLatin1Char(';'))).count(), 2);
+    for (const QString &id : order.split(QLatin1Char(';'))) {
+        QVERIFY2(newappletids.contains(id), qPrintable(QStringLiteral("appletOrder still names %1, which the import did not create").arg(id)));
+    }
+
+    // origin applet 2 was the locked one and applet 3 the colorizing-blocked one, so the
+    // remapped order is exactly "<new 2>;<new 3>".
+    QCOMPARE(order, QStringLiteral("%1;%2").arg(locked, blocked));
+    QVERIFY2(locked != QStringLiteral("2"), "lockedZoomApplets kept the origin's applet id");
+    QVERIFY2(blocked != QStringLiteral("3"), "userBlocksColorizingApplets kept the origin's applet id");
 }
 
 void StorageTest::storedViewInactiveWritesTempFile()

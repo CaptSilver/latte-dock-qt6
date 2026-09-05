@@ -4,6 +4,9 @@
 */
 
 #include "clonedview.h"
+
+// local
+#include <coretypes.h>
 #include "containmentinterface.h"
 #include "visibilitymanager.h"
 #include "../data/viewdata.h"
@@ -12,11 +15,6 @@
 namespace Latte {
 
 const int ClonedView::ERRORAPPLETID;
-
-QStringList ClonedView::CONTAINMENTMANUALSYNCEDPROPERTIES = QStringList()
-        << QStringLiteral("appletOrder")
-        << QStringLiteral("lockedZoomApplets")
-        << QStringLiteral("userBlocksColorizingApplets");  
 
 ClonedView::ClonedView(Plasma::Corona *corona, Latte::OriginalView *originalView, QScreen *targetScreen, bool byPassX11WM)
     : View(corona, targetScreen, byPassX11WM),
@@ -273,7 +271,9 @@ void ClonedView::onOriginalAppletInScheduledDestructionChanged(const int &id, co
 
 void ClonedView::updateContainmentConfigProperty(const QString &key, const QVariant &value)
 {
-    if (!CONTAINMENTMANUALSYNCEDPROPERTIES.contains(key)) {
+    //! The applet-id lists are the one thing a clone must not copy verbatim: its applets carry
+    //! their own ids, so they are translated by the dedicated handlers instead.
+    if (!ConfigKeys::appletIdListKeys().contains(key)) {
         extendedInterface()->updateContainmentConfigProperty(key, value);
     } else {
         //qDebug() << "org.kde.sync :: containment config value syncing blocked :: " << key;

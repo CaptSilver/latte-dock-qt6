@@ -380,12 +380,8 @@ QString Storage::newUniqueIdsFile(QString originFile, const Layout::GenericLayou
 
     //! update applet ids in their containment order and in MultipleLayouts update also the layoutId
     for (const auto &cId : investigate_conts.groupList()) {
-        //! Update options that contain applet ids
-        //! (appletOrder) and (lockedZoomApplets) and (userBlocksColorizingApplets)
-        QStringList options;
-        options << QStringLiteral("appletOrder") << QStringLiteral("lockedZoomApplets") << QStringLiteral("userBlocksColorizingApplets");
-
-        for (const auto &settingStr : options) {
+        //! Update the options that contain applet ids
+        for (const auto &settingStr : ConfigKeys::appletIdListKeys()) {
             QString order1 = investigate_conts.group(cId).group(QStringLiteral("General")).readEntry(settingStr, QString());
 
             if (!order1.isEmpty()) {
