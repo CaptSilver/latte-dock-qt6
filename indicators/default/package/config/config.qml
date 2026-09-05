@@ -7,10 +7,7 @@ import QtQuick 2.7
 import QtQuick.Controls 2.15 as QQC2
 import QtQuick.Layouts 1.3
 
-import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.plasma.components 3.0 as PlasmaComponents
-import org.kde.plasma.components 3.0 as PlasmaComponents3
-import org.kde.plasma.plasmoid 2.0
 
 import org.kde.latte.components 1.0 as LatteComponents
 import org.kde.kirigami 2.20 as Kirigami
@@ -77,149 +74,47 @@ ColumnLayout {
         }
     }
 
-    RowLayout {
-        Layout.fillWidth: true
-        spacing: Kirigami.Units.smallSpacing
+    LatteComponents.PercentSliderRow {
+        label: i18n("Thickness")
+        value: Math.round(indicator.configuration.size * 100)
+        from: 3
+        to: 25
 
-        PlasmaComponents.Label {
-            text: i18n("Thickness")
-            horizontalAlignment: Text.AlignLeft
-        }
-
-        LatteComponents.Slider {
-            id: sizeSlider
-            Layout.fillWidth: true
-
-            value: Math.round(indicator.configuration.size * 100)
-            from: 3
-            to: 25
-            stepSize: 1
-            wheelEnabled: false
-
-            onPressedChanged: {
-                if (!pressed) {
-                    indicator.configuration.size = Number(value / 100).toFixed(2);
-                }
-            }
-        }
-
-        PlasmaComponents.Label {
-            text: i18nc("number in percentage, e.g. 85 %","%1 %", currentValue)
-            horizontalAlignment: Text.AlignRight
-            Layout.minimumWidth: defaultFontMetrics.advanceWidth * 4
-            Layout.maximumWidth: defaultFontMetrics.advanceWidth * 4
-
-            readonly property int currentValue: sizeSlider.value
+        onReleased: (percent) => {
+            indicator.configuration.size = Number(percent / 100).toFixed(2);
         }
     }
 
-    RowLayout {
-        Layout.fillWidth: true
-        spacing: Kirigami.Units.smallSpacing
+    LatteComponents.PercentSliderRow {
+        label: i18n("Position")
+        value: Math.round(indicator.configuration.thickMargin * 100)
+        from: 0
+        to: 30
 
-        PlasmaComponents.Label {
-            text: i18n("Position")
-            horizontalAlignment: Text.AlignLeft
-        }
-
-        LatteComponents.Slider {
-            id: thickMarginSlider
-            Layout.fillWidth: true
-
-            value: Math.round(indicator.configuration.thickMargin * 100)
-            from: 0
-            to: 30
-            stepSize: 1
-            wheelEnabled: false
-
-            onPressedChanged: {
-                if (!pressed) {
-                    indicator.configuration.thickMargin = value / 100;
-                }
-            }
-        }
-
-        PlasmaComponents.Label {
-            text: i18nc("number in percentage, e.g. 85 %","%1 %", currentValue)
-            horizontalAlignment: Text.AlignRight
-            Layout.minimumWidth: defaultFontMetrics.advanceWidth * 4
-            Layout.maximumWidth: defaultFontMetrics.advanceWidth * 4
-
-            readonly property int currentValue: thickMarginSlider.value
+        onReleased: (percent) => {
+            indicator.configuration.thickMargin = percent / 100;
         }
     }
 
-    RowLayout {
-        Layout.fillWidth: true
-        spacing: Kirigami.Units.smallSpacing
+    LatteComponents.PercentSliderRow {
+        label: i18n("Padding")
+        value: Math.round(indicator.configuration.lengthPadding * 100)
+        from: 0
+        to: 80
 
-        PlasmaComponents.Label {
-            text: i18n("Padding")
-            horizontalAlignment: Text.AlignLeft
-        }
-
-        LatteComponents.Slider {
-            id: lengthIntMarginSlider
-            Layout.fillWidth: true
-
-            value: Math.round(indicator.configuration.lengthPadding * 100)
-            from: 0
-            to: maxMargin
-            stepSize: 1
-            wheelEnabled: false
-
-            readonly property int maxMargin: 80
-
-            onPressedChanged: {
-                if (!pressed) {
-                    indicator.configuration.lengthPadding = value / 100;
-                }
-            }
-        }
-
-        PlasmaComponents.Label {
-            text: i18nc("number in percentage, e.g. 85 %","%1 %", currentValue)
-            horizontalAlignment: Text.AlignRight
-            Layout.minimumWidth: defaultFontMetrics.advanceWidth * 4
-            Layout.maximumWidth: defaultFontMetrics.advanceWidth * 4
-
-            readonly property int currentValue: lengthIntMarginSlider.value
+        onReleased: (percent) => {
+            indicator.configuration.lengthPadding = percent / 100;
         }
     }
 
-    RowLayout {
-        Layout.fillWidth: true
-        spacing: Kirigami.Units.smallSpacing
+    LatteComponents.PercentSliderRow {
+        label: i18n("Corner Margin")
+        value: Math.round(indicator.configuration.backgroundCornerMargin * 100)
+        from: 0
+        to: 100
 
-        PlasmaComponents.Label {
-            text: i18n("Corner Margin")
-            horizontalAlignment: Text.AlignLeft
-        }
-
-        LatteComponents.Slider {
-            id: backgroundCornerMarginSlider
-            Layout.fillWidth: true
-
-            value: Math.round(indicator.configuration.backgroundCornerMargin * 100)
-            from: 0
-            to: 100
-            stepSize: 1
-            wheelEnabled: false
-
-            onPressedChanged: {
-                if (!pressed) {
-                    indicator.configuration.backgroundCornerMargin = value / 100;
-                }
-            }
-        }
-
-        PlasmaComponents.Label {
-            text: i18nc("number in percentage, e.g. 85 %","%1 %", currentValue)
-            horizontalAlignment: Text.AlignRight
-            Layout.minimumWidth: defaultFontMetrics.advanceWidth * 4
-            Layout.maximumWidth: defaultFontMetrics.advanceWidth * 4
-
-            readonly property int currentValue: backgroundCornerMarginSlider.value
+        onReleased: (percent) => {
+            indicator.configuration.backgroundCornerMargin = percent / 100;
         }
     }
 
