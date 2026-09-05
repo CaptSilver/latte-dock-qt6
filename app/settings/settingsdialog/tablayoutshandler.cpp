@@ -17,13 +17,13 @@
 #include "../exporttemplatedialog/exporttemplatedialog.h"
 #include "../viewsdialog/viewsdialog.h"
 #include "../../apptypes.h"
+#include "../../coronahelpers.h"
 #include "../../lattecorona.h"
 #include "../../layout/centrallayout.h"
 #include "../../layouts/importer.h"
 #include "../../layouts/manager.h"
 #include "../../layouts/storage.h"
 #include "../../templates/templatesmanager.h"
-#include "../../tools/commontools.h"
 
 //! Qt
 #include <QAbstractButton>
@@ -309,7 +309,7 @@ void TabLayouts::initLayoutTemplatesSubMenu()
         openTemplatesDirectory->setIcon(QIcon::fromTheme(QStringLiteral("edit")));
 
         connect(openTemplatesDirectory, &QAction::triggered, this, [&]() {
-            KIO::highlightInFileManager(QList<QUrl>{QUrl::fromLocalFile(QString(Latte::configPath() + QStringLiteral("/latte/templates/Dock.layout.latte")))});
+            KIO::highlightInFileManager(QList<QUrl>{QUrl::fromLocalFile(Latte::Layouts::Importer::layoutTemplatesUserDir() + QStringLiteral("/Dock") + CoronaHelpers::LAYOUTEXTENSION)});
         });
     }
 }
@@ -559,16 +559,17 @@ void TabLayouts::importLayout()
         return;
     }
 
-    QFileDialog *importFileDialog = new QFileDialog(m_parentDialog, i18nc("import layout", "Import Layout"), QDir::homePath(), QStringLiteral("layout.latte"));
+    QFileDialog *importFileDialog = new QFileDialog(m_parentDialog, i18nc("import layout", "Import Layout"), QDir::homePath(), CoronaHelpers::LAYOUTEXTENSION.mid(1));
 
     importFileDialog->setWindowIcon(QIcon::fromTheme(QStringLiteral("document-import")));
     importFileDialog->setLabelText(QFileDialog::Accept, i18nc("import layout","Import"));
     importFileDialog->setFileMode(QFileDialog::AnyFile);
     importFileDialog->setAcceptMode(QFileDialog::AcceptOpen);
-    importFileDialog->setDefaultSuffix(QStringLiteral("layout.latte"));
+    //! setDefaultSuffix() wants the suffix without its leading dot
+    importFileDialog->setDefaultSuffix(CoronaHelpers::LAYOUTEXTENSION.mid(1));
 
     QStringList filters;
-    filters << QString(i18nc("import latte layout", "Latte Dock Layout file v0.2") + QStringLiteral("(*.layout.latte)"))
+    filters << QString(i18nc("import latte layout", "Latte Dock Layout file v0.2") + QStringLiteral("(*") + CoronaHelpers::LAYOUTEXTENSION + QStringLiteral(")"))
             << QString(i18nc("import older latte layout", "Latte Dock Layout file v0.1") + QStringLiteral("(*.latterc)"));
     importFileDialog->setNameFilters(filters);
 
@@ -640,15 +641,16 @@ void TabLayouts::exportLayoutForBackup()
     m_corona->layoutsManager()->synchronizer()->syncActiveLayoutsToOriginalFiles();
     m_corona->universalSettings()->syncSettings();
 
-    QFileDialog *exportFileDialog = new QFileDialog(m_parentDialog, i18n("Export Layout For Backup"), QDir::homePath(), QStringLiteral("layout.latte"));
+    QFileDialog *exportFileDialog = new QFileDialog(m_parentDialog, i18n("Export Layout For Backup"), QDir::homePath(), CoronaHelpers::LAYOUTEXTENSION.mid(1));
 
     exportFileDialog->setLabelText(QFileDialog::Accept, i18nc("export layout","Export"));
     exportFileDialog->setFileMode(QFileDialog::AnyFile);
     exportFileDialog->setAcceptMode(QFileDialog::AcceptSave);
-    exportFileDialog->setDefaultSuffix(QStringLiteral("layout.latte"));
+    //! setDefaultSuffix() wants the suffix without its leading dot
+    exportFileDialog->setDefaultSuffix(CoronaHelpers::LAYOUTEXTENSION.mid(1));
 
     QStringList filters;
-    QString filter1(i18nc("export layout", "Latte Dock Layout file v0.2") + QStringLiteral("(*.layout.latte)"));
+    QString filter1(i18nc("export layout", "Latte Dock Layout file v0.2") + QStringLiteral("(*") + CoronaHelpers::LAYOUTEXTENSION + QStringLiteral(")"));
 
     filters << filter1;
 
@@ -668,7 +670,7 @@ void TabLayouts::exportLayoutForBackup()
             return;
         }
 
-        if (file.endsWith(QStringLiteral(".layout.latte"))) {
+        if (file.endsWith(CoronaHelpers::LAYOUTEXTENSION)) {
             if (!QFile(selectedLayout.id).copy(file)) {
                 showExportLayoutError(selectedLayout);
                 return;
@@ -737,7 +739,7 @@ void TabLayouts::exportLayoutForBackup()
     });
 
     exportFileDialog->open();
-    exportFileDialog->selectFile(selectedLayout.name + QStringLiteral(".layout.latte"));
+    exportFileDialog->selectFile(selectedLayout.name + CoronaHelpers::LAYOUTEXTENSION);
 }
 
 void TabLayouts::showDetailsDialog()
@@ -783,7 +785,7 @@ void TabLayouts::onLayoutFilesDropped(const QStringList &paths)
     QStringList layoutNames;
 
     for (int i=0; i<paths.count(); ++i) {
-        if (paths[i].endsWith(QStringLiteral(".layout.latte"))) {
+        if (paths[i].endsWith(CoronaHelpers::LAYOUTEXTENSION)) {
             Latte::Data::Layout importedlayout = m_layoutsController->addLayoutForFile(paths[i]);
             layoutNames << importedlayout.name;
         }
@@ -885,7 +887,7 @@ void TabLayouts::onDropEvent(QDropEvent *event)
         for (int i = 0; i < qMin(urlList.size(), 20); ++i) {
             QString layoutPath = urlList[i].path();
 
-            if (layoutPath.endsWith(QStringLiteral(".layout.latte"))) {
+            if (layoutPath.endsWith(CoronaHelpers::LAYOUTEXTENSION)) {
                 paths << layoutPath;
             }
         }

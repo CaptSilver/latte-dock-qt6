@@ -17,6 +17,7 @@
 #include "../settingsnameutils.h"
 #include "../universalsettings.h"
 #include "../generic/generictools.h"
+#include "../../coronahelpers.h"
 #include "../../screenpool.h"
 #include "../../data/uniqueidinfo.h"
 #include "../../layout/centrallayout.h"
@@ -737,7 +738,7 @@ const Latte::Data::Layout Layouts::addLayoutForFile(QString file, QString layout
     Latte::Data::Layout copied;
 
     if (newTempDirectory) {
-        copied.id = uniqueTempDirectory() + QStringLiteral("/") + layoutName + QStringLiteral(".layout.latte");
+        copied.id = uniqueTempDirectory() + QStringLiteral("/") + layoutName + CoronaHelpers::LAYOUTEXTENSION;
         QFile(file).copy(copied.id);
     } else {
         copied.id = file;
@@ -812,7 +813,7 @@ void Layouts::duplicateSelectedLayout()
     Latte::Data::Layout copied = selectedLayoutCurrent;
 
     copied.name = uniqueLayoutName(selectedLayoutCurrent.name);
-    copied.id = uniqueTempDirectory() + QStringLiteral("/") + copied.name + QStringLiteral(".layout.latte");
+    copied.id = uniqueTempDirectory() + QStringLiteral("/") + copied.name + CoronaHelpers::LAYOUTEXTENSION;
     copied.isActive = false;
     copied.isConsideredActive = false;
     copied.isLocked = false;
@@ -857,14 +858,14 @@ bool Layouts::importLayoutsFromV1ConfigFile(QString file)
             QStringList importedlayouts;
 
             if (m_handler->corona()->layoutsManager()->importer()->importOldLayout(applets, name, false, tempDir.absolutePath())) {
-                Latte::Data::Layout imported = addLayoutForFile(tempDir.absolutePath() + QStringLiteral("/") + name + QStringLiteral(".layout.latte"), name);
+                Latte::Data::Layout imported = addLayoutForFile(tempDir.absolutePath() + QStringLiteral("/") + name + CoronaHelpers::LAYOUTEXTENSION, name);
                 importedlayouts << imported.name;
             }
 
             QString alternativeName = name + QStringLiteral("-") + i18nc("layout", "Alternative");
 
             if (m_handler->corona()->layoutsManager()->importer()->importOldLayout(applets, alternativeName, false, tempDir.absolutePath())) {
-                Latte::Data::Layout imported = addLayoutForFile(tempDir.absolutePath() + QStringLiteral("/") + alternativeName + QStringLiteral(".layout.latte"), alternativeName, false);
+                Latte::Data::Layout imported = addLayoutForFile(tempDir.absolutePath() + QStringLiteral("/") + alternativeName + CoronaHelpers::LAYOUTEXTENSION, alternativeName, false);
                 importedlayouts << imported.name;
             }
 
@@ -963,7 +964,7 @@ void Layouts::save()
                 activeLayoutsToRename[iLayoutCurrentData.name] = central;
             }
 
-            QString tempFile = layoutTempDir.path() + QStringLiteral("/") + central->name() + QStringLiteral(".layout.latte");
+            QString tempFile = layoutTempDir.path() + QStringLiteral("/") + central->name() + CoronaHelpers::LAYOUTEXTENSION;
             qDebug() << "new temp file ::: " << tempFile;
 
             QFile(iLayoutCurrentData.id).rename(tempFile);

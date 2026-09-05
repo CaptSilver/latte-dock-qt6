@@ -51,6 +51,8 @@ private Q_SLOTS:
     void newLayoutRejectsUnknownTemplate();
     void importSystemLayoutsCopiesToUserDir();
     void installCustomLayoutTemplateCopiesAndIsCustom();
+    void installCustomLayoutTemplateKeepsDotsInTheName();
+    void viewTemplateNameKeepsDotsInTheName();
 
 private:
     QTemporaryDir m_configDir;
@@ -188,6 +190,34 @@ void TemplatesManagerTest::installCustomLayoutTemplateCopiesAndIsCustom()
 
     m_tm->init();
     QVERIFY(m_tm->hasCustomLayoutTemplate(QStringLiteral("MyCustom")));
+}
+
+void TemplatesManagerTest::installCustomLayoutTemplateKeepsDotsInTheName()
+{
+    // The name is everything before ".layout.latte", not everything before the FIRST dot:
+    // QFileInfo::baseName() silently renamed "Plasma 5.27.layout.latte" to "Plasma 5".
+    const QString src = m_configDir.path() + QStringLiteral("/Plasma 5.27.layout.latte");
+    QVERIFY(QFile::copy(m_tm->layoutTemplateForName(QStringLiteral("Default")).id, src));
+
+    m_tm->installCustomLayoutTemplate(src);
+
+    QVERIFY(QFile::exists(Latte::configPath() + QStringLiteral("/latte/templates/Plasma 5.27.layout.latte")));
+
+    m_tm->init();
+    QVERIFY(m_tm->hasCustomLayoutTemplate(QStringLiteral("Plasma 5.27")));
+}
+
+void TemplatesManagerTest::viewTemplateNameKeepsDotsInTheName()
+{
+    // Same truncation on the view side: a user template dropped into the templates dir is
+    // listed under the name before ".view.latte", dots and all.
+    const QString src = Latte::configPath() + QStringLiteral("/latte/templates/My 5.27 Dock.view.latte");
+    QVERIFY(QFile::copy(m_tm->viewTemplateFilePath(QStringLiteral("Default Dock")), src));
+
+    m_tm->init();
+
+    QVERIFY(m_tm->hasViewTemplate(QStringLiteral("My 5.27 Dock")));
+    QCOMPARE(m_tm->viewTemplateFilePath(QStringLiteral("My 5.27 Dock")), src);
 }
 
 QTEST_MAIN(TemplatesManagerTest)

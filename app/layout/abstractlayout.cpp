@@ -6,6 +6,7 @@
 #include "abstractlayout.h"
 
 // local
+#include "../coronahelpers.h"
 #include "../data/layoutdata.h"
 
 // Qt
@@ -335,17 +336,9 @@ void AbstractLayout::setLaunchers(QStringList launcherList)
 
 QString AbstractLayout::layoutName(const QString &fileName)
 {
-    int lastSlash = fileName.lastIndexOf(QLatin1String("/"));
-    QString layoutName = fileName.mid(lastSlash + 1);
-
-    //! strip the extension only when present; a not-found -1 index passed to
-    //! remove() would chop the last character of an unrelated name.
-    const QString extension(QStringLiteral(".layout.latte"));
-    if (layoutName.endsWith(extension)) {
-        layoutName.chop(extension.size());
-    }
-
-    return layoutName;
+    //! only the layout extension: a .view.latte path is a template, and this name ends up
+    //! addressing a layout file, so widening the list here would silently rename templates.
+    return CoronaHelpers::strippedLatteName(fileName, {CoronaHelpers::LAYOUTEXTENSION});
 }
 
 void AbstractLayout::syncSettings()

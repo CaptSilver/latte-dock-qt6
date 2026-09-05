@@ -99,10 +99,10 @@ void Manager::init()
     }
 
     //! Custom Templates path creation
-    QDir localTemplatesDir(Latte::configPath() + QStringLiteral("/latte/templates"));
+    QDir localTemplatesDir(Importer::layoutTemplatesUserDir());
 
     if (!localTemplatesDir.exists()) {
-        QDir(Latte::configPath() + QStringLiteral("/latte")).mkdir(QStringLiteral("templates"));
+        localTemplatesDir.mkpath(QStringLiteral("."));
     }
 
     //! Check if the multiple-layouts hidden file is present, add it if it isnt

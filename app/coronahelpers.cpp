@@ -10,9 +10,22 @@ namespace Latte {
 
 namespace CoronaHelpers {
 
+QString strippedLatteName(const QString &path, const QStringList &extensions)
+{
+    const QString name = path.mid(path.lastIndexOf(QLatin1Char('/')) + 1);
+
+    for (const QString &extension : extensions) {
+        if (name.endsWith(extension)) {
+            return name.chopped(extension.size());
+        }
+    }
+
+    return name;
+}
+
 bool isLayoutFilePath(const QString &path)
 {
-    return (path.startsWith(QLatin1String("file:/")) || path.startsWith(QLatin1String("/"))) && path.endsWith(QLatin1String(".layout.latte"));
+    return (path.startsWith(QLatin1String("file:/")) || path.startsWith(QLatin1String("/"))) && path.endsWith(LAYOUTEXTENSION);
 }
 
 QString cleanLayoutFilePath(const QString &path)

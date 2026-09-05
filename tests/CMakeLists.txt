@@ -9,16 +9,22 @@ ecm_add_test(indicatormetadatatest.cpp
     TEST_NAME indicatormetadatatest
     LINK_LIBRARIES Qt6::Test Qt6::Core KF6::CoreAddons
 )
-ecm_add_test(templatesnametest.cpp
+# templateName() delegates to CoronaHelpers::strippedLatteName(), so the real shared source
+# links here instead of the private copy this test used to assert against.
+ecm_add_test(templatesnametest.cpp ${CMAKE_SOURCE_DIR}/app/coronahelpers.cpp
     TEST_NAME templatesnametest
-    LINK_LIBRARIES Qt6::Test Qt6::Core
+    LINK_LIBRARIES Qt6::Test Qt6::Core KF6::ConfigCore
 )
+target_include_directories(templatesnametest PRIVATE ${CMAKE_SOURCE_DIR}/app)
 
 ecm_add_test(storageroundtriptest.cpp
     TEST_NAME storageroundtriptest
     LINK_LIBRARIES Qt6::Test Qt6::Core KF6::ConfigCore
 )
+# layoutName() delegates to CoronaHelpers::strippedLatteName(), so coronahelpers.cpp comes
+# along; its header reaches only Qt + KConfigCore, already linked here.
 ecm_add_test(abstractlayouttest.cpp ${CMAKE_SOURCE_DIR}/app/layout/abstractlayout.cpp
+    ${CMAKE_SOURCE_DIR}/app/coronahelpers.cpp
     TEST_NAME abstractlayouttest
     LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui KF6::ConfigCore Plasma::Plasma
 )

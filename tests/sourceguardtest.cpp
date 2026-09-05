@@ -296,6 +296,11 @@ private Q_SLOTS:
     void layoutManager_classifiesChildrenThroughOnePredicate();
     void containmentInterface_reflectedLayoutManagerNamesResolve();
     void qmlInvocationsRouteThroughTheSharedHelper();
+    void latteFileExtensions_areSpelledOnce();
+    void templatesUserDir_isSpelledOnce();
+    void abstractLayout_layoutName_delegatesToTheSharedStrip();
+    void templatesManager_templateName_delegatesToTheSharedStrip();
+    void viewsHandler_importView_stripsTheSuffixNotEveryOccurrence();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -2614,6 +2619,114 @@ void SourceGuardTest::qmlInvocationsRouteThroughTheSharedHelper()
     }
 
     QVERIFY2(offenders.isEmpty(), qPrintable(offenders.join(QLatin1Char('\n'))));
+}
+
+void SourceGuardTest::latteFileExtensions_areSpelledOnce()
+{
+    // ".layout.latte" / ".view.latte" are a frozen on-disk contract: every layout a user
+    // ever saved, the shipped shell templates and the .latterc archives all carry them
+    // literally. Spelling them at forty call sites means a typo in any one of them makes
+    // files silently invisible rather than failing loudly, so they live in coronahelpers.h.
+    // Two files keep raw hits on purpose:
+    //   * coronahelpers.h defines the constants
+    //   * lattepackage.cpp registers presets/*.layout.latte package entries -- a dead
+    //     definition set (no presets/ dir ships and nobody reads preset1..preset10) that
+    //     should be deleted rather than dressed up in the constant
+    // The token searched for ends at the closing quote of a string literal, so it also
+    // catches the dot-less "layout.latte" that QFileDialog::setDefaultSuffix() wants, and
+    // deliberately misses the i18n messages in exporttemplatehandler.cpp that spell the
+    // extension inside the translatable text ("does not end with <i>.layout.latte</i>") --
+    // substituting there would change the msgid and orphan it in every .po catalogue.
+    const QHash<QString, int> allowedExtensionSpellings{
+        {QStringLiteral("app/coronahelpers.h"), 2},
+        {QStringLiteral("app/package/lattepackage.cpp"), 5}};
+
+    QStringList sources = sourcesUnder({QStringLiteral("app")}, QStringLiteral("*.cpp"));
+    sources += sourcesUnder({QStringLiteral("app")}, QStringLiteral("*.h"));
+    QVERIFY2(!sources.isEmpty(), "no app sources found");
+
+    QStringList offenders;
+
+    for (const QString &abs : sources) {
+        const QString rel = relativeToRepo(abs);
+        const QString src = withoutComments(readFile(abs));
+        const int found = src.count(QStringLiteral("layout.latte\"")) + src.count(QStringLiteral("view.latte\""));
+        const int expected = allowedExtensionSpellings.value(rel, 0);
+
+        if (found != expected) {
+            offenders << QStringLiteral("%1 spells a latte file extension %2 times, expected %3 -- use Latte::CoronaHelpers::LAYOUTEXTENSION / VIEWEXTENSION").arg(rel).arg(found).arg(expected);
+        }
+    }
+
+    QVERIFY2(offenders.isEmpty(), qPrintable(offenders.join(QLatin1Char('\n'))));
+}
+
+void SourceGuardTest::templatesUserDir_isSpelledOnce()
+{
+    // The custom-templates directory had three spellings -- configPath()+"/latte/templates",
+    // layoutUserDir()+"/templates", and a bare mkdir("templates") -- so a grep for any one of
+    // them found only part of the call sites. Importer::layoutTemplatesUserDir() is the name.
+    // importer.cpp keeps two "latte/templates/" hits: without a leading slash they are entry
+    // names INSIDE the exported .latterc, matched at extraction by copyTo(configPath()).
+    // Turning those into absolute host paths embeds /home/<user>/... in every backup.
+    const QHash<QString, int> allowedDirSpellings{{QStringLiteral("app/layouts/importer.cpp"), 2}};
+
+    QStringList sources = sourcesUnder({QStringLiteral("app")}, QStringLiteral("*.cpp"));
+    sources += sourcesUnder({QStringLiteral("app")}, QStringLiteral("*.h"));
+    QVERIFY2(!sources.isEmpty(), "no app sources found");
+
+    QStringList offenders;
+
+    for (const QString &abs : sources) {
+        const QString rel = relativeToRepo(abs);
+        const QString src = withoutComments(readFile(abs));
+        const int found = src.count(QStringLiteral("latte/templates"));
+        const int expected = allowedDirSpellings.value(rel, 0);
+
+        if (found != expected) {
+            offenders << QStringLiteral("%1 spells the templates directory %2 times, expected %3 -- use Latte::Layouts::Importer::layoutTemplatesUserDir()").arg(rel).arg(found).arg(expected);
+        }
+    }
+
+    QVERIFY2(offenders.isEmpty(), qPrintable(offenders.join(QLatin1Char('\n'))));
+
+    // ... and layoutUserDir() + "/templates" is the other spelling the grep above cannot see.
+    const QString importer = withoutComments(readRepoFile(QStringLiteral("app/layouts/importer.cpp")));
+    QVERIFY2(!importer.isEmpty(), "importer.cpp not found");
+    QCOMPARE(importer.count(QStringLiteral("\"/templates\"")), 1);
+}
+
+void SourceGuardTest::abstractLayout_layoutName_delegatesToTheSharedStrip()
+{
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/layout/abstractlayout.cpp")),
+                                            QStringLiteral("QString AbstractLayout::layoutName(const QString &fileName)")));
+    QVERIFY2(!s.isEmpty(), "AbstractLayout::layoutName() not found");
+    // A layout file only ever carries the layout extension; widening this to the view
+    // extension would rename every .view.latte the settings dialog shows.
+    QVERIFY2(s.contains(QStringLiteral("CoronaHelpers::strippedLatteName(fileName,{CoronaHelpers::LAYOUTEXTENSION})")),
+             "layoutName must delegate to CoronaHelpers::strippedLatteName with the layout extension alone");
+}
+
+void SourceGuardTest::templatesManager_templateName_delegatesToTheSharedStrip()
+{
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/templates/templatesmanager.cpp")),
+                                            QStringLiteral("QString Manager::templateName(const QString &filePath)")));
+    QVERIFY2(!s.isEmpty(), "Manager::templateName() not found");
+    QVERIFY2(s.contains(QStringLiteral("CoronaHelpers::strippedLatteName(filePath,{CoronaHelpers::LAYOUTEXTENSION,CoronaHelpers::VIEWEXTENSION})")),
+             "templateName must delegate to CoronaHelpers::strippedLatteName with both extensions");
+}
+
+void SourceGuardTest::viewsHandler_importView_stripsTheSuffixNotEveryOccurrence()
+{
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/settings/viewsdialog/viewshandler.cpp")),
+                                            QStringLiteral("void ViewsHandler::importView()")));
+    QVERIFY2(!s.isEmpty(), "ViewsHandler::importView() not found");
+    // QString::remove(const QString &) deletes EVERY occurrence anywhere in the name, so
+    // importing "My .view.latte backup.view.latte" used to come out as "My  backup".
+    QVERIFY2(!s.contains(QStringLiteral(".remove(")),
+             "importView must strip the trailing extension, not remove() every occurrence");
+    QVERIFY2(s.contains(QStringLiteral("CoronaHelpers::strippedLatteName(file,{CoronaHelpers::VIEWEXTENSION})")),
+             "importView must name the imported view through CoronaHelpers::strippedLatteName");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

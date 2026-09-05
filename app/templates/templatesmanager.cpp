@@ -6,12 +6,12 @@
 #include "templatesmanager.h"
 
 // local
+#include "../coronahelpers.h"
 #include "../layout/abstractlayout.h"
 #include "../layout/centrallayout.h"
 #include "../layouts/importer.h"
 #include "../layouts/manager.h"
 #include "../layouts/storage.h"
-#include "../tools/commontools.h"
 #include "../view/view.h"
 
 // Qt
@@ -29,7 +29,7 @@ Manager::Manager(Latte::Corona *corona, QObject *parent)
     : QObject(parent),
       m_corona(corona)
 {
-    KDirWatch::self()->addDir(Latte::configPath() + QStringLiteral("/latte/templates"), KDirWatch::WatchFiles);
+    KDirWatch::self()->addDir(Layouts::Importer::layoutTemplatesUserDir(), KDirWatch::WatchFiles);
     connect(KDirWatch::self(), &KDirWatch::created, this, &Manager::onCustomTemplatesCountChanged);
     connect(KDirWatch::self(), &KDirWatch::deleted, this, &Manager::onCustomTemplatesCountChanged);
     connect(KDirWatch::self(), &KDirWatch::dirty, this, &Manager::onCustomTemplatesCountChanged);
@@ -51,7 +51,7 @@ void Manager::initLayoutTemplates()
 {
     m_layoutTemplates.clear();
     initLayoutTemplates(m_corona->kPackage().filePath("templates"));
-    initLayoutTemplates(Latte::configPath() + QStringLiteral("/latte/templates"));
+    initLayoutTemplates(Layouts::Importer::layoutTemplatesUserDir());
     Q_EMIT layoutTemplatesChanged();
 }
 
@@ -59,7 +59,7 @@ void Manager::initViewTemplates()
 {
     m_viewTemplates.clear();
     initViewTemplates(m_corona->kPackage().filePath("templates"));
-    initViewTemplates(Latte::configPath() + QStringLiteral("/latte/templates"));
+    initViewTemplates(Layouts::Importer::layoutTemplatesUserDir());
     Q_EMIT viewTemplatesChanged();
 }
 
@@ -67,7 +67,7 @@ void Manager::initLayoutTemplates(const QString &path)
 {
     QDir templatesDir(path);
     QStringList filter;
-    filter.append(QStringLiteral("*.layout.latte"));
+    filter.append(QStringLiteral("*") + CoronaHelpers::LAYOUTEXTENSION);
     QStringList templates = templatesDir.entryList(filter, QDir::Files | QDir::Hidden | QDir::NoSymLinks);
 
     for (int i=0; i<templates.count(); ++i) {
@@ -94,7 +94,7 @@ void Manager::initViewTemplates(const QString &path)
 
     QDir templatesDir(path);
     QStringList filter;
-    filter.append(QStringLiteral("*.view.latte"));
+    filter.append(QStringLiteral("*") + CoronaHelpers::VIEWEXTENSION);
     QStringList templates = templatesDir.entryList(filter, QDir::Files | QDir::Hidden | QDir::NoSymLinks);
 
     for (int i=0; i<templates.count(); ++i) {
@@ -103,7 +103,7 @@ void Manager::initViewTemplates(const QString &path)
         if (!m_viewTemplates.containsId(templatePath)) {
             Data::Generic vdata;
             vdata.id = templatePath;
-            QString tname = QFileInfo(templatePath).baseName();
+            QString tname = CoronaHelpers::strippedLatteName(templatePath, {CoronaHelpers::VIEWEXTENSION});
 
             if (istranslated) {
                 QByteArray tnamechars = tname.toUtf8();
@@ -187,10 +187,10 @@ bool Manager::exportTemplate(const Latte::View *view, const QString &destination
 
 void Manager::onCustomTemplatesCountChanged(const QString &file)
 {
-    if (file.startsWith(Latte::configPath() + QStringLiteral("/latte/templates"))) {
-        if (file.endsWith(QStringLiteral(".layout.latte"))) {
+    if (file.startsWith(Layouts::Importer::layoutTemplatesUserDir())) {
+        if (file.endsWith(CoronaHelpers::LAYOUTEXTENSION)) {
             initLayoutTemplates();
-        } else if (file.endsWith(QStringLiteral(".view.latte"))) {
+        } else if (file.endsWith(CoronaHelpers::VIEWEXTENSION)) {
             initViewTemplates();
         }
     }
@@ -214,15 +214,15 @@ QString Manager::proposedTemplateAbsolutePath(QString templateFilename)
 {
     QString tempfilename = templateFilename;
 
-    if (tempfilename.endsWith(QStringLiteral(".layout.latte"))) {
-        QString clearedname = tempfilename.chopped(QStringLiteral(".layout.latte").size());
-        tempfilename = uniqueLayoutTemplateName(clearedname) + QStringLiteral(".layout.latte");
-    } else if (tempfilename.endsWith(QStringLiteral(".view.latte"))) {
-        QString clearedname = tempfilename.chopped(QStringLiteral(".view.latte").size());
-        tempfilename = uniqueViewTemplateName(clearedname) + QStringLiteral(".view.latte");
+    if (tempfilename.endsWith(CoronaHelpers::LAYOUTEXTENSION)) {
+        QString clearedname = CoronaHelpers::strippedLatteName(tempfilename, {CoronaHelpers::LAYOUTEXTENSION});
+        tempfilename = uniqueLayoutTemplateName(clearedname) + CoronaHelpers::LAYOUTEXTENSION;
+    } else if (tempfilename.endsWith(CoronaHelpers::VIEWEXTENSION)) {
+        QString clearedname = CoronaHelpers::strippedLatteName(tempfilename, {CoronaHelpers::VIEWEXTENSION});
+        tempfilename = uniqueViewTemplateName(clearedname) + CoronaHelpers::VIEWEXTENSION;
     }
 
-    return Latte::configPath() + QStringLiteral("/latte/templates/") + tempfilename;
+    return Layouts::Importer::layoutTemplatesUserDir() + QStringLiteral("/") + tempfilename;
 }
 
 bool Manager::hasCustomLayoutTemplate(const QString &templateName) const
@@ -257,13 +257,13 @@ QString Manager::viewTemplateFilePath(const QString templateName) const
 
 void Manager::installCustomLayoutTemplate(const QString &templateFilePath)
 {
-    if (!templateFilePath.endsWith(QStringLiteral(".layout.latte"))) {
+    if (!templateFilePath.endsWith(CoronaHelpers::LAYOUTEXTENSION)) {
         return;
     }
 
-    QString layoutName = QFileInfo(templateFilePath).baseName();
+    QString layoutName = CoronaHelpers::strippedLatteName(templateFilePath, {CoronaHelpers::LAYOUTEXTENSION});
 
-    QString destinationFilePath = Latte::configPath() + QStringLiteral("/latte/templates/") + layoutName + QStringLiteral(".layout.latte");
+    QString destinationFilePath = Layouts::Importer::layoutTemplatesUserDir() + QStringLiteral("/") + layoutName + CoronaHelpers::LAYOUTEXTENSION;
 
     if (hasCustomLayoutTemplate(layoutName)) {
         QFile(destinationFilePath).remove();
@@ -314,20 +314,7 @@ QString Manager::uniqueViewTemplateName(QString name) const
 
 QString Manager::templateName(const QString &filePath)
 {
-    int lastSlash = filePath.lastIndexOf(QLatin1Char('/'));
-    QString templatename = filePath.mid(lastSlash + 1);
-
-    //! strip a recognised template extension; a name ending in neither is left
-    //! untouched (remove() with a not-found -1 index would chop the last char).
-    const QString extensions[] = {QStringLiteral(".layout.latte"), QStringLiteral(".view.latte")};
-    for (const QString &extension : extensions) {
-        if (templatename.endsWith(extension)) {
-            templatename.chop(extension.size());
-            break;
-        }
-    }
-
-    return templatename;
+    return CoronaHelpers::strippedLatteName(filePath, {CoronaHelpers::LAYOUTEXTENSION, CoronaHelpers::VIEWEXTENSION});
 }
 
 //! it is used in order to provide translations for system templates

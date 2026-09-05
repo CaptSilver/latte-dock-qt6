@@ -92,6 +92,8 @@ public:
     static QString layoutUserFilePath(QString layoutName);
     //! returns the layouts user directory
     static QString layoutUserDir();
+    //! returns the directory custom layout/view templates are stored in
+    static QString layoutTemplatesUserDir();
     //! returns the system path for latte shell data
     static QString systemShellDataPath();
 

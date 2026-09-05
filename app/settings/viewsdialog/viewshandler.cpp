@@ -14,17 +14,18 @@
 #include "../settingsdialog/layoutscontroller.h"
 #include "../settingsdialog/layoutsmodel.h"
 #include "../settingsdialog/delegates/layoutcmbitemdelegate.h"
+#include "../../coronahelpers.h"
 #include "../../data/layoutstable.h"
 #include "../../data/genericbasictable.h"
 #include "../../data/viewstable.h"
 #include "../../lattecorona.h"
 #include "../../layout/abstractlayout.h"
 #include "../../layout/centrallayout.h"
+#include "../../layouts/importer.h"
 #include "../../layouts/manager.h"
 #include "../../layouts/storage.h"
 #include "../../layouts/synchronizer.h"
 #include "../../templates/templatesmanager.h"
-#include "../../tools/commontools.h"
 
 // Qt
 #include <QFileDialog>
@@ -178,7 +179,7 @@ void ViewsHandler::initViewTemplatesSubMenu()
         openTemplatesDirectory->setIcon(QIcon::fromTheme(QStringLiteral("edit")));
 
         connect(openTemplatesDirectory, &QAction::triggered, this, [&]() {
-            KIO::highlightInFileManager(QList<QUrl>{QUrl::fromLocalFile(QString(Latte::configPath() + QStringLiteral("/latte/templates/Dock.view.latte")))});
+            KIO::highlightInFileManager(QList<QUrl>{QUrl::fromLocalFile(Latte::Layouts::Importer::layoutTemplatesUserDir() + QStringLiteral("/Dock") + CoronaHelpers::VIEWEXTENSION)});
         });
     }
 }
@@ -346,15 +347,16 @@ void ViewsHandler::exportViewForBackup()
 
     QString temporiginfile = storedView(views[0].id);
 
-    QFileDialog *exportFileDialog = new QFileDialog(m_dialog, i18n("Export Dock/Panel For Backup"), QDir::homePath(), QStringLiteral("view.latte"));
+    QFileDialog *exportFileDialog = new QFileDialog(m_dialog, i18n("Export Dock/Panel For Backup"), QDir::homePath(), CoronaHelpers::VIEWEXTENSION.mid(1));
 
     exportFileDialog->setLabelText(QFileDialog::Accept, i18nc("export view","Export"));
     exportFileDialog->setFileMode(QFileDialog::AnyFile);
     exportFileDialog->setAcceptMode(QFileDialog::AcceptSave);
-    exportFileDialog->setDefaultSuffix(QStringLiteral("view.latte"));
+    //! setDefaultSuffix() wants the suffix without its leading dot
+    exportFileDialog->setDefaultSuffix(CoronaHelpers::VIEWEXTENSION.mid(1));
 
     QStringList filters;
-    QString filter1(i18nc("export view", "Latte Dock/Panel file v0.2") + QStringLiteral("(*.view.latte)"));
+    QString filter1(i18nc("export view", "Latte Dock/Panel file v0.2") + QStringLiteral("(*") + CoronaHelpers::VIEWEXTENSION + QStringLiteral(")"));
 
     filters << filter1;
 
@@ -374,7 +376,7 @@ void ViewsHandler::exportViewForBackup()
             return;
         }
 
-        if (file.endsWith(QStringLiteral(".view.latte"))) {
+        if (file.endsWith(CoronaHelpers::VIEWEXTENSION)) {
             if (!QFile(temporiginfile).copy(file)) {
                 showExportViewError(file);
                 return;
@@ -435,16 +437,17 @@ void ViewsHandler::importView()
 {
     qDebug() << Q_FUNC_INFO;
 
-    QFileDialog *importFileDialog = new QFileDialog(m_dialog, i18nc("import dock/panel", "Import Dock/Panel"), QDir::homePath(), QStringLiteral("view.latte"));
+    QFileDialog *importFileDialog = new QFileDialog(m_dialog, i18nc("import dock/panel", "Import Dock/Panel"), QDir::homePath(), CoronaHelpers::VIEWEXTENSION.mid(1));
 
     importFileDialog->setWindowIcon(QIcon::fromTheme(QStringLiteral("document-import")));
     importFileDialog->setLabelText(QFileDialog::Accept, i18n("Import"));
     importFileDialog->setFileMode(QFileDialog::AnyFile);
     importFileDialog->setAcceptMode(QFileDialog::AcceptOpen);
-    importFileDialog->setDefaultSuffix(QStringLiteral("view.latte"));
+    //! setDefaultSuffix() wants the suffix without its leading dot
+    importFileDialog->setDefaultSuffix(CoronaHelpers::VIEWEXTENSION.mid(1));
 
     QStringList filters;
-    filters << QString(i18nc("import dock panel", "Latte Dock or Panel file v0.2") + QStringLiteral("(*.view.latte)"));
+    filters << QString(i18nc("import dock panel", "Latte Dock or Panel file v0.2") + QStringLiteral("(*") + CoronaHelpers::VIEWEXTENSION + QStringLiteral(")"));
     importFileDialog->setNameFilters(filters);
 
     connect(importFileDialog, &QFileDialog::finished, importFileDialog, &QFileDialog::deleteLater);
@@ -452,8 +455,7 @@ void ViewsHandler::importView()
     connect(importFileDialog, &QFileDialog::fileSelected, this, [&](const QString & file) {
         Data::Generic templatedata;
         templatedata.id = file;
-        templatedata.name = QFileInfo(file).fileName();
-        templatedata.name = templatedata.name.remove(QStringLiteral(".view.latte"));
+        templatedata.name = CoronaHelpers::strippedLatteName(file, {CoronaHelpers::VIEWEXTENSION});
         newView(templatedata);
     });
 

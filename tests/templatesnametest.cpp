@@ -2,41 +2,38 @@
     SPDX-License-Identifier: GPL-2.0-or-later
 */
 
-// Mirrors Latte::Templates::Manager::templateName() (app/templates/templatesmanager.cpp:315),
-// which strips a recognised template extension (.layout.latte / .view.latte) off a
-// template file path to get its display name. The static cannot be linked headlessly
-// (templatesmanager.cpp pulls in Corona), so the logic is mirrored here and the real
-// function carries the identical implementation.
+// The naming contract of Latte::Templates::Manager::templateName(): the display name of a
+// template is its file name with a recognised extension (.layout.latte / .view.latte)
+// stripped off the END, and a file ending in neither comes back untouched.
 //
-// A path ending in NEITHER extension must be returned unchanged. The original code ran
-// templatename.remove(ext, size) with ext == -1 (lastIndexOf miss), and Qt6
-// QString::remove(-1, n) clamps to and removes the LAST character — so a stray file in
-// the templates dir (e.g. "notes.txt") came back as "notes.tx".
+// templatesmanager.cpp cannot be linked headlessly -- its header pulls in Corona -- so
+// templateName() delegates to Latte::CoronaHelpers::strippedLatteName(), which is what this
+// test drives. sourceguardtest::templatesManager_templateName_delegatesToTheSharedStrip
+// is what keeps the two ends tied together. (This test used to carry a private copy of the
+// function body and assert against that, so it stayed green no matter what the app did.)
+//
+// The rows below are the ones that bit: the original code ran templatename.remove(ext, size)
+// with ext == -1 from a lastIndexOf() miss, and Qt6 QString::remove(-1, n) clamps to and
+// removes the LAST character -- so a stray "notes.txt" in the templates dir was listed as
+// "notes.tx".
+
+#include "coronahelpers.h"
 
 #include <QObject>
 #include <QString>
+#include <QStringList>
 #include <QtTest>
+
+using namespace Latte;
 
 class TemplatesNameTest : public QObject
 {
     Q_OBJECT
 
 private:
-    // Mirror of Manager::templateName under test.
     static QString templateName(const QString &filePath)
     {
-        int lastSlash = filePath.lastIndexOf(QLatin1Char('/'));
-        QString templatename = filePath.mid(lastSlash + 1);
-
-        const QString extensions[] = {QStringLiteral(".layout.latte"), QStringLiteral(".view.latte")};
-        for (const QString &extension : extensions) {
-            if (templatename.endsWith(extension)) {
-                templatename.chop(extension.size());
-                break;
-            }
-        }
-
-        return templatename;
+        return CoronaHelpers::strippedLatteName(filePath, {CoronaHelpers::LAYOUTEXTENSION, CoronaHelpers::VIEWEXTENSION});
     }
 
 private Q_SLOTS:
@@ -56,6 +53,7 @@ void TemplatesNameTest::templateName_data()
     QTest::newRow("non-template kept")    << QStringLiteral("/p/notes.txt")                   << QStringLiteral("notes.txt");
     QTest::newRow("no extension kept")    << QStringLiteral("/p/Plasma")                      << QStringLiteral("Plasma");
     QTest::newRow("dotfile kept")         << QStringLiteral("/p/.directory")                  << QStringLiteral(".directory");
+    QTest::newRow("dots in name")         << QStringLiteral("/p/Plasma 5.27.layout.latte")    << QStringLiteral("Plasma 5.27");
 }
 
 void TemplatesNameTest::templateName()

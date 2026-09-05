@@ -11,6 +11,7 @@
 #include "importer.h"
 #include "manager.h"
 #include "../apptypes.h"
+#include "../coronahelpers.h"
 #include "../screenpool.h"
 #include "../data/activitiesinfo.h"
 #include "../data/layoutdata.h"
@@ -564,7 +565,7 @@ void Synchronizer::initLayouts()
 
     QDir layoutDir(Layouts::Importer::layoutUserDir());
     QStringList filter;
-    filter.append(QStringLiteral("*.layout.latte"));
+    filter.append(QStringLiteral("*") + CoronaHelpers::LAYOUTEXTENSION);
     QStringList files = layoutDir.entryList(filter, QDir::Files | QDir::NoSymLinks);
 
     for (const auto &layout : files) {

@@ -93,6 +93,10 @@ void AbstractLayoutTest::layoutName_data()
     QTest::newRow("bare layout file")  << QStringLiteral("Default.layout.latte")        << QStringLiteral("Default");
     QTest::newRow("non-layout kept")   << QStringLiteral("/p/notes.txt")                << QStringLiteral("notes.txt");
     QTest::newRow("no extension kept") << QStringLiteral("/p/Plasma")                   << QStringLiteral("Plasma");
+    //! a view template is not a layout: layoutName() must not learn the second extension
+    QTest::newRow("view template kept") << QStringLiteral("/a/b/Default Dock.view.latte") << QStringLiteral("Default Dock.view.latte");
+    //! everything before ".layout.latte" is the name, dots and all
+    QTest::newRow("dots in name")      << QStringLiteral("/a/b/Plasma 5.27.layout.latte") << QStringLiteral("Plasma 5.27");
 }
 
 void AbstractLayoutTest::layoutName()

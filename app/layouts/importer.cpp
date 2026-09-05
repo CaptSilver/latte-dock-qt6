@@ -10,6 +10,7 @@
 // local
 #include <coretypes.h>
 #include "manager.h"
+#include "../coronahelpers.h"
 #include "../lattecorona.h"
 #include "../screenpool.h"
 #include "../layout/abstractlayout.h"
@@ -270,18 +271,18 @@ QString Importer::layoutCanBeImported(QString oldAppletsPath, QString newName, Q
         }
     }
 
-    QString newLayoutPath = layoutDir.absolutePath() + QStringLiteral("/") + newName + QStringLiteral(".layout.latte");
+    QString newLayoutPath = layoutDir.absolutePath() + QStringLiteral("/") + newName + CoronaHelpers::LAYOUTEXTENSION;
     QFile newLayoutFile(newLayoutPath);
 
     QStringList filter;
-    filter.append(newName + QStringLiteral("*.layout.latte"));
+    filter.append(newName + QStringLiteral("*") + CoronaHelpers::LAYOUTEXTENSION);
     QStringList files = layoutDir.entryList(filter, QDir::Files | QDir::NoSymLinks);
 
     //! if the newLayout already exists provide a newName that doesn't
     if (files.count() >= 1) {
         int newCounter = files.count() + 1;
 
-        newLayoutPath = layoutDir.absolutePath() + QStringLiteral("/") + newName + QStringLiteral("-") + QString::number(newCounter) + QStringLiteral(".layout.latte");
+        newLayoutPath = layoutDir.absolutePath() + QStringLiteral("/") + newName + QStringLiteral("-") + QString::number(newCounter) + CoronaHelpers::LAYOUTEXTENSION;
     }
 
     return newLayoutPath;
@@ -390,13 +391,15 @@ bool Importer::exportFullConfiguration(QString file)
     archive.addLocalFile(Latte::configPath() + QStringLiteral("/lattedockrc"), QStringLiteral("lattedockrc"));
 
     for(const auto &layoutName : availableLayouts()) {
-        archive.addLocalFile(layoutUserFilePath(layoutName), QStringLiteral("latte/") + layoutName + QStringLiteral(".layout.latte"));
+        archive.addLocalFile(layoutUserFilePath(layoutName), QStringLiteral("latte/") + layoutName + CoronaHelpers::LAYOUTEXTENSION);
     }
 
-    //! custom templates
-    QDir templatesDir(Latte::configPath() + QStringLiteral("/latte/templates"));
+    //! custom templates. The "latte/templates/" below names the entry INSIDE the archive,
+    //! which importHelper() unpacks with copyTo(configPath()) -- an absolute host path there
+    //! would bake /home/<user> into every backup.
+    QDir templatesDir(layoutTemplatesUserDir());
     QStringList filters;
-    filters.append(QStringLiteral("*.layout.latte"));
+    filters.append(QStringLiteral("*") + CoronaHelpers::LAYOUTEXTENSION);
     QStringList templates = templatesDir.entryList(filters, QDir::Files | QDir::Hidden | QDir::NoSymLinks);
 
     for (int i=0; i<templates.count(); ++i) {
@@ -405,7 +408,7 @@ bool Importer::exportFullConfiguration(QString file)
     }
 
     filters.clear();
-    filters.append(QStringLiteral("*.view.latte"));
+    filters.append(QStringLiteral("*") + CoronaHelpers::VIEWEXTENSION);
     templates = templatesDir.entryList(filters, QDir::Files | QDir::Hidden | QDir::NoSymLinks);
 
     for (int i=0; i<templates.count(); ++i) {
@@ -423,7 +426,7 @@ Importer::LatteFileVersion Importer::fileVersion(QString file)
     if (!QFile::exists(file))
         return UnknownFileType;
 
-    if (file.endsWith(QLatin1String(".layout.latte"))) {
+    if (file.endsWith(CoronaHelpers::LAYOUTEXTENSION)) {
         KSharedConfigPtr lConfig = KSharedConfig::openConfig(QFileInfo(file).absoluteFilePath());
         KConfigGroup layoutGroup = KConfigGroup(lConfig, QStringLiteral("LayoutSettings"));
         int version = layoutGroup.readEntry("version", 1);
@@ -630,7 +633,7 @@ QStringList Importer::availableLayouts()
 {
     QDir layoutDir(layoutUserDir());
     QStringList filter;
-    filter.append(QStringLiteral("*.layout.latte"));
+    filter.append(QStringLiteral("*") + CoronaHelpers::LAYOUTEXTENSION);
     QStringList files = layoutDir.entryList(filter, QDir::Files | QDir::NoSymLinks);
 
     QStringList layoutNames;
@@ -646,9 +649,9 @@ QStringList Importer::availableViewTemplates()
 {
     QStringList templates;
 
-    QDir localDir(layoutUserDir() + QStringLiteral("/templates"));
+    QDir localDir(layoutTemplatesUserDir());
     QStringList filter;
-    filter.append(QStringLiteral("*.view.latte"));
+    filter.append(QStringLiteral("*") + CoronaHelpers::VIEWEXTENSION);
     QStringList files = localDir.entryList(filter, QDir::Files | QDir::NoSymLinks);
 
     for(const auto &file : files) {
@@ -672,9 +675,9 @@ QStringList Importer::availableLayoutTemplates()
 {
     QStringList templates;
 
-    QDir localDir(layoutUserDir() + QStringLiteral("/templates"));
+    QDir localDir(layoutTemplatesUserDir());
     QStringList filter;
-    filter.append(QStringLiteral("*.layout.latte"));
+    filter.append(QStringLiteral("*") + CoronaHelpers::LAYOUTEXTENSION);
     QStringList files = localDir.entryList(filter, QDir::Files | QDir::NoSymLinks);
 
     for(const auto &file : files) {
@@ -720,9 +723,14 @@ QString Importer::layoutUserDir()
     return Latte::configPath() + QStringLiteral("/latte");
 }
 
+QString Importer::layoutTemplatesUserDir()
+{
+    return layoutUserDir() + QStringLiteral("/templates");
+}
+
 QString Importer::layoutUserFilePath(QString layoutName)
 {
-    return layoutUserDir() + QStringLiteral("/") + layoutName + QStringLiteral(".layout.latte");
+    return layoutUserDir() + QStringLiteral("/") + layoutName + CoronaHelpers::LAYOUTEXTENSION;
 }
 
 QString Importer::systemShellDataPath()
@@ -734,7 +742,7 @@ QString Importer::systemShellDataPath()
 
 QString Importer::layoutTemplateSystemFilePath(const QString &name)
 {
-    return systemShellDataPath() + QStringLiteral("/contents/templates/") + name + QStringLiteral(".layout.latte");
+    return systemShellDataPath() + QStringLiteral("/contents/templates/") + name + CoronaHelpers::LAYOUTEXTENSION;
 }
 
 QString Importer::uniqueLayoutName(QString name)

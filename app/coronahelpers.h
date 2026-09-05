@@ -53,6 +53,19 @@ struct ContextMenuInputs
     int viewClonesCount{0};
 };
 
+//! The on-disk extensions of a Latte layout and of a dock/panel template. They are
+//! a compatibility contract -- every layout a user ever saved, the shipped shell
+//! templates and the entries of an exported .latterc all carry them literally -- so
+//! they are spelled here once and never normalised.
+inline const QString LAYOUTEXTENSION = QStringLiteral(".layout.latte");
+inline const QString VIEWEXTENSION = QStringLiteral(".view.latte");
+
+//! The file name of path with the first of extensions that it ENDS with removed; a
+//! name ending in none of them comes back untouched. Callers used to reach for
+//! QFileInfo::baseName(), which cuts at the first dot and renames "Plasma 5.27", and
+//! for QString::remove(), which deletes the extension wherever it appears in the name.
+QString strippedLatteName(const QString &path, const QStringList &extensions);
+
 //! True when path points to a Latte .layout.latte file, given either as an
 //! absolute filesystem path or a file: URL.
 bool isLayoutFilePath(const QString &path);

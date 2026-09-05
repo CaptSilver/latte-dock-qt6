@@ -12,6 +12,7 @@
 #include "appletsmodel.h"
 #include "delegates/normalcheckboxdelegate.h"
 #include "../settingsdialog/layoutscontroller.h"
+#include "../../coronahelpers.h"
 #include "../../lattecorona.h"
 #include "../../data/appletdata.h"
 #include "../../layout/genericlayout.h"
@@ -53,7 +54,7 @@ ExportTemplateHandler::ExportTemplateHandler(Dialog::ExportTemplateDialog *dialo
 {
     loadApplets(layout.id);
     m_dialog->setWindowTitle(i18n("Export Layout Template"));
-    o_filepath = dialog->corona()->templatesManager()->proposedTemplateAbsolutePath(layout.name + QStringLiteral(".layout.latte"));
+    o_filepath = dialog->corona()->templatesManager()->proposedTemplateAbsolutePath(layout.name + CoronaHelpers::LAYOUTEXTENSION);
     setFilepath(o_filepath);
 }
 
@@ -64,7 +65,7 @@ ExportTemplateHandler::ExportTemplateHandler(Dialog::ExportTemplateDialog *dialo
     m_dialog->setWindowTitle(i18n("Export Dock/Panel Template"));
 
     QString viewname = view.name.isEmpty() ? view.originLayout() + QStringLiteral(" ") + i18n("Dock") : view.name;
-    o_filepath = dialog->corona()->templatesManager()->proposedTemplateAbsolutePath(viewname + QStringLiteral(".view.latte"));
+    o_filepath = dialog->corona()->templatesManager()->proposedTemplateAbsolutePath(viewname + CoronaHelpers::VIEWEXTENSION);
     setFilepath(o_filepath);
 }
 
@@ -80,7 +81,7 @@ ExportTemplateHandler::ExportTemplateHandler(Dialog::ExportTemplateDialog *dialo
 
     QString viewname = view->name().isEmpty() ? view->layout()->name() + QStringLiteral(" ") + type : view->name();
 
-    o_filepath = dialog->corona()->templatesManager()->proposedTemplateAbsolutePath(viewname + QStringLiteral(".view.latte"));
+    o_filepath = dialog->corona()->templatesManager()->proposedTemplateAbsolutePath(viewname + CoronaHelpers::VIEWEXTENSION);
     setFilepath(o_filepath);
 }
 
@@ -142,28 +143,29 @@ void ExportTemplateHandler::loadApplets(const QString &file)
 void ExportTemplateHandler::chooseFileDialog()
 {
     QFileInfo currentFile(c_filepath);
-    bool inLayoutState = c_filepath.endsWith(QStringLiteral("layout.latte"));
+    bool inLayoutState = c_filepath.endsWith(CoronaHelpers::LAYOUTEXTENSION);
 
     QFileDialog *chooseFileDlg = new QFileDialog(m_dialog,
                                                  inLayoutState ? i18n("Choose Layout Template file") : i18n("Choose View Template file"),
                                                  currentFile.absoluteFilePath(),
-                                                 inLayoutState ? QStringLiteral(".layout.latte") : QStringLiteral(".view.latte"));
+                                                 inLayoutState ? CoronaHelpers::LAYOUTEXTENSION : CoronaHelpers::VIEWEXTENSION);
 
     chooseFileDlg->setLabelText(QFileDialog::Accept, i18nc("choose file","Choose"));
     chooseFileDlg->setFileMode(QFileDialog::AnyFile);
     chooseFileDlg->setAcceptMode(QFileDialog::AcceptSave);
+    //! setDefaultSuffix() wants the suffix without its leading dot
     if (inLayoutState) {
-        chooseFileDlg->setDefaultSuffix(QStringLiteral("layout.latte"));
+        chooseFileDlg->setDefaultSuffix(CoronaHelpers::LAYOUTEXTENSION.mid(1));
     } else {
-        chooseFileDlg->setDefaultSuffix(QStringLiteral("view.latte"));
+        chooseFileDlg->setDefaultSuffix(CoronaHelpers::VIEWEXTENSION.mid(1));
     }
 
     QStringList filters;
 
     if (inLayoutState) {
-        filters << QString(i18nc("layout template", "Latte Dock Layout Template file v0.2") + QStringLiteral("(*.layout.latte)"));
+        filters << QString(i18nc("layout template", "Latte Dock Layout Template file v0.2") + QStringLiteral("(*") + CoronaHelpers::LAYOUTEXTENSION + QStringLiteral(")"));
     } else {
-        filters << QString(i18nc("view template", "Latte Dock View Template file v0.2") + QStringLiteral("(*.view.latte)"));
+        filters << QString(i18nc("view template", "Latte Dock View Template file v0.2") + QStringLiteral("(*") + CoronaHelpers::VIEWEXTENSION + QStringLiteral(")"));
     }
 
     chooseFileDlg->setNameFilters(filters);
@@ -171,7 +173,7 @@ void ExportTemplateHandler::chooseFileDialog()
     connect(chooseFileDlg, &QFileDialog::finished, chooseFileDlg, &QFileDialog::deleteLater);
     connect(chooseFileDlg, &QFileDialog::fileSelected, this, [&, inLayoutState](const QString &file) {
         if (inLayoutState) {
-            if (!file.endsWith(QStringLiteral(".layout.latte"))) {
+            if (!file.endsWith(CoronaHelpers::LAYOUTEXTENSION)) {
                 QString selected = file;
                 selected = selected.replace(QDir::homePath(), QStringLiteral("~"));
                 showInlineMessage(i18n("<i>%1</i> does not end with <i>.layout.latte</i> extension. Selected file <b>rejected</b>.", selected),
@@ -181,7 +183,7 @@ void ExportTemplateHandler::chooseFileDialog()
                 setFilepath(file);
             }
         } else {
-            if (!file.endsWith(QStringLiteral(".view.latte"))) {
+            if (!file.endsWith(CoronaHelpers::VIEWEXTENSION)) {
                 QString selected = file;
                 selected = selected.replace(QDir::homePath(), QStringLiteral("~"));
                 showInlineMessage(i18n("<i>%1</i> does not end with <i>.view.latte</i> extension. Selected file <b>rejected</b>.", selected),

@@ -22,6 +22,9 @@ class CoronaHelpersTest : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
+    void strippedLatteName_dropsARecognisedSuffix();
+    void strippedLatteName_keepsAnythingElse();
+    void strippedLatteName_stripsTheSuffixOnly();
     void isLayoutFilePath_acceptsAbsoluteAndFileUrls();
     void isLayoutFilePath_rejectsWrongSuffixOrRelative();
     void cleanLayoutFilePath_stripsFileScheme();
@@ -38,6 +41,53 @@ private Q_SLOTS:
     void parseWindowIdAndScheme_handlesEdges();
     void validPageOrFirst_keepsInRangeElseFirst();
 };
+
+void CoronaHelpersTest::strippedLatteName_dropsARecognisedSuffix()
+{
+    QCOMPARE(CoronaHelpers::strippedLatteName(QStringLiteral("/p/Default.layout.latte"), {CoronaHelpers::LAYOUTEXTENSION}),
+             QStringLiteral("Default"));
+    QCOMPARE(CoronaHelpers::strippedLatteName(QStringLiteral("/p/Default Dock.view.latte"), {CoronaHelpers::VIEWEXTENSION}),
+             QStringLiteral("Default Dock"));
+    //! either of the two, whichever the name ends with
+    QCOMPARE(CoronaHelpers::strippedLatteName(QStringLiteral("/p/Default Dock.view.latte"),
+                                              {CoronaHelpers::LAYOUTEXTENSION, CoronaHelpers::VIEWEXTENSION}),
+             QStringLiteral("Default Dock"));
+    //! a path with no directory part is a bare file name
+    QCOMPARE(CoronaHelpers::strippedLatteName(QStringLiteral("Empty.layout.latte"), {CoronaHelpers::LAYOUTEXTENSION}),
+             QStringLiteral("Empty"));
+    //! everything before the extension survives, dots included -- QFileInfo::baseName()
+    //! cuts at the FIRST dot and used to rename this one to "Plasma 5"
+    QCOMPARE(CoronaHelpers::strippedLatteName(QStringLiteral("/p/Plasma 5.27.layout.latte"), {CoronaHelpers::LAYOUTEXTENSION}),
+             QStringLiteral("Plasma 5.27"));
+}
+
+void CoronaHelpersTest::strippedLatteName_keepsAnythingElse()
+{
+    //! an extension the caller did not ask for is not one of ours
+    QCOMPARE(CoronaHelpers::strippedLatteName(QStringLiteral("/p/Default Dock.view.latte"), {CoronaHelpers::LAYOUTEXTENSION}),
+             QStringLiteral("Default Dock.view.latte"));
+    QCOMPARE(CoronaHelpers::strippedLatteName(QStringLiteral("/p/notes.txt"), {CoronaHelpers::LAYOUTEXTENSION, CoronaHelpers::VIEWEXTENSION}),
+             QStringLiteral("notes.txt"));
+    QCOMPARE(CoronaHelpers::strippedLatteName(QStringLiteral("/p/Plasma"), {CoronaHelpers::LAYOUTEXTENSION}),
+             QStringLiteral("Plasma"));
+    QCOMPARE(CoronaHelpers::strippedLatteName(QStringLiteral("/p/.directory"), {CoronaHelpers::LAYOUTEXTENSION}),
+             QStringLiteral(".directory"));
+    //! with nothing to strip the file name is all the caller gets back
+    QCOMPARE(CoronaHelpers::strippedLatteName(QStringLiteral("/p/Default.layout.latte"), {}),
+             QStringLiteral("Default.layout.latte"));
+    QCOMPARE(CoronaHelpers::strippedLatteName(QString(), {CoronaHelpers::LAYOUTEXTENSION}), QString());
+}
+
+void CoronaHelpersTest::strippedLatteName_stripsTheSuffixOnly()
+{
+    //! QString::remove(const QString &) deletes every occurrence anywhere in the name;
+    //! only the trailing one is the extension
+    QCOMPARE(CoronaHelpers::strippedLatteName(QStringLiteral("/p/My .view.latte backup.view.latte"), {CoronaHelpers::VIEWEXTENSION}),
+             QStringLiteral("My .view.latte backup"));
+    //! and a name that merely contains the extension keeps all of it
+    QCOMPARE(CoronaHelpers::strippedLatteName(QStringLiteral("/p/Backup.view.latte copy"), {CoronaHelpers::VIEWEXTENSION}),
+             QStringLiteral("Backup.view.latte copy"));
+}
 
 void CoronaHelpersTest::isLayoutFilePath_acceptsAbsoluteAndFileUrls()
 {
