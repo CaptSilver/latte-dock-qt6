@@ -13,35 +13,25 @@
 //   * ContainmentInterface::updateContainmentConfigProperty  empty guard body
 //                                             falls through to a null deref
 
+#include "sourcereader.h"
+
 #include <QDir>
 #include <QDirIterator>
-#include <QFile>
 #include <QFileInfo>
+#include <QHash>
 #include <QRegularExpression>
 #include <QSet>
 #include <QString>
 #include <QStringList>
 #include <QtTest>
 
+using namespace LatteTest;
+
 class SourceGuardTest : public QObject
 {
     Q_OBJECT
 
 private:
-    static QString readAbsolute(const QString &abs)
-    {
-        QFile f(abs);
-        if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            return QString();
-        }
-        return QString::fromUtf8(f.readAll());
-    }
-
-    static QString readFile(const QString &rel)
-    {
-        return readAbsolute(QStringLiteral("%1/%2").arg(QStringLiteral(REPO_ROOT), rel));
-    }
-
     // Absolute paths make a failure message unreadable and machine-specific; the tree-walking
     // guards report what a reader can paste into an editor.
     static QString relativeToRepo(const QString &abs)
@@ -49,37 +39,6 @@ private:
         QString rel = abs;
         rel.remove(QStringLiteral("%1/").arg(QStringLiteral(REPO_ROOT)));
         return rel;
-    }
-
-    // Brace-matched body (including the outer braces) of the first `sig { ... }`.
-    static QString functionBody(const QString &src, const QString &sig)
-    {
-        const int s = src.indexOf(sig);
-        if (s == -1) {
-            return QString();
-        }
-        const int brace = src.indexOf(QLatin1Char('{'), s + sig.size());
-        if (brace == -1) {
-            return QString();
-        }
-        int depth = 0;
-        int i = brace;
-        for (; i < src.size(); ++i) {
-            if (src.at(i) == QLatin1Char('{')) {
-                ++depth;
-            } else if (src.at(i) == QLatin1Char('}') && --depth == 0) {
-                ++i;
-                break;
-            }
-        }
-        return src.mid(brace, i - brace);
-    }
-
-    static QString stripped(const QString &body)
-    {
-        QString s = body;
-        s.remove(QRegularExpression(QStringLiteral("\\s+")));
-        return s;
     }
 
     // Comment-free copy of a C++ source, with string and char literals left alone so a `//` inside
@@ -159,7 +118,7 @@ private:
     {
         QStringList out;
         for (const QString &rel : relDirs) {
-            QDirIterator it(QStringLiteral("%1/%2").arg(QStringLiteral(REPO_ROOT), rel),
+            QDirIterator it(repoPath(rel),
                             QStringList() << glob,
                             QDir::Files,
                             QDirIterator::Subdirectories);
@@ -204,7 +163,7 @@ private:
 
         QSet<QString> names = itemMembers;
         for (const QString &rel : relFiles) {
-            const QString src = readFile(rel);
+            const QString src = readRepoFile(rel);
             if (src.isEmpty()) {
                 return QSet<QString>(); // caller turns an unreadable layer into a failure
             }
@@ -225,15 +184,13 @@ private:
     static QStringList unresolvedReads(const QString &ns, const QSet<QString> &declared, const QStringList &absFiles)
     {
         const QRegularExpression use(QStringLiteral("\\b%1\\.([A-Za-z_]\\w*)").arg(QRegularExpression::escape(ns)));
-        const QString prefix = QStringLiteral("%1/").arg(QStringLiteral(REPO_ROOT));
-
         QStringList bad;
         for (const QString &abs : absFiles) {
-            QFile f(abs);
-            if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            const QString src = readFile(abs);
+            if (src.isEmpty()) {
                 continue;
             }
-            const QStringList lines = QString::fromUtf8(f.readAll()).split(QLatin1Char('\n'));
+            const QStringList lines = src.split(QLatin1Char('\n'));
             for (int i = 0; i < lines.size(); ++i) {
                 if (lines.at(i).trimmed().startsWith(QStringLiteral("//"))) {
                     continue;
@@ -242,8 +199,7 @@ private:
                 while (it.hasNext()) {
                     const QString member = it.next().captured(1);
                     if (!declared.contains(member)) {
-                        QString rel = abs;
-                        rel.remove(prefix);
+                        const QString rel = relativeToRepo(abs);
                         bad << QStringLiteral("%1:%2  %3.%4").arg(rel).arg(i + 1).arg(ns, member);
                     }
                 }
@@ -349,7 +305,7 @@ void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
 
 void SourceGuardTest::layoutsController_modeIsChanged_delegatesToModel()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/settings/settingsdialog/layoutscontroller.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/settings/settingsdialog/layoutscontroller.cpp")),
                                             QStringLiteral("bool Layouts::modeIsChanged() const")));
     QVERIFY2(!s.isEmpty(), "Layouts::modeIsChanged() not found");
     QVERIFY2(s.contains(QStringLiteral("m_model->modeIsChanged()")),
@@ -360,7 +316,7 @@ void SourceGuardTest::layoutsController_modeIsChanged_delegatesToModel()
 
 void SourceGuardTest::containmentInterface_updateContainmentConfigProperty_guardReturns()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/view/containmentinterface.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/view/containmentinterface.cpp")),
                                             QStringLiteral("void ContainmentInterface::updateContainmentConfigProperty")));
     QVERIFY2(!s.isEmpty(), "updateContainmentConfigProperty() not found");
     // The null/missing-key guard must early-return instead of an empty body that
@@ -374,25 +330,25 @@ void SourceGuardTest::primaryScreen_dereferencesAreNullGuarded()
     // qGuiApp->primaryScreen() can be null (all monitors off / transient unplug),
     // so every site that dereferences it must guard first. No headless repro: the
     // offscreen QPA always reports a screen.
-    const QString screenPool = stripped(functionBody(readFile(QStringLiteral("app/screenpool.cpp")),
-                                       QStringLiteral("int ScreenPool::primaryScreenId() const")));
+    const QString screenPool = stripped(functionBody(readRepoFile(QStringLiteral("app/screenpool.cpp")),
+                                                     QStringLiteral("int ScreenPool::primaryScreenId() const")));
     QVERIFY2(screenPool.contains(QStringLiteral("if(!primary){returnNOSCREENID;}")),
              "primaryScreenId must null-check primaryScreen() before ->name()");
 
-    const QString screenInfo = stripped(functionBody(readFile(QStringLiteral("app/realscreeninfo.cpp")),
-                                   QStringLiteral("QRect RealScreenInfo::screenGeometry(int id) const")));
+    const QString screenInfo = stripped(functionBody(readRepoFile(QStringLiteral("app/realscreeninfo.cpp")),
+                                                     QStringLiteral("QRect RealScreenInfo::screenGeometry(int id) const")));
     QVERIFY2(screenInfo.contains(QStringLiteral("if(!screen){return")),
              "RealScreenInfo::screenGeometry must null-check the resolved screen before ->geometry()");
 
-    const QString watcher = stripped(functionBody(readFile(QStringLiteral("app/primaryoutputwatcher.cpp")),
-                                    QStringLiteral("void PrimaryOutputWatcher::setupRegistry()")));
+    const QString watcher = stripped(functionBody(readRepoFile(QStringLiteral("app/primaryoutputwatcher.cpp")),
+                                                  QStringLiteral("void PrimaryOutputWatcher::setupRegistry()")));
     QVERIFY2(watcher.contains(QStringLiteral("if(QScreen*primary=qGuiApp->primaryScreen())")),
              "setupRegistry must guard qGuiApp->primaryScreen() before ->name()");
 }
 
 void SourceGuardTest::layoutsController_selectedLayoutOriginalData_guardsNegativeRow()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/settings/settingsdialog/layoutscontroller.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/settings/settingsdialog/layoutscontroller.cpp")),
                                             QStringLiteral("const Latte::Data::Layout Layouts::selectedLayoutOriginalData() const")));
     QVERIFY2(!s.isEmpty(), "selectedLayoutOriginalData() not found");
     // Must short-circuit a -1 (no selection) row like its three siblings, rather
@@ -403,7 +359,7 @@ void SourceGuardTest::layoutsController_selectedLayoutOriginalData_guardsNegativ
 
 void SourceGuardTest::synchronizer_switchToLayoutInMultipleMode_guardsEmptyActivities()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/layouts/synchronizer.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/layouts/synchronizer.cpp")),
                                             QStringLiteral("bool Synchronizer::switchToLayoutInMultipleMode(QString layoutName)")));
     QVERIFY2(!s.isEmpty(), "switchToLayoutInMultipleMode() not found");
     // appliedActivities can be empty; indexing [0] is an OOB read.
@@ -419,7 +375,7 @@ void SourceGuardTest::panelBackground_cornerScansShareOneWalk()
     // Both scanners take their bounds from the shared walk descriptor, so the exclusive
     // row bound is written once instead of copied per branch — an inclusive copy is what
     // once made scanLine() read a row past the image buffer.
-    const QString src = readFile(QStringLiteral("app/plasma/extended/panelbackgroundscan.cpp"));
+    const QString src = readRepoFile(QStringLiteral("app/plasma/extended/panelbackgroundscan.cpp"));
     QVERIFY2(!src.isEmpty(), "panelbackgroundscan.cpp not found");
 
     const QStringList scanners{QStringLiteral("int roundnessFromMaskCorner(const QImage &corner, bool topLeftCorner)"),
@@ -435,7 +391,7 @@ void SourceGuardTest::panelBackground_cornerScansShareOneWalk()
 
 void SourceGuardTest::panelBackground_shadowRowScanKeepsTheBaseline()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/plasma/extended/panelbackgroundscan.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/plasma/extended/panelbackgroundscan.cpp")),
                                             QStringLiteral("int roundnessFromShadowCorner(const QImage &corner, bool topLeftCorner)")));
     QVERIFY2(!s.isEmpty(), "roundnessFromShadowCorner() not found");
 
@@ -450,7 +406,7 @@ void SourceGuardTest::panelBackground_shadowRowScanKeepsTheBaseline()
 
 void SourceGuardTest::genericLayout_recreateView_usesQPointerAndAlwaysDequeues()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/layout/genericlayout.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/layout/genericlayout.cpp")),
                                             QStringLiteral("void GenericLayout::recreateView(Plasma::Containment *containment, bool delayed)")));
     QVERIFY2(!s.isEmpty(), "recreateView() not found");
     // The deferred chain dereferences the containment ~600ms later, so it must
@@ -464,7 +420,7 @@ void SourceGuardTest::genericLayout_recreateView_usesQPointerAndAlwaysDequeues()
 
 void SourceGuardTest::synchronizer_pauseLayout_guardsNullLayout()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/layouts/synchronizer.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/layouts/synchronizer.cpp")),
                                             QStringLiteral("void Synchronizer::pauseLayout(QString layoutName)")));
     QVERIFY2(!s.isEmpty(), "pauseLayout() not found");
     // centralLayout() can return null; the null check must precede the dereference.
@@ -474,7 +430,7 @@ void SourceGuardTest::synchronizer_pauseLayout_guardsNullLayout()
 
 void SourceGuardTest::factory_reload_keepsIdNameListsLockstep()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/indicator/factory.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/indicator/factory.cpp")),
                                             QStringLiteral("void Factory::reload(const QString &indicatorPath)")));
     QVERIFY2(!s.isEmpty(), "Factory::reload() not found");
     // The id and name lists are index-parallel, so the name must be inserted under
@@ -486,7 +442,7 @@ void SourceGuardTest::factory_reload_keepsIdNameListsLockstep()
 
 void SourceGuardTest::panelBackground_updateShadow_emitsNotify()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/plasma/extended/panelbackground.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/plasma/extended/panelbackground.cpp")),
                                             QStringLiteral("void PanelBackground::updateShadow(KSvg::Svg *svg)")));
     QVERIFY2(!s.isEmpty(), "updateShadow() not found");
     // The shadowSize/shadowColor Q_PROPERTYs back reactive QML bindings; without
@@ -499,7 +455,7 @@ void SourceGuardTest::panelBackground_updateShadow_emitsNotify()
 
 void SourceGuardTest::synchronizer_unloadLayouts_unloadsViewsBeforeContainments()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/layouts/synchronizer.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/layouts/synchronizer.cpp")),
                                             QStringLiteral("void Synchronizer::unloadLayouts(const QStringList &layoutNames, const QStringList &preloadedLayouts)")));
     QVERIFY2(!s.isEmpty(), "unloadLayouts() not found");
     const int views = s.indexOf(QStringLiteral("unloadLatteViews"));
@@ -513,7 +469,7 @@ void SourceGuardTest::synchronizer_unloadLayouts_unloadsViewsBeforeContainments(
 
 void SourceGuardTest::corona_showSettingsWindow_warnsWhenInStartup()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/lattecorona.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/lattecorona.cpp")),
                                             QStringLiteral("void Corona::showSettingsWindow(int page)")));
     QVERIFY2(!s.isEmpty(), "showSettingsWindow() not found");
     // A degraded session where KActivities never reaches Running leaves m_inStartup
@@ -536,7 +492,7 @@ void SourceGuardTest::deadCompositingBranchesAreCollapsed()
         "app/view/settings/widgetexplorerview.cpp",
     };
     for (const char *f : files) {
-        const QString s = stripped(readFile(QString::fromUtf8(f)));
+        const QString s = stripped(readRepoFile(QString::fromUtf8(f)));
         QVERIFY2(!s.isEmpty(), qPrintable(QStringLiteral("could not read %1").arg(QString::fromUtf8(f))));
         QVERIFY2(!s.contains(QStringLiteral("if(true)")),
                  qPrintable(QStringLiteral("%1 still has an if(true) dead branch").arg(QString::fromUtf8(f))));
@@ -547,16 +503,16 @@ void SourceGuardTest::deadCompositingBranchesAreCollapsed()
 
 void SourceGuardTest::addView_constructsViewsThroughFactory()
 {
-    const QString addView = stripped(functionBody(readFile(QStringLiteral("app/layout/genericlayout.cpp")),
-                                     QStringLiteral("void GenericLayout::addView(Plasma::Containment *containment)")));
+    const QString addView = stripped(functionBody(readRepoFile(QStringLiteral("app/layout/genericlayout.cpp")),
+                                                  QStringLiteral("void GenericLayout::addView(Plasma::Containment *containment)")));
     QVERIFY2(!addView.isEmpty(), "addView() not found");
     QVERIFY2(!addView.contains(QStringLiteral("newLatte::OriginalView(")) && !addView.contains(QStringLiteral("newLatte::ClonedView(")),
              "addView must not construct views inline; it routes through the view factory");
     QVERIFY2(addView.contains(QStringLiteral("viewFactory()->createView(")),
              "addView must create views via viewFactory()->createView()");
 
-    const QString factory = stripped(functionBody(readFile(QStringLiteral("app/layout/realviewfactory.cpp")),
-                                     QStringLiteral("Latte::View *RealViewFactory::createView(GenericLayout *layout, const AddViewRequest &request)")));
+    const QString factory = stripped(functionBody(readRepoFile(QStringLiteral("app/layout/realviewfactory.cpp")),
+                                                  QStringLiteral("Latte::View *RealViewFactory::createView(GenericLayout *layout, const AddViewRequest &request)")));
     QVERIFY2(factory.contains(QStringLiteral("layout->registerLatteView(")), "factory must register the view (store-before-wire)");
     QVERIFY2(factory.contains(QStringLiteral("->setupWaylandLayerShell();")) && factory.contains(QStringLiteral("->show();")),
              "factory must wire the view (layer shell + show)");
@@ -564,7 +520,7 @@ void SourceGuardTest::addView_constructsViewsThroughFactory()
 
 void SourceGuardTest::synchronizer_runningActivities_usesStatesCache()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/layouts/synchronizer.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/layouts/synchronizer.cpp")),
                                             QStringLiteral("QStringList Synchronizer::runningActivities()")));
     QVERIFY2(!s.isEmpty(), "Synchronizer::runningActivities() not found");
     QVERIFY2(s.contains(QStringLiteral("m_activityStates.runningActivities()")),
@@ -575,7 +531,7 @@ void SourceGuardTest::synchronizer_runningActivities_usesStatesCache()
 
 void SourceGuardTest::synchronizer_syncMultipleLayouts_invalidatesStatesCacheOnce()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/layouts/synchronizer.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/layouts/synchronizer.cpp")),
                                             QStringLiteral("void Synchronizer::syncMultipleLayoutsToActivities(QStringList preloadedLayouts)")));
     QVERIFY2(!s.isEmpty(), "syncMultipleLayoutsToActivities() not found");
     QVERIFY2(s.contains(QStringLiteral("m_activityStates.invalidate();")),
@@ -584,22 +540,22 @@ void SourceGuardTest::synchronizer_syncMultipleLayouts_invalidatesStatesCacheOnc
 
 void SourceGuardTest::waylandInterface_windowFor_usesIndexFastPath()
 {
-    const QString src = readFile(QStringLiteral("app/wm/waylandinterface.cpp"));
+    const QString src = readRepoFile(QStringLiteral("app/wm/waylandinterface.cpp"));
 
     const QString wf = stripped(functionBody(src,
-                                QStringLiteral("KWayland::Client::PlasmaWindow *WaylandInterface::windowFor(WindowId wid)")));
+                                             QStringLiteral("KWayland::Client::PlasmaWindow *WaylandInterface::windowFor(WindowId wid)")));
     QVERIFY2(!wf.isEmpty(), "windowFor() not found");
     QVERIFY2(wf.contains(QStringLiteral("m_windowIndex.lookup(wid)")),
              "windowFor must consult the id index before scanning");
 
     const QString track = stripped(functionBody(src,
-                                QStringLiteral("void WaylandInterface::trackWindow(KWayland::Client::PlasmaWindow *w)")));
+                                                QStringLiteral("void WaylandInterface::trackWindow(KWayland::Client::PlasmaWindow *w)")));
     QVERIFY2(!track.isEmpty(), "trackWindow() not found");
     QVERIFY2(track.contains(QStringLiteral("m_windowIndex.insert(idFor(w),w);")),
              "trackWindow must index the window");
 
     const QString untrack = stripped(functionBody(src,
-                                QStringLiteral("void WaylandInterface::untrackWindow(KWayland::Client::PlasmaWindow *w)")));
+                                                  QStringLiteral("void WaylandInterface::untrackWindow(KWayland::Client::PlasmaWindow *w)")));
     QVERIFY2(!untrack.isEmpty(), "untrackWindow() not found");
     QVERIFY2(untrack.contains(QStringLiteral("m_windowIndex.remove(idFor(w));")),
              "untrackWindow must drop the window from the index");
@@ -607,7 +563,7 @@ void SourceGuardTest::waylandInterface_windowFor_usesIndexFastPath()
 
 void SourceGuardTest::genericLayout_viewTransitions_useTransitionHelpers()
 {
-    const QString src = readFile(QStringLiteral("app/layout/genericlayout.cpp"));
+    const QString src = readRepoFile(QStringLiteral("app/layout/genericlayout.cpp"));
 
     const QString dc = stripped(functionBody(src, QStringLiteral("void GenericLayout::destroyedChanged(bool destroyed)")));
     QVERIFY2(!dc.isEmpty(), "destroyedChanged() not found");
@@ -624,8 +580,8 @@ void SourceGuardTest::genericLayout_viewTransitions_useTransitionHelpers()
 
 void SourceGuardTest::positioner_dropsDeadAvailableRegionMember()
 {
-    const QString h = readFile(QStringLiteral("app/view/positioner.h"));
-    const QString cpp = readFile(QStringLiteral("app/view/positioner.cpp"));
+    const QString h = readRepoFile(QStringLiteral("app/view/positioner.h"));
+    const QString cpp = readRepoFile(QStringLiteral("app/view/positioner.cpp"));
     QVERIFY2(!h.isEmpty() && !cpp.isEmpty(), "positioner sources not found");
     QVERIFY2(!h.contains(QStringLiteral("m_lastAvailableScreenRegion")),
              "the dead m_lastAvailableScreenRegion member must be removed from the header");
@@ -635,11 +591,11 @@ void SourceGuardTest::positioner_dropsDeadAvailableRegionMember()
 
 void SourceGuardTest::hashLookupsAvoidKeysContains()
 {
-    const QString bg = readFile(QStringLiteral("app/plasma/extended/backgroundcache.cpp"));
+    const QString bg = readRepoFile(QStringLiteral("app/plasma/extended/backgroundcache.cpp"));
     QVERIFY2(!bg.isEmpty(), "backgroundcache.cpp not found");
     QVERIFY2(!bg.contains(QStringLiteral("keys().contains(")),
              "backgroundcache.cpp must use contains(), not the allocating keys().contains()");
-    const QString gl = readFile(QStringLiteral("app/layout/genericlayout.cpp"));
+    const QString gl = readRepoFile(QStringLiteral("app/layout/genericlayout.cpp"));
     QVERIFY2(!gl.isEmpty(), "genericlayout.cpp not found");
     QVERIFY2(!gl.contains(QStringLiteral("keys().contains(")),
              "genericlayout.cpp must use contains(), not keys().contains()");
@@ -647,7 +603,7 @@ void SourceGuardTest::hashLookupsAvoidKeysContains()
 
 void SourceGuardTest::positioner_geometryMethodsDelegateToPureUnit()
 {
-    const QString cpp = readFile(QStringLiteral("app/view/positioner.cpp"));
+    const QString cpp = readRepoFile(QStringLiteral("app/view/positioner.cpp"));
     QVERIFY2(!cpp.isEmpty(), "positioner.cpp not found");
 
     // updatePosition must call dockPosition
@@ -683,7 +639,7 @@ void SourceGuardTest::positioner_geometryMethodsDelegateToPureUnit()
 
 void SourceGuardTest::synchronizer_freeActivities_delegatesToHelper()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/layouts/synchronizer.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/layouts/synchronizer.cpp")),
                                             QStringLiteral("QStringList Synchronizer::freeActivities()")));
     QVERIFY2(!s.isEmpty(), "freeActivities() not found");
     QVERIFY2(s.contains(QStringLiteral("ActivitySetAlgebra::freeActivities(activities(),m_assignedLayouts.keys())")),
@@ -692,7 +648,7 @@ void SourceGuardTest::synchronizer_freeActivities_delegatesToHelper()
 
 void SourceGuardTest::synchronizer_freeRunningActivities_delegatesToHelper()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/layouts/synchronizer.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/layouts/synchronizer.cpp")),
                                             QStringLiteral("QStringList Synchronizer::freeRunningActivities()")));
     QVERIFY2(!s.isEmpty(), "freeRunningActivities() not found");
     QVERIFY2(s.contains(QStringLiteral("ActivitySetAlgebra::freeRunningActivities(runningActivities(),m_assignedLayouts.keys())")),
@@ -701,7 +657,7 @@ void SourceGuardTest::synchronizer_freeRunningActivities_delegatesToHelper()
 
 void SourceGuardTest::synchronizer_validActivities_delegatesToHelper()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/layouts/synchronizer.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/layouts/synchronizer.cpp")),
                                             QStringLiteral("QStringList Synchronizer::validActivities(const QStringList &layoutActivities)")));
     QVERIFY2(!s.isEmpty(), "validActivities() not found");
     QVERIFY2(s.contains(QStringLiteral("ActivitySetAlgebra::validActivities(layoutActivities,activities())")),
@@ -710,7 +666,7 @@ void SourceGuardTest::synchronizer_validActivities_delegatesToHelper()
 
 void SourceGuardTest::iconItem_setSource_routesThroughClassifier()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("declarativeimports/core/iconitem.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("declarativeimports/core/iconitem.cpp")),
                                             QStringLiteral("void IconItem::setSource(const QVariant &source)")));
     QVERIFY2(!s.isEmpty(), "setSource() not found");
     QVERIFY2(s.contains(QStringLiteral("IconSourceClassifier::classify(")),
@@ -721,7 +677,7 @@ void SourceGuardTest::iconItem_setSource_routesThroughClassifier()
 
 void SourceGuardTest::iconItem_setLastValidSourceName_usesFilter()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("declarativeimports/core/iconitem.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("declarativeimports/core/iconitem.cpp")),
                                             QStringLiteral("void IconItem::setLastValidSourceName(QString name)")));
     QVERIFY2(!s.isEmpty(), "setLastValidSourceName() not found");
     QVERIFY2(s.contains(QStringLiteral("IconSourceClassifier::isFilteredSourceName(")),
@@ -732,7 +688,7 @@ void SourceGuardTest::iconItem_setLastValidSourceName_usesFilter()
 
 void SourceGuardTest::iconItem_isValid_delegatesToClassifier()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("declarativeimports/core/iconitem.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("declarativeimports/core/iconitem.cpp")),
                                             QStringLiteral("bool IconItem::isValid() const")));
     QVERIFY2(!s.isEmpty(), "isValid() not found");
     QVERIFY2(s.contains(QStringLiteral("IconSourceClassifier::isValid(")),
@@ -741,7 +697,7 @@ void SourceGuardTest::iconItem_isValid_delegatesToClassifier()
 
 void SourceGuardTest::layoutsController_uniqueLayoutName_delegatesToHelper()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/settings/settingsdialog/layoutscontroller.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/settings/settingsdialog/layoutscontroller.cpp")),
                                             QStringLiteral("QString Layouts::uniqueLayoutName(")));
     QVERIFY2(!s.isEmpty(), "uniqueLayoutName() not found");
     QVERIFY2(s.contains(QStringLiteral("Settings::uniqueName(")),
@@ -750,7 +706,7 @@ void SourceGuardTest::layoutsController_uniqueLayoutName_delegatesToHelper()
 
 void SourceGuardTest::layoutsController_rowForId_delegatesToHelper()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/settings/settingsdialog/layoutscontroller.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/settings/settingsdialog/layoutscontroller.cpp")),
                                             QStringLiteral("int Layouts::rowForId(")));
     QVERIFY2(!s.isEmpty(), "Layouts::rowForId() not found");
     QVERIFY2(s.contains(QStringLiteral("Settings::rowForValue(")),
@@ -759,7 +715,7 @@ void SourceGuardTest::layoutsController_rowForId_delegatesToHelper()
 
 void SourceGuardTest::layoutsController_rowForName_delegatesToHelper()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/settings/settingsdialog/layoutscontroller.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/settings/settingsdialog/layoutscontroller.cpp")),
                                             QStringLiteral("int Layouts::rowForName(")));
     QVERIFY2(!s.isEmpty(), "Layouts::rowForName() not found");
     QVERIFY2(s.contains(QStringLiteral("Settings::rowForValue(")),
@@ -768,7 +724,7 @@ void SourceGuardTest::layoutsController_rowForName_delegatesToHelper()
 
 void SourceGuardTest::viewsController_uniqueViewName_delegatesToHelper()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/settings/viewsdialog/viewscontroller.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/settings/viewsdialog/viewscontroller.cpp")),
                                             QStringLiteral("QString Views::uniqueViewName(")));
     QVERIFY2(!s.isEmpty(), "Views::uniqueViewName() not found");
     QVERIFY2(s.contains(QStringLiteral("Settings::uniqueName(")),
@@ -777,7 +733,7 @@ void SourceGuardTest::viewsController_uniqueViewName_delegatesToHelper()
 
 void SourceGuardTest::viewsController_rowForId_delegatesToHelper()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/settings/viewsdialog/viewscontroller.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/settings/viewsdialog/viewscontroller.cpp")),
                                             QStringLiteral("int Views::rowForId(")));
     QVERIFY2(!s.isEmpty(), "Views::rowForId() not found");
     QVERIFY2(s.contains(QStringLiteral("Settings::rowForValue(")),
@@ -786,7 +742,7 @@ void SourceGuardTest::viewsController_rowForId_delegatesToHelper()
 
 void SourceGuardTest::viewsController_pasteSelectedViews_delegatesToHelper()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/settings/viewsdialog/viewscontroller.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/settings/viewsdialog/viewscontroller.cpp")),
                                             QStringLiteral("void Views::pasteSelectedViews()")));
     QVERIFY2(!s.isEmpty(), "pasteSelectedViews() not found");
     QVERIFY2(s.contains(QStringLiteral("Settings::pasteSkipsView(")),
@@ -795,7 +751,7 @@ void SourceGuardTest::viewsController_pasteSelectedViews_delegatesToHelper()
 
 void SourceGuardTest::storage_newUniqueIdsFile_delegatesToRemapper()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/layouts/storage.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/layouts/storage.cpp")),
                                             QStringLiteral("QString Storage::newUniqueIdsFile(")));
     QVERIFY2(!s.isEmpty(), "newUniqueIdsFile() not found");
     // The assignment algorithm was moved to StorageIdRemapper::remap; the adapter
@@ -811,7 +767,7 @@ void SourceGuardTest::storage_newUniqueIdsFile_delegatesToRemapper()
 
 void SourceGuardTest::windowstracker_predicatesDelegate()
 {
-    const QString src = readFile(QStringLiteral("app/wm/tracker/windowstracker.cpp"));
+    const QString src = readRepoFile(QStringLiteral("app/wm/tracker/windowstracker.cpp"));
 
     const QString intersectsBody = functionBody(src, QStringLiteral("Windows::intersects"));
     QVERIFY2(intersectsBody.contains(QStringLiteral("WindowTrackingPredicates::")),
@@ -855,7 +811,7 @@ void SourceGuardTest::x11GlobalScaleScalingIsSharedNotCopied()
     };
 
     for (const auto &site : sites) {
-        const QString body = functionBody(readFile(site.file), site.signature);
+        const QString body = functionBody(readRepoFile(site.file), site.signature);
         const QString where = QStringLiteral("%1 %2").arg(site.file, site.signature);
         const QByteArray missing = where.toUtf8();
         const QByteArray notShared = QStringLiteral("%1 must scale through WindowGeometryPredicates::scaledForGlobalScale()").arg(where).toUtf8();
@@ -869,7 +825,7 @@ void SourceGuardTest::x11GlobalScaleScalingIsSharedNotCopied()
     // The scalar sibling in publishFrameExtents() is deliberately left out: it writes the scaled
     // value back into the same field it uses as its early-out cache key, so folding it in as-is
     // would dress that bug up as reviewed code.
-    const QString publish = functionBody(readFile(QStringLiteral("app/view/visibilitymanager.cpp")),
+    const QString publish = functionBody(readRepoFile(QStringLiteral("app/view/visibilitymanager.cpp")),
                                          QStringLiteral("void VisibilityManager::publishFrameExtents(bool forceUpdate)"));
     QVERIFY2(!publish.isEmpty(), "publishFrameExtents() not found");
     QVERIFY2(!publish.contains(QStringLiteral("scaledForGlobalScale(")),
@@ -878,7 +834,7 @@ void SourceGuardTest::x11GlobalScaleScalingIsSharedNotCopied()
 
 void SourceGuardTest::windowsTracker_updateExtraViewHints_delegatesToBucketing()
 {
-    const QString src = functionBody(readFile(QStringLiteral("app/wm/tracker/windowstracker.cpp")),
+    const QString src = functionBody(readRepoFile(QStringLiteral("app/wm/tracker/windowstracker.cpp")),
                                      QStringLiteral("void Windows::updateExtraViewHints()"));
     QVERIFY2(src.contains(QStringLiteral("ExtraViewHints::bucketHorizontalTouchingBusyVertical(")),
              "updateExtraViewHints must delegate to ExtraViewHints::bucketHorizontalTouchingBusyVertical");
@@ -886,7 +842,7 @@ void SourceGuardTest::windowsTracker_updateExtraViewHints_delegatesToBucketing()
 
 void SourceGuardTest::abstractWindowInterface_classifiersDelegate()
 {
-    const QString file = readFile(QStringLiteral("app/wm/abstractwindowinterface.cpp"));
+    const QString file = readRepoFile(QStringLiteral("app/wm/abstractwindowinterface.cpp"));
 
     const QString isIgnoredBody = functionBody(file, QStringLiteral("AbstractWindowInterface::isIgnored"));
     QVERIFY2(isIgnoredBody.contains(QStringLiteral("WindowTrackingPredicates::")),
@@ -911,7 +867,7 @@ void SourceGuardTest::abstractWindowInterface_classifiersDelegate()
 
 void SourceGuardTest::windowsTracker_perEventIterationAvoidsKeysCopy()
 {
-    const QString file = readFile(QStringLiteral("app/wm/tracker/windowstracker.cpp"));
+    const QString file = readRepoFile(QStringLiteral("app/wm/tracker/windowstracker.cpp"));
 
     // m_views.keys() must no longer appear in the file
     QVERIFY2(!file.contains(QStringLiteral("m_views.keys()")),
@@ -933,7 +889,7 @@ void SourceGuardTest::windowsTracker_perEventIterationAvoidsKeysCopy()
 
 void SourceGuardTest::storageValidationDelegatesToValidator()
 {
-    const QString src = readFile(QStringLiteral("app/layouts/storage.cpp"));
+    const QString src = readRepoFile(QStringLiteral("app/layouts/storage.cpp"));
     const QString body = functionBody(src, QStringLiteral("Storage::hasDifferentAppletsWithSameId"));
     QVERIFY2(body.contains(QStringLiteral("StorageValidator::differentAppletsWithSameId")),
              "hasDifferentAppletsWithSameId must delegate to the shared validator");
@@ -949,7 +905,7 @@ void SourceGuardTest::storageValidationDelegatesToValidator()
 
 void SourceGuardTest::visibilityManager_setViewOnFrontLayer_appliesConfiguredMode()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/view/visibilitymanager.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/view/visibilitymanager.cpp")),
                                             QStringLiteral("void VisibilityManager::setViewOnFrontLayer()")));
     QVERIFY2(!s.isEmpty(), "setViewOnFrontLayer() not found");
     // The front-layer path must hand the view's ACTUAL visibility mode to the window system so
@@ -965,7 +921,7 @@ void SourceGuardTest::visibilityManager_setViewOnFrontLayer_appliesConfiguredMod
 
 void SourceGuardTest::infoView_showEvent_keepsPopupOnTopLayer()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/infoview.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/infoview.cpp")),
                                             QStringLiteral("void InfoView::showEvent(QShowEvent *ev)")));
     QVERIFY2(!s.isEmpty(), "InfoView::showEvent() not found");
     // setupWaylandIntegration() puts the message popup on LayerTop so it is visible above windows.
@@ -980,7 +936,7 @@ void SourceGuardTest::infoView_showEvent_keepsPopupOnTopLayer()
 
 void SourceGuardTest::canvasConfigView_showEvent_staysAboveTheDock()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/view/settings/canvasconfigview.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/view/settings/canvasconfigview.cpp")),
                                             QStringLiteral("void CanvasConfigView::showEvent(QShowEvent *ev)")));
     QVERIFY2(!s.isEmpty(), "CanvasConfigView::showEvent() not found");
     // The edit canvas overlays the dock -- its input region is click-through so events reach the widgets
@@ -995,7 +951,7 @@ void SourceGuardTest::canvasConfigView_showEvent_staysAboveTheDock()
 
 void SourceGuardTest::iconItem_appliesEffectsThroughTheStaticApi()
 {
-    const QString s = readFile(QStringLiteral("declarativeimports/core/iconitem.cpp"));
+    const QString s = readRepoFile(QStringLiteral("declarativeimports/core/iconitem.cpp"));
     QVERIFY2(!s.isEmpty(), "iconitem.cpp unreadable");
     // KIconLoader::iconEffect() and KIconEffect::apply() went away in KF 6.5. The static
     // helpers mutate the pixmap in place, so a half-converted call site would compile as
@@ -1008,7 +964,7 @@ void SourceGuardTest::iconItem_appliesEffectsThroughTheStaticApi()
 
 void SourceGuardTest::tabLayouts_onRawLayoutDropped_reportsAFailedImport()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/settings/settingsdialog/tablayoutshandler.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/settings/settingsdialog/tablayoutshandler.cpp")),
                                             QStringLiteral("void TabLayouts::onRawLayoutDropped(const QString &rawLayout)")));
     QVERIFY2(!s.isEmpty(), "TabLayouts::onRawLayoutDropped() not found");
     // addLayoutByText() returns a default-constructed layout when the drop cannot be imported.
@@ -1021,7 +977,7 @@ void SourceGuardTest::tabLayouts_onRawLayoutDropped_reportsAFailedImport()
 
 void SourceGuardTest::layoutsController_addLayoutByText_guardsTheTemporaryFile()
 {
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/settings/settingsdialog/layoutscontroller.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/settings/settingsdialog/layoutscontroller.cpp")),
                                             QStringLiteral("const Latte::Data::Layout Layouts::addLayoutByText(QString rawLayoutText)")));
     QVERIFY2(!s.isEmpty(), "Layouts::addLayoutByText() not found");
     // An unopened QTemporaryFile has an empty fileName(), so carrying on built a CentralLayout
@@ -1032,7 +988,7 @@ void SourceGuardTest::layoutsController_addLayoutByText_guardsTheTemporaryFile()
 
 void SourceGuardTest::importer_checksEveryArchiveOpen()
 {
-    const QString s = stripped(readFile(QStringLiteral("app/layouts/importer.cpp")));
+    const QString s = stripped(readRepoFile(QStringLiteral("app/layouts/importer.cpp")));
     QVERIFY2(!s.isEmpty(), "importer.cpp unreadable");
     // KArchive::open() is nodiscard for a reason: every directory() walk below it dereferences
     // a null entry when the archive never opened.
@@ -1123,24 +1079,21 @@ void SourceGuardTest::shippedJavaScriptIsImported()
 
     QSet<QString> imported;
     for (const QString &qml : qmlSourcesUnder(packages)) {
-        QFile f(qml);
-        if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        const QString src = readFile(qml);
+        if (src.isEmpty()) {
             continue;
         }
         const QString dir = QFileInfo(qml).absolutePath();
-        QRegularExpressionMatchIterator it = jsImport.globalMatch(QString::fromUtf8(f.readAll()));
+        QRegularExpressionMatchIterator it = jsImport.globalMatch(src);
         while (it.hasNext()) {
             imported.insert(QDir::cleanPath(QStringLiteral("%1/%2").arg(dir, it.next().captured(1))));
         }
     }
 
-    const QString prefix = QStringLiteral("%1/").arg(QStringLiteral(REPO_ROOT));
     QStringList orphans;
     for (const QString &js : scripts) {
         if (!imported.contains(QDir::cleanPath(js))) {
-            QString rel = js;
-            rel.remove(prefix);
-            orphans << rel;
+            orphans << relativeToRepo(js);
         }
     }
 
@@ -1150,7 +1103,7 @@ void SourceGuardTest::shippedJavaScriptIsImported()
 
 void SourceGuardTest::eventsSink_mouseCasesShareOneBody()
 {
-    const QString body = functionBody(readFile(QStringLiteral("app/view/eventssink.cpp")),
+    const QString body = functionBody(readRepoFile(QStringLiteral("app/view/eventssink.cpp")),
                                       QStringLiteral("QEvent *EventsSink::onEvent(QEvent *e)"));
     QVERIFY2(!body.isEmpty(), "EventsSink::onEvent() not found");
 
@@ -1184,7 +1137,7 @@ void SourceGuardTest::notifyrcEventsMatchTheirEmitters()
     // Notifications as if the user could configure something, and a KNotification whose id has no
     // block is worse -- KNotification answers a missing id with library defaults rather than an
     // error, so the popup silently stops appearing. Tie the two sides together here.
-    const QString notifyrc = readFile(QStringLiteral("app/lattedock.notifyrc"));
+    const QString notifyrc = readRepoFile(QStringLiteral("app/lattedock.notifyrc"));
     QVERIFY2(!notifyrc.isEmpty(), "app/lattedock.notifyrc not found");
 
     static const QRegularExpression eventHeader(QStringLiteral("^\\[Event/([^\\]]+)\\]"),
@@ -1202,11 +1155,11 @@ void SourceGuardTest::notifyrcEventsMatchTheirEmitters()
     QSet<QString> emitted;
     const QStringList cppRoots = {QStringLiteral("app"), QStringLiteral("plasmoid"), QStringLiteral("containment"), QStringLiteral("declarativeimports")};
     for (const QString &cpp : sourcesUnder(cppRoots, QStringLiteral("*.cpp"))) {
-        QFile f(cpp);
-        if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        const QString src = readFile(cpp);
+        if (src.isEmpty()) {
             continue;
         }
-        QRegularExpressionMatchIterator eit = emitterId.globalMatch(QString::fromUtf8(f.readAll()));
+        QRegularExpressionMatchIterator eit = emitterId.globalMatch(src);
         while (eit.hasNext()) {
             emitted.insert(eit.next().captured(1));
         }
@@ -1231,7 +1184,7 @@ void SourceGuardTest::factory_removeIndicator_reportsAFailedRemoval()
     // removeIndicator() shells out to kpackagetool6 behind a modal confirmation, so there is no
     // headless repro. What matters is that both outcomes speak: a bare `if (exitCode == 0)` leaves
     // the user staring at an indicator they just told the dialog to delete, with no message at all.
-    const QString s = stripped(functionBody(readFile(QStringLiteral("app/indicator/factory.cpp")),
+    const QString s = stripped(functionBody(readRepoFile(QStringLiteral("app/indicator/factory.cpp")),
                                             QStringLiteral("void Factory::removeIndicator(QString id)")));
     QVERIFY2(!s.isEmpty(), "Factory::removeIndicator() not found");
     QVERIFY2(s.contains(QStringLiteral("if(process.exitCode()==0){showRemovedSucceed(pluginName);}else{showRemovedFailed(pluginName);}")),
@@ -1240,8 +1193,8 @@ void SourceGuardTest::factory_removeIndicator_reportsAFailedRemoval()
 
 void SourceGuardTest::dialog_dropsCommentedOutAdjustGeometry()
 {
-    const QString h = readFile(QStringLiteral("declarativeimports/core/dialog.h"));
-    const QString cpp = readFile(QStringLiteral("declarativeimports/core/dialog.cpp"));
+    const QString h = readRepoFile(QStringLiteral("declarativeimports/core/dialog.h"));
+    const QString cpp = readRepoFile(QStringLiteral("declarativeimports/core/dialog.cpp"));
     QVERIFY2(!h.isEmpty() && !cpp.isEmpty(), "dialog sources not found");
 
     // Popup placement moved to popupPosition() in 2021 and the superseded adjustGeometry() override
@@ -1268,7 +1221,7 @@ void SourceGuardTest::dialog_dropsCommentedOutAdjustGeometry()
 
 void SourceGuardTest::containmentInterface_appletExpansionTrackedThroughOneHelper()
 {
-    const QString cpp = readFile(QStringLiteral("app/view/containmentinterface.cpp"));
+    const QString cpp = readRepoFile(QStringLiteral("app/view/containmentinterface.cpp"));
     QVERIFY2(!cpp.isEmpty(), "containmentinterface.cpp not found");
 
     const QString body = functionBody(cpp, QStringLiteral("void ContainmentInterface::onAppletAdded"));
@@ -1294,8 +1247,8 @@ void SourceGuardTest::containmentInterface_appletExpansionTrackedThroughOneHelpe
 
 void SourceGuardTest::containmentInterface_trackAppletExpansion_guardsBeforeConnecting()
 {
-    const QString h = readFile(QStringLiteral("app/view/containmentinterface.h"));
-    const QString cpp = readFile(QStringLiteral("app/view/containmentinterface.cpp"));
+    const QString h = readRepoFile(QStringLiteral("app/view/containmentinterface.h"));
+    const QString cpp = readRepoFile(QStringLiteral("app/view/containmentinterface.cpp"));
     QVERIFY2(!h.isEmpty() && !cpp.isEmpty(), "containmentinterface sources not found");
 
     const QString s = stripped(functionBody(cpp, QStringLiteral("void ContainmentInterface::trackAppletExpansion")));
@@ -1334,7 +1287,7 @@ void SourceGuardTest::wm_skipTaskBarNoOpIsGone()
                                QStringLiteral("tests/lastactivewindowtest.cpp")};
 
     for (const QString &rel : files) {
-        const QString src = readFile(rel);
+        const QString src = readRepoFile(rel);
         QVERIFY2(!src.isEmpty(), qPrintable(QStringLiteral("%1 is unreadable").arg(rel)));
         QVERIFY2(!src.contains(QStringLiteral("skipTaskBar")),
                  qPrintable(QStringLiteral("%1 still mentions skipTaskBar").arg(rel)));
@@ -1342,7 +1295,7 @@ void SourceGuardTest::wm_skipTaskBarNoOpIsGone()
 
     // Losing the QDialog parameter leaves five includes in a header 47 translation units deep
     // that nothing below it reads.
-    const QString h = stripped(readFile(QStringLiteral("app/wm/abstractwindowinterface.h")));
+    const QString h = stripped(readRepoFile(QStringLiteral("app/wm/abstractwindowinterface.h")));
     QVERIFY2(!h.isEmpty(), "abstractwindowinterface.h is unreadable");
     const QStringList dead = {QStringLiteral("#include<unordered_map>"),
                               QStringLiteral("#include<list>"),
@@ -1357,7 +1310,7 @@ void SourceGuardTest::wm_skipTaskBarNoOpIsGone()
 
     // currentScreenGeometries() dereferences QScreen and used to get the type from its own
     // header; pin the include so the removal above cannot silently break it.
-    QVERIFY2(stripped(readFile(QStringLiteral("app/wm/abstractwindowinterface.cpp"))).contains(QStringLiteral("#include<QScreen>")),
+    QVERIFY2(stripped(readRepoFile(QStringLiteral("app/wm/abstractwindowinterface.cpp"))).contains(QStringLiteral("#include<QScreen>")),
              "abstractwindowinterface.cpp must include <QScreen> for its own use");
 }
 
@@ -1367,14 +1320,14 @@ void SourceGuardTest::corona_dropsTheOrphanAboutDialog()
     // switch to KHelpMenu: the QAction that reached them was deleted, so nothing called either
     // one. Their only cost was dragging <KAboutApplicationDialog> through every translation
     // unit that includes lattecorona.h.
-    const QString coronaHeader = readFile(QStringLiteral("app/lattecorona.h"));
+    const QString coronaHeader = readRepoFile(QStringLiteral("app/lattecorona.h"));
     QVERIFY2(!coronaHeader.isEmpty(), "lattecorona.h is unreadable");
     QVERIFY2(!coronaHeader.contains(QStringLiteral("KAboutApplicationDialog")),
              "lattecorona.h must not name KAboutApplicationDialog");
     QVERIFY2(!coronaHeader.contains(QStringLiteral("aboutApplication")),
              "lattecorona.h must not declare aboutApplication");
 
-    const QString coronaSource = readFile(QStringLiteral("app/lattecorona.cpp"));
+    const QString coronaSource = readRepoFile(QStringLiteral("app/lattecorona.cpp"));
     QVERIFY2(!coronaSource.isEmpty(), "lattecorona.cpp is unreadable");
     QVERIFY2(!coronaSource.contains(QStringLiteral("aboutDialog")),
              "lattecorona.cpp must not keep the About dialog member alive");
@@ -1382,7 +1335,7 @@ void SourceGuardTest::corona_dropsTheOrphanAboutDialog()
              "lattecorona.cpp must drop <KAboutData> once its only user is gone");
 
     for (const QString &rel : {QStringLiteral("app/layouts/manager.h"), QStringLiteral("app/layouts/manager.cpp")}) {
-        const QString src = readFile(rel);
+        const QString src = readRepoFile(rel);
         QVERIFY2(!src.isEmpty(), qPrintable(QStringLiteral("%1 is unreadable").arg(rel)));
         QVERIFY2(!src.contains(QStringLiteral("showAboutDialog")),
                  qPrintable(QStringLiteral("%1 still forwards to the orphaned About dialog").arg(rel)));
@@ -1391,7 +1344,7 @@ void SourceGuardTest::corona_dropsTheOrphanAboutDialog()
     // The settings window's Help menu is the About surface users actually reach, which is why
     // the code above is dead rather than missing. Anyone tempted to "restore" it should see
     // this first: KHelpMenu already ships an About Latte entry, and nothing hides it.
-    const QString settings = readFile(QStringLiteral("app/settings/settingsdialog/settingsdialog.cpp"));
+    const QString settings = readRepoFile(QStringLiteral("app/settings/settingsdialog/settingsdialog.cpp"));
     QVERIFY2(!settings.isEmpty(), "settingsdialog.cpp is unreadable");
     QVERIFY2(settings.contains(QStringLiteral("new KHelpMenu(")),
              "the settings window must still build a KHelpMenu");
@@ -1401,7 +1354,7 @@ void SourceGuardTest::corona_dropsTheOrphanAboutDialog()
 
 void SourceGuardTest::dataTables_dropDeadCopyAndRedundantEarlyOuts()
 {
-    const QString views = readFile(QStringLiteral("app/data/viewstable.cpp"));
+    const QString views = readRepoFile(QStringLiteral("app/data/viewstable.cpp"));
     QVERIFY2(!views.isEmpty(), "viewstable.cpp is unreadable");
 
     const QString equality = stripped(functionBody(views, QStringLiteral("bool ViewsTable::operator==(const ViewsTable &rhs) const")));
@@ -1426,7 +1379,7 @@ void SourceGuardTest::dataTables_dropDeadCopyAndRedundantEarlyOuts()
     QVERIFY2(!viewsSubtracted.contains(QStringLiteral("(*this)==rhs")),
              "ViewsTable::subtracted must not keep an early-out that cannot change its result");
 
-    const QString layouts = readFile(QStringLiteral("app/data/layoutstable.cpp"));
+    const QString layouts = readRepoFile(QStringLiteral("app/data/layoutstable.cpp"));
     QVERIFY2(!layouts.isEmpty(), "layoutstable.cpp is unreadable");
     const QString layoutsSubtracted = stripped(functionBody(layouts, QStringLiteral("LayoutsTable LayoutsTable::subtracted(const LayoutsTable &rhs) const")));
     QVERIFY2(!layoutsSubtracted.isEmpty(), "LayoutsTable::subtracted not found");
@@ -1459,7 +1412,7 @@ void SourceGuardTest::alignmentStateSelfReadsResolve()
     for (const RootScope &scope : scopes) {
         const QSet<QString> declared = declaredMembers({scope.file});
         QVERIFY2(!declared.isEmpty(), qPrintable(QStringLiteral("no declarations found in %1").arg(scope.file)));
-        unresolved << unresolvedReads(scope.id, declared, {QStringLiteral("%1/%2").arg(QStringLiteral(REPO_ROOT), scope.file)});
+        unresolved << unresolvedReads(scope.id, declared, {repoPath(scope.file)});
     }
 
     QVERIFY2(unresolved.isEmpty(),
@@ -1474,7 +1427,7 @@ void SourceGuardTest::commonTools_standardPath_dropsTheDeadReverseSearch()
     // the reverse walk could never run -- and it is the kind of dead branch that reads
     // like a supported mode, so the next caller reaches for a flag that was never used.
     // Nothing behavioural can catch its return, hence the source-level guard.
-    const QString src = readFile(QStringLiteral("app/tools/commontools.cpp"));
+    const QString src = readRepoFile(QStringLiteral("app/tools/commontools.cpp"));
     QVERIFY2(!src.isEmpty(), "commontools.cpp is unreadable");
 
     const QString s = stripped(functionBody(src, QStringLiteral("QString standardPath(QString subPath)")));
@@ -1484,7 +1437,7 @@ void SourceGuardTest::commonTools_standardPath_dropsTheDeadReverseSearch()
     QVERIFY2(!s.contains(QStringLiteral("}else{")),
              "standardPath must not keep the unreachable reverse-order search");
 
-    const QString header = stripped(readFile(QStringLiteral("app/tools/commontools.h")));
+    const QString header = stripped(readRepoFile(QStringLiteral("app/tools/commontools.h")));
     QVERIFY2(!header.isEmpty(), "commontools.h is unreadable");
     QVERIFY2(header.contains(QStringLiteral("QStringstandardPath(QStringsubPath);")),
              "commontools.h must declare standardPath without the localFirst parameter");
@@ -1542,7 +1495,7 @@ void SourceGuardTest::orphanHeaderDeclarationsAreGone()
     for (const Orphan &orphan : orphans) {
         const QString rel = QString::fromUtf8(orphan.header);
         const QString name = QString::fromUtf8(orphan.name);
-        const QString src = readFile(rel);
+        const QString src = readRepoFile(rel);
         QVERIFY2(!src.isEmpty(), qPrintable(QStringLiteral("%1 is unreadable").arg(rel)));
         // Word-bounded, not contains(): saveOption is a prefix of the live saveOptions()
         // sitting a few lines above it in the same header.
@@ -1553,7 +1506,7 @@ void SourceGuardTest::orphanHeaderDeclarationsAreGone()
     // configurationShown was the only thing in lattecorona.h naming a PlasmaQuick type, and
     // that header reaches most of app/ -- put the include back and every one of those
     // translation units pays for QQmlEngine and QQuickWindow again.
-    QVERIFY2(!readFile(QStringLiteral("app/lattecorona.h")).contains(QStringLiteral("PlasmaQuick/ConfigView")),
+    QVERIFY2(!readRepoFile(QStringLiteral("app/lattecorona.h")).contains(QStringLiteral("PlasmaQuick/ConfigView")),
              "lattecorona.h must not include <PlasmaQuick/ConfigView>, nothing in it needs the type");
 }
 
@@ -1577,7 +1530,7 @@ void SourceGuardTest::mouseSensitivityChainIsGone()
     const QRegularExpression sensitivity(QStringLiteral("sensitivity"), QRegularExpression::CaseInsensitiveOption);
 
     for (const QString &rel : files) {
-        const QString src = readFile(rel);
+        const QString src = readRepoFile(rel);
         QVERIFY2(!src.isEmpty(), qPrintable(QStringLiteral("%1 is unreadable").arg(rel)));
         QVERIFY2(!src.contains(sensitivity),
                  qPrintable(QStringLiteral("%1 still names the mouse sensitivity chain").arg(rel)));
@@ -1585,18 +1538,18 @@ void SourceGuardTest::mouseSensitivityChainIsGone()
 
     // MouseSensitivity was the only reason Latte::Settings carried a namespace meta-object.
     // ImportExport still needs one, and apptypes.cpp exists to give moc a translation unit.
-    QVERIFY2(stripped(readFile(QStringLiteral("app/apptypes.h"))).contains(QStringLiteral("Q_ENUM_NS(State);")),
+    QVERIFY2(stripped(readRepoFile(QStringLiteral("app/apptypes.h"))).contains(QStringLiteral("Q_ENUM_NS(State);")),
              "ImportExport::State must keep its namespace meta-object");
 
     // The deletion stops at the enum. Latte::Settings itself is reopened by the whole
     // settings-dialog hierarchy, so removing the namespace instead takes ~30 headers with it.
-    QVERIFY2(readFile(QStringLiteral("app/settings/settingsdialog/tabpreferenceshandler.h"))
-                     .contains(QStringLiteral("Latte::Settings::Dialog::SettingsDialog")),
+    QVERIFY2(readRepoFile(QStringLiteral("app/settings/settingsdialog/tabpreferenceshandler.h"))
+                 .contains(QStringLiteral("Latte::Settings::Dialog::SettingsDialog")),
              "the Latte::Settings namespace must survive, the settings dialog lives in it");
 
     // The uncreatable metaobject registration was the enum's only C++ reader. The QML module
     // it registered into stays: three live types are still imported from it.
-    const QString corona = readFile(QStringLiteral("app/lattecorona.cpp"));
+    const QString corona = readRepoFile(QStringLiteral("app/lattecorona.cpp"));
     QVERIFY2(!corona.isEmpty(), "lattecorona.cpp is unreadable");
     QVERIFY2(!corona.contains(QStringLiteral("Latte::Settings::staticMetaObject")),
              "lattecorona.cpp still registers the Latte::Settings meta-object with QML");
@@ -1606,7 +1559,7 @@ void SourceGuardTest::mouseSensitivityChainIsGone()
     // The containment binding was the only QML reader, and it must go BEFORE the registration:
     // a missing enum resolves to undefined rather than failing, which would silently pin
     // hoverPixelSensitivity at undefined and disable every parabolic hover comparison.
-    const QString animations = readFile(QStringLiteral("containment/package/contents/ui/abilities/Animations.qml"));
+    const QString animations = readRepoFile(QStringLiteral("containment/package/contents/ui/abilities/Animations.qml"));
     QVERIFY2(!animations.isEmpty(), "containment Animations.qml is unreadable");
     QVERIFY2(!animations.contains(QRegularExpression(QStringLiteral("\\bLatteApp\\b"))),
              "containment Animations.qml still names the LatteApp module alias");
@@ -1616,14 +1569,14 @@ void SourceGuardTest::mouseSensitivityChainIsGone()
     // metrics and settings were plumbed into AnimationsPrivate for the two dead branches alone.
     // The declaration must not outlive the assignment: QML errors on assigning a property that
     // does not exist, and at containment load that error takes the whole dock down.
-    const QString privates = readFile(QStringLiteral("containment/package/contents/ui/abilities/privates/AnimationsPrivate.qml"));
+    const QString privates = readRepoFile(QStringLiteral("containment/package/contents/ui/abilities/privates/AnimationsPrivate.qml"));
     QVERIFY2(!privates.isEmpty(), "AnimationsPrivate.qml is unreadable");
     QVERIFY2(!privates.contains(QRegularExpression(QStringLiteral("property\\s+\\w+\\s+(metrics|settings)\\b"))),
              "AnimationsPrivate.qml still declares the metrics/settings sinks only the dead branches read");
     QVERIFY2(privates.contains(QStringLiteral("property Item layouts")),
              "AnimationsPrivate.qml must keep layouts, the zoomFactor Binding walks it");
 
-    const QString block = functionBody(readFile(QStringLiteral("containment/package/contents/ui/main.qml")),
+    const QString block = functionBody(readRepoFile(QStringLiteral("containment/package/contents/ui/main.qml")),
                                        QStringLiteral("Ability.Animations"));
     QVERIFY2(!block.isEmpty(), "the Ability.Animations block in main.qml was not found");
     QVERIFY2(!block.contains(QRegularExpression(QStringLiteral("\\b(metrics|settings)\\s*:"))),
@@ -1635,7 +1588,7 @@ void SourceGuardTest::editModeLogSinkExistsOnlyInDebugOutput()
     // View::debugLog and Interfaces::debugLog each carried a private copy of the same
     // O_NOFOLLOW/fdopen sink, so the process held two never-closed handles on one file.
     // Both must now forward to the single implementation in debugoutput.cpp.
-    const QString sink = readFile(QStringLiteral("app/debugoutput.cpp"));
+    const QString sink = readRepoFile(QStringLiteral("app/debugoutput.cpp"));
     QVERIFY2(sink.contains(QStringLiteral("O_NOFOLLOW")) && sink.contains(QStringLiteral("fdopen")),
              "the edit-mode log sink must live in debugoutput.cpp");
 
@@ -1659,7 +1612,7 @@ void SourceGuardTest::editModeLogSinkExistsOnlyInDebugOutput()
 
     for (const Forwarder &forwarder : forwarders) {
         const QString rel = QString::fromUtf8(forwarder.file);
-        const QString src = readFile(rel);
+        const QString src = readRepoFile(rel);
         QVERIFY2(!src.isEmpty(), qPrintable(QStringLiteral("%1 is unreadable").arg(rel)));
         QVERIFY2(!src.contains(QStringLiteral("O_NOFOLLOW")) && !src.contains(QStringLiteral("fdopen")),
                  qPrintable(QStringLiteral("%1 has grown its own copy of the edit-mode log sink").arg(rel)));
@@ -1692,12 +1645,12 @@ void SourceGuardTest::namespaceConstantsNobodyReadsAreDeleted()
     QStringList unread;
 
     for (const QString &path : sources) {
-        QFile f(path);
-        if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        const QString raw = readFile(path);
+        if (raw.isEmpty()) {
             continue;
         }
 
-        const QString src = withoutComments(QString::fromUtf8(f.readAll()));
+        const QString src = withoutComments(raw);
         const QStringList lines = src.split(QLatin1Char('\n'));
 
         for (const QString &line : lines) {
@@ -1754,7 +1707,7 @@ void SourceGuardTest::delegatePaintDropsItsUnreadLocals()
 
     for (const DeadLocal &dead : deadLocals) {
         const QString rel = QString::fromUtf8(dead.file);
-        const QString body = functionBody(withoutComments(readFile(rel)), QString::fromUtf8(dead.signature));
+        const QString body = functionBody(withoutComments(readRepoFile(rel)), QString::fromUtf8(dead.signature));
         QVERIFY2(!body.isEmpty(), qPrintable(QStringLiteral("%1 paint() not found").arg(rel)));
 
         const QString local = QString::fromUtf8(dead.local);
@@ -1782,7 +1735,7 @@ void SourceGuardTest::stdNamespaceIsNotReopened()
     QVERIFY2(sources.size() > 100, qPrintable(QStringLiteral("only %1 C++ sources walked, the roots are wrong").arg(sources.size())));
 
     for (const QString &path : std::as_const(sources)) {
-        QVERIFY2(!reopened.match(withoutComments(readAbsolute(path))).hasMatch(),
+        QVERIFY2(!reopened.match(withoutComments(readFile(path))).hasMatch(),
                  qPrintable(QStringLiteral("%1 reopens the standard library namespace").arg(relativeToRepo(path))));
     }
 }
@@ -1815,12 +1768,12 @@ void SourceGuardTest::configuredHeaderMacrosAreAllRead()
         if (generated.contains(path)) {
             continue;
         }
-        corpus += withoutStringBodies(withoutComments(readAbsolute(path)));
+        corpus += withoutStringBodies(withoutComments(readFile(path)));
     }
 
     static const QRegularExpression cmakedefine(QStringLiteral("^#cmakedefine(?:01)?\\s+(\\w+)"), QRegularExpression::MultilineOption);
     for (const QString &tmpl : templates) {
-        QRegularExpressionMatchIterator it = cmakedefine.globalMatch(readAbsolute(tmpl));
+        QRegularExpressionMatchIterator it = cmakedefine.globalMatch(readFile(tmpl));
         int names = 0;
         while (it.hasNext()) {
             const QString name = it.next().captured(1);
@@ -1855,7 +1808,7 @@ void SourceGuardTest::qmlSignalHandlersDeclareTheirParameters()
 
     QStringList injected;
     for (const QString &abs : shippedQml) {
-        const QString src = withoutComments(readAbsolute(abs));
+        const QString src = withoutComments(readFile(abs));
         QSet<QString> handlers;
         QRegularExpressionMatchIterator it = signalDecl.globalMatch(src);
         while (it.hasNext()) {
@@ -1893,7 +1846,7 @@ void SourceGuardTest::parabolicRelaysDropTheirUnreadScales()
 
     for (const char *relay : relays) {
         const QString rel = QString::fromUtf8(relay);
-        const QString src = withoutComments(readFile(rel));
+        const QString src = withoutComments(readRepoFile(rel));
         QVERIFY2(!src.isEmpty(), qPrintable(QStringLiteral("%1 unreadable").arg(rel)));
 
         QVERIFY2(src.contains(QRegularExpression(QStringLiteral("\\bapplyParabolicEffect\\s*\\("))),
@@ -1909,7 +1862,7 @@ void SourceGuardTest::stackViewSlidesShareOneTransition()
     // inline it was eight copies of `duration: 350` across two files, so retuning the slide
     // meant finding all eight; miss one and the two halves of a swap disagree.
     const QString componentRel = QStringLiteral("shell/package/contents/controls/SlidingReplaceTransition.qml");
-    const QString component = withoutComments(readFile(componentRel));
+    const QString component = withoutComments(readRepoFile(componentRel));
     QVERIFY2(!component.isEmpty(), qPrintable(QStringLiteral("%1 unreadable").arg(componentRel)));
     QCOMPARE(component.count(QStringLiteral("350")), 1);
 
@@ -1917,7 +1870,7 @@ void SourceGuardTest::stackViewSlidesShareOneTransition()
     const QRegularExpression inlineReplace(QStringLiteral("replace(Enter|Exit)\\s*:\\s*Transition\\b"));
 
     QStringList strays;
-    QDirIterator it(QStringLiteral("%1/shell").arg(QStringLiteral(REPO_ROOT)),
+    QDirIterator it(repoPath(QStringLiteral("shell")),
                     QStringList() << QStringLiteral("*.qml"), QDir::Files, QDirIterator::Subdirectories);
     while (it.hasNext()) {
         const QString abs = it.next();
@@ -1926,7 +1879,7 @@ void SourceGuardTest::stackViewSlidesShareOneTransition()
             continue;
         }
 
-        const QString src = withoutComments(readAbsolute(abs));
+        const QString src = withoutComments(readFile(abs));
         if (src.contains(duration)) {
             strays << QStringLiteral("%1  writes a raw 350ms animation; the page slide's duration belongs to the shared component").arg(rel);
         }
@@ -1940,12 +1893,12 @@ void SourceGuardTest::stackViewSlidesShareOneTransition()
     // The distance stays the caller's. The dock settings pages travel the width of the
     // background behind the stack, not the stack's own -- that one is `currentItem ?
     // currentItem.width : 0` and would collapse the slide into a motionless fade.
-    const QString dock = stripped(withoutComments(readFile(QStringLiteral("shell/package/contents/configuration/LatteDockConfiguration.qml"))));
+    const QString dock = stripped(withoutComments(readRepoFile(QStringLiteral("shell/package/contents/configuration/LatteDockConfiguration.qml"))));
     QCOMPARE(dock.count(QStringLiteral("LatteExtraControls.SlidingReplaceTransition{")), 2);
     QCOMPARE(dock.count(QStringLiteral("slideWidth:pagesBackground.width")), 2);
     QCOMPARE(dock.count(QStringLiteral("forward:pagesStackView.forwardSliding")), 2);
 
-    const QString effects = stripped(withoutComments(readFile(QStringLiteral("shell/package/contents/configuration/pages/EffectsConfig.qml"))));
+    const QString effects = stripped(withoutComments(readRepoFile(QStringLiteral("shell/package/contents/configuration/pages/EffectsConfig.qml"))));
     QCOMPARE(effects.count(QStringLiteral("LatteExtraControls.SlidingReplaceTransition{")), 2);
     QCOMPARE(effects.count(QStringLiteral("slideWidth:indicatorsStackView.width")), 2);
     QCOMPARE(effects.count(QStringLiteral("forward:indicatorsStackView.forwardSliding")), 2);
@@ -1957,7 +1910,7 @@ void SourceGuardTest::kwinReshowRetriesAreNamedAndHandledOnce()
     // answer with two retries, one early and one late, and each wrote both raw millisecond
     // counts and both timeout bodies out twice -- four edits to retune one delay, and two
     // handlers that had already been kept in sync by hand.
-    const QString view = stripped(withoutComments(readFile(QStringLiteral("app/view/view.cpp"))));
+    const QString view = stripped(withoutComments(readRepoFile(QStringLiteral("app/view/view.cpp"))));
     QVERIFY2(!view.isEmpty(), "view.cpp unreadable");
     QCOMPARE(view.count(QStringLiteral("constexprintKWINHACKEARLYRETRYMS=400;")), 1);
     QCOMPARE(view.count(QStringLiteral("constexprintKWINHACKLATERETRYMS=2500;")), 1);
@@ -1970,7 +1923,7 @@ void SourceGuardTest::kwinReshowRetriesAreNamedAndHandledOnce()
     QCOMPARE(view.count(QStringLiteral("connectionsLayout<<connect(&m_visibleHackTimer1,&QTimer::timeout,this,&View::restoreViewFromActivityStopping);")), 1);
     QCOMPARE(view.count(QStringLiteral("connectionsLayout<<connect(&m_visibleHackTimer2,&QTimer::timeout,this,&View::restoreViewFromActivityStopping);")), 1);
 
-    const QString sub = stripped(withoutComments(readFile(QStringLiteral("app/view/helpers/subwindow.cpp"))));
+    const QString sub = stripped(withoutComments(readRepoFile(QStringLiteral("app/view/helpers/subwindow.cpp"))));
     QVERIFY2(!sub.isEmpty(), "subwindow.cpp unreadable");
     QCOMPARE(sub.count(QStringLiteral("constexprintKWINHACKEARLYRETRYMS=400;")), 1);
     QCOMPARE(sub.count(QStringLiteral("constexprintKWINHACKLATERETRYMS=2500;")), 1);
@@ -2004,7 +1957,7 @@ void SourceGuardTest::latteQmlModulesShipNoUnreachableFiles()
     // comment-free body, which is the whole reason the dead private/ files looked used.
     QHash<QString, QString> readable;
     for (const QString &path : sources) {
-        readable.insert(path, withoutComments(readAbsolute(path)));
+        readable.insert(path, withoutComments(readFile(path)));
     }
 
     QStringList unreachable;
@@ -2021,7 +1974,7 @@ void SourceGuardTest::latteQmlModulesShipNoUnreachableFiles()
         const QFileInfo info(path);
 
         bool exported = false;
-        const QStringList qmldirLines = readAbsolute(info.absolutePath() + QStringLiteral("/qmldir")).split(QLatin1Char('\n'));
+        const QStringList qmldirLines = readFile(info.absolutePath() + QStringLiteral("/qmldir")).split(QLatin1Char('\n'));
         for (const QString &line : qmldirLines) {
             if (line.simplified().split(QLatin1Char(' ')).contains(info.fileName())) {
                 exported = true;
@@ -2075,7 +2028,7 @@ void SourceGuardTest::qmldirExportsResolveToTheirFiles()
 
     for (const QString &path : qmldirs) {
         const QString dir = QFileInfo(path).absolutePath();
-        const QStringList lines = readAbsolute(path).split(QLatin1Char('\n'));
+        const QStringList lines = readFile(path).split(QLatin1Char('\n'));
 
         for (const QString &line : lines) {
             const QRegularExpressionMatch m = exportLine.match(line);
@@ -2096,7 +2049,7 @@ void SourceGuardTest::qmldirExportsResolveToTheirFiles()
 
 void SourceGuardTest::comboBoxDropsItsDeadMobileTextMachinery()
 {
-    const QString raw = readFile(QStringLiteral("declarativeimports/components/ComboBox.qml"));
+    const QString raw = readRepoFile(QStringLiteral("declarativeimports/components/ComboBox.qml"));
     QVERIFY2(!raw.isEmpty(), "ComboBox.qml not found");
 
     // The editable/tablet-mode TextField path was commented out well before the Qt6 port and never
@@ -2128,7 +2081,7 @@ void SourceGuardTest::comboBoxDropsItsDeadMobileTextMachinery()
 
     // ItemDelegate's only tie to private/ was a commented-out background line. The import has to go
     // with it, or the file keeps importing a directory it no longer takes anything from.
-    const QString delegate = readFile(QStringLiteral("declarativeimports/components/ItemDelegate.qml"));
+    const QString delegate = readRepoFile(QStringLiteral("declarativeimports/components/ItemDelegate.qml"));
     QVERIFY2(!delegate.isEmpty(), "ItemDelegate.qml not found");
     QVERIFY2(!delegate.contains(QStringLiteral("DefaultListItemBackground")),
              "ItemDelegate.qml still names the deleted DefaultListItemBackground");
@@ -2136,7 +2089,7 @@ void SourceGuardTest::comboBoxDropsItsDeadMobileTextMachinery()
              "ItemDelegate.qml imports private/ but instantiates nothing from it");
 
     // Slider is the other live consumer of private/, and the reason the directory has to survive.
-    QVERIFY2(withoutComments(readFile(QStringLiteral("declarativeimports/components/Slider.qml"))).contains(QStringLiteral("Private.RoundShadow")),
+    QVERIFY2(withoutComments(readRepoFile(QStringLiteral("declarativeimports/components/Slider.qml"))).contains(QStringLiteral("Private.RoundShadow")),
              "Slider.qml must keep the live Private.RoundShadow");
 }
 
@@ -2155,7 +2108,7 @@ void SourceGuardTest::layout_deadTypeEnumIsGone()
                                QStringLiteral("app/layout/centrallayout.cpp")};
 
     for (const QString &rel : files) {
-        const QString src = withoutComments(readFile(rel));
+        const QString src = withoutComments(readRepoFile(rel));
         QVERIFY2(!src.isEmpty(), qPrintable(QStringLiteral("%1 is unreadable").arg(rel)));
 
         // Matches every form the member took: `virtual Type type()`, `Type type() ... override`,
@@ -2172,7 +2125,7 @@ void SourceGuardTest::layout_deadTypeEnumIsGone()
 
     // Shared named a layout class this fork removed; abstractlayout.h holds the tree's only
     // occurrence of the bare word, which makes it a sentinel that cannot collide.
-    const QString h = readFile(QStringLiteral("app/layout/abstractlayout.h"));
+    const QString h = readRepoFile(QStringLiteral("app/layout/abstractlayout.h"));
     QVERIFY2(!h.contains(QRegularExpression(QStringLiteral("\\bShared\\b"))),
              "abstractlayout.h still names the Shared layout type");
 
@@ -2185,7 +2138,7 @@ void SourceGuardTest::layout_deadTypeEnumIsGone()
 
     // The only caller. Dropping the token but keeping the label leaves a log line whose text no
     // longer matches what it prints.
-    const QString save = functionBody(readFile(QStringLiteral("app/settings/settingsdialog/layoutscontroller.cpp")),
+    const QString save = functionBody(readRepoFile(QStringLiteral("app/settings/settingsdialog/layoutscontroller.cpp")),
                                       QStringLiteral("void Layouts::save()"));
     QVERIFY2(!save.isEmpty(), "Layouts::save() not found");
     QVERIFY2(!save.contains(QStringLiteral("->type()")),
@@ -2206,14 +2159,14 @@ void SourceGuardTest::view_isSingleIsOriginalViewOnly()
                                  QStringLiteral("app/view/clonedview.cpp")};
 
     for (const QString &rel : cleared) {
-        const QString src = readFile(rel);
+        const QString src = readRepoFile(rel);
         QVERIFY2(!src.isEmpty(), qPrintable(QStringLiteral("%1 is unreadable").arg(rel)));
         QVERIFY2(!src.contains(QStringLiteral("isSingle")),
                  qPrintable(QStringLiteral("%1 still mentions isSingle").arg(rel)));
     }
 
     // View stays abstract on its own account; nothing here should have taken the other three with it.
-    const QString view = stripped(readFile(QStringLiteral("app/view/view.h")));
+    const QString view = stripped(readRepoFile(QStringLiteral("app/view/view.h")));
     for (const QString &pure : {QStringLiteral("virtualboolisCloned()const=0;"),
                                 QStringLiteral("virtualboolisOriginal()const=0;"),
                                 QStringLiteral("virtualLatte::Types::ScreensGroupscreensGroup()const=0;")}) {
@@ -2223,7 +2176,7 @@ void SourceGuardTest::view_isSingleIsOriginalViewOnly()
 
     // The absence of `override` is the assertion: it is what proves the base virtual really went,
     // rather than the declaration having merely moved.
-    const QString oh = stripped(readFile(QStringLiteral("app/view/originalview.h")));
+    const QString oh = stripped(readRepoFile(QStringLiteral("app/view/originalview.h")));
     QVERIFY2(oh.contains(QStringLiteral("boolisSingle()const;")),
              "OriginalView must keep isSingle(), without an override keyword");
     QVERIFY2(!oh.contains(QStringLiteral("boolisSingle()constoverride;")),
@@ -2236,7 +2189,7 @@ void SourceGuardTest::view_isSingleIsOriginalViewOnly()
     QVERIFY2(firstPrivate != -1, "originalview.h has no private section");
     QVERIFY2(at > firstPrivate, "OriginalView::isSingle() is still declared in the public block");
 
-    QVERIFY2(stripped(readFile(QStringLiteral("app/view/originalview.cpp"))).contains(QStringLiteral("boolOriginalView::isSingle()const")),
+    QVERIFY2(stripped(readRepoFile(QStringLiteral("app/view/originalview.cpp"))).contains(QStringLiteral("boolOriginalView::isSingle()const")),
              "OriginalView::isSingle() lost its definition");
 }
 
@@ -2246,7 +2199,7 @@ void SourceGuardTest::layout_genericVirtualsMatchOverrides()
     // overrode three. A virtual nobody overrides reads as an extension point and invites one.
     // Going the other way is worse and compiles clean: strip `virtual` from isCurrent and every
     // GenericLayout* call site silently stops reaching CentralLayout's answer.
-    const QString h = stripped(readFile(QStringLiteral("app/layout/genericlayout.h")));
+    const QString h = stripped(readRepoFile(QStringLiteral("app/layout/genericlayout.h")));
     QVERIFY2(!h.isEmpty(), "genericlayout.h is unreadable");
 
     const QStringList deVirtualized = {QStringLiteral("QList<Latte::View*>viewsWithPlasmaShortcuts();"),
@@ -2266,7 +2219,7 @@ void SourceGuardTest::layout_genericVirtualsMatchOverrides()
     }
 
     // The three that stay virtual, paired with the override that earns each one.
-    const QString ch = stripped(readFile(QStringLiteral("app/layout/centrallayout.h")));
+    const QString ch = stripped(readRepoFile(QStringLiteral("app/layout/centrallayout.h")));
     QVERIFY2(!ch.isEmpty(), "centrallayout.h is unreadable");
 
     struct Kept
@@ -2333,7 +2286,7 @@ void SourceGuardTest::unreadAbilityMembersAndHostApiAreGone()
 
     for (const Rule &r : gone) {
         const QString rel = QString::fromUtf8(r.file);
-        const QString s = stripped(withoutComments(readFile(rel)));
+        const QString s = stripped(withoutComments(readRepoFile(rel)));
         QVERIFY2(!s.isEmpty(), qPrintable(QStringLiteral("%1 not found").arg(rel)));
         QVERIFY2(!s.contains(QString::fromUtf8(r.needle)),
                  qPrintable(QStringLiteral("%1 still carries %2 -- %3").arg(rel, QString::fromUtf8(r.needle), QString::fromUtf8(r.why))));

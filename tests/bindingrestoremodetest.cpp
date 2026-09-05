@@ -14,10 +14,13 @@
 // Binding missing it — the regression the migration sweep kept reintroducing.
 // (Behavioral testing needs the full containment context, so this is structural.)
 
-#include <QFile>
+#include "sourcereader.h"
+
 #include <QObject>
 #include <QString>
 #include <QtTest>
+
+using namespace LatteTest;
 
 struct FreezeFile {
     const char *relPath;
@@ -27,49 +30,6 @@ struct FreezeFile {
 class BindingRestoreModeTest : public QObject
 {
     Q_OBJECT
-
-private:
-    static QString readFile(const QString &path)
-    {
-        QFile f(path);
-        if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            return QString();
-        }
-        return QString::fromUtf8(f.readAll());
-    }
-
-    // Extract the body of every `Binding { ... }` element via brace matching, so
-    // we are not fooled by `Binding.RestoreNone` references or sibling elements.
-    static QList<QString> bindingBlocks(const QString &src)
-    {
-        QList<QString> blocks;
-        const QString marker = QStringLiteral("Binding");
-        int idx = 0;
-        while ((idx = src.indexOf(marker, idx)) != -1) {
-            const int after = idx + marker.size();
-            const int brace = src.indexOf(QLatin1Char('{'), after);
-            // Only a Binding ELEMENT: nothing but whitespace between name and '{'.
-            if (brace == -1 || !src.mid(after, brace - after).trimmed().isEmpty()) {
-                idx = after;
-                continue;
-            }
-            int depth = 0;
-            int i = brace;
-            for (; i < src.size(); ++i) {
-                if (src.at(i) == QLatin1Char('{')) {
-                    ++depth;
-                } else if (src.at(i) == QLatin1Char('}')) {
-                    if (--depth == 0) {
-                        ++i;
-                        break;
-                    }
-                }
-            }
-            blocks << src.mid(brace, i - brace);
-            idx = i;
-        }
-        return blocks;
-    }
 
 private Q_SLOTS:
     void freezeBindingsCarryRestoreNone_data();
@@ -98,7 +58,7 @@ void BindingRestoreModeTest::freezeBindingsCarryRestoreNone_data()
     };
 
     for (const FreezeFile &f : files) {
-        QTest::newRow(f.relPath) << QStringLiteral("%1/%2").arg(QStringLiteral(REPO_ROOT), QString::fromUtf8(f.relPath))
+        QTest::newRow(f.relPath) << repoPath(QString::fromUtf8(f.relPath))
                                  << f.minWhenGated;
     }
 }
@@ -112,7 +72,7 @@ void BindingRestoreModeTest::freezeBindingsCarryRestoreNone()
     QVERIFY2(!src.isEmpty(), qPrintable(QStringLiteral("could not read %1").arg(relPath)));
 
     int frozen = 0;
-    const QList<QString> blocks = bindingBlocks(src);
+    const QList<QString> blocks = elementBlocks(src, QStringLiteral("Binding"));
     for (const QString &block : blocks) {
         if (!block.contains(QStringLiteral("when:"))) {
             continue;

@@ -25,8 +25,11 @@
 #include <QQmlComponent>
 #include <QQmlEngine>
 #include <QQmlProperty>
-#include <QFile>
 #include <QObject>
+
+#include "sourcereader.h"
+
+using namespace LatteTest;
 
 class ConfigControlsTest : public QObject
 {
@@ -35,9 +38,6 @@ class ConfigControlsTest : public QObject
 private:
     //! Compiles the QML fragment and returns the component error string (empty when it compiles).
     QString compileError(const QString &qml);
-    //! Reads a shipped QML source file.
-    QString readSource(const QString &path);
-
 private Q_SLOTS:
     void textFieldImplicitWidthIsFinal();
     void textFieldImplicitWidthBindingIsAccepted();
@@ -58,15 +58,6 @@ QString ConfigControlsTest::compileError(const QString &qml)
     QQmlComponent component(&engine);
     component.setData(qml.toUtf8(), QUrl());
     return component.isError() ? component.errorString() : QString();
-}
-
-QString ConfigControlsTest::readSource(const QString &path)
-{
-    QFile file(path);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        return QString();
-    }
-    return QString::fromUtf8(file.readAll());
 }
 
 //! Redeclaring implicitWidth on a PlasmaComponents TextField is fatal in Qt6 (final), so the type
@@ -165,7 +156,7 @@ void ConfigControlsTest::listModelIsDistinguishedByItsGetMethod()
 //! across every settings page set it. It must stay declared and wired to a ToolTip.
 void ConfigControlsTest::checkBoxSourceRestoresTooltip()
 {
-    const QString src = readSource(QStringLiteral(CHECKBOX_QML_PATH));
+    const QString src = readRepoFile(QStringLiteral("declarativeimports/components/CheckBox.qml"));
     QVERIFY2(!src.isEmpty(), "CheckBox.qml source must be readable.");
     QVERIFY2(src.contains(QStringLiteral("property string tooltip")),
              "Latte CheckBox must declare a tooltip property.");
@@ -177,7 +168,7 @@ void ConfigControlsTest::checkBoxSourceRestoresTooltip()
 //! inherited implicitWidth rather than redeclaring it (which is final in Qt6).
 void ConfigControlsTest::textFieldSourceRestoresTextColorAndBindsImplicitWidth()
 {
-    const QString src = readSource(QStringLiteral(TEXTFIELD_QML_PATH));
+    const QString src = readRepoFile(QStringLiteral("declarativeimports/components/TextField.qml"));
     QVERIFY2(!src.isEmpty(), "TextField.qml source must be readable.");
     QVERIFY2(src.contains(QStringLiteral("property color textColor")),
              "Latte TextField must declare a textColor property.");
@@ -191,7 +182,7 @@ void ConfigControlsTest::textFieldSourceRestoresTextColorAndBindsImplicitWidth()
 //! to iconSource. The colliding declaration must not return.
 void ConfigControlsTest::itemDelegateSourceAvoidsFinalIconCollision()
 {
-    const QString src = readSource(QStringLiteral(ITEMDELEGATE_QML_PATH));
+    const QString src = readRepoFile(QStringLiteral("declarativeimports/components/ItemDelegate.qml"));
     QVERIFY2(!src.isEmpty(), "ItemDelegate.qml source must be readable.");
     QVERIFY2(src.contains(QStringLiteral("property string iconSource")),
              "ItemDelegate must expose iconSource.");

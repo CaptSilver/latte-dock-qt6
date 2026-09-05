@@ -14,20 +14,20 @@
 // These tests pin the trigger contract (a right-click really does map to "RightButton;NoModifier")
 // and that the shipped default and the View's fallback agree on the plugin id.
 
+#include "sourcereader.h"
+
 #include <QtTest>
 #include <QMouseEvent>
-#include <QFile>
 #include <QFileInfo>
 #include <QObject>
 
 #include <Plasma/ContainmentActions>
 
+using namespace LatteTest;
+
 class ContextMenuDefaultTest : public QObject
 {
     Q_OBJECT
-
-private:
-    QString readSource(const QString &path);
 
 private Q_SLOTS:
     void rightClickMapsToExpectedTrigger();
@@ -35,15 +35,6 @@ private Q_SLOTS:
     void viewInstallsDefaultRightButtonAction();
     void contextMenuPluginIsNamedAfterItsConfigId();
 };
-
-QString ContextMenuDefaultTest::readSource(const QString &path)
-{
-    QFile file(path);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        return QString();
-    }
-    return QString::fromUtf8(file.readAll());
-}
 
 //! The trigger the View registers must be exactly what a right-click produces, otherwise the
 //! lookup in ContextMenuLayerQuickItem::mousePressEvent misses and no menu shows.
@@ -59,7 +50,7 @@ void ContextMenuDefaultTest::rightClickMapsToExpectedTrigger()
 //! hard fallback has to match this id.
 void ContextMenuDefaultTest::shippedDefaultsDeclareLatteContextMenu()
 {
-    const QString src = readSource(QStringLiteral(LATTE_DEFAULTS_PATH));
+    const QString src = readRepoFile(QStringLiteral("shell/package/contents/defaults"));
     QVERIFY2(!src.isEmpty(), "shell defaults file must be readable.");
     QVERIFY2(src.contains(QStringLiteral("RightButton;NoModifier=org.kde.latte.contextmenu")),
              "shell defaults must map RightButton;NoModifier to org.kde.latte.contextmenu.");
@@ -69,7 +60,7 @@ void ContextMenuDefaultTest::shippedDefaultsDeclareLatteContextMenu()
 //! no [ActionPlugins] group (the Plasma 6 regression that left containmentActions() empty).
 void ContextMenuDefaultTest::viewInstallsDefaultRightButtonAction()
 {
-    const QString src = readSource(QStringLiteral(VIEW_CPP_PATH));
+    const QString src = readRepoFile(QStringLiteral("app/view/view.cpp"));
     QVERIFY2(!src.isEmpty(), "view.cpp must be readable.");
     QVERIFY2(src.contains(QStringLiteral("setContainmentActions")),
              "View must register a containment action.");

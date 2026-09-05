@@ -9,9 +9,6 @@ ecm_add_test(indicatormetadatatest.cpp
     TEST_NAME indicatormetadatatest
     LINK_LIBRARIES Qt6::Test Qt6::Core KF6::CoreAddons
 )
-target_compile_definitions(indicatormetadatatest PRIVATE
-    REPO_ROOT="${CMAKE_SOURCE_DIR}")
-
 ecm_add_test(templatesnametest.cpp
     TEST_NAME templatesnametest
     LINK_LIBRARIES Qt6::Test Qt6::Core
@@ -21,18 +18,12 @@ ecm_add_test(storageroundtriptest.cpp
     TEST_NAME storageroundtriptest
     LINK_LIBRARIES Qt6::Test Qt6::Core KF6::ConfigCore
 )
-target_compile_definitions(storageroundtriptest PRIVATE
-    DOCK_TEMPLATE_PATH="${CMAKE_SOURCE_DIR}/shell/package/contents/templates/Default Dock.view.latte")
-
 ecm_add_test(abstractlayouttest.cpp ${CMAKE_SOURCE_DIR}/app/layout/abstractlayout.cpp
     TEST_NAME abstractlayouttest
     LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui KF6::ConfigCore Plasma::Plasma
 )
 target_include_directories(abstractlayouttest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/layout ${CMAKE_BINARY_DIR}/app)
-target_compile_definitions(indicatorsknsrctest PRIVATE
-    INDICATORS_KNSRC_PATH="${CMAKE_SOURCE_DIR}/app/latte-indicators.knsrc")
-
 ecm_add_test(datatypestest.cpp
     ${CMAKE_SOURCE_DIR}/app/data/genericdata.cpp
     ${CMAKE_SOURCE_DIR}/app/data/activitydata.cpp
@@ -259,9 +250,6 @@ ecm_add_test(bindingrestoremodetest.cpp
     TEST_NAME bindingrestoremodetest
     LINK_LIBRARIES Qt6::Test Qt6::Core
 )
-target_compile_definitions(bindingrestoremodetest PRIVATE
-    REPO_ROOT="${CMAKE_SOURCE_DIR}")
-
 ecm_add_test(alternativescreateapplettest.cpp
     TEST_NAME alternativescreateapplettest
     LINK_LIBRARIES Qt6::Test Qt6::Core
@@ -271,16 +259,14 @@ ecm_add_test(sourceguardtest.cpp
     TEST_NAME sourceguardtest
     LINK_LIBRARIES Qt6::Test Qt6::Core
 )
-target_compile_definitions(sourceguardtest PRIVATE
-    REPO_ROOT="${CMAKE_SOURCE_DIR}")
-
 ecm_add_test(scriptguardtest.cpp
     TEST_NAME scriptguardtest
     LINK_LIBRARIES Qt6::Test Qt6::Core
 )
-target_compile_definitions(scriptguardtest PRIVATE
-    REPO_ROOT="${CMAKE_SOURCE_DIR}")
-
+ecm_add_test(sourcereadertest.cpp
+    TEST_NAME sourcereadertest
+    LINK_LIBRARIES Qt6::Test Qt6::Core
+)
 ecm_add_test(activitiesinfotest.cpp ../app/data/activitiesinfo.cpp
     TEST_NAME activitiesinfotest
     LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::DBus
@@ -414,9 +400,6 @@ ecm_add_test(panelbackgroundtest.cpp
     TEST_NAME panelbackgroundtest
     LINK_LIBRARIES Qt6::Test Qt6::Qml Qt6::Gui
 )
-target_compile_definitions(panelbackgroundtest PRIVATE
-    PANEL_QML_PATH="${CMAKE_SOURCE_DIR}/shell/package/contents/views/Panel.qml")
-
 # panelbackgroundscan.cpp is the pure pixel-loop math extracted from PanelBackground.
 # Its header reaches only Qt, so the real source links directly with no KSvg/Plasma graph.
 ecm_add_test(panelbackgroundscantest.cpp ${CMAKE_SOURCE_DIR}/app/plasma/extended/panelbackgroundscan.cpp
@@ -439,27 +422,17 @@ ecm_add_test(configcontrolstest.cpp
     TEST_NAME configcontrolstest
     LINK_LIBRARIES Qt6::Test Qt6::Qml Qt6::Gui
 )
-target_compile_definitions(configcontrolstest PRIVATE
-    CHECKBOX_QML_PATH="${CMAKE_SOURCE_DIR}/declarativeimports/components/CheckBox.qml"
-    TEXTFIELD_QML_PATH="${CMAKE_SOURCE_DIR}/declarativeimports/components/TextField.qml"
-    ITEMDELEGATE_QML_PATH="${CMAKE_SOURCE_DIR}/declarativeimports/components/ItemDelegate.qml")
-
 ecm_add_test(contextmenudefaulttest.cpp
     TEST_NAME contextmenudefaulttest
     LINK_LIBRARIES Qt6::Test Qt6::Gui Plasma::Plasma
 )
 target_compile_definitions(contextmenudefaulttest PRIVATE
-    LATTE_DEFAULTS_PATH="${CMAKE_SOURCE_DIR}/shell/package/contents/defaults"
-    VIEW_CPP_PATH="${CMAKE_SOURCE_DIR}/app/view/view.cpp"
     LATTE_CONTEXTMENU_PLUGIN="${CMAKE_BINARY_DIR}/bin/org.kde.latte.contextmenu.so")
 
 ecm_add_test(editmodehandleactiontest.cpp
     TEST_NAME editmodehandleactiontest
     LINK_LIBRARIES Qt6::Test Qt6::Gui
 )
-target_compile_definitions(editmodehandleactiontest PRIVATE
-    CONFIGOVERLAY_QML_PATH="${CMAKE_SOURCE_DIR}/containment/package/contents/ui/editmode/ConfigOverlay.qml")
-
 qt_wrap_cpp(appletremovaltest_TYPES_MOC ${CMAKE_BINARY_DIR}/containment/plugin/lattetypes.h)
 ecm_add_test(appletremovaltest.cpp
     ${CMAKE_SOURCE_DIR}/containment/plugin/layoutmanager.cpp
@@ -920,18 +893,22 @@ set_tests_properties(qmlinteraction PROPERTIES
     ENVIRONMENT "BUILD=${CMAKE_BINARY_DIR}"
     TIMEOUT 300)
 
-# Static guard against the edit-mode handle flicker regressing: the ConfigOverlay handle buttons must
-# never carry an attached QQC2.ToolTip (Wayland popup-surface hover-steal). No headless behavioral repro
-# exists for a multi-surface compositor interaction, so this pins the fix at the source.
-add_test(NAME editmodetooltipguard COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/manual/editmode_tooltip_guard.sh)
-set_tests_properties(editmodetooltipguard PROPERTIES TIMEOUT 30)
-
 ecm_add_test(viewedgestest.cpp ${CMAKE_SOURCE_DIR}/app/layout/viewedges.cpp
     TEST_NAME viewedgestest
     LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Plasma::Plasma
 )
 target_include_directories(viewedgestest PRIVATE ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(viewedgestest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+# The guards that read the checkout instead of linking against it resolve their inputs through
+# tests/sourcereader.h, which needs REPO_ROOT. One list beats the bespoke *_PATH macro each of
+# them used to invent for the single file it happened to read. Add new source-reading tests here.
+foreach(_repo_root_test
+    indicatorsknsrctest indicatormetadatatest storageroundtriptest bindingrestoremodetest
+    sourceguardtest scriptguardtest sourcereadertest panelbackgroundtest configcontrolstest
+    contextmenudefaulttest editmodehandleactiontest)
+    target_compile_definitions(${_repo_root_test} PRIVATE REPO_ROOT="${CMAKE_SOURCE_DIR}")
+endforeach()
 
 # When coverage is on, instrument every test binary AND the production sources
 # linked into it (ecm_add_test compiles the listed app/* sources into the target).
@@ -940,7 +917,7 @@ if(LATTE_COVERAGE)
     set(_latte_cov_targets
         indicatorsknsrctest templatesnametest storageroundtriptest storageidremappertest
         abstractlayouttest bindingrestoremodetest alternativescreateapplettest sourceguardtest
-        scriptguardtest
+        scriptguardtest sourcereadertest
         activitiesinfotest activitystatescachetest syncedlaunchersclienttest layershellmappingtest
         windowinfowraptest windowindextest visibilityrevealtest coretypesenumtest appletzoomsizetest
         panelbackgroundtest panelbackgroundscantest configcontrolstest contextmenudefaulttest

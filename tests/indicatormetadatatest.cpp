@@ -24,8 +24,9 @@
 //     factory.cpp headlessly would drag in KNS/KArchive/Importer/KDirWatch, so
 //     this pins the fix at the source (same approach as bindingrestoremodetest).
 
+#include "sourcereader.h"
+
 #include <QDir>
-#include <QFile>
 #include <QFileInfo>
 #include <QObject>
 #include <QRegularExpression>
@@ -34,6 +35,8 @@
 
 #include <KPluginMetaData>
 
+using namespace LatteTest;
+
 class IndicatorMetadataTest : public QObject
 {
     Q_OBJECT
@@ -41,16 +44,7 @@ class IndicatorMetadataTest : public QObject
 private:
     static QString indicatorsDir()
     {
-        return QStringLiteral(REPO_ROOT "/indicators");
-    }
-
-    static QString readFile(const QString &path)
-    {
-        QFile f(path);
-        if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            return QString();
-        }
-        return QString::fromUtf8(f.readAll());
+        return repoPath(QStringLiteral("indicators"));
     }
 
     // The shipped packages, each a subdir of indicators/ holding metadata.json.
@@ -110,7 +104,7 @@ private Q_SLOTS:
     // never via the bare-ctor-from-a-file form that silently fails on KF6.
     void factoryUsesFromJsonFile()
     {
-        const QString src = readFile(QStringLiteral(REPO_ROOT "/app/indicator/factory.cpp"));
+        const QString src = readRepoFile(QStringLiteral("app/indicator/factory.cpp"));
         QVERIFY2(!src.isEmpty(), "could not read app/indicator/factory.cpp");
 
         QVERIFY2(src.contains(QStringLiteral("KPluginMetaData::fromJsonFile")),

@@ -11,12 +11,16 @@
 // as a failed round-trip, and parsing the real fixture guards the on-disk format
 // the port must keep reading.
 
+#include "sourcereader.h"
+
 #include <KConfig>
 #include <KConfigGroup>
 #include <QObject>
 #include <QString>
 #include <QTemporaryDir>
 #include <QtTest>
+
+using namespace LatteTest;
 
 // Storage constants (storage.cpp:41-42, viewdata.cpp:11, screenpool.h:33-34).
 static const int IDNULL = -1;
@@ -195,7 +199,7 @@ void StorageRoundTripTest::viewFieldsRoundTripThroughKConfig()
 
 void StorageRoundTripTest::deserializesShippedDockTemplate()
 {
-    KConfig fixture(QStringLiteral(DOCK_TEMPLATE_PATH));
+    KConfig fixture(repoPath(QStringLiteral("shell/package/contents/templates/Default Dock.view.latte")));
     KConfigGroup c = fixture.group(QStringLiteral("Containments")).group(QStringLiteral("1"));
 
     // The guard Storage::view applies before reading anything (storage.cpp:1588).

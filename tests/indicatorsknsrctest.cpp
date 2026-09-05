@@ -10,11 +10,15 @@
 // providers. The structure id must stay "Latte/Indicator" to match the
 // registered KPackage structure plugin.
 
+#include "sourcereader.h"
+
 #include <KConfig>
 #include <KConfigGroup>
 #include <QObject>
 #include <QString>
 #include <QtTest>
+
+using namespace LatteTest;
 
 class IndicatorsKnsrcTest : public QObject
 {
@@ -28,7 +32,7 @@ private Q_SLOTS:
 void IndicatorsKnsrcTest::usesKf6PackageStructureKey()
 {
     // KConfig must outlive the KConfigGroup it vends, so read within this scope.
-    KConfig config(QStringLiteral(INDICATORS_KNSRC_PATH));
+    KConfig config(repoPath(QStringLiteral("app/latte-indicators.knsrc")));
     const KConfigGroup grp = config.group(QStringLiteral("KNewStuff3"));
     QVERIFY2(grp.exists(), "[KNewStuff3] group missing from latte-indicators.knsrc");
     // kpackage uncompression requires a registered structure id under the KF6 key.
@@ -38,7 +42,7 @@ void IndicatorsKnsrcTest::usesKf6PackageStructureKey()
 
 void IndicatorsKnsrcTest::doesNotUseDeadKf5PackageTypeKey()
 {
-    KConfig config(QStringLiteral(INDICATORS_KNSRC_PATH));
+    KConfig config(repoPath(QStringLiteral("app/latte-indicators.knsrc")));
     const KConfigGroup grp = config.group(QStringLiteral("KNewStuff3"));
     // KF6 KNSCore ignores KPackageType; leaving it is a silent store-dialog break.
     QVERIFY2(!grp.hasKey("KPackageType"),

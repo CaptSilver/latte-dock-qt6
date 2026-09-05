@@ -17,33 +17,22 @@
 // through REPO_ROOT and assert the shape of the fix, the way sourceguardtest does for
 // one-token C++ fixes.
 
+#include "sourcereader.h"
+
 #include <QDir>
-#include <QFile>
 #include <QProcess>
 #include <QRegularExpression>
 #include <QString>
 #include <QTemporaryDir>
 #include <QtTest>
 
+using namespace LatteTest;
+
 class ScriptGuardTest : public QObject
 {
     Q_OBJECT
 
 private:
-    static QString repoPath(const QString &rel)
-    {
-        return QStringLiteral("%1/%2").arg(QStringLiteral(REPO_ROOT), rel);
-    }
-
-    static QString readScript(const QString &rel)
-    {
-        QFile f(repoPath(rel));
-        if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            return QString();
-        }
-        return QString::fromUtf8(f.readAll());
-    }
-
     // Offset of the first line matching `needle`, or -1. Used to assert ordering
     // between two steps of a script.
     static int lineOffset(const QString &src, const QString &needle)
@@ -65,7 +54,7 @@ private Q_SLOTS:
 
 void ScriptGuardTest::uninstall_doesNotReadTheStaleBuildManifest()
 {
-    const QString src = readScript(QStringLiteral("uninstall.sh"));
+    const QString src = readRepoFile(QStringLiteral("uninstall.sh"));
     QVERIFY2(!src.isEmpty(), "uninstall.sh unreadable");
 
     // The manifest belongs to whichever tree ran the install; hardcoding build/ meant an
@@ -100,7 +89,7 @@ void ScriptGuardTest::uninstall_failsLoudlyWhenTheManifestIsMissing()
 
 void ScriptGuardTest::e2eRunner_honoursABuildDirOverride()
 {
-    const QString src = readScript(QStringLiteral("tests/e2e/run.sh"));
+    const QString src = readRepoFile(QStringLiteral("tests/e2e/run.sh"));
     QVERIFY2(!src.isEmpty(), "tests/e2e/run.sh unreadable");
 
     QVERIFY2(!src.contains(QStringLiteral("BUILD=\"$REPO/build\"")),
@@ -111,7 +100,7 @@ void ScriptGuardTest::e2eRunner_honoursABuildDirOverride()
 
 void ScriptGuardTest::sceneprobeRunner_stagesFromTheSelectedBuildDir()
 {
-    const QString src = readScript(QStringLiteral("tests/sceneprobe/run.sh"));
+    const QString src = readRepoFile(QStringLiteral("tests/sceneprobe/run.sh"));
     QVERIFY2(!src.isEmpty(), "tests/sceneprobe/run.sh unreadable");
 
     // Staging from a different tree than the probe came from is how the gate ended up
@@ -124,7 +113,7 @@ void ScriptGuardTest::sceneprobeRunner_stagesFromTheSelectedBuildDir()
 
 void ScriptGuardTest::sceneprobeRunner_announcesAnUninstrumentedFallback()
 {
-    const QString src = readScript(QStringLiteral("tests/sceneprobe/run.sh"));
+    const QString src = readRepoFile(QStringLiteral("tests/sceneprobe/run.sh"));
     QVERIFY2(!src.isEmpty(), "tests/sceneprobe/run.sh unreadable");
 
     // The fallback is legitimate -- build-asan is optional -- but it has to be visible,
@@ -138,7 +127,7 @@ void ScriptGuardTest::sceneprobeRunner_announcesAnUninstrumentedFallback()
 
 void ScriptGuardTest::qmlCoverage_honoursACoverageBuildOverride()
 {
-    const QString src = readScript(QStringLiteral("tests/coverage/qml_coverage.sh"));
+    const QString src = readRepoFile(QStringLiteral("tests/coverage/qml_coverage.sh"));
     QVERIFY2(!src.isEmpty(), "tests/coverage/qml_coverage.sh unreadable");
 
     // Every other path in this script is overridable; this one was not, which tied the
@@ -149,7 +138,7 @@ void ScriptGuardTest::qmlCoverage_honoursACoverageBuildOverride()
 
 void ScriptGuardTest::qmlCoverage_stagesBeforeDestroyingThePreviousStage()
 {
-    const QString src = readScript(QStringLiteral("tests/coverage/qml_coverage.sh"));
+    const QString src = readRepoFile(QStringLiteral("tests/coverage/qml_coverage.sh"));
     QVERIFY2(!src.isEmpty(), "tests/coverage/qml_coverage.sh unreadable");
 
     const int destroy = lineOffset(src, QStringLiteral("rm -rf \"$STAGE\""));
@@ -166,7 +155,7 @@ void ScriptGuardTest::manualRunners_doNotDefaultToTheStaleBuildTree()
     for (const QString &rel : {QStringLiteral("tests/manual/qml_load_compile.sh"),
                                QStringLiteral("tests/manual/qml_interaction_test.sh"),
                                QStringLiteral("tests/manual/qml_pkg_test.sh")}) {
-        const QString src = readScript(rel);
+        const QString src = readRepoFile(rel);
         QVERIFY2(!src.isEmpty(), qPrintable(rel + QStringLiteral(" unreadable")));
         QVERIFY2(!src.contains(QStringLiteral("${BUILD:-$REPO/build}")),
                  qPrintable(rel + QStringLiteral(" still defaults to the stale $REPO/build")));
@@ -186,7 +175,7 @@ void ScriptGuardTest::buildScripts_configureWithTheMandatoryQtPathsFlag()
     QVERIFY2(!scripts.isEmpty(), "no top-level shell scripts found, REPO_ROOT is wrong");
 
     for (const QString &rel : scripts) {
-        const QString src = readScript(rel);
+        const QString src = readRepoFile(rel);
         QVERIFY2(!src.isEmpty(), qPrintable(rel + QStringLiteral(" unreadable")));
 
         QRegularExpressionMatchIterator it = configureLine.globalMatch(src);

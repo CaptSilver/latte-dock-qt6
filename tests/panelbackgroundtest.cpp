@@ -24,9 +24,12 @@
 #include <QQmlComponent>
 #include <QQmlEngine>
 #include <QQmlProperty>
-#include <QFile>
 #include <QObject>
 #include <QRegularExpression>
+
+#include "sourcereader.h"
+
+using namespace LatteTest;
 
 class PanelBackgroundTest : public QObject
 {
@@ -91,9 +94,8 @@ void PanelBackgroundTest::legacyCheckSuppressesBandWhenBackgroundHintsIsNoBackgr
 //! panel-background of its own (the containment owns all background drawing).
 void PanelBackgroundTest::shippedWrapperNeverPaintsPanelBackground()
 {
-    QFile file(QStringLiteral(PANEL_QML_PATH));
-    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text), qPrintable(file.errorString()));
-    const QString source = QString::fromUtf8(file.readAll());
+    const QString source = readRepoFile(QStringLiteral("shell/package/contents/views/Panel.qml"));
+    QVERIFY2(!source.isEmpty(), "Panel.qml must be readable.");
 
     //! The active imagePath assignment is empty (commented-out alternatives are ignored).
     static const QRegularExpression activeImagePath(QStringLiteral("^\\s*imagePath:\\s*\"\"\\s*$"),
