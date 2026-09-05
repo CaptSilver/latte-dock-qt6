@@ -16,15 +16,27 @@
 // These live in shell, so there is no symbol to link against -- read the real scripts
 // through REPO_ROOT and assert the shape of the fix, the way sourceguardtest does for
 // one-token C++ fixes.
+//
+// The nested-kwin guards below are the same idea applied to a copy that had been made three
+// times. The render, e2e and coverage harnesses each hand-rolled the same kwin_wayland
+// incantation, and the copies had already drifted apart: all three resolved a Vulkan ICD
+// manifest by glob order, which picks the 32-bit one and leaves a 64-bit process with no
+// driver at all. That killed the render gate outright while the other two only got away with
+// it because their process never asked for Vulkan.
 
 #include "sourcereader.h"
 
 #include <QDir>
+#include <QDirIterator>
 #include <QProcess>
 #include <QRegularExpression>
+#include <QStandardPaths>
 #include <QString>
+#include <QSysInfo>
 #include <QTemporaryDir>
 #include <QtTest>
+
+#include <tuple>
 
 using namespace LatteTest;
 
@@ -40,6 +52,57 @@ private:
         return src.indexOf(needle);
     }
 
+    //! Repo-relative path of every *.sh under tests/, sorted. The "defined once" guards have to
+    //! see the whole tree: a hand-listed set is exactly what a fourth copy would slip past.
+    static QStringList testShellScripts()
+    {
+        const QDir repo(QStringLiteral(REPO_ROOT));
+        QStringList rel;
+        QDirIterator it(repoPath(QStringLiteral("tests")), QStringList() << QStringLiteral("*.sh"),
+                        QDir::Files, QDirIterator::Subdirectories);
+        while (it.hasNext()) {
+            rel << repo.relativeFilePath(it.next());
+        }
+        rel.sort();
+        return rel;
+    }
+
+    //! `src` with its whole-line comments removed. The guards below forbid a token from appearing
+    //! outside its one home, and every one of those tokens is also the clearest word to use when
+    //! explaining the rule -- matching prose would make the guards punish good comments.
+    static QString codeOnly(const QString &src)
+    {
+        QStringList kept;
+        const QStringList lines = src.split(QLatin1Char('\n'));
+        for (const QString &line : lines) {
+            if (!line.trimmed().startsWith(QLatin1Char('#'))) {
+                kept << line;
+            }
+        }
+        return kept.join(QLatin1Char('\n'));
+    }
+
+    static QStringList shellScriptsContaining(const QString &needle)
+    {
+        QStringList hits;
+        const QStringList scripts = testShellScripts();
+        for (const QString &rel : scripts) {
+            if (codeOnly(readRepoFile(rel)).contains(needle)) {
+                hits << rel;
+            }
+        }
+        return hits;
+    }
+
+    //! Asserts `needle` occurs in exactly `owner` and nowhere else under tests/.
+    static void verifyOnlyOwnerHas(const QString &needle, const QString &owner)
+    {
+        const QStringList hits = shellScriptsContaining(needle);
+        QVERIFY2(hits == QStringList{owner},
+                 qPrintable(QStringLiteral("`%1` should live only in %2, found it in: %3")
+                                .arg(needle, owner, hits.isEmpty() ? QStringLiteral("(nowhere)") : hits.join(QStringLiteral(", ")))));
+    }
+
 private Q_SLOTS:
     void uninstall_doesNotReadTheStaleBuildManifest();
     void uninstall_failsLoudlyWhenTheManifestIsMissing();
@@ -50,6 +113,16 @@ private Q_SLOTS:
     void qmlCoverage_honoursACoverageBuildOverride();
     void qmlCoverage_stagesBeforeDestroyingThePreviousStage();
     void buildScripts_configureWithTheMandatoryQtPathsFlag();
+    void nestedKwinLaunchers_pickAnArchMatchedVulkanIcd();
+    void nestedKwinLaunchers_shareOneLauncher();
+    void vulkanIcd_prefersTheArchMatchedManifest();
+    void vulkanIcd_fallsBackToTheUnsuffixedManifest();
+    void vulkanIcd_failsLoudlyWithNoManifest();
+    void nestedKwinLauncher_doesNotForceTheVulkanRhi();
+    void nestedKwinLauncher_propagatesTheSessionExitCode_data();
+    void nestedKwinLauncher_propagatesTheSessionExitCode();
+    void dockCtl_isDefinedOnce();
+    void dockCtl_doesNotSwallowMutatingCallErrors();
 };
 
 void ScriptGuardTest::uninstall_doesNotReadTheStaleBuildManifest()
@@ -185,6 +258,190 @@ void ScriptGuardTest::buildScripts_configureWithTheMandatoryQtPathsFlag()
                      qPrintable(QStringLiteral("%1 configures without KDE_INSTALL_USE_QT_SYS_PATHS: %2").arg(rel, line)));
         }
     }
+}
+
+void ScriptGuardTest::nestedKwinLaunchers_pickAnArchMatchedVulkanIcd()
+{
+    // `ls lvp_icd.*.json | head -1` sorts i686 ahead of x86_64 and Mesa ships both, so the glob
+    // handed a 64-bit process the 32-bit manifest. That is not a missing-file error the script
+    // could catch: the loader finds the manifest, finds no usable driver behind it, and
+    // vkCreateInstance returns ERROR_INCOMPATIBLE_DRIVER -- "QVulkanInstance::create failed
+    // (err -9)", with the whole render gate down and nothing pointing at the ICD.
+    const QStringList globbers = shellScriptsContaining(QStringLiteral("_icd.*.json"));
+    QVERIFY2(globbers.isEmpty(),
+             qPrintable(QStringLiteral("these resolve a Vulkan ICD by glob order: %1").arg(globbers.join(QStringLiteral(", ")))));
+
+    const QString helper = readRepoFile(QStringLiteral("tests/lib/nested_kwin.sh"));
+    QVERIFY2(!helper.isEmpty(), "tests/lib/nested_kwin.sh unreadable");
+    QVERIFY2(helper.contains(QStringLiteral("uname -m")),
+             "the shared launcher should match the ICD manifest to the machine architecture");
+}
+
+//! Runs vulkan_icd against a seeded directory through the VULKAN_ICD_DIR seam and returns
+//! {exitCode, stdout, stderr}. Sourcing is safe: nested_kwin.sh only defines functions.
+static std::tuple<int, QString, QString> runVulkanIcd(const QString &dir, const QString &driver)
+{
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert(QStringLiteral("VULKAN_ICD_DIR"), dir);
+
+    QProcess p;
+    p.setProcessEnvironment(env);
+    p.start(QStringLiteral("bash"),
+            {QStringLiteral("-c"),
+             QStringLiteral(". %1; vulkan_icd %2").arg(repoPath(QStringLiteral("tests/lib/nested_kwin.sh")), driver)});
+    if (!p.waitForFinished(30000)) {
+        return {-1, QString(), QStringLiteral("vulkan_icd did not terminate")};
+    }
+    return {p.exitCode(),
+            QString::fromUtf8(p.readAllStandardOutput()).trimmed(),
+            QString::fromUtf8(p.readAllStandardError()).trimmed()};
+}
+
+static void seedIcd(const QString &dir, const QString &name)
+{
+    QFile f(QStringLiteral("%1/%2").arg(dir, name));
+    QVERIFY(f.open(QIODevice::WriteOnly | QIODevice::Text));
+    f.write("{}\n");
+}
+
+void ScriptGuardTest::vulkanIcd_prefersTheArchMatchedManifest()
+{
+    // The defect this replaced: `ls lvp_icd.*.json | head -1` sorts i686 ahead of x86_64, and Mesa
+    // ships both, so a 64-bit process got the 32-bit manifest. The loader then finds no usable
+    // driver behind it and vkCreateInstance returns ERROR_INCOMPATIBLE_DRIVER, with nothing in the
+    // failure pointing at the ICD. Seed both and require the machine's own architecture to win.
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+
+    const QString arch = QSysInfo::currentCpuArchitecture() == QStringLiteral("x86_64")
+        ? QStringLiteral("x86_64") : QSysInfo::currentCpuArchitecture();
+    seedIcd(tmp.path(), QStringLiteral("lvp_icd.i686.json"));
+    seedIcd(tmp.path(), QStringLiteral("lvp_icd.%1.json").arg(arch));
+    seedIcd(tmp.path(), QStringLiteral("lvp_icd.json"));
+
+    const auto [code, out, err] = runVulkanIcd(tmp.path(), QStringLiteral("lvp"));
+    QCOMPARE(code, 0);
+    QCOMPARE(out, QStringLiteral("%1/lvp_icd.%2.json").arg(tmp.path(), arch));
+}
+
+void ScriptGuardTest::vulkanIcd_fallsBackToTheUnsuffixedManifest()
+{
+    // Distros that ship one manifest per driver have no architecture suffix at all.
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+    seedIcd(tmp.path(), QStringLiteral("lvp_icd.json"));
+
+    const auto [code, out, err] = runVulkanIcd(tmp.path(), QStringLiteral("lvp"));
+    QCOMPARE(code, 0);
+    QCOMPARE(out, QStringLiteral("%1/lvp_icd.json").arg(tmp.path()));
+}
+
+void ScriptGuardTest::vulkanIcd_failsLoudlyWithNoManifest()
+{
+    // Returning 0 with an empty path would hand the caller an empty VK_ICD_FILENAMES and the
+    // render gate would fail somewhere further down with no idea why.
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+
+    const auto [code, out, err] = runVulkanIcd(tmp.path(), QStringLiteral("lvp"));
+    QVERIFY2(code != 0, "vulkan_icd exited 0 with no manifest to report");
+    QVERIFY2(out.isEmpty(), "vulkan_icd printed a path it did not find");
+    QVERIFY2(err.contains(QStringLiteral("lvp")), qPrintable(QStringLiteral("expected a message naming the driver, got: %1").arg(err)));
+}
+
+void ScriptGuardTest::nestedKwinLaunchers_shareOneLauncher()
+{
+    // Three harnesses had three copies of the launch line and they had already drifted --
+    // different sizes, timeouts, and outer env. Pin the count at one so a fourth cannot be
+    // added quietly.
+    verifyOnlyOwnerHas(QStringLiteral("kwin_wayland"), QStringLiteral("tests/lib/nested_kwin.sh"));
+}
+
+void ScriptGuardTest::nestedKwinLauncher_doesNotForceTheVulkanRhi()
+{
+    const QString src = readRepoFile(QStringLiteral("tests/lib/nested_kwin.sh"));
+    QVERIFY2(!src.isEmpty(), "tests/lib/nested_kwin.sh unreadable");
+
+    // The render probe picks its own RHI backend. If the shared launcher forced Vulkan too, the
+    // e2e and coverage harnesses -- which run the real latte-dock on the default OpenGL RHI --
+    // would be dragged onto Vulkan the moment they started sharing this code.
+    QVERIFY2(!src.contains(QStringLiteral("QSG_RHI_BACKEND")),
+             "the shared launcher must not choose an RHI backend for its callers");
+}
+
+void ScriptGuardTest::nestedKwinLauncher_propagatesTheSessionExitCode_data()
+{
+    QTest::addColumn<int>("sessionExitCode");
+
+    QTest::newRow("success") << 0;
+    QTest::newRow("failure") << 7;
+}
+
+void ScriptGuardTest::nestedKwinLauncher_propagatesTheSessionExitCode()
+{
+    // The launcher this replaced echoed $? into a tempfile and re-exited with it, on the premise
+    // -- stated in its header comment -- that kwin's own exit code says nothing about the
+    // session's. That is not how --exit-with-session behaves, and nobody had ever checked. Assert
+    // the contract directly, so the next person to touch the launcher finds out from a test.
+    if (QStandardPaths::findExecutable(QStringLiteral("kwin_wayland")).isEmpty()
+        || QStandardPaths::findExecutable(QStringLiteral("dbus-run-session")).isEmpty()) {
+        QSKIP("needs kwin_wayland and dbus-run-session");
+    }
+
+    QFETCH(int, sessionExitCode);
+
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+
+    const auto writeScript = [&tmp](const QString &name, const QString &body) {
+        const QString path = tmp.filePath(name);
+        QFile f(path);
+        if (!f.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            return QString();
+        }
+        f.write(body.toUtf8());
+        f.close();
+        f.setPermissions(f.permissions() | QFileDevice::ExeOwner);
+        return path;
+    };
+
+    const QString session = writeScript(QStringLiteral("session.sh"),
+                                        QStringLiteral("#!/bin/bash\nexit %1\n").arg(sessionExitCode));
+    QVERIFY2(!session.isEmpty(), "could not write the session script");
+
+    const QString driver = writeScript(QStringLiteral("driver.sh"),
+                                       QStringLiteral("#!/bin/bash\nset -u\n. %1\nlaunch_nested_kwin --width 64 --height 64 --timeout 60 -- %2\n")
+                                           .arg(repoPath(QStringLiteral("tests/lib/nested_kwin.sh")), session));
+    QVERIFY2(!driver.isEmpty(), "could not write the driver script");
+
+    QProcess p;
+    p.setWorkingDirectory(tmp.path());
+    p.start(QStringLiteral("bash"), {driver});
+    QVERIFY2(p.waitForFinished(120000), "the nested kwin session did not terminate");
+
+    QCOMPARE(p.exitStatus(), QProcess::NormalExit);
+    QCOMPARE(p.exitCode(), sessionExitCode);
+}
+
+void ScriptGuardTest::dockCtl_isDefinedOnce()
+{
+    verifyOnlyOwnerHas(QStringLiteral("busctl --user call org.kde.lattedock"), QStringLiteral("tests/lib/dockctl.sh"));
+}
+
+void ScriptGuardTest::dockCtl_doesNotSwallowMutatingCallErrors()
+{
+    const QString src = codeOnly(readRepoFile(QStringLiteral("tests/lib/dockctl.sh")));
+    QVERIFY2(!src.isEmpty(), "tests/lib/dockctl.sh unreadable");
+
+    const int def = src.indexOf(QStringLiteral("busctl --user call org.kde.lattedock"));
+    QVERIFY2(def != -1, "no dctl definition in the shared helper");
+    const QString line = src.mid(def, src.indexOf(QLatin1Char('\n'), def) - def);
+
+    // One of the two copies appended 2>/dev/null. Hoisting that version would erase the errors
+    // from addApplet and triggerAppletAction -- the two calls the e2e harness deliberately
+    // leaves unmuted, because when they fail their stderr is the only clue why.
+    QVERIFY2(!line.contains(QStringLiteral("2>/dev/null")),
+             "the shared dctl swallows stderr; read-only callers should mute it per-site instead");
 }
 
 QTEST_MAIN(ScriptGuardTest)

@@ -5,6 +5,7 @@
 # pixels. The on-disk config group is logged informational only.
 set -u
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
+. "$REPO/tests/lib/nested_kwin.sh"
 HERE="$REPO/tests/e2e"
 BUILD="${BUILD:-$REPO}"
 DOCK="$BUILD/bin/latte-dock"
@@ -44,14 +45,8 @@ LOG="$WORK/dock.log"; : > "\$LOG"
 "$DOCK" --debug --layout Default --log-file "\$LOG" >"$WORK/dock.out" 2>&1 &
 DOCKPID=\$!
 
-dctl(){ busctl --user call org.kde.lattedock /Latte org.kde.LatteDock "\$@"; }
-up=0; for i in \$(seq 1 25); do
-  busctl --user list 2>/dev/null | grep -q org.kde.lattedock && { up=1; break; }
-  kill -0 \$DOCKPID 2>/dev/null || break
-  sleep 1
-done
-[ "\$up" = 1 ] || { echo "RESULT: dock-never-came-up"; tail -20 "\$LOG"; exit 1; }
-sleep 6
+. "$REPO/tests/lib/dockctl.sh"
+wait_for_dock \$DOCKPID 25 6 || { echo "RESULT: dock-never-came-up"; tail -20 "\$LOG"; exit 1; }
 
 CID=\$(dctl containmentIds 2>/dev/null | awk '{print \$3}')
 [ -n "\$CID" ] || { echo "RESULT: no-containment-id"; exit 1; }
@@ -104,13 +99,14 @@ exit \$rc
 EOF
 chmod +x "$SESS"
 
-RT="$(mktemp -d)"; chmod 700 "$RT"
-ICD="$(ls /usr/share/vulkan/icd.d/lvp_icd.*.json 2>/dev/null | head -1)"
-XDG_RUNTIME_DIR="$RT" KWIN_WAYLAND_NO_PERMISSION_CHECKS=1 KWIN_SCREENSHOT_NO_PERMISSION_CHECKS=1 \
-  VK_ICD_FILENAMES="$ICD" LP_NUM_THREADS=0 \
-  timeout 120 dbus-run-session -- kwin_wayland --virtual --width 1280 --height 800 \
-  --no-lockscreen --exit-with-session "$SESS"
+ICD="$(vulkan_icd lvp)" || exit 2
+# KWIN_SCREENSHOT_NO_PERMISSION_CHECKS goes on kwin's own environment, not the session's: it
+# is read by kwin's ScreenShot2 effect, so forwarding it to shot.py instead would just get
+# every capture denied and pin pass_pix at 0.
+launch_nested_kwin --width 1280 --height 800 --timeout 120 \
+  --env "VK_ICD_FILENAMES=$ICD" --env LP_NUM_THREADS=0 \
+  --env KWIN_SCREENSHOT_NO_PERMISSION_CHECKS=1 \
+  -- "$SESS"
 rc=$?
-rm -rf "$RT"
 echo "harness exit: $rc"
 exit "$rc"

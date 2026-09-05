@@ -3,20 +3,23 @@
 # wayland QPA. Device mode is controlled by SCENEPROBE_DEVICE (default: lavapipe).
 #   lavapipe  — Mesa software Vulkan, LP_NUM_THREADS=0 for determinism
 #   dgpu      — hardware RADV on the discrete AMD RX 9070 XT (MESA_VK_DEVICE_SELECT=1002:7550)
-# Streams the command's combined output and propagates its exit code (kwin's own exit code
-# does not reflect the session command's).
+# Emits ONLY the probe's own transcript and exits with its exit code. Unlike the e2e and
+# capture harnesses, this one's caller redirects to a file and prints it only on failure, so
+# streaming buys nothing here and costs a readable verdict: the "N px differ" line ends up
+# buried in portal warnings, dbus activation lines and a PipeWire connect failure.
 set -u
+
+HERE="$(cd "$(dirname "$0")" && pwd)"
+. "$HERE/../lib/nested_kwin.sh"
 
 DEV="${SCENEPROBE_DEVICE:-lavapipe}"
 case "$DEV" in
   lavapipe)
-    ICD="$(ls /usr/share/vulkan/icd.d/lvp_icd.*.json 2>/dev/null | head -1)"
-    [ -n "$ICD" ] || { echo "lavapipe ICD not found" >&2; exit 2; }
+    ICD="$(vulkan_icd lvp)" || exit 2
     DEV_ENV='LP_NUM_THREADS=0'
     ;;
   dgpu)
-    ICD="$(ls /usr/share/vulkan/icd.d/radeon_icd.*.json 2>/dev/null | head -1)"
-    [ -n "$ICD" ] || { echo "RADV ICD not found" >&2; exit 2; }
+    ICD="$(vulkan_icd radeon)" || exit 2
     # pin the discrete RX 9070 XT (vendorID:deviceID 1002:7550); the box also exposes
     # the 9950X3D integrated Radeon (1002:13c0) so explicit selection is mandatory
     DEV_ENV='MESA_VK_DEVICE_SELECT=1002:7550'
@@ -24,26 +27,25 @@ case "$DEV" in
   *) echo "unknown SCENEPROBE_DEVICE: $DEV" >&2; exit 2;;
 esac
 
-RT="$(mktemp -d /tmp/sceneprobe-xdg.XXXXXX)"; chmod 700 "$RT"
-ECF="$(mktemp)"; OUTF="$(mktemp)"; SESS="$(mktemp)"
-echo 124 > "$ECF"
+SESS="$(mktemp)"; OUTF="$(mktemp)"
+trap 'rm -f "$SESS" "$OUTF"' EXIT
 
+# The probe picks its own RHI backend (main.cpp qputenv's QSG_RHI_BACKEND), so this only has
+# to hand it a Vulkan driver and the wayland platform.
 {
   printf '#!/bin/bash\n'
-  printf 'export QT_QPA_PLATFORM=wayland QSG_RHI_BACKEND=vulkan VK_ICD_FILENAMES=%q %s\n' "$ICD" "$DEV_ENV"
+  printf 'export QT_QPA_PLATFORM=wayland VK_ICD_FILENAMES=%q %s\n' "$ICD" "$DEV_ENV"
   for v in LATTE_VK_SUPPRESSIONS LATTE_QML_IMPORT_PATH ASAN_OPTIONS SCENEPROBE_DEVICE SCENEPROBE_ARTIFACTS SCENEPROBE_BLESS; do
     if [ -n "${!v:-}" ]; then printf 'export %s=%q\n' "$v" "${!v}"; fi
   done
+  printf 'exec '
   printf '%q ' "$@"
-  printf '>%q 2>&1; echo $? >%q\n' "$OUTF" "$ECF"
+  printf '> %q 2>&1\n' "$OUTF"
+
 } > "$SESS"
 chmod +x "$SESS"
 
-XDG_RUNTIME_DIR="$RT" KWIN_WAYLAND_NO_PERMISSION_CHECKS=1 \
-  timeout 90 dbus-run-session -- kwin_wayland --virtual --width 256 --height 256 \
-  --no-lockscreen --exit-with-session "$SESS" >/dev/null 2>&1
-
+launch_nested_kwin --width 256 --height 256 --timeout 90 -- "$SESS" >/dev/null 2>&1
+rc=$?
 cat "$OUTF"
-ec="$(cat "$ECF" 2>/dev/null || echo 124)"
-rm -rf "$RT" "$ECF" "$OUTF" "$SESS"
-exit "$ec"
+exit "$rc"

@@ -13,6 +13,7 @@
 # the whole-app number. WIDGET= overrides the widget added.
 set -u
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
+. "$REPO/tests/lib/nested_kwin.sh"
 COV="${COV_DIR:-$REPO/build-coverage}"
 OUT="$REPO/build/_coverage"
 DOCK="$COV/bin/latte-dock"
@@ -42,23 +43,17 @@ export QML_IMPORT_PATH="$STAGE/usr/lib64/qt6/qml" QML2_IMPORT_PATH="$STAGE/usr/l
 export LLVM_PROFILE_FILE="$LIVEDIR/dock-%p.profraw"
 "$DOCK" --debug --layout Default --log-file "$WORK/dock.log" >"$WORK/dock.out" 2>&1 &
 DOCKPID=\$!
-dctl(){ busctl --user call org.kde.lattedock /Latte org.kde.LatteDock "\$@" 2>/dev/null; }
+. "$REPO/tests/lib/dockctl.sh"
 
-up=0; for i in \$(seq 1 30); do
-  busctl --user list 2>/dev/null | grep -q org.kde.lattedock && { up=1; break; }
-  kill -0 \$DOCKPID 2>/dev/null || break
-  sleep 1
-done
-[ "\$up" = 1 ] || { echo "RESULT: dock-never-came-up"; tail -20 "$WORK/dock.log"; exit 1; }
-sleep 5
+wait_for_dock \$DOCKPID 30 5 || { echo "RESULT: dock-never-came-up"; tail -20 "$WORK/dock.log"; exit 1; }
 
 # Drive a spread of runtime paths: enumerate, add a widget, re-enumerate, remove it.
-CID=\$(dctl containmentIds | awk '{print \$3}')
+CID=\$(dctl containmentIds 2>/dev/null | awk '{print \$3}')
 echo "containment=\$CID"
-dctl layouts >/dev/null
-before=\$(dctl appletIds u "\$CID")
+dctl layouts >/dev/null 2>&1
+before=\$(dctl appletIds u "\$CID" 2>/dev/null)
 dctl addApplet us "\$CID" "$WIDGET"; sleep 3
-after=\$(dctl appletIds u "\$CID")
+after=\$(dctl appletIds u "\$CID" 2>/dev/null)
 NEW=""; for t in \$(echo "\$after" | tr ' ' '\n' | grep -E '^[0-9]+\$'); do
   echo "\$before" | grep -qw "\$t" || NEW="\$t"; done
 echo "added applet=\$NEW"
@@ -75,13 +70,12 @@ EOF
 chmod +x "$SESS"
 
 echo "== run the instrumented dock under nested kwin =="
-RT="$(mktemp -d)"; chmod 700 "$RT"
-ICD="$(ls /usr/share/vulkan/icd.d/lvp_icd.*.json 2>/dev/null | head -1)"
-XDG_RUNTIME_DIR="$RT" KWIN_WAYLAND_NO_PERMISSION_CHECKS=1 KWIN_SCREENSHOT_NO_PERMISSION_CHECKS=1 \
-  VK_ICD_FILENAMES="$ICD" LP_NUM_THREADS=0 \
-  timeout 180 dbus-run-session -- kwin_wayland --virtual --width 1280 --height 800 \
-  --no-lockscreen --exit-with-session "$SESS"
-rm -rf "$RT"
+ICD="$(vulkan_icd lvp)" || exit 2
+# The exit code is ignored on purpose: this run is judged on whether the dock flushed profraw,
+# not on how the session ended.
+launch_nested_kwin --width 1280 --height 800 --timeout 180 \
+  --env "VK_ICD_FILENAMES=$ICD" --env LP_NUM_THREADS=0 \
+  -- "$SESS"
 
 shopt -s nullglob
 live=("$LIVEDIR"/*.profraw)
