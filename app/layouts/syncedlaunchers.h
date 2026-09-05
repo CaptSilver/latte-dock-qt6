@@ -14,16 +14,6 @@
 #include <QObject>
 #include <QQuickItem>
 
-namespace Plasma {
-class Applet;
-}
-
-namespace Latte {
-namespace Layouts {
-class Manager;
-}
-}
-
 namespace Latte {
 namespace Layouts {
 
@@ -55,14 +45,14 @@ public Q_SLOTS:
 private:
     QList<QQuickItem *> clients(QString layoutName, QString groupId);
     QList<QQuickItem *> clients(QString layoutName, uint senderId, Latte::Types::LaunchersGroup launcherGroup, QString launcherGroupId);
+    //! the clients an ability call has to reach
+    QList<QQuickItem *> groupClients(QString layoutName, uint senderId, int launcherGroup, QString launcherGroupId);
     QQuickItem *client(const int &id);
 
 private Q_SLOTS:
     void removeClientObject(QObject *obj);
 
 private:
-    Layouts::Manager *m_manager{nullptr};
-
     QList<QQuickItem *> m_clients;
 };
 

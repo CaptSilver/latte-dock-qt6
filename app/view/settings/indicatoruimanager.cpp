@@ -11,6 +11,7 @@
 #include "../indicator/indicator.h"
 #include "../../lattecorona.h"
 #include "../../indicator/factory.h"
+#include "../../tools/qmlinvoke.h"
 
 // Qt
 #include <QFileDialog>
@@ -78,16 +79,10 @@ void IndicatorUiManager::showNextIndicator()
         return;
     }
 
-    if (auto *metaObject = m_parentItem->metaObject()) {
-        int methodIndex = metaObject->indexOfMethod("showNextIndicator()");
-
-        if (methodIndex == -1) {
-            qDebug() << "indicator parent page function showNextIndicator() was not found...";
-            return;
-        }
-
-        QMetaMethod method = metaObject->method(methodIndex);
-        method.invoke(m_parentItem);
+    //! the page is the config window's own QML, so a miss is a broken build rather than an
+    //! applet that simply does not offer the method - worth saying out loud.
+    if (!invokeIfPresent(m_parentItem, "showNextIndicator()")) {
+        qDebug() << "indicator parent page function showNextIndicator() was not found...";
     }
 }
 

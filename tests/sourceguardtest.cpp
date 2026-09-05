@@ -295,6 +295,7 @@ private Q_SLOTS:
     void appletIdListKeys_areSpelledOnce();
     void layoutManager_classifiesChildrenThroughOnePredicate();
     void containmentInterface_reflectedLayoutManagerNamesResolve();
+    void qmlInvocationsRouteThroughTheSharedHelper();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -2576,6 +2577,43 @@ void SourceGuardTest::containmentInterface_reflectedLayoutManagerNamesResolve()
         QVERIFY2(declared.match(managerh).hasMatch(),
                  qPrintable(QStringLiteral("containmentinterface.cpp reads LayoutManager's \"%1\", which is not a Q_PROPERTY in layoutmanager.h").arg(name)));
     }
+}
+
+void SourceGuardTest::qmlInvocationsRouteThroughTheSharedHelper()
+{
+    // Reflecting a QML method by signature, bailing out on -1 and invoking it is one operation,
+    // and it lives in app/tools/qmlinvoke.h. Only two sites in app/ legitimately keep the
+    // QMetaMethod instead of calling it there and then: ContainmentInterface caches the shortcut
+    // host's four methods once it has found the host, and ContextMenuLayerQuickItem caches
+    // appletContainsPos across right clicks. Every other indexOfMethod() is the four-step dance
+    // written out by hand again. ContainmentInterface::addApplet is why this is a guard rather
+    // than a style preference -- though not for the reason it looks: handing an invalid
+    // QMetaMethod to invoke() is harmless, since method(-1) walks up to a null superdata and
+    // invoke() just returns false. What addApplet was actually missing is the null check on its
+    // QPointer target, which the helper does for every caller. The containment plugin is a
+    // separate binary that cannot reach app/tools, so it is out of scope here.
+    static const QHash<QString, int> allowedReflection = {
+        {QStringLiteral("app/tools/qmlinvoke.h"), 1},
+        {QStringLiteral("app/view/containmentinterface.cpp"), 4},
+        {QStringLiteral("app/declarativeimports/contextmenulayerquickitem.cpp"), 1}};
+
+    QStringList sources = sourcesUnder({QStringLiteral("app")}, QStringLiteral("*.cpp"));
+    sources += sourcesUnder({QStringLiteral("app")}, QStringLiteral("*.h"));
+    QVERIFY2(!sources.isEmpty(), "no app sources found");
+
+    QStringList offenders;
+
+    for (const QString &abs : sources) {
+        const QString rel = relativeToRepo(abs);
+        const int expected = allowedReflection.value(rel, 0);
+        const int found = withoutComments(readFile(abs)).count(QStringLiteral("indexOfMethod("));
+
+        if (found != expected) {
+            offenders << QStringLiteral("%1 calls indexOfMethod() %2 times, expected %3 -- use Latte::invokeIfPresent()").arg(rel).arg(found).arg(expected);
+        }
+    }
+
+    QVERIFY2(offenders.isEmpty(), qPrintable(offenders.join(QLatin1Char('\n'))));
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

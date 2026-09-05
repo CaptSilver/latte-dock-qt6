@@ -279,10 +279,11 @@ ecm_add_test(activitystatescachetest.cpp ../app/data/activitiesinfo.cpp
 )
 target_include_directories(activitystatescachetest PRIVATE ${CMAKE_SOURCE_DIR}/app/data)
 
-ecm_add_test(syncedlaunchersclienttest.cpp
+ecm_add_test(syncedlaunchersclienttest.cpp ../app/layouts/syncedlaunchers.cpp
     TEST_NAME syncedlaunchersclienttest
     LINK_LIBRARIES Qt6::Test Qt6::Gui Qt6::Quick
 )
+target_include_directories(syncedlaunchersclienttest PRIVATE ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(syncedlaunchersclienttest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
 ecm_add_test(layershellmappingtest.cpp ../app/wm/waylandlayershell.cpp
@@ -494,6 +495,12 @@ ecm_add_test(activitysetalgebratest.cpp
 )
 target_include_directories(activitysetalgebratest PRIVATE ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(activitysetalgebratest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+ecm_add_test(qmlinvoketest.cpp
+    TEST_NAME qmlinvoketest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Qml
+)
+target_include_directories(qmlinvoketest PRIVATE ${CMAKE_SOURCE_DIR}/app)
 
 ecm_add_test(settingsnameutilstest.cpp
     TEST_NAME settingsnameutilstest
@@ -925,7 +932,7 @@ if(LATTE_COVERAGE)
         debugoutputtest
         datatypestest commontoolstest layoutmanagertest settingsmodelstest wmtoolstest
         shortcutstest viewmodelstest screenpooltest coretoolstest generictoolstest
-        addviewdecisiontest viewcontainertransitiontest activitysetalgebratest
+        addviewdecisiontest viewcontainertransitiontest activitysetalgebratest qmlinvoketest
         settingsnameutilstest iconsourceclassifiertest windowtrackingpredicatestest extraviewhintstest
         positionergeometrytest storagevalidatortest backgroundimageinfotest
         windowgeometrypredicatestest indicatorfactorytest

@@ -12,6 +12,7 @@
 #include "../layouts/importer.h"
 #include "../layouts/storage.h"
 #include "../settings/universalsettings.h"
+#include "../tools/qmlinvoke.h"
 
 // Qt
 #include <QDebug>
@@ -31,6 +32,51 @@
 
 namespace Latte {
 namespace ViewPart {
+
+namespace {
+
+bool isLatteTasks(Plasma::Applet *applet)
+{
+    return applet->pluginMetaData().pluginId() == QLatin1String("org.kde.latte.plasmoid");
+}
+
+bool isPlasmaTasks(Plasma::Applet *applet)
+{
+    const auto &provides = applet->pluginMetaData().value(QStringLiteral("X-Plasma-Provides"), QStringList());
+    return provides.contains(QLatin1String("org.kde.plasma.multitasking"));
+}
+
+//! Runs @p signature on the first child item of a @p matches applet that answers to it, and
+//! reports whether one did. Which child of a task manager owns a given function is not knowable
+//! from here, so every child is tried - which is also why nothing is logged when one does not
+//! have the method. "var" arguments are QVariant at the metaobject level.
+template <typename Matcher, typename... Args>
+bool invokeOnAppletChild(const QList<Plasma::Applet *> &applets, Matcher matches, const char *signature, Args &&...args)
+{
+    for (auto *applet : applets) {
+        if (!matches(applet)) {
+            continue;
+        }
+
+        QQuickItem *appletInterface = PlasmaQuick::AppletQuickItem::itemForApplet(applet);
+
+        if (!appletInterface) {
+            continue;
+        }
+
+        const auto &childItems = appletInterface->childItems();
+
+        for (QQuickItem *item : childItems) {
+            if (invokeIfPresent(item, signature, std::forward<Args>(args)...)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+}
 
 ContainmentInterface::ContainmentInterface(Latte::View *parent)
     : QObject(parent),
@@ -200,45 +246,11 @@ bool ContainmentInterface::updateBadgeForLatteTask(const QString identifier, con
         return false;
     }
 
-    const auto &applets = m_view->containment()->applets();
-
-    for (auto *applet : applets) {
-        KPluginMetaData meta = applet->pluginMetaData();
-
-        if (meta.pluginId() == QLatin1String("org.kde.latte.plasmoid")) {
-
-            if (QQuickItem *appletInterface = PlasmaQuick::AppletQuickItem::itemForApplet(applet)) {
-                const auto &childItems = appletInterface->childItems();
-
-                if (childItems.isEmpty()) {
-                    continue;
-                }
-
-                for (QQuickItem *item : childItems) {
-                    if (auto *metaObject = item->metaObject()) {
-                        // not using QMetaObject::invokeMethod to avoid warnings when calling
-                        // this on applets that don't have it or other child items since this
-                        // is pretty much trial and error.
-                        // Also, "var" arguments are treated as QVariant in QMetaObject
-
-                        int methodIndex = metaObject->indexOfMethod("updateBadge(QVariant,QVariant)");
-
-                        if (methodIndex == -1) {
-                            continue;
-                        }
-
-                        QMetaMethod method = metaObject->method(methodIndex);
-
-                        if (method.invoke(item, Q_ARG(QVariant, identifier), Q_ARG(QVariant, value))) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    return false;
+    return invokeOnAppletChild(m_view->containment()->applets(),
+                               isLatteTasks,
+                               "updateBadge(QVariant,QVariant)",
+                               Q_ARG(QVariant, identifier),
+                               Q_ARG(QVariant, value));
 }
 
 bool ContainmentInterface::activatePlasmaTask(const int index)
@@ -249,41 +261,16 @@ bool ContainmentInterface::activatePlasmaTask(const int index)
         return false;
     }
 
-    const auto &applets = m_view->containment()->applets();
-
-    for (auto *applet : applets) {
-        const auto &provides = applet->pluginMetaData().value(QStringLiteral("X-Plasma-Provides"), QStringList());
-
-        if (provides.contains(QLatin1String("org.kde.plasma.multitasking"))) {
-            if (QQuickItem *appletInterface = PlasmaQuick::AppletQuickItem::itemForApplet(applet)) {
-                const auto &childItems = appletInterface->childItems();
-
-                if (childItems.isEmpty()) {
-                    continue;
-                }
-
-                for (QQuickItem *item : childItems) {
-                    if (auto *metaObject = item->metaObject()) {
-                        int methodIndex{metaObject->indexOfMethod("activateTaskAtIndex(QVariant)")};
-
-                        if (methodIndex == -1) {
-                            continue;
-                        }
-
-                        QMetaMethod method = metaObject->method(methodIndex);
-
-                        if (method.invoke(item, Q_ARG(QVariant, index - 1))) {
-                            showShortcutBadges(false, true);
-
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
+    if (!invokeOnAppletChild(m_view->containment()->applets(),
+                             isPlasmaTasks,
+                             "activateTaskAtIndex(QVariant)",
+                             Q_ARG(QVariant, index - 1))) {
+        return false;
     }
 
-    return false;
+    showShortcutBadges(false, true);
+
+    return true;
 }
 
 bool ContainmentInterface::newInstanceForPlasmaTask(const int index)
@@ -294,41 +281,16 @@ bool ContainmentInterface::newInstanceForPlasmaTask(const int index)
         return false;
     }
 
-    const auto &applets = m_view->containment()->applets();
-
-    for (auto *applet : applets) {
-        const auto &provides = applet->pluginMetaData().value(QStringLiteral("X-Plasma-Provides"), QStringList());
-
-        if (provides.contains(QLatin1String("org.kde.plasma.multitasking"))) {
-            if (QQuickItem *appletInterface = PlasmaQuick::AppletQuickItem::itemForApplet(applet)) {
-                const auto &childItems = appletInterface->childItems();
-
-                if (childItems.isEmpty()) {
-                    continue;
-                }
-
-                for (QQuickItem *item : childItems) {
-                    if (auto *metaObject = item->metaObject()) {
-                        int methodIndex{metaObject->indexOfMethod("newInstanceForTaskAtIndex(QVariant)")};
-
-                        if (methodIndex == -1) {
-                            continue;
-                        }
-
-                        QMetaMethod method = metaObject->method(methodIndex);
-
-                        if (method.invoke(item, Q_ARG(QVariant, index - 1))) {
-                            showShortcutBadges(false, true);
-
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
+    if (!invokeOnAppletChild(m_view->containment()->applets(),
+                             isPlasmaTasks,
+                             "newInstanceForTaskAtIndex(QVariant)",
+                             Q_ARG(QVariant, index - 1))) {
+        return false;
     }
 
-    return false;
+    showShortcutBadges(false, true);
+
+    return true;
 }
 
 bool ContainmentInterface::activateEntry(const int index)
@@ -626,12 +588,11 @@ void ContainmentInterface::addApplet(const QString &pluginId)
 
 void ContainmentInterface::addApplet(QObject *metadata, int x, int y)
 {
-    int processmimedataindex = m_plasmoid->metaObject()->indexOfMethod("processMimeData(QObject*,int,int)");
-    QMetaMethod processmethod = m_plasmoid->metaObject()->method(processmimedataindex);
-    processmethod.invoke(m_plasmoid,
-                         Q_ARG(QObject *, metadata),
-                         Q_ARG(int, x),
-                         Q_ARG(int, y));
+    invokeIfPresent(m_plasmoid,
+                    "processMimeData(QObject*,int,int)",
+                    Q_ARG(QObject *, metadata),
+                    Q_ARG(int, x),
+                    Q_ARG(int, y));
 }
 
 void ContainmentInterface::addExpandedApplet(PlasmaQuick::AppletQuickItem * appletQuickItem)
