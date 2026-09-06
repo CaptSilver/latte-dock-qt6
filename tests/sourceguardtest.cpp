@@ -261,6 +261,7 @@ private Q_SLOTS:
     void abilityMemberReadsResolve();
     void shippedJavaScriptIsImported();
     void everyScriptImportResolves();
+    void configRedirectingTestsRedirectDataToo();
     void eventsSink_mouseCasesShareOneBody();
     void notifyrcEventsMatchTheirEmitters();
     void factory_removeIndicator_reportsAFailedRemoval();
@@ -1066,6 +1067,33 @@ void SourceGuardTest::abilityMemberReadsResolve()
     QVERIFY2(unresolved.isEmpty(),
              qPrintable(QStringLiteral("ability member reads that resolve to undefined:\n  %1")
                             .arg(unresolved.join(QStringLiteral("\n  ")))));
+}
+
+void SourceGuardTest::configRedirectingTestsRedirectDataToo()
+{
+    // A test that redirects XDG_CONFIG_HOME and stops there is still reading the developer's
+    // XDG_DATA_HOME. Latte resolves packages through it, so a shell package installed under
+    // ~/.local/share/plasma/shells shadows the staged one and the test fails for reasons that
+    // have nothing to do with the code under test -- which is exactly what happened while a
+    // fix was staged there by hand. Redirect both, or the sandbox has a hole in it.
+    const QStringList sources = sourcesUnder({QStringLiteral("tests")}, QStringLiteral("*.cpp"));
+    QVERIFY2(!sources.isEmpty(), "no test sources found");
+
+    QStringList offenders;
+    for (const QString &path : sources) {
+        const QString src = withoutComments(readFile(path));
+        if (!src.contains(QStringLiteral("qputenv(\"XDG_CONFIG_HOME\""))) {
+            continue;
+        }
+        if (!src.contains(QStringLiteral("qputenv(\"XDG_DATA_HOME\""))) {
+            offenders << relativeToRepo(path);
+        }
+    }
+
+    offenders.sort();
+    QVERIFY2(offenders.isEmpty(),
+             qPrintable(QStringLiteral("these tests redirect XDG_CONFIG_HOME but leave XDG_DATA_HOME pointing at the developer's home: %1")
+                            .arg(offenders.join(QStringLiteral(", ")))));
 }
 
 void SourceGuardTest::everyScriptImportResolves()

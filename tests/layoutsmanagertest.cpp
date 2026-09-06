@@ -65,6 +65,10 @@ void LayoutsManagerTest::initTestCase()
     QVERIFY(m_configDir.isValid());
     qputenv("XDG_CONFIG_HOME", m_configDir.path().toUtf8());
 
+    //! Latte resolves packages through XDG_DATA_HOME too, so a shell package installed under
+    //! ~/.local/share/plasma/shells would shadow the staged one and fail this test for reasons
+    //! unrelated to the code. Redirect it alongside the config dir.
+    qputenv("XDG_DATA_HOME", m_configDir.path().toUtf8());
     m_corona = new Latte::Corona(false, QString(), QString(), 0, nullptr);
     QVERIFY(m_corona->universalSettings() != nullptr);
     m_manager = m_corona->layoutsManager();

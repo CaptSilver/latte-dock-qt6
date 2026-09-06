@@ -64,6 +64,10 @@ void TemplatesManagerTest::initTestCase()
 {
     QVERIFY(m_configDir.isValid());
     qputenv("XDG_CONFIG_HOME", m_configDir.path().toUtf8());
+    //! Latte resolves packages through XDG_DATA_HOME too, so a shell package installed under
+    //! ~/.local/share/plasma/shells would shadow the staged one and fail this test for reasons
+    //! unrelated to the code. Redirect it alongside the config dir.
+    qputenv("XDG_DATA_HOME", m_configDir.path().toUtf8());
     // QFile::copy() does not create parent dirs, so make the layout + template
     // directories the writers target.
     QVERIFY(QDir(m_configDir.path()).mkpath(QStringLiteral("latte/templates")));

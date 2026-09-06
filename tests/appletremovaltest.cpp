@@ -104,6 +104,10 @@ int main(int argc, char *argv[])
     // that out of the developer's own ~/.config. Only XDG_DATA_* drives package
     // resolution, so the two QSKIP guards above are unaffected.
     qputenv("XDG_CONFIG_HOME", s_xdgConfig.path().toUtf8());
+    //! Latte resolves packages through XDG_DATA_HOME too, so a shell package installed under
+    //! ~/.local/share/plasma/shells would shadow the staged one and fail this test for reasons
+    //! unrelated to the code. Redirect it alongside the config dir.
+    qputenv("XDG_DATA_HOME", s_xdgConfig.path().toUtf8());
     QGuiApplication app(argc, argv);
     AppletRemovalTest tc;
     return QTest::qExec(&tc, argc, argv);

@@ -263,6 +263,10 @@ int main(int argc, char *argv[])
     static QTemporaryDir xdgConfig;
     qputenv("XDG_CONFIG_HOME", xdgConfig.path().toUtf8());
 
+    //! Latte resolves packages through XDG_DATA_HOME too, so a shell package installed under
+    //! ~/.local/share/plasma/shells would shadow the staged one and fail this test for reasons
+    //! unrelated to the code. Redirect it alongside the config dir.
+    qputenv("XDG_DATA_HOME", xdgConfig.path().toUtf8());
     QGuiApplication app(argc, argv);
     ScreenPoolTest tc;
     return QTest::qExec(&tc, argc, argv);

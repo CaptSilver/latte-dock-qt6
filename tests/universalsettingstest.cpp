@@ -70,6 +70,10 @@ void UniversalSettingsTest::initTestCase()
     // config, so without this every run watches - and the kwin_ setters would write -
     // the developer's real ~/.config/kwinrc, reconfiguring the live compositor.
     qputenv("XDG_CONFIG_HOME", m_dir.path().toLocal8Bit());
+    //! Latte resolves packages through XDG_DATA_HOME too, so a shell package installed under
+    //! ~/.local/share/plasma/shells would shadow the staged one and fail this test for reasons
+    //! unrelated to the code. Redirect it alongside the config dir.
+    qputenv("XDG_DATA_HOME", m_dir.path().toLocal8Bit());
     QCOMPARE(Latte::configPath(), m_dir.path());
 }
 
