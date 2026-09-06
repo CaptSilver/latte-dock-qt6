@@ -913,6 +913,15 @@ ecm_add_test(viewedgestest.cpp ${CMAKE_SOURCE_DIR}/app/layout/viewedges.cpp
 target_include_directories(viewedgestest PRIVATE ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(viewedgestest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+# panelshadows.cpp only reaches KSvg and KWindowSystem, so the real source compiles
+# straight into the test with no View/Corona graph behind it.
+ecm_add_test(panelshadowstest.cpp ${CMAKE_SOURCE_DIR}/app/view/panelshadows.cpp
+    TEST_NAME panelshadowstest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui KF6::Svg KF6::WindowSystem
+)
+target_include_directories(panelshadowstest PRIVATE ${CMAKE_SOURCE_DIR}/app/view)
+set_tests_properties(panelshadowstest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 # The guards that read the checkout instead of linking against it resolve their inputs through
 # tests/sourcereader.h, which needs REPO_ROOT. One list beats the bespoke *_PATH macro each of
 # them used to invent for the single file it happened to read. Add new source-reading tests here.
@@ -941,7 +950,7 @@ if(LATTE_COVERAGE)
         addviewdecisiontest viewcontainertransitiontest activitysetalgebratest qmlinvoketest
         settingsnameutilstest iconsourceclassifiertest windowtrackingpredicatestest extraviewhintstest
         positionergeometrytest storagevalidatortest backgroundimageinfotest
-        windowgeometrypredicatestest indicatorfactorytest
+        windowgeometrypredicatestest indicatorfactorytest panelshadowstest
         screengeometrycalculatortest coronahelperstest startuplayoutplannertest
         validviewsmapbuildertest viewsyncplantest viewedgestest
         # GLOB-behavioral tests link the (now instrumented) app objects; listing them

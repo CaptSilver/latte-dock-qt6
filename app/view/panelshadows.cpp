@@ -74,15 +74,21 @@ void PanelShadows::addWindow(QWindow *window, KSvg::FrameSvg::EnabledBorders ena
         return;
     }
 
+    //! One handler per window, and it has to go in before the hash write below -- after it,
+    //! every window looks registered. Qt refuses Qt::UniqueConnection for a lambda, so
+    //! reconnecting on every show would just stack another copy of this.
+    if (!d->m_windows.contains(window)) {
+        connect(window, &QObject::destroyed, this, [this, window]() {
+            d->m_windows.remove(window);
+            d->clearShadow(window);
+            if (d->m_windows.isEmpty()) {
+                d->clearTiles();
+            }
+        });
+    }
+
     d->m_windows[window] = enabledBorders;
     d->updateShadow(window, enabledBorders);
-    connect(window, &QObject::destroyed, this, [this, window]() {
-        d->m_windows.remove(window);
-        d->clearShadow(window);
-        if (d->m_windows.isEmpty()) {
-            d->clearTiles();
-        }
-    });
 }
 
 void PanelShadows::removeWindow(QWindow *window)
