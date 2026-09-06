@@ -14,6 +14,7 @@
 
 #include <KConfig>
 #include <KConfigGroup>
+#include <KDirWatch>
 #include <KService>
 #include <KSharedConfig>
 
@@ -60,6 +61,8 @@ private Q_SLOTS:
     void schemeColors_schemeNameFromGeneralGroup();
     void schemeColors_missingFileYieldsEmptyFileAndInvalidColors();
     void schemeColors_possibleSchemeFileAcceptsAbsoluteColors();
+    void schemeColors_destructorReleasesTheWatchItTook();
+    void schemeColors_twoSchemesOnOneFileEachReleaseOnce();
 
     // tasktools - windowUrlFromMetadata (rules-config driven, no service DB needed)
     void windowUrl_nullConfigReturnsEmpty();
@@ -349,6 +352,50 @@ void WmToolsTest::schemeColors_possibleSchemeFileAcceptsAbsoluteColors()
 
     // A non-existent absolute .colors path resolves to nothing.
     QVERIFY(SchemeColors::possibleSchemeFile(m_dir.filePath(QStringLiteral("Nope.colors"))).isEmpty());
+}
+
+void WmToolsTest::schemeColors_destructorReleasesTheWatchItTook()
+{
+    // The constructor hands the scheme file to the shared KDirWatch; without a matching
+    // release the dock keeps an inotify watch on every colour scheme it ever read, long
+    // after the object that cared about it is gone.
+    const QString path = writeColorsFile(QStringLiteral("WatchRelease.colors"),
+                                         QStringLiteral("[General]\nName=WatchRelease\n"));
+    QVERIFY(!path.isEmpty());
+    QVERIFY(!KDirWatch::self()->contains(path));
+
+    {
+        SchemeColors scheme(nullptr, path, /*plasmaTheme*/ false);
+        QCOMPARE(scheme.schemeFile(), path);
+        QVERIFY(KDirWatch::self()->contains(path));
+    }
+
+    QVERIFY(!KDirWatch::self()->contains(path));
+}
+
+void WmToolsTest::schemeColors_twoSchemesOnOneFileEachReleaseOnce()
+{
+    // Two live objects can share one scheme file: the extended theme builds its
+    // replacement on the same path before deleting the old one, and the schemes model
+    // lists the kdeglobals-resolved file alongside the same file found in a scheme
+    // directory. The release must be per-object, or the first destruction pulls the
+    // watch out from under the survivor.
+    const QString path = writeColorsFile(QStringLiteral("SharedWatch.colors"),
+                                         QStringLiteral("[General]\nName=SharedWatch\n"));
+    QVERIFY(!path.isEmpty());
+    QVERIFY(!KDirWatch::self()->contains(path));
+
+    //! parented to nullptr and deleted by hand so the ordering is deterministic
+    //! without spinning an event loop
+    auto *first = new SchemeColors(nullptr, path, /*plasmaTheme*/ false);
+    auto *second = new SchemeColors(nullptr, path, /*plasmaTheme*/ false);
+    QVERIFY(KDirWatch::self()->contains(path));
+
+    delete first;
+    QVERIFY(KDirWatch::self()->contains(path));
+
+    delete second;
+    QVERIFY(!KDirWatch::self()->contains(path));
 }
 
 void WmToolsTest::appDataFromUrl_iconDataQueryDecodesPixmap()

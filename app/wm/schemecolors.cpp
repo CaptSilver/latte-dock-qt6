@@ -56,7 +56,12 @@ SchemeColors::SchemeColors(QObject *parent, QString scheme, bool plasmaTheme) :
 
 SchemeColors::~SchemeColors()
 {
-    ///
+    //! KDirWatch refcounts registrations per instance, so release exactly the one
+    //! this object took. m_schemeFile is set only by the constructor, only in the
+    //! branch that called addFile, so it is empty iff no watch was taken.
+    if (!m_schemeFile.isEmpty() && KDirWatch::exists()) {
+        KDirWatch::self()->removeFile(m_schemeFile);
+    }
 }
 
 QColor SchemeColors::backgroundColor() const
