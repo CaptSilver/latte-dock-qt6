@@ -69,6 +69,8 @@ Theme::~Theme()
 {
     saveConfig();
 
+    releaseSettingsFileWatch();
+
     //! the schemes are created in load(); guard in case the theme was built but never loaded
     if (m_defaultScheme) {
         m_defaultScheme->deleteLater();
@@ -367,6 +369,11 @@ void Theme::loadThemePaths()
         disconnect(c);
     }
 
+    //! drop the watch the previous theme took. This has to happen before the branch below
+    //! because a theme that ships its own colors takes no watch at all and would otherwise
+    //! leave the previous one registered.
+    releaseSettingsFileWatch();
+
     //! assign color schemes
     QString themeColorScheme = m_themePath + QStringLiteral("/colors");
 
@@ -378,6 +385,7 @@ void Theme::loadThemePaths()
         QString kdeSettingsFile = Latte::configPath() + QStringLiteral("/kdeglobals");
 
         KDirWatch::self()->addFile(kdeSettingsFile);
+        m_watchedSettingsFile = kdeSettingsFile;
 
         m_kdeConnections[0] = connect(KDirWatch::self(), &KDirWatch::dirty, this, [ &, kdeSettingsFile](const QString & path) {
             if (path == kdeSettingsFile) {
@@ -393,6 +401,17 @@ void Theme::loadThemePaths()
 
         setOriginalSchemeFile(WindowSystem::SchemeColors::possibleSchemeFile(QStringLiteral("kdeglobals")));
     }
+}
+
+//! KDirWatch refcounts registrations per instance and KDirWatch::self() lives for the whole
+//! process, so every addFile here needs its matching removeFile or the entry outlives us.
+void Theme::releaseSettingsFileWatch()
+{
+    if (!m_watchedSettingsFile.isEmpty() && KDirWatch::exists()) {
+        KDirWatch::self()->removeFile(m_watchedSettingsFile);
+    }
+
+    m_watchedSettingsFile.clear();
 }
 
 void Theme::loadThemeLightness()

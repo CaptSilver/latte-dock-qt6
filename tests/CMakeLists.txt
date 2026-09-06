@@ -640,6 +640,23 @@ target_include_directories(schemesmodeltest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/settings ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(schemesmodeltest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+# plasma/extended/theme.cpp includes lattecorona.h, so it uses the same prebuilt-objects
+# real-link and drives the real Theme over a temp XDG tree to pin its KDirWatch bookkeeping.
+ecm_add_test(plasmathemewatchtest.cpp
+    TEST_NAME plasmathemewatchtest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::DBus Qt6::Network
+        Plasma::Activities KF6::Archive KF6::CoreAddons KF6::Crash KF6::DBusAddons
+        KF6::ConfigQml KF6::ConfigCore KF6::GuiAddons KF6::GlobalAccel KF6::I18n
+        KF6::IconThemes KF6::IconWidgets KF6::KIOWidgets KF6::Notifications
+        KF6::NewStuffWidgets Plasma::Plasma KF6::Svg KF6::Package Plasma::PlasmaQuick
+        Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
+        KF6::Service Wayland::Client
+)
+target_link_libraries(plasmathemewatchtest lattedock-objs)
+target_include_directories(plasmathemewatchtest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/plasma/extended ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(plasmathemewatchtest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 # colorsmodel.cpp's header includes lattecorona.h, so it uses the same
 # prebuilt-objects real-link and drives the model through its corona-free
 # constructor. Qt6::Widgets is on the list because the negative-row case is

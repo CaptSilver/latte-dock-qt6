@@ -115,6 +115,7 @@ private:
     void updateBackgrounds();
 
     void setOriginalSchemeFile(const QString &file);
+    void releaseSettingsFileWatch();
     void updateHasShadow();
     void updateDefaultScheme();
     void updateDefaultSchemeValues();
@@ -139,6 +140,7 @@ private:
     QString m_themePath;
     QString m_themeWidgetsPath;
     QString m_defaultSchemePath;
+    QString m_watchedSettingsFile;
     QString m_originalSchemePath;
     QString m_reversedSchemePath;
 
