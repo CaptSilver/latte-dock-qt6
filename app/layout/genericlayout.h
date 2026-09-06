@@ -9,6 +9,7 @@
 // local
 #include <coretypes.h>
 #include "abstractlayout.h"
+#include "realviewfactory.h"
 #include "viewsmap.h"
 #include "../data/errordata.h"
 #include "../data/viewdata.h"
@@ -37,8 +38,6 @@ class View;
 
 namespace Latte {
 namespace Layout {
-
-class IViewFactory;
 
 class GenericLayout : public AbstractLayout
 {
@@ -75,7 +74,7 @@ public:
 
     QStringList unloadedContainmentsIds();
 
-    const QList<Plasma::Containment *> *containments() const;
+    const QList<Plasma::Containment *> &containments() const;
 
     bool contains(Plasma::Containment *containment) const;
     bool containsView(const int &containmentId) const;
@@ -161,8 +160,6 @@ protected:
 
 protected:
     Latte::Corona *m_corona{nullptr};
-    IViewFactory *m_viewFactory{nullptr};
-    bool m_ownsViewFactory{false};   //! true only for the lazily-created default factory
 
     QList<Plasma::Containment *> m_containments;
 
@@ -203,6 +200,11 @@ private:
 
     //! Containments that are pending screen/state updates
     Latte::Data::ViewsTable m_pendingContainmentUpdates;
+
+    //! Stateless, so it costs a vtable pointer and there is always a factory to call. Holding it
+    //! by value is what makes the handle below a pure observer with nothing to own or free.
+    RealViewFactory m_defaultViewFactory;
+    IViewFactory *m_viewFactory{&m_defaultViewFactory};
 
     friend class Latte::View;
 };

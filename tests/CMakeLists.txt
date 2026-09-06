@@ -601,6 +601,25 @@ target_include_directories(storagetest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/layouts ${CMAKE_BINARY_DIR}/app)
 set_tests_properties(storagetest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+# genericlayout.cpp reaches Corona/View/Importer through its includes, so the same
+# prebuilt-objects trick as storagetest links the real compiled layout. A CentralLayout
+# built from an empty file path stays inert, so this needs neither a Corona nor the
+# staged shell package -- no fixture, unlike layoutssynchronizertest.
+ecm_add_test(genericlayouttest.cpp
+    TEST_NAME genericlayouttest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::DBus Qt6::Network
+        Plasma::Activities KF6::Archive KF6::CoreAddons KF6::Crash KF6::DBusAddons
+        KF6::ConfigQml KF6::ConfigCore KF6::GuiAddons KF6::GlobalAccel KF6::I18n
+        KF6::IconThemes KF6::IconWidgets KF6::KIOWidgets KF6::Notifications
+        KF6::NewStuffWidgets Plasma::Plasma KF6::Svg KF6::Package Plasma::PlasmaQuick
+        Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
+        Wayland::Client
+)
+target_link_libraries(genericlayouttest lattedock-objs)
+target_include_directories(genericlayouttest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(genericlayouttest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 # tasktools.cpp / schemecolors.cpp drag in the whole app object graph through their
 # includes (Importer -> Corona -> ...), so the prebuilt-objects trick links the real
 # compiled wm/tasktools.cpp.o and wm/schemecolors.cpp.o (minus main.cpp) and drives
@@ -973,7 +992,7 @@ if(LATTE_COVERAGE)
         # GLOB-behavioral tests link the (now instrumented) app objects; listing them
         # gives their binaries the profile link flag and the export object set, which
         # is what makes the Corona-coupled core count toward whole-app coverage.
-        universalsettingstest storagetest schemesmodeltest colorsmodeltest viewsmodeltest
+        universalsettingstest storagetest genericlayouttest schemesmodeltest colorsmodeltest viewsmodeltest
         layoutsmodeltest lastactivewindowtest importerlogictest coronaenginegeometrytest
         layoutsmanagertest templatesmanagertest layoutssynchronizertest)
     foreach(_t ${_latte_cov_targets})

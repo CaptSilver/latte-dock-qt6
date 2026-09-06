@@ -470,7 +470,7 @@ void Storage::syncToLayoutFile(const Layout::GenericLayout *layout, bool removeL
 
     qDebug() << " LAYOUT :: " << layout->name() << " is syncing its original file.";
 
-    for (const auto containment : *layout->containments()) {
+    for (const auto containment : layout->containments()) {
         if (removeLayoutId) {
             containment->config().writeEntry(QStringLiteral("layoutId"), QString());
         }
@@ -809,7 +809,7 @@ StorageValidator::LayoutModel Storage::modelFromLive(const Layout::GenericLayout
 {
     StorageValidator::LayoutModel model;
 
-    for (const auto containment : *layout->containments()) {
+    for (const auto containment : layout->containments()) {
         StorageValidator::ContainmentModel cm;
         cm.id = QString::number(containment->id());
         cm.pluginId = containment->pluginMetaData().pluginId();
@@ -896,7 +896,7 @@ bool Storage::hasOrphanedSubContainments(const Layout::GenericLayout *layout, Da
     Data::ViewsTable views = Layouts::Storage::self()->views(layout);
 
     if (layout->isActive()) { // active layout — live parent-walk, unchanged
-        for (const auto containment : *layout->containments()) {
+        for (const auto containment : layout->containments()) {
             QString cid = QString::number(containment->id());
 
             Plasma::Applet *parentApplet = qobject_cast<Plasma::Applet *>(containment->parent());
@@ -1016,7 +1016,7 @@ Data::AppletsTable Storage::plugins(const Layout::GenericLayout *layout, const i
         validcontainmentids << containmentid;
 
         //! searching for specific containment and subcontainments and ignore all other containments
-        for(auto containment : *layout->containments()) {
+        for(auto containment : layout->containments()) {
             if (((int)containment->id()) != containmentid) {
                 //! ignore irrelevant containments
                 continue;
@@ -1031,7 +1031,7 @@ Data::AppletsTable Storage::plugins(const Layout::GenericLayout *layout, const i
     }
 
     //! cycle through valid contaiments in order to retrieve their metadata
-    for(auto containment : *layout->containments()) {
+    for(auto containment : layout->containments()) {
         if (validcontainmentids.count()>0 && !validcontainmentids.contains(containment->id())) {
             //! searching only for valid containments
             continue;
@@ -1158,7 +1158,7 @@ bool Storage::hasContainment(const Layout::GenericLayout *layout, const int &id)
     }
 
     if (layout->isActive()) { // active layout
-        for(const auto containment : *layout->containments()) {
+        for(const auto containment : layout->containments()) {
             if ((int)containment->id() == id) {
                 return true;
             }
@@ -1232,7 +1232,7 @@ Data::GenericTable<Data::Generic> Storage::subcontainments(const Layout::Generic
         return subs;
     }
 
-    for (const auto containment : (*layout->containments())) {
+    for (const auto containment : layout->containments()) {
         if (containment == lattecontainment) {
             continue;
         }
@@ -1544,7 +1544,7 @@ Data::ViewsTable Storage::views(const Layout::GenericLayout *layout)
         return views(layout->file());
     }
 
-    for (const auto containment : (*layout->containments())) {
+    for (const auto containment : layout->containments()) {
         if (!isLatteContainment(containment)) {
             continue;
         }

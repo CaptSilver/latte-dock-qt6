@@ -10,7 +10,6 @@
 #include "abstractlayout.h"
 #include "addviewdecision.h"
 #include "iviewfactory.h"
-#include "realviewfactory.h"
 #include "validviewsmapbuilder.h"
 #include "viewcontainertransition.h"
 #include "viewedges.h"
@@ -51,9 +50,6 @@ GenericLayout::GenericLayout(QObject *parent, QString layoutFile, QString assign
 
 GenericLayout::~GenericLayout()
 {
-    if (m_ownsViewFactory) {
-        delete m_viewFactory;
-    }
 }
 
 void GenericLayout::unloadContainments()
@@ -178,23 +174,12 @@ void GenericLayout::registerLatteView(Plasma::Containment *containment, Latte::V
 
 void GenericLayout::setViewFactory(Layout::IViewFactory *factory)
 {
-    //! an injected factory is owned by the caller; drop any default we created earlier
-    if (m_ownsViewFactory) {
-        delete m_viewFactory;
-        m_ownsViewFactory = false;
-    }
-
-    m_viewFactory = factory;
+    //! an injected factory belongs to the caller; nullptr puts the built-in one back
+    m_viewFactory = factory ? factory : &m_defaultViewFactory;
 }
 
 Layout::IViewFactory *GenericLayout::viewFactory()
 {
-    if (!m_viewFactory) {
-        //! production default; tests inject their own before addView
-        m_viewFactory = new Layout::RealViewFactory();
-        m_ownsViewFactory = true;
-    }
-
     return m_viewFactory;
 }
 
@@ -538,9 +523,9 @@ bool GenericLayout::viewAtLowerEdgePriority(Latte::View *test, Latte::View *base
 }
 
 
-const QList<Plasma::Containment *> *GenericLayout::containments() const
+const QList<Plasma::Containment *> &GenericLayout::containments() const
 {
-    return &m_containments;
+    return m_containments;
 }
 
 QList<Latte::View *> GenericLayout::viewsWithPlasmaShortcuts()

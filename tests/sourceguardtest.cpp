@@ -229,6 +229,8 @@ private Q_SLOTS:
     void synchronizer_syncMultipleLayouts_invalidatesStatesCacheOnce();
     void waylandInterface_windowFor_usesIndexFastPath();
     void genericLayout_viewTransitions_useTransitionHelpers();
+    void genericLayout_viewFactoryIsOneUnownedHandle();
+    void genericLayout_containmentsHandsOutAReference();
     void hashLookupsAvoidKeysContains();
     void positioner_dropsDeadAvailableRegionMember();
     void positioner_geometryMethodsDelegateToPureUnit();
@@ -590,6 +592,42 @@ void SourceGuardTest::genericLayout_viewTransitions_useTransitionHelpers()
     QVERIFY2(!cd.isEmpty(), "containmentDestroyed() not found");
     QVERIFY2(cd.contains(QStringLiteral("ViewContainerTransition::takeFromEither(m_latteViews,m_waitingLatteViews,containment)")),
              "containmentDestroyed must take from either map via the transition helper");
+}
+
+void SourceGuardTest::genericLayout_viewFactoryIsOneUnownedHandle()
+{
+    // The layout used to carry a raw factory pointer next to a hand-written ownership bool, and
+    // deleted through that pointer in two places -- so handing viewFactory()'s own answer back to
+    // setViewFactory() freed the default and then stored the freed address. Holding the default
+    // by value instead leaves no ownership question to answer. Nothing a test can call sees the
+    // difference: both shapes hand out the same pointers, so it is pinned here.
+    const QString h = stripped(readRepoFile(QStringLiteral("app/layout/genericlayout.h")));
+    QVERIFY2(!h.isEmpty(), "genericlayout.h is unreadable");
+    QVERIFY2(!h.contains(QStringLiteral("boolm_ownsViewFactory")),
+             "genericlayout.h must not track factory ownership by hand");
+
+    const QString cpp = stripped(withoutComments(readRepoFile(QStringLiteral("app/layout/genericlayout.cpp"))));
+    QVERIFY2(!cpp.isEmpty(), "genericlayout.cpp is unreadable");
+    QVERIFY2(!cpp.contains(QStringLiteral("deletem_viewFactory")),
+             "the layout must not delete a factory it also hands out to callers");
+}
+
+void SourceGuardTest::genericLayout_containmentsHandsOutAReference()
+{
+    // containments() returned the address of the by-value m_containments member: a pointer that
+    // can never be null and that every caller dereferenced on the spot. A const reference says
+    // the same thing without the ceremony. This has to be source text -- returning by value
+    // would bind to the same `const QList &` at every call site and pass any assertion a test
+    // could write, while silently copying the list.
+    const QString h = stripped(readRepoFile(QStringLiteral("app/layout/genericlayout.h")));
+    QVERIFY2(!h.isEmpty(), "genericlayout.h is unreadable");
+    QVERIFY2(h.contains(QStringLiteral("constQList<Plasma::Containment*>&containments()const;")),
+             "genericlayout.h must declare containments() as a const reference");
+
+    const QString cpp = stripped(withoutComments(readRepoFile(QStringLiteral("app/layout/genericlayout.cpp"))));
+    QVERIFY2(!cpp.isEmpty(), "genericlayout.cpp is unreadable");
+    QVERIFY2(!cpp.contains(QStringLiteral("return&m_containments;")),
+             "containments() must not hand out the address of the internal list");
 }
 
 void SourceGuardTest::positioner_dropsDeadAvailableRegionMember()
