@@ -119,6 +119,7 @@ private Q_SLOTS:
     void vulkanIcd_fallsBackToTheUnsuffixedManifest();
     void vulkanIcd_failsLoudlyWithNoManifest();
     void renderGateScenes_pinTheirFontSize();
+    void dockCtl_refusesTheRealSessionBus();
     void nestedKwinLauncher_doesNotForceTheVulkanRhi();
     void nestedKwinLauncher_propagatesTheSessionExitCode_data();
     void nestedKwinLauncher_propagatesTheSessionExitCode();
@@ -303,6 +304,31 @@ static void seedIcd(const QString &dir, const QString &name)
     QFile f(QStringLiteral("%1/%2").arg(dir, name));
     QVERIFY(f.open(QIODevice::WriteOnly | QIODevice::Text));
     f.write("{}\n");
+}
+
+void ScriptGuardTest::dockCtl_refusesTheRealSessionBus()
+{
+    // dctl() drives whatever dock owns org.kde.lattedock on the bus `busctl --user` resolves
+    // to. Inside the nested session that is the harness's own dock; outside it, it is the
+    // developer's LIVE dock -- and wait_for_dock() cannot tell the difference, because its
+    // poll succeeds instantly against the real bus where a dock is always present. A harness
+    // that sources this outside the compositor therefore reports success and then drives the
+    // user's desktop: saving their layout, opening their settings window. Refuse instead.
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.remove(QStringLiteral("LATTE_NESTED_SESSION"));
+
+    QProcess p;
+    p.setProcessEnvironment(env);
+    p.start(QStringLiteral("bash"),
+            {QStringLiteral("-c"),
+             QStringLiteral(". %1; dctl Ping").arg(repoPath(QStringLiteral("tests/lib/dockctl.sh")))});
+    QVERIFY2(p.waitForFinished(30000), "dctl did not terminate");
+
+    const QString err = QString::fromUtf8(p.readAllStandardError());
+    QVERIFY2(p.exitCode() != 0,
+             "dctl ran against the caller's own session bus -- outside the nested compositor that is the live dock");
+    QVERIFY2(err.contains(QStringLiteral("LATTE_NESTED_SESSION")),
+             qPrintable(QStringLiteral("expected a refusal naming the marker, got: %1").arg(err)));
 }
 
 void ScriptGuardTest::renderGateScenes_pinTheirFontSize()

@@ -74,7 +74,11 @@ launch_nested_kwin() {
     # --exit-with-session propagates the session's exit code verbatim, so this status is the
     # caller's answer. scriptguardtest pins that, because it is a compositor behaviour the
     # scripts depend on and cannot see.
-    env XDG_RUNTIME_DIR="$rt" KWIN_WAYLAND_NO_PERMISSION_CHECKS=1 "${outer_env[@]}" \
+    #
+    # LATTE_NESTED_SESSION is what lets dockctl.sh tell this bus from the developer's own.
+    # dbus-run-session gives the session its own bus, but nothing downstream could see that
+    # it had, so a harness sourced outside here silently drove the real desktop.
+    env XDG_RUNTIME_DIR="$rt" KWIN_WAYLAND_NO_PERMISSION_CHECKS=1 LATTE_NESTED_SESSION=1 "${outer_env[@]}" \
         timeout "$timeout" dbus-run-session -- \
         kwin_wayland --virtual --width "$width" --height "$height" \
         --no-lockscreen --exit-with-session "$session"
