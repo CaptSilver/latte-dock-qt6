@@ -35,6 +35,26 @@ vulkan_icd() {
     return 1
 }
 
+# Point HOME *and* every XDG base directory at a throwaway directory.
+#
+# Exporting HOME alone sandboxes nothing. Qt resolves config through QStandardPaths, which
+# prefers XDG_CONFIG_HOME over $HOME/.config -- and the distrobox exports
+# XDG_CONFIG_HOME=/home/<user>/.config. A harness that seeds only HOME therefore reads and
+# writes the developer's REAL config while believing it is isolated; that is how a test widget
+# ended up in a live Latte layout. Override the inherited values, never defer to them.
+seed_sandbox_home() {
+    local home="${1:-}"
+    [ -n "$home" ] || { echo "seed_sandbox_home: no directory given" >&2; return 2; }
+
+    mkdir -p "$home/.config" "$home/.local/share" "$home/.cache" "$home/.local/state" || return 2
+
+    export HOME="$home"
+    export XDG_CONFIG_HOME="$home/.config"
+    export XDG_DATA_HOME="$home/.local/share"
+    export XDG_CACHE_HOME="$home/.cache"
+    export XDG_STATE_HOME="$home/.local/state"
+}
+
 # Run a session script under a throwaway nested kwin_wayland, and return what the session
 # returned.
 #

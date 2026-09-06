@@ -120,6 +120,8 @@ private Q_SLOTS:
     void vulkanIcd_failsLoudlyWithNoManifest();
     void renderGateScenes_pinTheirFontSize();
     void dockCtl_refusesTheRealSessionBus();
+    void sandboxHome_overridesInheritedXdgPaths();
+    void liveHarnesses_seedTheirHomeThroughTheHelper();
     void nestedKwinLauncher_doesNotForceTheVulkanRhi();
     void nestedKwinLauncher_propagatesTheSessionExitCode_data();
     void nestedKwinLauncher_propagatesTheSessionExitCode();
@@ -304,6 +306,61 @@ static void seedIcd(const QString &dir, const QString &name)
     QFile f(QStringLiteral("%1/%2").arg(dir, name));
     QVERIFY(f.open(QIODevice::WriteOnly | QIODevice::Text));
     f.write("{}\n");
+}
+
+void ScriptGuardTest::sandboxHome_overridesInheritedXdgPaths()
+{
+    // Exporting HOME is not enough to sandbox a harness. Qt resolves its config through
+    // QStandardPaths, which prefers XDG_CONFIG_HOME over $HOME/.config -- and the distrobox
+    // exports XDG_CONFIG_HOME=/home/<user>/.config. A harness that seeds only HOME therefore
+    // reads and writes the developer's REAL config while believing it is isolated. That is how
+    // a test widget ended up in a live Latte layout and crashed the dock.
+    //
+    // The decoy below is that inherited value: the helper has to override it, not defer to it.
+    QTemporaryDir sandbox;
+    QVERIFY(sandbox.isValid());
+    QTemporaryDir decoy;
+    QVERIFY(decoy.isValid());
+
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    for (const QString &var : {QStringLiteral("XDG_CONFIG_HOME"), QStringLiteral("XDG_DATA_HOME"),
+                               QStringLiteral("XDG_CACHE_HOME"), QStringLiteral("XDG_STATE_HOME")}) {
+        env.insert(var, decoy.path());
+    }
+
+    QProcess p;
+    p.setProcessEnvironment(env);
+    p.start(QStringLiteral("bash"),
+            {QStringLiteral("-c"),
+             QStringLiteral(". %1; seed_sandbox_home %2 || exit 3; "
+                            "printf 'HOME=%s\\nXDG_CONFIG_HOME=%s\\nXDG_DATA_HOME=%s\\nXDG_CACHE_HOME=%s\\nXDG_STATE_HOME=%s\\n' "
+                            "\"$HOME\" \"$XDG_CONFIG_HOME\" \"$XDG_DATA_HOME\" \"$XDG_CACHE_HOME\" \"$XDG_STATE_HOME\"")
+                 .arg(repoPath(QStringLiteral("tests/lib/nested_kwin.sh")), sandbox.path())});
+    QVERIFY2(p.waitForFinished(30000), "seed_sandbox_home did not terminate");
+    const QString out = QString::fromUtf8(p.readAllStandardOutput());
+    QCOMPARE(p.exitCode(), 0);
+
+    const QStringList lines = out.split(QLatin1Char('\n'), Qt::SkipEmptyParts);
+    QVERIFY2(lines.size() == 5, qPrintable(QStringLiteral("expected five paths, got: %1").arg(out)));
+
+    for (const QString &line : lines) {
+        const QString value = line.section(QLatin1Char('='), 1);
+        QVERIFY2(value.startsWith(sandbox.path()),
+                 qPrintable(QStringLiteral("%1 must live under the sandbox %2, not the inherited %3")
+                                .arg(line, sandbox.path(), decoy.path())));
+    }
+}
+
+void ScriptGuardTest::liveHarnesses_seedTheirHomeThroughTheHelper()
+{
+    // Getting this right once in a shared helper only holds if the harnesses use it. Seeding
+    // HOME by hand is what left the XDG variables pointing at the real config.
+    for (const QString &rel : {QStringLiteral("tests/e2e/run.sh"), QStringLiteral("tests/coverage/live_capture.sh")}) {
+        const QString src = readRepoFile(rel);
+        QVERIFY2(!src.isEmpty(), qPrintable(QStringLiteral("%1 unreadable").arg(rel)));
+        QVERIFY2(src.contains(QStringLiteral("seed_sandbox_home")),
+                 qPrintable(QStringLiteral("%1 must sandbox through seed_sandbox_home, not a bare HOME export").arg(rel)));
+    }
 }
 
 void ScriptGuardTest::dockCtl_refusesTheRealSessionBus()

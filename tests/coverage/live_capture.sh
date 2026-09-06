@@ -35,7 +35,9 @@ SESS="$WORK/session.sh"
 cat > "$SESS" <<EOF
 #!/bin/bash
 set -u
-export HOME="$HOMEDIR" USER=lattelive USERNAME=lattelive
+. "$REPO/tests/lib/nested_kwin.sh"
+seed_sandbox_home "$HOMEDIR"
+export USER=lattelive USERNAME=lattelive
 export QT_QPA_PLATFORM=wayland
 export XDG_DATA_DIRS="$STAGE/usr/share:\${XDG_DATA_DIRS:-/usr/share}"
 export QML_IMPORT_PATH="$STAGE/usr/lib64/qt6/qml" QML2_IMPORT_PATH="$STAGE/usr/lib64/qt6/qml"

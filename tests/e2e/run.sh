@@ -25,16 +25,21 @@ trap 'rm -rf "$WORK"' EXIT
 DESTDIR="$STAGE" cmake --install "$BUILD" >"$WORK"/install.log 2>&1 \
     || { echo "stage install failed"; tail -10 "$WORK"/install.log; exit 2; }
 
-if [ -d /tmp/latte-e2e-home/.config/latte ]; then
-    cp /tmp/latte-e2e-home/.config/latte/*.layout.latte "$HOMEDIR/.config/latte/" 2>/dev/null || true
-    cp /tmp/latte-e2e-home/.config/lattedockrc "$HOMEDIR/.config/" 2>/dev/null || true
-fi
+# Seed the sandbox with the shipped Default template. This used to copy from a stray
+# /tmp/latte-e2e-home if one happened to exist, which is a machine-specific crutch -- and it
+# did not matter anyway, because the session leaked out to the developer's real config and
+# read its layout from there. With the sandbox honest, the layout has to come from the tree.
+TEMPLATE="$REPO/shell/package/contents/templates/Default.layout.latte"
+[ -r "$TEMPLATE" ] || { echo "no layout template at $TEMPLATE"; exit 2; }
+cp "$TEMPLATE" "$HOMEDIR/.config/latte/Default.layout.latte"
+printf '[UniversalSettings]\ncurrentLayout=Default\n' > "$HOMEDIR/.config/lattedockrc"
 
 SESS="$WORK/session.sh"
 cat > "$SESS" <<EOF
 #!/bin/bash
 set -u
-export HOME="$HOMEDIR"
+. "$REPO/tests/lib/nested_kwin.sh"
+seed_sandbox_home "$HOMEDIR"
 export USER=lattee2e USERNAME=lattee2e
 rm -f /tmp/latte-dock.lattee2e.lock
 export QT_QPA_PLATFORM=wayland
