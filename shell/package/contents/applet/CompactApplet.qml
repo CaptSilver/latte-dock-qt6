@@ -72,17 +72,21 @@ PlasmaCore.ToolTipArea {
         }
 
         //if the fullRepresentation size was restored to a stored size, or if is dragged from the desktop, restore popup size
+        //! The guards below pick a branch once, but each Qt.binding re-evaluates for as long as
+        //! the popup lives -- and a widget that declares switchWidth/switchHeight drops back to
+        //! a null fullRepresentation when the dock resizes. So every binding has to survive it,
+        //! not just the branch that installed it.
         if (fullRepresentation.Layout && fullRepresentation.Layout.preferredWidth > 0) {
             popupWindow.mainItem.width = Qt.binding(function() {
-                return fullRepresentation.Layout.preferredWidth
+                return fullRepresentation?.Layout?.preferredWidth ?? _mSize.advanceWidth * 35
             })
         } else if (fullRepresentation.implicitWidth > 0) {
             popupWindow.mainItem.width = Qt.binding(function() {
-                return fullRepresentation.implicitWidth
+                return fullRepresentation?.implicitWidth ?? _mSize.advanceWidth * 35
             })
         } else if (fullRepresentation.width > 0) {
             popupWindow.mainItem.width = Qt.binding(function() {
-                return fullRepresentation.width
+                return fullRepresentation?.width ?? _mSize.advanceWidth * 35
             })
         } else {
             popupWindow.mainItem.width = Qt.binding(function() {
@@ -92,15 +96,15 @@ PlasmaCore.ToolTipArea {
 
         if (fullRepresentation.Layout && fullRepresentation.Layout.preferredHeight > 0) {
             popupWindow.mainItem.height = Qt.binding(function() {
-                return fullRepresentation.Layout.preferredHeight
+                return fullRepresentation?.Layout?.preferredHeight ?? _mSize.height * 25
             })
         } else if (fullRepresentation.implicitHeight > 0) {
             popupWindow.mainItem.height = Qt.binding(function() {
-                return fullRepresentation.implicitHeight
+                return fullRepresentation?.implicitHeight ?? _mSize.height * 25
             })
         } else if (fullRepresentation.height > 0) {
             popupWindow.mainItem.height = Qt.binding(function() {
-                return fullRepresentation.height
+                return fullRepresentation?.height ?? _mSize.height * 25
             })
         } else {
             popupWindow.mainItem.height = Qt.binding(function() {

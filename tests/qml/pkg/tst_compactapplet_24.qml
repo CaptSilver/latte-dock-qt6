@@ -9,6 +9,7 @@
 // readonly property, a reparent/binding side-effect, a status transition, or a
 // signal (toolTipVisibleChanged). No execute-and-verify(true) credit.
 import QtQuick
+import QtQuick.Layouts
 import QtTest
 import Stage 1.0
 
@@ -88,6 +89,17 @@ TestCase {
         implicitHeight: 90
         width: 120
         height: 90
+    }
+
+    // Takes the Layout.preferredWidth branch of onFullRepresentationChanged, which is the one
+    // that installs a binding reading through .Layout. A plain Item leaves preferredWidth at
+    // -1 and falls to the implicitWidth branch, which never touches .Layout at all.
+    Item {
+        id: fullRepWithLayoutMock
+        implicitWidth: 120
+        implicitHeight: 90
+        Layout.preferredWidth: 140
+        Layout.preferredHeight: 100
     }
 
     SignalSpy { id: ttVisibleSpy }
@@ -172,6 +184,26 @@ TestCase {
 
     // Drive the expandedSync timer (interval 500): its onTriggered syncs
     // hostedApplet.expanded to popupWindow.visible (false at rest).
+    // A representation can go away again. Widgets that declare switchWidth/switchHeight --
+    // the system monitor is one -- swap between their compact and full representation as the
+    // dock resizes, so fullRepresentation returns to null after having been set.
+    //
+    // onFullRepresentationChanged guards `if (fullRepresentation.Layout && ...)` once, then
+    // installs Qt.binding(function(){ return fullRepresentation.Layout.preferredWidth }). The
+    // guard runs at assignment; the closure re-evaluates forever after, unguarded. When the
+    // representation goes, the binding fires against null and throws on every re-evaluation.
+    function test_fullRepresentationClearedAfterItsBindingsWereInstalled() {
+        failOnWarning(/Cannot read property 'Layout' of null/);
+
+        const o = make();
+        o.fullRepresentation = fullRepWithLayoutMock;
+        wait(50);
+        o.fullRepresentation = null;
+        wait(50);
+
+        compare(o.fullRepresentation, null);
+    }
+
     function test_expandedSyncTimer() {
         const o = make();
         // Pre-set expanded true; the timer must overwrite it with popup.visible.
