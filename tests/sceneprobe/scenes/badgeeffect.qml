@@ -14,7 +14,10 @@ Item {
         id: iconWidget
         anchors.fill: parent
         color: "steelblue"
-        Text { anchors.centerIn: parent; text: "app"; color: "white" }
+        //! pinned because this scene is compared pixel-exact: unpinned, the glyphs render at
+        //! whatever the host's default font size is, and the reference then encodes that rather
+        //! than anything about BadgeEffect. 12 is what the reference was blessed at.
+        Text { anchors.centerIn: parent; text: "app"; font.pixelSize: 12; color: "white" }
     }
 
     Item {

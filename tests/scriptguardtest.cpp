@@ -118,6 +118,7 @@ private Q_SLOTS:
     void vulkanIcd_prefersTheArchMatchedManifest();
     void vulkanIcd_fallsBackToTheUnsuffixedManifest();
     void vulkanIcd_failsLoudlyWithNoManifest();
+    void renderGateScenes_pinTheirFontSize();
     void nestedKwinLauncher_doesNotForceTheVulkanRhi();
     void nestedKwinLauncher_propagatesTheSessionExitCode_data();
     void nestedKwinLauncher_propagatesTheSessionExitCode();
@@ -302,6 +303,40 @@ static void seedIcd(const QString &dir, const QString &name)
     QFile f(QStringLiteral("%1/%2").arg(dir, name));
     QVERIFY(f.open(QIODevice::WriteOnly | QIODevice::Text));
     f.write("{}\n");
+}
+
+void ScriptGuardTest::renderGateScenes_pinTheirFontSize()
+{
+    // A render-gate scene is compared pixel-exact on lavapipe (tolerance {0, 0.0}), so any Text
+    // that does not set font.pixelSize bakes the HOST's default font size into the reference.
+    // That is not a property of the code under test, and it drifts: badgeeffect.qml was blessed
+    // when the default resolved to 12px, the rebuilt box resolves it to 13px, and the scene
+    // failed with 211 differing pixels while five sibling text scenes -- every one of which pins
+    // its size -- kept matching exactly.
+    const QString dir = repoPath(QStringLiteral("tests/sceneprobe/scenes"));
+    QDirIterator it(dir, QStringList() << QStringLiteral("*.qml"), QDir::Files);
+
+    QStringList offenders;
+    int scanned = 0;
+
+    while (it.hasNext()) {
+        const QString path = it.next();
+        const QString src = readFile(path);
+        QVERIFY2(!src.isEmpty(), qPrintable(QStringLiteral("%1 unreadable").arg(path)));
+        ++scanned;
+
+        if (!src.contains(QRegularExpression(QStringLiteral("\\bText\\s*\\{")))) {
+            continue;
+        }
+        if (!src.contains(QStringLiteral("font.pixelSize"))) {
+            offenders << QFileInfo(path).fileName();
+        }
+    }
+
+    QVERIFY2(scanned > 0, "no render-gate scenes found");
+    QVERIFY2(offenders.isEmpty(),
+             qPrintable(QStringLiteral("these scenes render Text without pinning font.pixelSize, so their reference encodes the host's default font: %1")
+                            .arg(offenders.join(QStringLiteral(", ")))));
 }
 
 void ScriptGuardTest::vulkanIcd_prefersTheArchMatchedManifest()
