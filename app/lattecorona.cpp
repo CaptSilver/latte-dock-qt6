@@ -155,7 +155,16 @@ void Corona::onAboutToQuit()
 
     //! BEGIN: Give the time to slide-out views when closing
     layoutsManager()->synchronizer()->hideAllViews();
-    viewSettingsFactory()->deleteLater();
+
+    //! Must stay after hideAllViews(): that emits currentLayoutIsSwitching, which the settings
+    //! window connected to hideConfigWindow() in its own constructor, so it closes itself first.
+    //! Closing is what runs PrimaryConfigView::hideEvent -- clearing userConfiguring on the
+    //! containment, and on a visibility-mode change asking the layout to recreate the view.
+    //! Deleting first would skip that path rather than trigger it: a QWindow destructor cannot
+    //! reach an override, since the derived object is already gone when ~QWindow hides it.
+    //! It also has to be a real delete -- unload() below destroys the views synchronously, so a
+    //! deleteLater() posted here is never delivered.
+    viewSettingsFactory()->unloadSettingsWindow();
 
     m_viewsScreenSyncTimer.stop();
 

@@ -251,11 +251,6 @@ View::~View()
     //! windows.
     //! this->disconnect();
 
-    if (m_primaryConfigView && m_corona->inQuit()) {
-        //! delete only when application is quitting
-        delete m_primaryConfigView;
-    }
-
     if (m_appletConfigView) {
         delete m_appletConfigView;
     }

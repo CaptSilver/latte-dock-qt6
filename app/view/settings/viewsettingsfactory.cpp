@@ -22,9 +22,13 @@ ViewSettingsFactory::ViewSettingsFactory(QObject *parent)
 
 ViewSettingsFactory::~ViewSettingsFactory()
 {
-    if (m_primaryConfigView) {
-        delete m_primaryConfigView;
-    }
+    unloadSettingsWindow();
+}
+
+void ViewSettingsFactory::unloadSettingsWindow()
+{
+    //! no guard needed, m_primaryConfigView is a QPointer that nulls itself on destruction
+    delete m_primaryConfigView;
 }
 
 bool ViewSettingsFactory::hasOrphanSettings() const

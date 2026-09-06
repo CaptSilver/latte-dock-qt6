@@ -44,6 +44,9 @@ public:
     ViewPart::PrimaryConfigView *primaryConfigView(Latte::View *view);
     ViewPart::WidgetExplorerView *widgetExplorerView(Latte::View *view);
 
+    //! Destroys the settings window right now. The quit path cannot wait for a deleteLater().
+    void unloadSettingsWindow();
+
 private:
     QPointer<ViewPart::PrimaryConfigView> m_primaryConfigView;
     QPointer<Plasma::Containment> m_lastContainment;

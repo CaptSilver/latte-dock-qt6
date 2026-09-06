@@ -306,6 +306,7 @@ private Q_SLOTS:
     void templatesManager_templateName_delegatesToTheSharedStrip();
     void viewsHandler_importView_stripsTheSuffixNotEveryOccurrence();
     void rawPointerMembersAreNullInitialized();
+    void viewSettingsFactory_isTheOnlySettingsWindowDeleter();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -2888,6 +2889,56 @@ void SourceGuardTest::rawPointerMembersAreNullInitialized()
     offenders.sort();
     QVERIFY2(offenders.isEmpty(),
              qPrintable(QStringLiteral("raw pointer members with no in-class initializer:\n  %1").arg(offenders.join(QStringLiteral("\n  ")))));
+}
+
+void SourceGuardTest::viewSettingsFactory_isTheOnlySettingsWindowDeleter()
+{
+    // The single PrimaryConfigView had two deleters: ~ViewSettingsFactory, and a block in ~View
+    // that fired whenever the corona was quitting. Corona::onAboutToQuit only *posted* the
+    // factory's deleteLater() and then unloaded the layouts synchronously, so ~View is what
+    // actually destroyed the window and the factory's delete was the never-taken branch. The
+    // window now dies through one synchronous call, at the same point in the quit sequence.
+    // No test can observe that: Latte::View is abstract and a PrimaryConfigView needs a real
+    // containment plus the installed shell QML, so the shape is pinned here instead.
+    const QString corona = withoutComments(readRepoFile(QStringLiteral("app/lattecorona.cpp")));
+    QVERIFY2(!corona.isEmpty(), "lattecorona.cpp is unreadable");
+    const QString quitBody = stripped(functionBody(corona, QStringLiteral("void Corona::onAboutToQuit()")));
+    QVERIFY2(!quitBody.isEmpty(), "Corona::onAboutToQuit() not found");
+    QVERIFY2(quitBody.contains(QStringLiteral("viewSettingsFactory()->unloadSettingsWindow();")),
+             "onAboutToQuit() must tear the settings window down synchronously, before unload()");
+    QVERIFY2(!quitBody.contains(QStringLiteral("viewSettingsFactory()->deleteLater();")),
+             "a deleteLater() here is never delivered -- unload() destroys the views first");
+
+    // WHICH function deletes the window is only half of it; WHEN is the rest, and it is the half
+    // a reader is most likely to undo. Both bounds are real: hoisted above hideAllViews() the
+    // window never closes itself, so hideEvent never clears userConfiguring on the containment;
+    // dropped below unload() it outlives the views it points back into.
+    const int hideAll = quitBody.indexOf(QStringLiteral("layoutsManager()->synchronizer()->hideAllViews();"));
+    const int unloadWindow = quitBody.indexOf(QStringLiteral("viewSettingsFactory()->unloadSettingsWindow();"));
+    const int unloadAll = quitBody.indexOf(QStringLiteral("layoutsManager()->unload();"));
+    QVERIFY2(hideAll >= 0 && unloadAll >= 0, "onAboutToQuit() no longer hides the views or unloads the layouts");
+    QVERIFY2(hideAll < unloadWindow,
+             "the settings window must be torn down after hideAllViews(), which is what closes it");
+    QVERIFY2(unloadWindow < unloadAll,
+             "the settings window must be torn down before unload() destroys the views it points at");
+
+    const QString factory = withoutComments(readRepoFile(QStringLiteral("app/view/settings/viewsettingsfactory.cpp")));
+    QVERIFY2(!factory.isEmpty(), "viewsettingsfactory.cpp is unreadable");
+    const QString unloadBody = stripped(functionBody(factory, QStringLiteral("void ViewSettingsFactory::unloadSettingsWindow()")));
+    QVERIFY2(!unloadBody.isEmpty(), "ViewSettingsFactory::unloadSettingsWindow() not found");
+    QVERIFY2(unloadBody.contains(QStringLiteral("deletem_primaryConfigView;")),
+             "unloadSettingsWindow() must actually delete the window, not just exist");
+    const QString factoryDtor = stripped(functionBody(factory, QStringLiteral("ViewSettingsFactory::~ViewSettingsFactory()")));
+    QVERIFY2(!factoryDtor.isEmpty(), "~ViewSettingsFactory() not found");
+    QVERIFY2(factoryDtor.contains(QStringLiteral("unloadSettingsWindow();")),
+             "the orphan fallback must go through the same deleter");
+
+    const QString view = withoutComments(readRepoFile(QStringLiteral("app/view/view.cpp")));
+    QVERIFY2(!view.isEmpty(), "view.cpp is unreadable");
+    const QString viewDtor = stripped(functionBody(view, QStringLiteral("View::~View()")));
+    QVERIFY2(!viewDtor.isEmpty(), "View::~View() not found");
+    QVERIFY2(!viewDtor.contains(QStringLiteral("m_primaryConfigView")),
+             "~View must not be a second deleter for the settings window");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)
