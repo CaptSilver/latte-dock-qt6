@@ -774,10 +774,18 @@ set(LATTE_SHELL_STAGE_ENV "XDG_DATA_DIRS=${LATTE_SHELL_STAGE}/usr/share:/usr/sha
 set(LATTE_NO_SESSION_BUS "DBUS_SESSION_BUS_ADDRESS=unix:path=/nonexistent")
 
 
+# An aborted run -- Ctrl-C, --stop-on-failure -- leaves the stage on disk, and installing over
+# a leftover keeps files that have since been deleted from the tree. That is how a removed QML
+# file goes on being compiled by the gates below, and it is what those gates used to avoid by
+# each installing to a scratch dir and swapping it in. Reset first and they no longer have to.
+add_test(NAME shellpackagestagereset COMMAND ${CMAKE_COMMAND} -E rm -rf ${LATTE_SHELL_STAGE})
+set_tests_properties(shellpackagestagereset PROPERTIES FIXTURES_SETUP shellpackage)
+
 add_test(NAME shellpackagestage COMMAND ${CMAKE_COMMAND} --install ${CMAKE_BINARY_DIR})
 set_tests_properties(shellpackagestage PROPERTIES
     ENVIRONMENT "DESTDIR=${LATTE_SHELL_STAGE}"
-    FIXTURES_SETUP shellpackage)
+    FIXTURES_SETUP shellpackage
+    DEPENDS shellpackagestagereset)
 
 add_test(NAME shellpackagestageclean COMMAND ${CMAKE_COMMAND} -E rm -rf ${LATTE_SHELL_STAGE})
 set_tests_properties(shellpackagestageclean PROPERTIES FIXTURES_CLEANUP shellpackage)
@@ -908,19 +916,16 @@ target_include_directories(tasksbackendtest PRIVATE ${CMAKE_SOURCE_DIR}/plasmoid
 
 # Headless QML compile gate: compiles every shell/containment/plasmoid QML in the
 # real engine (offscreen) so removed-type / removed-property errors in lazy,
-# interaction-only components are caught without a live session. The script
-# self-stages the packages, so it needs no prior install. It assumes the in-tree
-# build environment (qmltestrunner + a writable stage dir), matching how the rest
-# of the suite is built and run.
+# interaction-only components are caught without a live session. It reads the
+# shellpackage stage instead of installing one of its own, and refuses to start
+# without it. It assumes the in-tree build environment (qmltestrunner), matching
+# how the rest of the suite is built and run.
 add_test(NAME qmlloadcompile COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/manual/qml_load_compile.sh)
 set_tests_properties(qmlloadcompile PROPERTIES
-    ENVIRONMENT "BUILD=${CMAKE_BINARY_DIR}"
+    ENVIRONMENT "STAGE=${LATTE_SHELL_STAGE}"
+    FIXTURES_REQUIRED shellpackage
     TIMEOUT 300)
 
-# The package-level QML suite: 546 cases that build real shell/containment/plasmoid
-# components out of a staged install. It reuses the shellpackage fixture rather than
-# installing a fourth copy of the tree, and runs against a scratch root so it never
-# touches the coverage harness's own stage.
 # Honest-coverage lint for the package tests: bans entry-tick banking, assertion-free
 # test bodies, error-swallowing catches and hardcoded stage paths. It was only ever a
 # reviewer aid; wiring it here makes those rules a gate.
@@ -928,18 +933,22 @@ add_test(NAME lintpkgtests
     COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/coverage/lint_pkg_tests.py
             --dir ${CMAKE_CURRENT_SOURCE_DIR}/qml/pkg)
 
+# The package-level QML suite: builds real shell/containment/plasmoid components out of
+# the shellpackage stage rather than installing another copy of the tree. It drops its
+# Stage singleton into that stage; no other gate searches that path, so none of them see it.
 add_test(NAME qmlpkg COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/manual/qml_pkg_test.sh)
 set_tests_properties(qmlpkg PROPERTIES
-    ENVIRONMENT "BUILD=${CMAKE_BINARY_DIR};STAGE=${LATTE_SHELL_STAGE}"
+    ENVIRONMENT "STAGE=${LATTE_SHELL_STAGE}"
     FIXTURES_REQUIRED shellpackage
     TIMEOUT 300)
 
 # Headless interaction tests (Qt Quick Test): instantiate self-contained Latte
 # controls offscreen and synthesize real clicks to assert behavior. New cases go
-# in tests/qml/tst_*.qml.
+# in tests/qml/tst_*.qml. Reads the shellpackage stage like the compile gate above.
 add_test(NAME qmlinteraction COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/manual/qml_interaction_test.sh)
 set_tests_properties(qmlinteraction PROPERTIES
-    ENVIRONMENT "BUILD=${CMAKE_BINARY_DIR}"
+    ENVIRONMENT "STAGE=${LATTE_SHELL_STAGE}"
+    FIXTURES_REQUIRED shellpackage
     TIMEOUT 300)
 
 ecm_add_test(viewedgestest.cpp ${CMAKE_SOURCE_DIR}/app/layout/viewedges.cpp

@@ -108,6 +108,8 @@ private Q_SLOTS:
     void uninstall_failsLoudlyWhenTheManifestIsMissing();
     void e2eRunner_honoursABuildDirOverride();
     void manualRunners_doNotDefaultToTheStaleBuildTree();
+    void manualRunners_requireAStagedInstallInsteadOfMakingOne();
+    void manualRunners_carryNoHardcodedStagePath();
     void sceneprobeRunner_stagesFromTheSelectedBuildDir();
     void sceneprobeRunner_announcesAnUninstrumentedFallback();
     void qmlCoverage_honoursACoverageBuildOverride();
@@ -227,8 +229,9 @@ void ScriptGuardTest::qmlCoverage_stagesBeforeDestroyingThePreviousStage()
 
 void ScriptGuardTest::manualRunners_doNotDefaultToTheStaleBuildTree()
 {
-    // ctest passes BUILD explicitly, so these defaults only ever bite someone running the
-    // script by hand -- which is exactly when a two-month-old tree is hardest to notice.
+    // None of these three defines BUILD any more, so this assertion has nothing left to catch.
+    // It stays as the door a hardcoded build tree used to come back through;
+    // manualRunners_requireAStagedInstallInsteadOfMakingOne below is what covers them now.
     for (const QString &rel : {QStringLiteral("tests/manual/qml_load_compile.sh"),
                                QStringLiteral("tests/manual/qml_interaction_test.sh"),
                                QStringLiteral("tests/manual/qml_pkg_test.sh")}) {
@@ -237,6 +240,112 @@ void ScriptGuardTest::manualRunners_doNotDefaultToTheStaleBuildTree()
         QVERIFY2(!src.contains(QStringLiteral("${BUILD:-$REPO/build}")),
                  qPrintable(rel + QStringLiteral(" still defaults to the stale $REPO/build")));
     }
+}
+
+void ScriptGuardTest::manualRunners_requireAStagedInstallInsteadOfMakingOne()
+{
+    // All three gates need a staged install to resolve org.kde.latte.* from. Two of them used to
+    // build their own into a fixed path shared by every checkout on the machine, so a second tree
+    // -- or a second run -- read a stage it had not built. ctest already publishes one stage per
+    // build dir as the shellpackage fixture; the runners consume that and refuse to run without it.
+    //
+    // Observe what the scripts do, not what they say. A `cmake` shim early on PATH touches a
+    // marker file, so a runner that still stages itself is caught even when it goes on to fail for
+    // an unrelated reason. The missing-stage message is the assertion with teeth: qml_load_compile.sh
+    // already exits 2 on an empty stage with "no staged QML found", so a non-zero exit proves nothing
+    // on its own.
+    //
+    // manualRunners_doNotDefaultToTheStaleBuildTree above is vacuous for all three now -- none of
+    // them defines BUILD any more. This is the guard that holds the line.
+    QTemporaryDir tmp;
+    QVERIFY(tmp.isValid());
+
+    const QString shim = tmp.filePath(QStringLiteral("cmake"));
+    {
+        QFile f(shim);
+        QVERIFY2(f.open(QIODevice::WriteOnly | QIODevice::Text), "could not write the cmake shim");
+        f.write(QByteArrayLiteral("#!/bin/bash\ntouch \"$MARKER\"\nexit 0\n"));
+        f.close();
+        QVERIFY2(f.setPermissions(f.permissions() | QFileDevice::ExeOwner), "could not make the cmake shim executable");
+    }
+
+    int n = 0;
+    for (const QString &rel : {QStringLiteral("tests/manual/qml_load_compile.sh"),
+                               QStringLiteral("tests/manual/qml_interaction_test.sh"),
+                               QStringLiteral("tests/manual/qml_pkg_test.sh")}) {
+        ++n;
+        // One stage per script: a runner that still stages deletes the directory it was handed,
+        // which would leave the next script looking at a missing stage rather than an empty one.
+        const QString stage = tmp.filePath(QStringLiteral("emptystage-%1").arg(n));
+        QVERIFY(QDir().mkpath(stage));
+        const QString marker = tmp.filePath(QStringLiteral("staged-%1.marker").arg(n));
+
+        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+        env.insert(QStringLiteral("PATH"), tmp.path() + QLatin1Char(':') + env.value(QStringLiteral("PATH")));
+        env.insert(QStringLiteral("MARKER"), marker);
+        // STAGE has to reach the child. A runner that still falls back to a fixed path would
+        // otherwise wipe and reinstall whatever this machine has staged there.
+        env.insert(QStringLiteral("STAGE"), stage);
+        // Keeps a runner that gets past the stage check from launching the real QML suite.
+        env.insert(QStringLiteral("QMLTESTRUNNER"), QStringLiteral("/bin/true"));
+
+        QProcess p;
+        p.setProcessEnvironment(env);
+        p.setWorkingDirectory(tmp.path());
+        p.setProcessChannelMode(QProcess::MergedChannels);
+        p.start(QStringLiteral("bash"), {repoPath(rel)});
+        QVERIFY2(p.waitForFinished(60000), qPrintable(rel + QStringLiteral(" did not terminate")));
+        const QString out = QString::fromUtf8(p.readAll()).trimmed();
+
+        QVERIFY2(!QFile::exists(marker),
+                 qPrintable(rel + QStringLiteral(" installed a stage of its own instead of consuming the shellpackage fixture")));
+        QVERIFY2(p.exitCode() != 0,
+                 qPrintable(rel + QStringLiteral(" exited 0 against an empty stage")));
+        QVERIFY2(out.contains(QStringLiteral("no staged install at")),
+                 qPrintable(rel + QStringLiteral(" did not name the missing stage, it said: ") + out));
+
+        // The PATH shim only intercepts a literal `cmake`, so match the flag rather than the
+        // command: staging reintroduced as ${CMAKE_COMMAND} or cmake3 walks straight past a
+        // needle spelled "cmake --install". Per-file, not tree-wide: qml_coverage.sh and
+        // sceneprobe/run.sh install their own stages by design.
+        QVERIFY2(!codeOnly(readRepoFile(rel)).contains(QStringLiteral("--install")),
+                 qPrintable(rel + QStringLiteral(" still carries an install step")));
+    }
+}
+
+void ScriptGuardTest::manualRunners_carryNoHardcodedStagePath()
+{
+    // A default stage path is worse than none: drop the ctest ENVIRONMENT that passes STAGE and
+    // the gates go green against whatever tree happens to sit at the fixed path, instead of going
+    // red. Requiring STAGE is what makes the CMake half self-enforcing, so pin the property and
+    // not one spelling of it -- any ${STAGE:-...} restores the failure mode, whatever path it names.
+    QStringList defaulted;
+    QStringList unguarded;
+
+    for (const QString &rel : {QStringLiteral("tests/manual/qml_load_compile.sh"),
+                               QStringLiteral("tests/manual/qml_interaction_test.sh"),
+                               QStringLiteral("tests/manual/qml_pkg_test.sh")}) {
+        const QString src = codeOnly(readRepoFile(rel));
+
+        if (src.contains(QStringLiteral("${STAGE:-"))) {
+            defaulted << rel;
+        }
+
+        if (!src.contains(QStringLiteral("${STAGE:?"))) {
+            unguarded << rel;
+        }
+    }
+
+    QVERIFY2(defaulted.isEmpty(),
+             qPrintable(QStringLiteral("these still fall back to a default stage path: %1").arg(defaulted.join(QStringLiteral(", ")))));
+    QVERIFY2(unguarded.isEmpty(),
+             qPrintable(QStringLiteral("these do not require STAGE to be set: %1").arg(unguarded.join(QStringLiteral(", ")))));
+
+    // The old fixed path, kept as its own needle: a bare STAGE=/tmp/lattestage assignment carries
+    // no default syntax for the checks above to see.
+    const QStringList hits = shellScriptsContaining(QStringLiteral("/tmp/lattestage"));
+    QVERIFY2(hits.isEmpty(),
+             qPrintable(QStringLiteral("these still name the old fixed stage path: %1").arg(hits.join(QStringLiteral(", ")))));
 }
 
 void ScriptGuardTest::buildScripts_configureWithTheMandatoryQtPathsFlag()

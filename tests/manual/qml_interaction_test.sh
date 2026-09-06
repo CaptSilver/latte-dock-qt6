@@ -10,24 +10,24 @@
 # coverage harness runs them again against an instrumented copy of that stage.
 #
 # Usage:
-#   tests/manual/qml_interaction_test.sh
+#   ctest -R qmlinteraction
+# or by hand, against an existing staged install:
+#   STAGE=<staged install> tests/manual/qml_interaction_test.sh
 set -u
 
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
-BUILD="${BUILD:-$REPO}"
-STAGE="${STAGE:-/tmp/lattestage}"
+# Cases that instantiate real indicator QML pull in org.kde.latte.core and
+# org.kde.latte.components, and those resolve only from an installed module tree -- without
+# one the tests fail on "module is not installed" anywhere the dock is not already installed
+# system wide, which is every clean checkout and every CI runner. The shellpackage ctest
+# fixture stages that tree once for every gate that needs it.
+STAGE="${STAGE:?set STAGE to a staged install; ctest passes it from the shellpackage fixture}"
 QMLTESTRUNNER="${QMLTESTRUNNER:-/usr/lib64/qt6/bin/qmltestrunner}"
 
 export QT_QPA_PLATFORM=offscreen
 
-# Deploy the tree the same way qml_load_compile.sh does. Cases that instantiate
-# real indicator QML pull in org.kde.latte.core and org.kde.latte.components, and
-# those resolve only from an installed module tree -- without this the tests fail
-# on "module is not installed" anywhere the dock is not already installed system
-# wide, which is every clean checkout and every CI runner.
-echo "staging $BUILD -> $STAGE ..."
-if ! ( cd "$BUILD" && DESTDIR="$STAGE" cmake --install . ) >/tmp/qml-interaction-stage.log 2>&1; then
-    echo "STAGE FAILED:"; tail -15 /tmp/qml-interaction-stage.log; exit 2
+if [ ! -d "$STAGE/usr/share/plasma" ]; then
+    echo "no staged install at $STAGE (expected the shellpackage fixture to provide it)"; exit 2
 fi
 
 # Run each top-level leaf/interaction test as its own qmltestrunner process.

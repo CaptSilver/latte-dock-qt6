@@ -10,11 +10,13 @@
 # coverage harness's own stage.
 #
 # Usage:
-#   tests/manual/qml_pkg_test.sh
+#   ctest -R qmlpkg
+# or by hand, against an existing staged install:
+#   STAGE=<staged install> tests/manual/qml_pkg_test.sh
 set -u
 
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
-STAGE="${STAGE:-/tmp/lattestage}"
+STAGE="${STAGE:?set STAGE to a staged install; ctest passes it from the shellpackage fixture}"
 QMLTESTRUNNER="${QMLTESTRUNNER:-/usr/lib64/qt6/bin/qmltestrunner}"
 
 if [ ! -d "$STAGE/usr/share/plasma" ]; then

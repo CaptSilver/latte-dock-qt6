@@ -19,27 +19,23 @@
 #     running app, never in qmltestrunner. These all load at startup anyway.
 #
 # Usage:
-#   tests/manual/qml_load_compile.sh
+#   ctest -R qmlloadcompile
+# or by hand, against an existing staged install:
+#   STAGE=<staged install> tests/manual/qml_load_compile.sh
 set -u
 
-REPO="$(cd "$(dirname "$0")/../.." && pwd)"
-BUILD="${BUILD:-$REPO}"
-STAGE="${STAGE:-/tmp/lattestage}"
+# Latte's own QML modules (org.kde.latte.*) resolve out of a staged install, through the
+# import path the dock actually uses. The shellpackage ctest fixture builds that stage and
+# removes it again, so each run installs into an empty directory -- which is the property
+# this script used to buy for itself by installing to a scratch dir and swapping it in.
+# Without it, a QML file deleted from the tree survives in the stage and goes on being
+# compiled here long after it is gone.
+STAGE="${STAGE:?set STAGE to a staged install; ctest passes it from the shellpackage fixture}"
 QMLTESTRUNNER="${QMLTESTRUNNER:-/usr/lib64/qt6/bin/qmltestrunner}"
 
-# Deploy the current tree so Latte's own QML modules (org.kde.latte.*) and any
-# edits resolve through the import path the dock actually uses.
-echo "staging $BUILD -> $STAGE ..."
-# Install into a fresh dir and swap it in: installing over the previous stage leaves
-# deleted files behind, so a removed QML keeps getting compiled long after it is gone.
-STAGE_NEW="$STAGE.new"
-rm -rf "$STAGE_NEW"
-if ! ( cd "$BUILD" && DESTDIR="$STAGE_NEW" cmake --install . ) >/tmp/qml-compile-stage.log 2>&1; then
-    echo "STAGE FAILED:"; tail -15 /tmp/qml-compile-stage.log; exit 2
+if [ ! -d "$STAGE/usr/share/plasma" ]; then
+    echo "no staged install at $STAGE (expected the shellpackage fixture to provide it)"; exit 2
 fi
-
-rm -rf "$STAGE"
-mv "$STAGE_NEW" "$STAGE"
 
 PKG="$STAGE/usr/share/plasma"
 # Indicators live outside the plasma package tree (share/latte/indicators) and
@@ -73,7 +69,11 @@ echo "skipped $skipped_app app-module-dependent files (covered by qml_load_gate.
 
 if [ "${#FILES[@]}" -eq 0 ]; then echo "nothing left to compile"; exit 2; fi
 
-GEN=/tmp/qml_compile_check.qml
+# The generated TestCase holds absolute paths from this run only, so it goes in a
+# per-process dir: a fixed /tmp name is one file two concurrent runs would fight over.
+WORK="$(mktemp -d)"
+trap 'rm -rf "$WORK"' EXIT
+GEN="$WORK/qml_compile_check.qml"
 {
     echo 'import QtQuick'
     echo 'import QtTest'
