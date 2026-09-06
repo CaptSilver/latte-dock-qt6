@@ -260,6 +260,7 @@ private Q_SLOTS:
     void importer_checksEveryArchiveOpen();
     void abilityMemberReadsResolve();
     void shippedJavaScriptIsImported();
+    void everyScriptImportResolves();
     void eventsSink_mouseCasesShareOneBody();
     void notifyrcEventsMatchTheirEmitters();
     void factory_removeIndicator_reportsAFailedRemoval();
@@ -1065,6 +1066,51 @@ void SourceGuardTest::abilityMemberReadsResolve()
     QVERIFY2(unresolved.isEmpty(),
              qPrintable(QStringLiteral("ability member reads that resolve to undefined:\n  %1")
                             .arg(unresolved.join(QStringLiteral("\n  ")))));
+}
+
+void SourceGuardTest::everyScriptImportResolves()
+{
+    // The mirror of shippedJavaScriptIsImported(). That one catches a script nobody imports;
+    // this one catches an import with no script behind it -- the failure a dead-code sweep
+    // actually risks, because deleting the last caller of a helper and deleting the helper are
+    // two edits and only the second one is obvious.
+    //
+    // Nothing else would catch it either. A missing script import is not a compile error the
+    // way a missing type is: the engine reports "Script ... unavailable" at load, on the user's
+    // machine, and only for the branch that instantiates that component. Latte's colorizer
+    // Manager sits behind a Loader, so it stays silent until something asks for it.
+    const QStringList packages = {QStringLiteral("containment"),
+                                  QStringLiteral("plasmoid"),
+                                  QStringLiteral("declarativeimports"),
+                                  QStringLiteral("shell"),
+                                  QStringLiteral("indicators")};
+
+    static const QRegularExpression jsImport(QStringLiteral("^[ \\t]*import\\s+\"([^\"]+\\.js)\""),
+                                             QRegularExpression::MultilineOption);
+
+    QStringList dangling;
+    int seen = 0;
+
+    for (const QString &qml : qmlSourcesUnder(packages)) {
+        const QString src = readFile(qml);
+        if (src.isEmpty()) {
+            continue;
+        }
+        const QString dir = QFileInfo(qml).absolutePath();
+        QRegularExpressionMatchIterator it = jsImport.globalMatch(src);
+        while (it.hasNext()) {
+            const QString rel = it.next().captured(1);
+            ++seen;
+            if (!QFileInfo::exists(QDir(dir).absoluteFilePath(rel))) {
+                dangling << QStringLiteral("%1 -> %2").arg(relativeToRepo(qml), rel);
+            }
+        }
+    }
+
+    QVERIFY2(seen > 0, "found no script imports to resolve");
+    QVERIFY2(dangling.isEmpty(),
+             qPrintable(QStringLiteral("these QML files import a script that is not shipped beside them: %1")
+                            .arg(dangling.join(QStringLiteral(", ")))));
 }
 
 void SourceGuardTest::shippedJavaScriptIsImported()
