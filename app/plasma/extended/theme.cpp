@@ -71,13 +71,7 @@ Theme::~Theme()
 
     releaseSettingsFileWatch();
 
-    //! the schemes are created in load(); guard in case the theme was built but never loaded
-    if (m_defaultScheme) {
-        m_defaultScheme->deleteLater();
-    }
-    if (m_reversedScheme) {
-        m_reversedScheme->deleteLater();
-    }
+    //! the color schemes are children, reaped by ~QObject
 }
 
 bool Theme::hasShadow() const

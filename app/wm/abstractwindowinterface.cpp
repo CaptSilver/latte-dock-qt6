@@ -88,8 +88,7 @@ AbstractWindowInterface::~AbstractWindowInterface()
 {
     m_windowWaitingTimer.stop();
 
-    m_schemesTracker->deleteLater();
-    m_windowsTracker->deleteLater();
+    //! the schemes and windows trackers are children, reaped by ~QObject
 }
 
 bool AbstractWindowInterface::isShowingDesktop() const

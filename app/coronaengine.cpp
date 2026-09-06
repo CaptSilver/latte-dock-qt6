@@ -99,25 +99,13 @@ CoronaEngine::CoronaEngine(Latte::Corona *shell, const Deps &deps)
     m_plasmaGeometries = new PlasmaExtended::ScreenGeometries(m_shell, this);
     m_dialogShadows = new PanelShadows(this, QStringLiteral("dialogs/background"));
 
-    //! Wayland-only: the X11 backend was removed in the Plasma 6 port.
+    //! Wayland-only: the X11 backend was removed in the Plasma 6 port. An injected wm keeps
+    //! its caller's parent, so ~QObject only reaps one we built here.
     m_wm = deps.wm ? deps.wm : new WindowSystem::WaylandInterface(this);
 }
 
 CoronaEngine::~CoronaEngine()
 {
-    m_plasmaGeometries->deleteLater();
-    m_wm->deleteLater();
-    m_dialogShadows->deleteLater();
-    m_globalShortcuts->deleteLater();
-    if (m_layoutsManager) {   //! created in init(); null when the engine was built headlessly
-        m_layoutsManager->deleteLater();
-    }
-    m_screenPool->deleteLater();
-    m_universalSettings->deleteLater();
-    m_plasmaScreenPool->deleteLater();
-    m_themeExtended->deleteLater();
-    m_indicatorFactory->deleteLater();
-
     delete m_activitiesConsumer;
 
     //! IScreenInfo is a plain (non-QObject) helper; an injected one belongs to the caller.

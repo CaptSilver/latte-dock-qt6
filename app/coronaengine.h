@@ -67,6 +67,8 @@ public:
     //! real collaborator; production passes nothing.
     struct Deps
     {
+        //! An injected wm stays parented to (and owned by) the caller; only a wm the engine
+        //! builds itself becomes a child and dies with it.
         WindowSystem::AbstractWindowInterface *wm = nullptr;   //! null => new WaylandInterface
         IScreenInfo *screenInfo = nullptr;                     //! null => RealScreenInfo(screenPool)
         KSharedConfig::Ptr config;                             //! null => KSharedConfig::openConfig()

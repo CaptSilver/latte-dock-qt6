@@ -60,10 +60,8 @@ BackgroundCache::BackgroundCache(QObject *parent)
 }
 
 BackgroundCache::~BackgroundCache()
-{   
-    if (m_pool) {
-        m_pool->deleteLater();
-    }
+{
+    //! the screen pool is a child, reaped by ~QObject
 }
 
 BackgroundCache *BackgroundCache::self()

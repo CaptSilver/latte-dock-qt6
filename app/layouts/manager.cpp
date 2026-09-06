@@ -56,13 +56,10 @@ Manager::~Manager()
         m_importer->setMultipleLayoutsStatus(Latte::MultipleLayouts::Paused);
     }
 
-    m_importer->deleteLater();
-    m_syncedLaunchers->deleteLater();
+    //! the importer, the synced launchers and the synchronizer are children, reaped by ~QObject
 
     //! no needed because Latte:Corona is calling it at better place
     // unload();
-
-    m_synchronizer->deleteLater();
 }
 
 void Manager::init()

@@ -44,13 +44,7 @@ WindowsTracker::~WindowsTracker()
 {
     qDebug() << "WindowsTracker removing...";
 
-    if (m_allScreensTracker) {
-        m_allScreensTracker->deleteLater();
-    }
-
-    if (m_currentScreenTracker) {
-        m_currentScreenTracker->deleteLater();
-    }
+    //! the all-screens and current-screen trackers are children, reaped by ~QObject
 }
 
 Latte::View *WindowsTracker::view() const

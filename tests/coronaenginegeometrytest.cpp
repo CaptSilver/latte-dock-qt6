@@ -10,11 +10,13 @@
 // geometry math runs against canned screen rects.
 
 #include <QtTest>
+#include <QPointer>
 #include <QTemporaryDir>
 
 #include <KSharedConfig>
 
 #include "../app/coronaengine.h"
+#include "../app/wm/waylandinterface.h"
 #include "fakescreeninfo.h"
 
 using namespace Latte;
@@ -27,6 +29,8 @@ private Q_SLOTS:
     void screenGeometryReflectsScreenInfo();
     void availableRectWithNoViewsReturnsFullScreen();
     void availableRectUnknownScreenIsEmpty();
+    void engineDoesNotOwnAnInjectedWindowInterface();
+    void engineDestroysTheWindowInterfaceItCreated();
 
 private:
     CoronaEngine::Deps depsWith(FakeScreenInfo *info)
@@ -71,6 +75,42 @@ void CoronaEngineGeometryTest::availableRectUnknownScreenIsEmpty()
     FakeScreenInfo info;   // no geometry registered for id 5
     CoronaEngine engine(nullptr, depsWith(&info));
     QCOMPARE(engine.availableScreenRectWithCriteria(5), QRect());
+}
+
+void CoronaEngineGeometryTest::engineDoesNotOwnAnInjectedWindowInterface()
+{
+    FakeScreenInfo info;
+    QObject owner;   // stands in for the caller that owns the window interface; heap-allocating
+                     // the wm under it keeps a regression a failed assertion, not a double free
+    WindowSystem::AbstractWindowInterface *wm = new WindowSystem::WaylandInterface(&owner);
+    QPointer<WindowSystem::AbstractWindowInterface> alive(wm);
+
+    {
+        CoronaEngine::Deps deps = depsWith(&info);
+        deps.wm = wm;
+        CoronaEngine engine(nullptr, deps);
+        QCOMPARE(engine.wm(), wm);
+        QCOMPARE(wm->parent(), &owner);   // the engine must not adopt what it was handed
+    }
+
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QVERIFY2(!alive.isNull(), "the engine destroyed a window interface it did not create");
+}
+
+void CoronaEngineGeometryTest::engineDestroysTheWindowInterfaceItCreated()
+{
+    FakeScreenInfo info;
+    QPointer<WindowSystem::AbstractWindowInterface> alive;
+
+    {
+        CoronaEngine engine(nullptr, depsWith(&info));   // no deps.wm — the engine builds its own
+        alive = engine.wm();
+        QVERIFY(!alive.isNull());
+    }
+
+    // No sendPostedEvents here on purpose: parentage is what frees it, and the child sweep
+    // in ~QObject is synchronous.
+    QVERIFY2(alive.isNull(), "the engine-built window interface must be reaped with the engine");
 }
 
 QTEST_MAIN(CoronaEngineGeometryTest)

@@ -61,13 +61,7 @@ GlobalShortcuts::GlobalShortcuts(Latte::Corona *corona, QObject *parent)
 
 GlobalShortcuts::~GlobalShortcuts()
 {
-    if (m_modifierTracker) {
-        m_modifierTracker->deleteLater();
-    }
-
-    if (m_shortcutsTracker) {
-        m_shortcutsTracker->deleteLater();
-    }
+    //! the modifier and shortcuts trackers are children, reaped by ~QObject
 }
 
 void GlobalShortcuts::init()
