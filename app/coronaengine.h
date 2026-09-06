@@ -11,6 +11,7 @@
 
 // Qt
 #include <QObject>
+#include <QPointer>
 #include <QRect>
 #include <QRegion>
 
@@ -132,7 +133,9 @@ private:
     GlobalShortcuts *m_globalShortcuts{nullptr};
     PlasmaExtended::ScreenPool *m_plasmaScreenPool{nullptr};
     PlasmaExtended::Theme *m_themeExtended{nullptr};
-    ViewSettingsFactory *m_viewSettingsFactory{nullptr};
+    //! Views ask the engine for this one and outlive it: it is built before the layouts manager,
+    //! so the child sweep takes it down first. A QPointer is what makes that answer null.
+    QPointer<ViewSettingsFactory> m_viewSettingsFactory;
     Templates::Manager *m_templatesManager{nullptr};
     Layouts::Manager *m_layoutsManager{nullptr};
     PlasmaExtended::ScreenGeometries *m_plasmaGeometries{nullptr};

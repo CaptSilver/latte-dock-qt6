@@ -307,6 +307,7 @@ private Q_SLOTS:
     void viewsHandler_importView_stripsTheSuffixNotEveryOccurrence();
     void rawPointerMembersAreNullInitialized();
     void viewSettingsFactory_isTheOnlySettingsWindowDeleter();
+    void view_readsTheSettingsWindowThroughTheFactory();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -2939,6 +2940,68 @@ void SourceGuardTest::viewSettingsFactory_isTheOnlySettingsWindowDeleter()
     QVERIFY2(!viewDtor.isEmpty(), "View::~View() not found");
     QVERIFY2(!viewDtor.contains(QStringLiteral("m_primaryConfigView")),
              "~View must not be a second deleter for the settings window");
+}
+
+void SourceGuardTest::view_readsTheSettingsWindowThroughTheFactory()
+{
+    // The factory holds the one settings window; View used to cache a second pointer to it, and
+    // the factory called View::releaseConfigView() on the previous holder to null that cache
+    // before handing the window to the next dock. The View now asks the factory each time and
+    // gates the answer on ownership, so there is no second handle left to keep in sync.
+    // Nothing here is observable from a test: Latte::View is abstract, and a PrimaryConfigView
+    // needs a real containment plus the installed shell QML.
+    const QString header = withoutComments(readRepoFile(QStringLiteral("app/view/view.h")));
+    QVERIFY2(!header.isEmpty(), "view.h is unreadable");
+    const QString decls = stripped(header);
+    QVERIFY2(!decls.contains(QStringLiteral("QPointer<ViewPart::PrimaryConfigView>m_primaryConfigView;")),
+             "View must not keep its own handle on the settings window");
+    QVERIFY2(!decls.contains(QStringLiteral("QQuickView*configView();")),
+             "configView() handed the cached window out untyped and had no callers");
+    QVERIFY2(!decls.contains(QStringLiteral("releaseConfigView")),
+             "releaseConfigView() existed only to null the cache from the factory");
+    QVERIFY2(decls.contains(QStringLiteral("ViewPart::PrimaryConfigView*settingsWindow()const;")),
+             "View must offer one accessor for the window the factory owns");
+
+    // The applet config window is a different object whose spelling only differs in case, and it
+    // is what view.h's PlasmaQuick/ConfigView include is for. A sweep for the word configView
+    // takes that include with it, and view.cpp then fails on constructing the incomplete type.
+    // Only view.cpp: Plasma's applet.h forward-declares the class, and a QPointer member is
+    // happy with an incomplete T, so merely including view.h keeps compiling.
+    QVERIFY2(decls.contains(QStringLiteral("QPointer<PlasmaQuick::ConfigView>m_appletConfigView;")),
+             "the applet config window is unrelated to the settings window and stays");
+    QVERIFY2(header.contains(QStringLiteral("#include <PlasmaQuick/ConfigView>")),
+             "m_appletConfigView needs the complete PlasmaQuick::ConfigView type");
+
+    const QString view = withoutComments(readRepoFile(QStringLiteral("app/view/view.cpp")));
+    QVERIFY2(!view.isEmpty(), "view.cpp is unreadable");
+    QVERIFY2(!view.contains(QStringLiteral("View::configView")), "configView() must lose its definition too");
+    QVERIFY2(!view.contains(QStringLiteral("View::releaseConfigView")), "releaseConfigView() must lose its definition too");
+
+    const QString accessor = stripped(functionBody(view, QStringLiteral("ViewPart::PrimaryConfigView *View::settingsWindow() const")));
+    QVERIFY2(!accessor.isEmpty(), "View::settingsWindow() not found");
+    QVERIFY2(accessor.contains(QStringLiteral("parentView()==this")),
+             "one window is shared between docks, so the accessor must answer for this one only");
+
+    const QString shown = stripped(functionBody(view, QStringLiteral("bool View::settingsWindowIsShown()")));
+    QVERIFY2(!shown.isEmpty(), "View::settingsWindowIsShown() not found");
+    QVERIFY2(shown.contains(QStringLiteral("settingsWindow()")),
+             "settingsWindowIsShown() answers positioner and the shortcuts, and must read the one handle");
+
+    const QString factory = withoutComments(readRepoFile(QStringLiteral("app/view/settings/viewsettingsfactory.cpp")));
+    QVERIFY2(!factory.isEmpty(), "viewsettingsfactory.cpp is unreadable");
+    QVERIFY2(!factory.contains(QStringLiteral("releaseConfigView")),
+             "the back-channel's only caller must go with it");
+
+    // setParentView() defers initParentView() by the slide-out delay, so for those 400ms
+    // parentView() still names the dock the window is leaving. View::applyActivitiesToWindows()
+    // now gates on ownership and therefore cannot reach the window during the move; the window
+    // has to pick the activities up itself once it lands.
+    const QString configWindow = withoutComments(readRepoFile(QStringLiteral("app/view/settings/primaryconfigview.cpp")));
+    QVERIFY2(!configWindow.isEmpty(), "primaryconfigview.cpp is unreadable");
+    const QString initParent = stripped(functionBody(configWindow, QStringLiteral("void PrimaryConfigView::initParentView(Latte::View *view)")));
+    QVERIFY2(!initParent.isEmpty(), "PrimaryConfigView::initParentView() not found");
+    QVERIFY2(initParent.contains(QStringLiteral("setOnActivities(m_latteView->activities());")),
+             "the window must apply the activities of the dock it just landed on");
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

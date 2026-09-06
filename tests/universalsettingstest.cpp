@@ -16,6 +16,7 @@
 #include "universalsettings.h"
 
 #include "../app/coretypes.h"
+#include "../app/view/view.h"
 #include "../app/data/preferencesdata.h"
 #include "../app/tools/commontools.h"
 
@@ -53,6 +54,7 @@ private Q_SLOTS:
     void freshProfileIsInPreferencesDefaults();
     void screenScalesRoundTrip();
     void kwinMetaForwardIsCachedAndReloaded();
+    void advancedModeIsNotMirroredOnTheView();
 };
 
 KSharedConfig::Ptr UniversalSettingsTest::freshConfig()
@@ -330,6 +332,17 @@ void UniversalSettingsTest::kwinMetaForwardIsCachedAndReloaded()
 
     QVERIFY(QMetaObject::invokeMethod(&settings, "recoverKWinOptions"));
     QCOMPARE(settings.kwin_metaForwardedToLatte(), false);
+}
+
+void UniversalSettingsTest::advancedModeIsNotMirroredOnTheView()
+{
+    // Latte::View carried an inSettingsAdvancedMode property that forwarded this setting on to
+    // QML, and the settings window emitted its change signal. No QML ever read it -- the
+    // configuration package reads universalSettings.inAdvancedModeForEditSettings itself -- so
+    // the flag is exposed here and nowhere else. The meta-object is what QML resolves a property
+    // against, so asking it is the one runtime check that the mirror is really gone.
+    QCOMPARE(Latte::View::staticMetaObject.indexOfProperty("inSettingsAdvancedMode"), -1);
+    QCOMPARE(Latte::View::staticMetaObject.indexOfSignal("inSettingsAdvancedModeChanged()"), -1);
 }
 
 // The UniversalSettings ctor connects to QGuiApplication::screenAdded/screenRemoved

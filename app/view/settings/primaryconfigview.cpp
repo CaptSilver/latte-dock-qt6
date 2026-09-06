@@ -277,7 +277,6 @@ void PrimaryConfigView::initParentView(Latte::View *view)
         updateAvailableScreenGeometry();
     });
 
-    viewconnections << connect(m_corona->universalSettings(), &Latte::UniversalSettings::inAdvancedModeForEditSettingsChanged, m_latteView, &Latte::View::inSettingsAdvancedModeChanged);
     viewconnections << connect(m_latteView->containment(), &Plasma::Containment::immutabilityChanged, this, &PrimaryConfigView::immutabilityChanged);   
 
     m_originalByPassWM = m_latteView->byPassWM();
@@ -297,8 +296,10 @@ void PrimaryConfigView::initParentView(Latte::View *view)
         m_secConfigView->setParentView(view);
     }
 
-    //! inform view about the current settings level
-    Q_EMIT m_latteView->inSettingsAdvancedModeChanged();
+    //! Take the activities of the dock we just landed on. On a dock-to-dock move setParentView()
+    //! defers this call by the slide-out delay, so the arriving view asked for the activities to
+    //! be applied while we still belonged to the dock we were leaving.
+    setOnActivities(m_latteView->activities());
 }
 
 void PrimaryConfigView::instantUpdateAvailableScreenGeometry()

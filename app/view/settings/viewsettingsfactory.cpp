@@ -60,12 +60,6 @@ ViewPart::PrimaryConfigView *ViewSettingsFactory::primaryConfigView(Latte::View 
 
         m_primaryConfigView = new ViewPart::PrimaryConfigView(view);
     } else {
-        auto previousView = m_primaryConfigView->parentView();
-
-        if (previousView) {
-            previousView->releaseConfigView();
-        }
-
         m_primaryConfigView->setParentView(view);
     }
 

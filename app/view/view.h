@@ -73,7 +73,6 @@ class View : public PlasmaQuick::ContainmentView
     Q_PROPERTY(bool behaveAsPlasmaPanel READ behaveAsPlasmaPanel WRITE setBehaveAsPlasmaPanel NOTIFY behaveAsPlasmaPanelChanged)
     Q_PROPERTY(bool byPassWM READ byPassWM WRITE setByPassWM NOTIFY byPassWMChanged)
     Q_PROPERTY(bool containsDrag READ containsDrag NOTIFY containsDragChanged)
-    Q_PROPERTY(bool inSettingsAdvancedMode READ inSettingsAdvancedMode NOTIFY inSettingsAdvancedModeChanged)
 
     Q_PROPERTY(bool inEditMode READ inEditMode NOTIFY inEditModeChanged)
     Q_PROPERTY(bool isPreferredForShortcuts READ isPreferredForShortcuts WRITE setIsPreferredForShortcuts NOTIFY isPreferredForShortcutsChanged)
@@ -163,8 +162,6 @@ public:
     virtual bool isPreferredForShortcuts() const;
     void setIsPreferredForShortcuts(bool preferred);
 
-    bool inSettingsAdvancedMode() const;
-
     bool isTouchingBottomViewAndIsBusy() const;
     void setIsTouchingBottomViewAndIsBusy(bool touchAndBusy);
 
@@ -222,6 +219,8 @@ public:
     QStringList activities() const;
     void setActivities(const QStringList &ids);
 
+    //! the settings window the factory owns, when this view is the one it belongs to
+    ViewPart::PrimaryConfigView *settingsWindow() const;
     bool settingsWindowIsShown();
     void showSettingsWindow();
 
@@ -236,8 +235,6 @@ public:
     virtual Latte::Types::ScreensGroup screensGroup() const = 0;
 
     QVariantList containmentActions() const;
-
-    QQuickView *configView();
 
     virtual Latte::Data::View data() const;
 
@@ -264,9 +261,6 @@ public:
     //! these are signals that create crashes, such a example is the availableScreenRectChanged from corona
     //! when its containment is destroyed
     void disconnectSensitiveSignals();
-
-    //! used from ViewSettingsFactory in order to move Configuration Windows to different View
-    void releaseConfigView();
 
 public Q_SLOTS:
     Q_INVOKABLE void newView(const QString &templateFile);
@@ -321,7 +315,6 @@ Q_SIGNALS:
     void heightChanged();
     void inEditModeChanged();
     void indicatorChanged();
-    void inSettingsAdvancedModeChanged();
     void interfacesGraphicObjChanged();
     void isPreferredForShortcutsChanged();
     void isTouchingBottomViewAndIsBusyChanged();
@@ -448,7 +441,6 @@ private:
     QQuickItem *m_metrics{nullptr};
 
     QPointer<PlasmaQuick::ConfigView> m_appletConfigView;
-    QPointer<ViewPart::PrimaryConfigView> m_primaryConfigView;
 
     QPointer<ViewPart::Effects> m_effects;
     QPointer<ViewPart::Indicator> m_indicator;

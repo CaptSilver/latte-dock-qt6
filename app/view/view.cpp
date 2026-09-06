@@ -211,8 +211,7 @@ View::View(Plasma::Corona *corona, QScreen *targetScreen, bool byPassX11WM)
                 && m_corona->viewSettingsFactory()->hasVisibleSettings()
                 && m_corona->viewSettingsFactory()->lastContainment() == containment()) {
             //! used mostly from view recreations in order to inform config windows that view has been updated
-            m_primaryConfigView = m_corona->viewSettingsFactory()->primaryConfigView();
-            m_primaryConfigView->setParentView(this, true);
+            m_corona->viewSettingsFactory()->primaryConfigView()->setParentView(this, true);
         }
 
         Q_EMIT containmentActionsChanged();
@@ -593,9 +592,22 @@ void View::removeView()
     }
 }
 
+ViewPart::PrimaryConfigView *View::settingsWindow() const
+{
+    //! The factory is a CoronaEngine child created before the layouts manager, so the child sweep
+    //! destroys it before the views it serves; nothing here may assume it outlives us.
+    auto factory = m_corona ? m_corona->viewSettingsFactory() : nullptr;
+    auto settings = factory ? factory->primaryConfigView() : nullptr;
+
+    //! one window is shared by every dock, and it is ours only while it points back at us
+    return (settings && settings->parentView() == this) ? settings : nullptr;
+}
+
 bool View::settingsWindowIsShown()
 {
-    return m_primaryConfigView && (m_primaryConfigView->parentView()==this) && m_primaryConfigView->isVisible();
+    auto settings = settingsWindow();
+
+    return settings && settings->isVisible();
 }
 
 void View::showSettingsWindow()
@@ -607,23 +619,19 @@ void View::showSettingsWindow()
     }
 }
 
-QQuickView *View::configView()
-{
-    return m_primaryConfigView.data();
-}
-
 void View::showConfigurationInterface(Plasma::Applet *applet)
 {
     if (!applet || !applet->containment())
         return;
 
     Plasma::Containment *c = qobject_cast<Plasma::Containment *>(applet);
+    auto settings = settingsWindow();
 
-    if (m_primaryConfigView && c && c->isContainment() && c == this->containment()) {
-        if (m_primaryConfigView->isVisible()) {
-            m_primaryConfigView->hideConfigWindow();
+    if (settings && c && c->isContainment() && c == this->containment()) {
+        if (settings->isVisible()) {
+            settings->hideConfigWindow();
         } else {
-            m_primaryConfigView->showConfigWindow();
+            settings->showConfigWindow();
             applyActivitiesToWindows();
         }
 
@@ -644,7 +652,7 @@ void View::showConfigurationInterface(Plasma::Applet *applet)
     bool delayConfigView = false;
 
     if (c && containment() && c->isContainment() && c->id() == containment()->id()) {
-        m_primaryConfigView = m_corona->viewSettingsFactory()->primaryConfigView(this);
+        m_corona->viewSettingsFactory()->primaryConfigView(this);
         applyActivitiesToWindows();
     } else {
         m_appletConfigView = new PlasmaQuick::ConfigView(applet);
@@ -1004,11 +1012,6 @@ void View::setIsPreferredForShortcuts(bool preferred)
     }
 }
 
-bool View::inSettingsAdvancedMode() const
-{
-    return m_primaryConfigView && m_corona->universalSettings()->inAdvancedModeForEditSettings();
-}
-
 bool View::isTouchingBottomViewAndIsBusy() const
 {
     return m_isTouchingBottomViewAndIsBusy;
@@ -1249,8 +1252,10 @@ void View::applyActivitiesToWindows()
         m_positioner->setWindowOnActivities(m_positioner->trackedWindowId(), runningActivities);
 
         //! config windows
-        if (m_primaryConfigView) {
-            m_primaryConfigView->setOnActivities(runningActivities);
+        auto settings = settingsWindow();
+
+        if (settings) {
+            settings->setOnActivities(runningActivities);
         }
 
         if (m_appletConfigView) {
@@ -1403,8 +1408,10 @@ void View::restoreViewFromActivityStopping()
 
 void View::hideWindowsForSlidingOut()
 {
-    if (m_primaryConfigView) {
-        m_primaryConfigView->hideConfigWindow();
+    auto settings = settingsWindow();
+
+    if (settings) {
+        settings->hideConfigWindow();
     }
 }
 
@@ -1657,11 +1664,6 @@ bool View::event(QEvent *e)
     }
 
     return ContainmentView::event(sunkevent);
-}
-
-void View::releaseConfigView()
-{
-    m_primaryConfigView = nullptr;
 }
 
 //! release grab and restore mouse state
