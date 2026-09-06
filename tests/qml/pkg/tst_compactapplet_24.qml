@@ -102,6 +102,24 @@ TestCase {
         Layout.preferredHeight: 100
     }
 
+    // A visual tree shaped like the one a compact representation actually lands in. Measured
+    // from a running dock: for most applets the hosting item sits three parents above
+    // compactRepresentationVisualParent, but a representation that wraps itself in one extra
+    // item -- org.kde.plasma.systemmonitor does -- pushes it to four, and a counted walk then
+    // stops on the containment's Flow, which has no `applet`.
+    Item {
+        id: hostMock                                   // the applet item: carries `applet`
+        property var applet: appletMock
+        Item { id: lvl1Mock                            // <- a counted walk stops here: no `applet`
+        Item { id: lvl2Mock
+        Item { id: lvl3Mock
+        Item { id: lvl4Mock
+        Item { id: lvl5Mock
+        Item { id: deepVisualParentMock
+        Item { id: deepCompactRepMock; width: 32; height: 32 }
+        } } } } } }
+    }
+
     SignalSpy { id: ttVisibleSpy }
 
     function make(extra) {
@@ -202,6 +220,25 @@ TestCase {
         wait(50);
 
         compare(o.fullRepresentation, null);
+    }
+
+    // The host is found by looking for it, not by counting parents. Injecting appletItem (as
+    // every other case here does) bypasses the derivation, so this one leaves it unset.
+    function test_appletItemIsFoundWhateverTheNestingDepth() {
+        const c = Qt.createComponent(targetUrl);
+        compare(c.status, Component.Ready, "component not ready: " + c.errorString());
+        const o = createTemporaryObject(c, tc, {});
+        verify(o, "instantiate failed");
+
+        o.compactRepresentation = deepCompactRepMock;
+        wait(50);
+
+        // Counting three parents up from compactRepresentationVisualParent lands short of the
+        // host at this depth and yields an item with no `applet` at all.
+        verify(o.appletItem, "appletItem must resolve at this nesting depth");
+        compare(o.appletItem.applet, appletMock,
+                "appletItem must be the item that actually carries `applet`, not whatever sits a fixed number of parents up");
+        compare(o.hostedApplet, appletMock);
     }
 
     function test_expandedSyncTimer() {

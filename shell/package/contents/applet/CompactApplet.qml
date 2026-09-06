@@ -35,9 +35,24 @@ PlasmaCore.ToolTipArea {
     property Item compactRepresentationVisualParent: originalCompactRepresenationParent && originalCompactRepresenationParent.parent
                                                      ? originalCompactRepresenationParent.parent.parent : null
 
-    property Item appletItem: compactRepresentationVisualParent
-                              && compactRepresentationVisualParent.parent
-                              && compactRepresentationVisualParent.parent.parent ? compactRepresentationVisualParent.parent.parent.parent : null
+    //! Walk up to the applet item that hosts us instead of assuming it sits a fixed number of
+    //! parents above. A compact representation that wraps itself in one extra item -- the
+    //! system monitor does -- shifts everything below it by a level, and a counted walk then
+    //! stops on the containment's Flow, whose `applet` is undefined. Every binding derived
+    //! from this resolves to undefined after that, down to the texture a ShaderEffect is
+    //! handed, and the render thread dies on it.
+    property Item appletItem: {
+        var candidate = compactRepresentationVisualParent;
+
+        while (candidate) {
+            if (candidate.applet !== undefined) {
+                return candidate;
+            }
+            candidate = candidate.parent;
+        }
+
+        return null;
+    }
 
     //! The hosted applet's graphic object (PlasmoidItem / AppletQuickItem). Carries the
     //! representation-side members (expanded, toolTip*, hideOnWindowDeactivate). Its
