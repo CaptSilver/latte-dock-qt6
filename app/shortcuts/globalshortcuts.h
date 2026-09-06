@@ -71,9 +71,9 @@ private:
     bool m_metaShowedViews{false};
 
     //! last action that was triggered from the user
-    QAction *m_lastInvokedAction;
+    QAction *m_lastInvokedAction{nullptr};
     //! it is used for code compatibility reasons in order to replicate a single Meta action
-    QAction *m_singleMetaAction;
+    QAction *m_singleMetaAction{nullptr};
 
     //! delayer for hiding the shown latte views
     QTimer m_hideViewsTimer;

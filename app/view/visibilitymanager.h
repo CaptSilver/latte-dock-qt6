@@ -230,7 +230,7 @@ private:
     bool canSetStrut() const;
 
 private:
-    WindowSystem::AbstractWindowInterface *m_wm;
+    WindowSystem::AbstractWindowInterface *m_wm{nullptr};
     Types::Visibility m_mode{Types::None};
     std::array<QMetaObject::Connection, 6> m_connections;
 

@@ -80,10 +80,10 @@ private:
 
     Latte::Corona *m_corona{nullptr};
 
-    Ui::ExportTemplateDialog *m_ui;
+    Ui::ExportTemplateDialog *m_ui{nullptr};
     Controller::Layouts *m_layoutsController{nullptr};
 
-    Handler::ExportTemplateHandler *m_handler;
+    Handler::ExportTemplateHandler *m_handler{nullptr};
 };
 
 }

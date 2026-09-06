@@ -29,7 +29,7 @@ protected:
     void paintEvent(QPaintEvent *event) override;
 
 private:
-    QLabel *m_overlayDropMessage;
+    QLabel *m_overlayDropMessage{nullptr};
 
 
 };

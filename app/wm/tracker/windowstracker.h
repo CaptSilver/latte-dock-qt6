@@ -163,7 +163,7 @@ private:
     //! really needed that often
     QTimer m_extraViewHintsTimer;
 
-    AbstractWindowInterface *m_wm;
+    AbstractWindowInterface *m_wm{nullptr};
     QHash<Latte::View *, TrackedViewInfo *> m_views;
     QHash<Latte::Layout::GenericLayout *, TrackedLayoutInfo *> m_layouts;
 

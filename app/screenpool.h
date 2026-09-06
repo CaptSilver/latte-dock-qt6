@@ -80,7 +80,7 @@ private:
 
     QTimer m_configSaveTimer;
 
-    PrimaryOutputWatcher *m_primaryWatcher;
+    PrimaryOutputWatcher *m_primaryWatcher{nullptr};
 };
 
 }

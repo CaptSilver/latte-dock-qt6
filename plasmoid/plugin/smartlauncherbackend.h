@@ -100,7 +100,7 @@ private:
     bool doNotDisturbMode() const;
 
     // Unity Launchers
-    QDBusServiceWatcher *m_watcher;
+    QDBusServiceWatcher *m_watcher{nullptr};
     QHash<QString, QString> m_dbusServiceToLauncherUrl;
     QHash<QString, QString> m_launcherUrlToStorageId;
     // these rules can be configured in the taskmanagerrulesrc in the "Unity Launcher Mapping" section

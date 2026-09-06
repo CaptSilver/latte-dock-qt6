@@ -125,7 +125,7 @@ private:
 
     QTemporaryDir m_storageTmpDir;
 
-    Layouts::Manager *m_manager;
+    Layouts::Manager *m_manager{nullptr};
 };
 
 }

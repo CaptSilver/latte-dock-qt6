@@ -86,7 +86,7 @@ private:
     QString uniqueViewTemplateName(QString name) const;
 
 private:
-    Latte::Corona *m_corona;
+    Latte::Corona *m_corona{nullptr};
 
     Data::LayoutsTable m_layoutTemplates;
     Data::GenericBasicTable m_viewTemplates;

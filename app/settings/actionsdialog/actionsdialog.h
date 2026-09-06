@@ -52,7 +52,7 @@ private:
     void init();
 
 private:
-    Ui::ActionsDialog *m_ui;
+    Ui::ActionsDialog *m_ui{nullptr};
 
     Handler::TabPreferences *m_preferencesHandler{nullptr};
     Handler::ActionsHandler *m_actionsHandler{nullptr};

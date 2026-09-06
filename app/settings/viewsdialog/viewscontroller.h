@@ -138,10 +138,10 @@ private:
     KConfigGroup m_storage;
 
     //! context menu actions for docks panels
-    QAction *m_cutAction;
-    QAction *m_copyAction;
-    QAction *m_duplicateAction;
-    QAction *m_pasteAction;
+    QAction *m_cutAction{nullptr};
+    QAction *m_copyAction{nullptr};
+    QAction *m_duplicateAction{nullptr};
+    QAction *m_pasteAction{nullptr};
 
     //! current data
     Model::Views *m_model{nullptr};

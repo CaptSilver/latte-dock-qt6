@@ -195,8 +195,8 @@ private:
     //! applets tracking
     QTimer m_appletsExpandedConnectionsTimer;
 
-    TasksModel *m_latteTasksModel;
-    TasksModel *m_plasmaTasksModel;
+    TasksModel *m_latteTasksModel{nullptr};
+    TasksModel *m_plasmaTasksModel{nullptr};
 
     //!follow containment plasmoid
     QPointer<QObject> m_plasmoid;

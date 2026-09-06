@@ -189,9 +189,9 @@ private:
     bool m_isKWinInterfaceAvailable{false};
     bool m_isVirtualDesktopNavigationWrappingAround{true};
 
-    Latte::Corona *m_corona;
-    Tracker::Schemes *m_schemesTracker;
-    Tracker::Windows *m_windowsTracker;
+    Latte::Corona *m_corona{nullptr};
+    Tracker::Schemes *m_schemesTracker{nullptr};
+    Tracker::Windows *m_windowsTracker{nullptr};
 
     QDBusServiceWatcher *m_kwinServiceWatcher{nullptr};
 };

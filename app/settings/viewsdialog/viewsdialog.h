@@ -63,12 +63,12 @@ private Q_SLOTS:
 
 private:
     SettingsDialog *m_parentDlg{nullptr};
-    Ui::ViewsDialog *m_ui;
+    Ui::ViewsDialog *m_ui{nullptr};
     Controller::Layouts *m_layoutsController{nullptr};
 
     QPushButton *m_applyNowBtn{nullptr};
 
-    Handler::ViewsHandler *m_handler;   
+    Handler::ViewsHandler *m_handler{nullptr};
 
     //! properties
     QSize m_windowSize;

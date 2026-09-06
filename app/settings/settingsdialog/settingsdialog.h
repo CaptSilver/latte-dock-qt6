@@ -113,7 +113,7 @@ private:
 
 private:
     Latte::Corona *m_corona{nullptr};
-    Ui::SettingsDialog *m_ui;
+    Ui::SettingsDialog *m_ui{nullptr};
 
     //! Handlers for UI
     Settings::Handler::TabLayouts *m_tabLayoutsHandler{nullptr};

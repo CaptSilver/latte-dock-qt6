@@ -165,8 +165,8 @@ private:
     QList<CentralLayout *> m_centralLayouts;
     AssignedLayoutsHash m_assignedLayouts;
 
-    Layouts::Manager *m_manager;
-    KActivities::Controller *m_activitiesController;
+    Layouts::Manager *m_manager{nullptr};
+    KActivities::Controller *m_activitiesController{nullptr};
 
     //! one activity-manager query per sync, reused by the discovery passes.
     //! Only invalidated at the top of syncMultipleLayoutsToActivities(), so it is

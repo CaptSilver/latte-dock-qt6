@@ -114,7 +114,7 @@ private:
     Model::Colors *m_colorsModel{nullptr};
     Model::Schemes *m_schemesModel{nullptr};
 
-    QButtonGroup *m_backButtonsGroup;
+    QButtonGroup *m_backButtonsGroup{nullptr};
 
     Latte::Data::Layout o_data;
     Latte::Data::Layout c_data;

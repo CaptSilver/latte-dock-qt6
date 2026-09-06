@@ -61,10 +61,10 @@ private Q_SLOTS:
 
 private:
     SettingsDialog *m_parentDlg{nullptr};
-    Ui::DetailsDialog *m_ui;
+    Ui::DetailsDialog *m_ui{nullptr};
     Controller::Layouts *m_layoutsController{nullptr};
 
-    Handler::DetailsHandler *m_handler;
+    Handler::DetailsHandler *m_handler{nullptr};
 
     //! properties
     QSize m_windowSize;

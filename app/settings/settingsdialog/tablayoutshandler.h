@@ -122,7 +122,7 @@ private:
 
     bool m_isViewsDialogVisible{false};
 
-    QButtonGroup *m_inMemoryButtons;
+    QButtonGroup *m_inMemoryButtons{nullptr};
 
     //! Layout menu actions
     QMenu *m_layoutMenu{nullptr};

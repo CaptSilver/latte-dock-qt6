@@ -73,7 +73,7 @@ private:
     QStringList m_mainPaths;
     QStringList m_indicatorsPaths;
 
-    QWidget *m_parentWidget;
+    QWidget *m_parentWidget{nullptr};
 };
 
 }

@@ -305,6 +305,7 @@ private Q_SLOTS:
     void abstractLayout_layoutName_delegatesToTheSharedStrip();
     void templatesManager_templateName_delegatesToTheSharedStrip();
     void viewsHandler_importView_stripsTheSuffixNotEveryOccurrence();
+    void rawPointerMembersAreNullInitialized();
 };
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
@@ -2839,6 +2840,54 @@ void SourceGuardTest::viewsHandler_importView_stripsTheSuffixNotEveryOccurrence(
              "importView must strip the trailing extension, not remove() every occurrence");
     QVERIFY2(s.contains(QStringLiteral("CoronaHelpers::strippedLatteName(file,{CoronaHelpers::VIEWEXTENSION})")),
              "importView must name the imported view through CoronaHelpers::strippedLatteName");
+}
+
+void SourceGuardTest::rawPointerMembersAreNullInitialized()
+{
+    // A raw pointer member with no in-class initializer is indeterminate until some constructor
+    // remembers to assign it, and every future constructor has to keep remembering. The two in
+    // app/shortcuts/globalshortcuts.h are the ones that stopped: GlobalShortcuts skips init()
+    // when it is handed a null corona, which is how CoronaEngine builds it headlessly.
+    const QStringList roots = {QStringLiteral("app"), QStringLiteral("containment"), QStringLiteral("containmentactions"),
+                               QStringLiteral("plasmoid"), QStringLiteral("declarativeimports"), QStringLiteral("tests")};
+
+    //! The star may hang off either side -- `QGraphicsDropShadowEffect* m_shadowEffect` is spelled
+    //! that way in this tree -- so whitespace before it cannot be required. Making it optional is
+    //! what forces the keyword lookahead: `return a * m_b;` otherwise reads as a declaration.
+    //! The type class carries a star of its own so a pointer to a container of pointers,
+    //! `QHash<QString, QAction *> *m_x;`, is still a declaration and not a miss.
+    static const QRegularExpression member(
+        QStringLiteral("^[ \\t]*(?!return\\b|delete\\b|case\\b|throw\\b)[A-Za-z_][A-Za-z0-9_:<>,&* ]*\\*+[ \\t]*(m_[A-Za-z0-9_]+)[ \\t]*;[ \\t]*$"),
+        QRegularExpression::MultilineOption);
+
+    //! uic, qdbusxml2cpp, qtwaylandscanner and kconfig_compiler all drop headers into app/ and
+    //! plasmoid/ next to hand-written ones, because this repo configures in-source. Their member
+    //! shapes belong to the generator and an edit there is thrown away on the next build, so they
+    //! are recognised by the banner they announce themselves with rather than by a filename that
+    //! goes stale the next time a generator lands. It has to be the generator's phrasing and not
+    //! the bare word, or any header mentioning "generated" in prose exempts itself wholesale.
+    static const QRegularExpression generated(QStringLiteral("generated (by|from)|do not edit"), QRegularExpression::CaseInsensitiveOption);
+
+    const QStringList headers = sourcesUnder(roots, QStringLiteral("*.h"));
+    QVERIFY2(headers.size() > 100, qPrintable(QStringLiteral("only %1 headers walked, the roots are wrong").arg(headers.size())));
+
+    QStringList offenders;
+    for (const QString &path : headers) {
+        const QString src = readFile(path);
+        const QString banner = src.split(QLatin1Char('\n')).mid(0, 10).join(QLatin1Char('\n'));
+        if (generated.match(banner).hasMatch()) {
+            continue;
+        }
+
+        QRegularExpressionMatchIterator it = member.globalMatch(withoutComments(src));
+        while (it.hasNext()) {
+            offenders << QStringLiteral("%1:%2").arg(relativeToRepo(path), it.next().captured(1));
+        }
+    }
+
+    offenders.sort();
+    QVERIFY2(offenders.isEmpty(),
+             qPrintable(QStringLiteral("raw pointer members with no in-class initializer:\n  %1").arg(offenders.join(QStringLiteral("\n  ")))));
 }
 
 QTEST_GUILESS_MAIN(SourceGuardTest)

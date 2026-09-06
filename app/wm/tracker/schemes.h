@@ -48,7 +48,7 @@ private:
     void init();
 
 private:
-     AbstractWindowInterface *m_wm;
+     AbstractWindowInterface *m_wm{nullptr};
 
      //! scheme file and its loaded colors
      QMap<QString, Latte::WindowSystem::SchemeColors *> m_schemes;

@@ -76,7 +76,7 @@ private:
     //! for simplicity reasons
     QHash<QAction *, QPushButton *> m_twinActions;
 
-    Dialog::GenericDialog *m_dialog;
+    Dialog::GenericDialog *m_dialog{nullptr};
 
 
 };

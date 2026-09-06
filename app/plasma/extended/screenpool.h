@@ -48,7 +48,7 @@ private:
     KSharedConfig::Ptr m_plasmarcConfig;
     KConfigGroup m_screensGroup;
 
-    PrimaryOutputWatcher *m_primaryWatcher;
+    PrimaryOutputWatcher *m_primaryWatcher{nullptr};
 };
 
 }

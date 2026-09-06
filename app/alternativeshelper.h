@@ -31,7 +31,7 @@ public:
     Q_INVOKABLE void loadAlternative(const QString &plugin);
 
 private:
-    Plasma::Applet *m_applet;
+    Plasma::Applet *m_applet{nullptr};
 };
 
 #endif

@@ -70,10 +70,10 @@ private:
 
     Latte::Corona *m_corona{nullptr};
 
-    Ui::ScreensDialog *m_ui;
+    Ui::ScreensDialog *m_ui{nullptr};
     Controller::Layouts *m_layoutsController{nullptr};
 
-    Handler::ScreensHandler *m_handler;
+    Handler::ScreensHandler *m_handler{nullptr};
 };
 
 }
