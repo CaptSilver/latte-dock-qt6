@@ -29,74 +29,101 @@ Provides:  latte-dock = %{version}-%{release}
 Conflicts: latte-dock
 
 BuildRequires: cmake
-BuildRequires: extra-cmake-modules
 BuildRequires: gcc-c++
-# Fedora's cmake macro hard-codes -G Ninja, so the generator is not optional.
-BuildRequires: ninja-build
 # KF6I18nMacros does find_package(Gettext REQUIRED) at include time.
 BuildRequires: gettext
+# Fedora's cmake macro hard-codes -G Ninja, so the generator is not optional.
+# Fedora calls the package ninja-build and everyone else calls it ninja; the
+# file is the one name all of them agree on.
+BuildRequires: /usr/bin/ninja
+# openSUSE ships this as kf6-extra-cmake-modules, which provides the bare name.
+BuildRequires: extra-cmake-modules
 
-# WaylandClient and qtwaylandscanner live in qtbase on Fedora 44 -- a separate
-# qt6-qtwayland-devel would be needed only on an older chroot.
-BuildRequires: qt6-qtbase-devel
-BuildRequires: qt6-qtdeclarative-devel
+# Everything below is named after the CMake package the build actually calls
+# find_package() on, not after a distro's package. The same library is
+# qt6-qtbase-devel on Fedora, qt6-core-devel on openSUSE and lib64qt6core-devel
+# on Mageia, but all three generate cmake(Qt6Core) out of the installed
+# Qt6CoreConfig.cmake, so the virtual provide is the only spelling that resolves
+# everywhere. Keep this list in step with CMakeLists.txt.
+BuildRequires: cmake(Qt6DBus)
+BuildRequires: cmake(Qt6Gui)
+BuildRequires: cmake(Qt6Qml)
+BuildRequires: cmake(Qt6Quick)
+BuildRequires: cmake(Qt6Widgets)
+BuildRequires: cmake(Qt6WaylandClient)
+# Qt6Test is in the unconditional COMPONENTS list, so it is needed even without
+# --with check.
+BuildRequires: cmake(Qt6Test)
 
-BuildRequires: kf6-karchive-devel
-BuildRequires: kf6-kconfig-devel
-BuildRequires: kf6-kcoreaddons-devel
-BuildRequires: kf6-kcrash-devel
-BuildRequires: kf6-kdbusaddons-devel
-BuildRequires: kf6-kglobalaccel-devel
-BuildRequires: kf6-kguiaddons-devel
-BuildRequires: kf6-ki18n-devel
-BuildRequires: kf6-kiconthemes-devel
-BuildRequires: kf6-kio-devel
-BuildRequires: kf6-kirigami-devel
+BuildRequires: cmake(KF6Archive)
+BuildRequires: cmake(KF6Config)
+BuildRequires: cmake(KF6CoreAddons)
+BuildRequires: cmake(KF6Crash)
+BuildRequires: cmake(KF6DBusAddons)
+BuildRequires: cmake(KF6GlobalAccel)
+BuildRequires: cmake(KF6GuiAddons)
+BuildRequires: cmake(KF6I18n)
+BuildRequires: cmake(KF6IconThemes)
+BuildRequires: cmake(KF6KIO)
+BuildRequires: cmake(KF6KirigamiPlatform)
+BuildRequires: cmake(KF6NewStuff)
+BuildRequires: cmake(KF6Notifications)
+BuildRequires: cmake(KF6Package)
+BuildRequires: cmake(KF6Service)
+BuildRequires: cmake(KF6Svg)
+BuildRequires: cmake(KF6WidgetsAddons)
+BuildRequires: cmake(KF6WindowSystem)
+BuildRequires: cmake(KF6XmlGui)
 # Not named anywhere in this project's CMake. LibNotificationManagerConfig.cmake
-# does find_dependency(KF6ItemModels "6.26.0") but plasma-workspace-devel never
-# requires it, so configure fails without this line. The floor is asserted
-# because Fedora 44 GA ships 6.25.0 -- only updates satisfies it, and a bad
-# resolution should fail while solving deps rather than halfway through cmake.
-BuildRequires: kf6-kitemmodels-devel >= 6.26.0
-BuildRequires: kf6-knewstuff-devel
-BuildRequires: kf6-knotifications-devel
-BuildRequires: kf6-kpackage-devel
-BuildRequires: kf6-kservice-devel
-BuildRequires: kf6-ksvg-devel
-BuildRequires: kf6-kwidgetsaddons-devel
-BuildRequires: kf6-kwindowsystem-devel
-BuildRequires: kf6-kxmlgui-devel
+# does find_dependency(KF6ItemModels) but plasma-workspace-devel never requires
+# it, so configure fails without this line.
+BuildRequires: cmake(KF6ItemModels)
+%if 0%{?fedora}
+# Fedora 44 GA ships 6.25.0 while its LibNotificationManager wants 6.26.0, so a
+# bad resolution should fail while solving deps rather than halfway through
+# cmake. The floor is Fedora's problem alone -- openSUSE Leap is on 6.16 and
+# Mageia on 6.22, and both carry a LibNotificationManager matched to them.
+BuildRequires: cmake(KF6ItemModels) >= 6.26.0
+%endif
 
-# One package, three configs: Plasma, PlasmaQuick and the plasma_install_package()
-# macro the containment, plasmoid and shell packages are installed with.
-BuildRequires: libplasma-devel
-# find_package(KSysGuard); there is no package called ksysguard-devel.
-BuildRequires: libksysguard-devel
-BuildRequires: plasma-activities-devel
-BuildRequires: plasma-activities-stats-devel
-# Provides cmake(LibNotificationManager) for the launcher badge/progress code.
-BuildRequires: plasma-workspace-devel
+# One package, three configs on Fedora: Plasma, PlasmaQuick and the
+# plasma_install_package() macro the containment, plasmoid and shell packages
+# are installed with.
+BuildRequires: cmake(Plasma)
+BuildRequires: cmake(PlasmaQuick)
+BuildRequires: cmake(KSysGuard)
+BuildRequires: cmake(PlasmaActivities)
+BuildRequires: cmake(PlasmaActivitiesStats)
+# The launcher badge/progress code.
+BuildRequires: cmake(LibNotificationManager)
 
 # find_package(KWayland) resolves to a Plasma::KWaylandClient target.
-BuildRequires: kwayland-devel
-BuildRequires: layer-shell-qt-devel
-# The -devel subpackage ships only the cmake config; kde-primary-output-v1.xml
-# is in the base package it requires at an exact EVR. Do not swap them.
-BuildRequires: plasma-wayland-protocols-devel
+BuildRequires: cmake(KWayland)
+BuildRequires: cmake(LayerShellQt)
+BuildRequires: cmake(PlasmaWaylandProtocols)
 # Wayland::Client plus wayland-scanner, which ECM needs next to qtwaylandscanner.
-BuildRequires: wayland-devel
+BuildRequires: pkgconfig(wayland-client)
 
 %if %{with check}
 # tests/sceneprobe is added unconditionally under BUILD_TESTING and wants
 # Qt6::GuiPrivate and find_package(Vulkan REQUIRED). Vulkan would resolve
 # through qtbase's pkgconfig(vulkan) chain by luck; name both halves instead.
+# Fedora spellings, and the only place the suite is actually run.
+%if 0%{?fedora}
 BuildRequires: qt6-qtbase-private-devel
 BuildRequires: vulkan-headers
 BuildRequires: vulkan-loader-devel
 %endif
+%endif
 
 # The QML imports below have no ELF linkage anywhere in the package, so nothing
-# in the automatic dependency generator can reach them.
+# in the automatic dependency generator can reach them, and unlike the build
+# deps there is no cmake() provide to hide the naming differences behind -- an
+# import is satisfied by whichever package happens to ship that directory. So
+# they are spelled per distro, and a distro only gets the names verified to
+# exist in its repos. Anything unlisted below is a gap, not a decision that the
+# import is unnecessary.
+%if 0%{?fedora}
 # org.kde.taskmanager and org.kde.plasma.private.shell:
 Requires: plasma-workspace
 # org.kde.kquickcontrolsaddons, org.kde.draganddrop, org.kde.graphicaleffects:
@@ -108,11 +135,27 @@ Requires: plasma5support
 # no icon-cache scriptlet of its own.
 Requires: breeze-icon-theme
 Requires: hicolor-icon-theme
-
 # org.kde.plasma.private.volume, used by the per-task audio indicator only.
 Recommends: plasma-pa
 # org.kde.pipewire, loaded lazily for live window-thumbnail previews.
 Recommends: kpipewire
+%endif
+
+%if 0%{?suse_version}
+Requires: plasma6-workspace
+Requires: kf6-kdeclarative-imports
+Requires: plasma5support6
+Requires: hicolor-icon-theme
+Recommends: plasma6-pa
+%endif
+
+%if 0%{?mgaversion}
+Requires: plasma-workspace
+Requires: plasma5support
+Requires: hicolor-icon-theme
+Recommends: plasma-pa
+Recommends: kpipewire
+%endif
 
 %description
 A dock and panel for the Plasma desktop, with parabolic icon zoom, its own
@@ -208,7 +251,10 @@ unset DBUS_SESSION_BUS_ADDRESS
 
 %{_bindir}/latte-dock
 %{_datadir}/applications/org.kde.latte-dock.desktop
-%{_datadir}/metainfo/org.kde.latte-dock.appdata.xml
+# plasma_install_package() also emits per-package appdata for the shell and the
+# plasmoid on some Plasma versions (openSUSE Leap 16.0 does, Fedora and Mageia do
+# not), so claim the family rather than the one file everyone has.
+%{_datadir}/metainfo/org.kde.latte*.appdata.xml
 %{_datadir}/dbus-1/interfaces/org.kde.LatteDock.xml
 %{_datadir}/knotifications6/lattedock.notifyrc
 %{_datadir}/knsrcfiles/latte-indicators.knsrc
