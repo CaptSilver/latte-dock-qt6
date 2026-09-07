@@ -44,6 +44,8 @@ void LayoutMenuItemWidget::setIcon(const bool &isBackgroundFile, const QString &
 QSize LayoutMenuItemWidget::minimumSizeHint() const
 {
    QStyleOptionMenuItem opt;
+   Latte::initMenuItemOption(opt, this, m_action);
+
    QSize contentSize = fontMetrics().size(Qt::TextSingleLine | Qt::TextShowMnemonic, m_action->text());
 
    contentSize.setHeight(contentSize.height() + 9);

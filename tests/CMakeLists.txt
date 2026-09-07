@@ -172,6 +172,36 @@ target_include_directories(generictoolstest PRIVATE
     ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/settings/generic)
 set_tests_properties(generictoolstest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+# Both custom menu-item widgets work out their popup width through QStyle::sizeFromContents,
+# so this drives the real widgets behind a recording QProxyStyle. The generictools.cpp that
+# layoutmenuitemwidget.cpp includes is a configure_file copy of app/settings/generic, so the
+# tracked original is what links here.
+ecm_add_test(menuitemsizehinttest.cpp
+    ${CMAKE_SOURCE_DIR}/containmentactions/contextmenu/layoutmenuitemwidget.cpp
+    ${CMAKE_SOURCE_DIR}/app/settings/viewsdialog/delegates/custommenuitemwidget.cpp
+    ${CMAKE_SOURCE_DIR}/app/settings/generic/generictools.cpp
+    ${CMAKE_SOURCE_DIR}/app/settings/generic/genericviewtools.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/genericdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/activitydata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/appletdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layoutcolordata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layouticondata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/errorinformationdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/errordata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/generictable.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layoutdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/viewdata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/screendata.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/viewstable.cpp
+    ${CMAKE_SOURCE_DIR}/app/data/layoutstable.cpp
+    ${CMAKE_SOURCE_DIR}/app/tools/commontools.cpp
+    TEST_NAME menuitemsizehinttest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Widgets KF6::ConfigCore KF6::I18n Plasma::Plasma
+)
+target_include_directories(menuitemsizehinttest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_SOURCE_DIR}/app/settings/generic ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(menuitemsizehinttest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 # The Activities cell delegate builds a real QPushButton + PersistentMenu, so a
 # hand-built model drives it headless. activitiesdelegate.cpp includes
 # layoutsmodel.h -> lattecorona.h, which is why the link list carries KSvg,
@@ -992,6 +1022,7 @@ if(LATTE_COVERAGE)
         debugoutputtest
         datatypestest commontoolstest layoutmanagertest settingsmodelstest wmtoolstest
         shortcutstest viewmodelstest screenpooltest coretoolstest generictoolstest
+        menuitemsizehinttest
         addviewdecisiontest viewcontainertransitiontest activitysetalgebratest qmlinvoketest
         settingsnameutilstest iconsourceclassifiertest windowtrackingpredicatestest extraviewhintstest
         positionergeometrytest storagevalidatortest backgroundimageinfotest

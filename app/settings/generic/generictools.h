@@ -14,6 +14,9 @@
 #include <QStyleOption>
 #include <QStyleOptionViewItem>
 
+class QAction;
+class QWidget;
+
 namespace Latte {
 
 bool isActive(const QStyleOption &option);
@@ -38,6 +41,10 @@ void drawFormattedText(QPainter *painter, const QStyleOption &option, const QStr
 //! background
 void drawBackground(QPainter *painter, const QStyleOptionViewItem &option);
 void drawBackground(QPainter *painter, const QStyle *style, const QStyleOptionMenuItem &option);
+
+//! Describes a menu row painted by a custom QWidget to the style, so that
+//! QStyle::sizeFromContents(CT_MenuItem, ...) measures that row and not a blank one.
+void initMenuItemOption(QStyleOptionMenuItem &option, const QWidget *widget, const QAction *action);
 
 //! simple icon
 QRect remainedFromIcon(const QStyleOption &option, Qt::AlignmentFlag alignment = Qt::AlignLeft, int lengthMargin = -1, int thickMargin = -1);

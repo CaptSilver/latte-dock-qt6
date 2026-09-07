@@ -51,6 +51,8 @@ void CustomMenuItemWidget::setView(const Latte::Data::View &view)
 QSize CustomMenuItemWidget::minimumSizeHint() const
 {
    QStyleOptionMenuItem opt;
+   Latte::initMenuItemOption(opt, this, m_action);
+
    QSize contentSize = fontMetrics().size(Qt::TextSingleLine | Qt::TextShowMnemonic, m_action->text());
    contentSize.setHeight(contentSize.height() + 9);
    contentSize.setWidth(contentSize.width() + 1.5 * contentSize.height());

@@ -6,10 +6,12 @@
 #include "generictools.h"
 
 // Qt
+#include <QAction>
 #include <QApplication>
 #include <QDebug>
 #include <QStyle>
 #include <QTextDocument>
+#include <QWidget>
 
 namespace Latte {
 
@@ -266,6 +268,27 @@ void drawBackground(QPainter *painter, const QStyle *style, const QStyleOptionMe
     //   iconOption.state = (option.state & ~QStyle::State_HasFocus);
 
     style->drawControl(QStyle::CE_MenuItem, &backOption, painter);
+}
+
+void initMenuItemOption(QStyleOptionMenuItem &option, const QWidget *widget, const QAction *action)
+{
+    //! initFrom() carries the rect, state, palette and font metrics of the hosting widget
+    option.initFrom(widget);
+
+    //! Breeze rebuilds the width of a Normal item out of these two and ignores the size handed
+    //! to sizeFromContents(), so leaving them unset collapses every row to the same stub width
+    option.text = action->text();
+    option.font = widget->font();
+
+    option.menuItemType = QStyleOptionMenuItem::Normal;
+
+    //! these widgets lay out a radio button and reserve its column while painting, whether or
+    //! not the action itself is checkable, so the measured row has to reserve it as well
+    option.menuHasCheckableItems = true;
+    option.checkType = QStyleOptionMenuItem::Exclusive;
+    option.checked = action->isChecked();
+
+    option.maxIconWidth = widget->style()->pixelMetric(QStyle::PM_SmallIconSize, &option, widget);
 }
 
 QRect remainedFromLayoutIcon(const QStyleOption &option, Qt::AlignmentFlag alignment, int lengthMargin, int thickMargin)
