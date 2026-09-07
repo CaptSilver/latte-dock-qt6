@@ -108,8 +108,8 @@ BuildRequires: pkgconfig(wayland-client)
 # tests/sceneprobe is added unconditionally under BUILD_TESTING and wants
 # Qt6::GuiPrivate and find_package(Vulkan REQUIRED). Vulkan would resolve
 # through qtbase's pkgconfig(vulkan) chain by luck; name both halves instead.
-# Fedora spellings, and the only place the suite is actually run.
-%if 0%{?fedora}
+# Fedora spellings, which EPEL shares; the only place the suite is actually run.
+%if 0%{?fedora} || 0%{?rhel}
 BuildRequires: qt6-qtbase-private-devel
 BuildRequires: vulkan-headers
 BuildRequires: vulkan-loader-devel
@@ -123,7 +123,8 @@ BuildRequires: vulkan-loader-devel
 # they are spelled per distro, and a distro only gets the names verified to
 # exist in its repos. Anything unlisted below is a gap, not a decision that the
 # import is unnecessary.
-%if 0%{?fedora}
+# EPEL 10 ships this stack under Fedora's names, and defines %%rhel rather than %%fedora.
+%if 0%{?fedora} || 0%{?rhel}
 # org.kde.taskmanager and org.kde.plasma.private.shell:
 Requires: plasma-workspace
 # org.kde.kquickcontrolsaddons, org.kde.draganddrop, org.kde.graphicaleffects:
