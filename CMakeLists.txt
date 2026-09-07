@@ -12,6 +12,10 @@ set(FAQS "https://userbase.kde.org/LatteDock/FAQ")
 
 set(QT_MIN_VERSION "6.7.0")
 set(KF6_MIN_VERSION "6.5.0")
+# Plasma versions on its own series, not Frameworks': a distro can ship Plasma
+# 6.4.2 next to KF6 6.16. Requiring the Frameworks floor from a Plasma package
+# rejects that pairing for a version number that never meant anything about it.
+set(PLASMA_MIN_VERSION "6.4.0")
 set(KDE_COMPILERSETTINGS_LEVEL "6.5.0")
 
 set(KF6_LOCALE_PREFIX "")
@@ -52,21 +56,32 @@ find_package(KF6Config ${KF6_MIN_VERSION} REQUIRED)
 find_package(KF6KirigamiPlatform ${KF6_MIN_VERSION} REQUIRED)
 
 # De-umbrella'd in Plasma 6 -> their own find_package calls
-find_package(Plasma ${KF6_MIN_VERSION} REQUIRED)
-find_package(PlasmaQuick ${KF6_MIN_VERSION} REQUIRED)
-find_package(PlasmaActivities ${KF6_MIN_VERSION} REQUIRED)
+find_package(Plasma ${PLASMA_MIN_VERSION} REQUIRED)
+find_package(PlasmaQuick ${PLASMA_MIN_VERSION} REQUIRED)
+find_package(PlasmaActivities ${PLASMA_MIN_VERSION} REQUIRED)
 find_package(KF6Service ${KF6_MIN_VERSION} REQUIRED)
 # Launcher badge/progress in the tasks plugin reads NotificationManager job data.
 find_package(LibNotificationManager REQUIRED)
 # Recent-document and jump-list actions in the tasks backend query the activity store.
-find_package(PlasmaActivitiesStats ${KF6_MIN_VERSION} REQUIRED)
+find_package(PlasmaActivitiesStats ${PLASMA_MIN_VERSION} REQUIRED)
 # parentPid() resolves a process tree to match audio streams to tasks.
-find_package(KSysGuard ${KF6_MIN_VERSION} REQUIRED)
+find_package(KSysGuard ${PLASMA_MIN_VERSION} REQUIRED)
 # Plasma::Svg split out as KSvg in Plasma 6; both QML and C++ callers need it.
 find_package(KF6Svg ${KF6_MIN_VERSION} REQUIRED)
 find_package(KWayland REQUIRED)
 # Dock anchoring goes through layer-shell on Wayland.
 find_package(LayerShellQt REQUIRED)
+
+# LayerShellQt::Window::setScreen() pins the surface to an output. It does not exist in the
+# LayerShellQt that ships with Plasma 6.4/6.5 (openSUSE Leap, Mageia 10), so detect it instead
+# of keying off a version: the compositor picks the output on its own where it is missing.
+include(CheckCXXSourceCompiles)
+set(CMAKE_REQUIRED_LIBRARIES LayerShellQt::Interface)
+check_cxx_source_compiles("
+#include <LayerShellQt/Window>
+int main() { LayerShellQt::Window *w = nullptr; w->setScreen(nullptr); return 0; }
+" HAVE_LAYERSHELLQT_SETSCREEN)
+unset(CMAKE_REQUIRED_LIBRARIES)
 
 # Plasma_VERSION (libplasma) stands in for the old LibTaskManager_VERSION; same workspace release.
 add_definitions(-DPLASMA_WORKSPACE_VERSION="${Plasma_VERSION}")

@@ -37,9 +37,9 @@
 #include <QTemporaryFile>
 
 // KDE
-#include <KArchive/KTar>
-#include <KArchive/KArchiveEntry>
-#include <KArchive/KArchiveDirectory>
+#include <KTar>
+#include <KArchiveEntry>
+#include <KArchiveDirectory>
 #include <KMessageWidget>
 #include <KPackage/Package>
 

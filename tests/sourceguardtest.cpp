@@ -306,6 +306,7 @@ private Q_SLOTS:
     void templatesManager_templateName_delegatesToTheSharedStrip();
     void viewsHandler_importView_stripsTheSuffixNotEveryOccurrence();
     void rawPointerMembersAreNullInitialized();
+    void buildPortability_plasmaAndFrameworksVersionsAreSeparate();
     void viewSettingsFactory_isTheOnlySettingsWindowDeleter();
     void view_readsTheSettingsWindowThroughTheFactory();
 };
@@ -2890,6 +2891,55 @@ void SourceGuardTest::rawPointerMembersAreNullInitialized()
     offenders.sort();
     QVERIFY2(offenders.isEmpty(),
              qPrintable(QStringLiteral("raw pointer members with no in-class initializer:\n  %1").arg(offenders.join(QStringLiteral("\n  ")))));
+}
+
+void SourceGuardTest::buildPortability_plasmaAndFrameworksVersionsAreSeparate()
+{
+    // Plasma and Frameworks version independently -- openSUSE Leap 16.0 ships Plasma 6.4.2 next
+    // to KF6 6.16 -- so asking a Plasma package for the Frameworks floor rejects a perfectly good
+    // Plasma over a number that says nothing about it. That is what kept Leap from building.
+    const QString cmakelists = withoutComments(readRepoFile(QStringLiteral("CMakeLists.txt")));
+    QVERIFY2(!cmakelists.isEmpty(), "CMakeLists.txt is unreadable");
+
+    static const QRegularExpression plasmaFind(
+        QStringLiteral("find_package\\((Plasma|PlasmaQuick|PlasmaActivities|PlasmaActivitiesStats|KSysGuard)[ \t]+\\$\\{KF6_MIN_VERSION\\}"));
+    const QRegularExpressionMatch m = plasmaFind.match(cmakelists);
+    QVERIFY2(!m.hasMatch(),
+             qPrintable(QStringLiteral("%1 is a Plasma package and must use PLASMA_MIN_VERSION").arg(m.captured(1))));
+
+    // A framework's headers land in /usr/include/KF6/<Module>/, and that directory is what the
+    // CMake target puts on the include path -- so <Module/Header> only resolves somewhere that
+    // /usr/include/KF6 itself is ALSO on the path. Fedora arranges that and Mageia does not.
+    // The frameworks below install no nested <Module>/<Module>/ directory, so for them the
+    // prefix is always wrong and the bare header name is the portable spelling. KArchive,
+    // KPackage and KSvg DO nest, so <KArchive/KTar> and friends are correct and stay.
+    // Whether the prefix is right depends on whether the framework installs a nested
+    // <Module>/<Module>/ directory, and that is NOT uniform across distros: Fedora nests
+    // KArchive while Mageia and openSUSE put KTar straight in KF6/KArchive/, so only the bare
+    // spelling builds on all three. KPackage, KSvg and KIO nest everywhere, so they keep their
+    // prefix -- KIO and KNSWidgets consumers get
+    // /usr/include/KF6 on the include path and so genuinely need their prefix, which is why
+    // upstream KDE writes <KIO/OpenUrlJob> and a bare <KIconLoader>. Unprefixing those two
+    // breaks the Fedora build outright -- measured, not assumed.
+    const QStringList flat = {QStringLiteral("KArchive"), QStringLiteral("KConfigQml"), QStringLiteral("KIconThemes")};
+    const QRegularExpression prefixed(QStringLiteral("#include[ \t]*<(%1)/").arg(flat.join(QLatin1Char('|'))));
+    const QStringList sources = sourcesUnder({QStringLiteral("app"), QStringLiteral("declarativeimports"),
+                                              QStringLiteral("containment"), QStringLiteral("containmentactions"),
+                                              QStringLiteral("plasmoid")}, QStringLiteral("*.cpp"));
+    QStringList offenders;
+
+    for (const QString &path : sources + sourcesUnder({QStringLiteral("app"), QStringLiteral("declarativeimports"),
+                                                       QStringLiteral("containment"), QStringLiteral("containmentactions"),
+                                                       QStringLiteral("plasmoid")}, QStringLiteral("*.h"))) {
+        const QRegularExpressionMatch hit = prefixed.match(withoutComments(readFile(path)));
+        if (hit.hasMatch()) {
+            offenders << QStringLiteral("%1 (%2)").arg(relativeToRepo(path), hit.captured(1));
+        }
+    }
+
+    QVERIFY2(offenders.isEmpty(),
+             qPrintable(QStringLiteral("these frameworks install no nested directory, so the prefixed include only resolves on Fedora:\n  %1")
+                            .arg(offenders.join(QStringLiteral("\n  ")))));
 }
 
 void SourceGuardTest::viewSettingsFactory_isTheOnlySettingsWindowDeleter()

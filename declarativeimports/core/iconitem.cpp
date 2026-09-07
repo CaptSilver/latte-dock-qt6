@@ -27,8 +27,10 @@
 
 // KDE
 #include <KIconTheme>
-#include <KIconThemes/KIconLoader>
-#include <KIconThemes/KIconEffect>
+//! unprefixed, like KIconTheme above: the KIconThemes/ form only resolves where
+//! the KF6 include root happens to be on the search path as well
+#include <KIconLoader>
+#include <KIconEffect>
 
 namespace Latte {
 

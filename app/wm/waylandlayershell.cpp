@@ -5,6 +5,9 @@
 
 #include "waylandlayershell.h"
 
+// local
+#include <config-latte.h>
+
 #include <QMargins>
 #include <QScreen>
 #include <QWindow>
@@ -134,7 +137,9 @@ void updateAnchoring(QWindow *window, QScreen *screen,
         if (seeded != window->size()) {
             window->resize(seeded);
         }
+#if HAVE_LAYERSHELLQT_SETSCREEN
         ls->setScreen(screen);
+#endif
     }
 
     //! The exclusive edge is one of the anchors by construction (edgeFor(location) is always in

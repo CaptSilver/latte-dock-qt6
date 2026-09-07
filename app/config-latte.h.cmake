@@ -5,4 +5,6 @@
 
 #cmakedefine WEBSITE "@WEBSITE@"
 
+#cmakedefine01 HAVE_LAYERSHELLQT_SETSCREEN
+
 #endif // CONFIG_LATTE_H

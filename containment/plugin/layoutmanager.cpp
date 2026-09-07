@@ -12,7 +12,7 @@
 #include <QtMath>
 
 // KDE
-#include <KConfigQml/KConfigPropertyMap>
+#include <KConfigPropertyMap>
 
 // Plasma
 #include <Plasma/Plasma>

@@ -26,10 +26,10 @@
 #include <KMessageBox>
 #include <KNotification>
 #include <KPluginMetaData>
-#include <KArchive/KTar>
-#include <KArchive/KZip>
-#include <KArchive/KArchiveEntry>
-#include <KArchive/KArchiveDirectory>
+#include <KTar>
+#include <KZip>
+#include <KArchiveEntry>
+#include <KArchiveDirectory>
 #include <KNSWidgets/Dialog>
 
 // C++
