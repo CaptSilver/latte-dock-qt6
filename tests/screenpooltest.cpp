@@ -7,6 +7,9 @@
 // (app/plasma/extended/screenpool.cpp). Both read a [ScreenConnectors] config
 // group and expose id<->connector lookups; this seeds that group and asserts the
 // mappings plus the known-id / not-found branches against real production code.
+// Nothing here may depend on how many monitors the machine running it has, or what
+// they are called: see parkLiveScreensAbove() for how the id tests stay out of the
+// way of the real ones.
 
 // local
 #include "screenpool.h"
@@ -15,6 +18,7 @@
 // Qt
 #include <QGuiApplication>
 #include <QObject>
+#include <QScreen>
 #include <QString>
 #include <QTemporaryDir>
 #include <QTest>
@@ -36,6 +40,8 @@ private Q_SLOTS:
     void lattePool_unknownIdHasEmptyConnector();
     void lattePool_hasScreenId();
     void lattePool_removeScreensSkipsAbsentIdAndRemovesPresent();
+    void lattePool_loadMapsEveryLiveScreen();
+    void lattePool_firstAvailableIdCountsUpFromFirstScreenId();
     void lattePool_firstAvailableIdFillsGap();
     void lattePool_firstAvailableIdAdvancesPastContiguousRun();
 
@@ -151,13 +157,68 @@ void ScreenPoolTest::lattePool_removeScreensSkipsAbsentIdAndRemovesPresent()
     QVERIFY(pool.hasScreenId(10));
 }
 
+//! load() maps every connected QScreen that is not in the config yet, so on a machine with
+//! monitors the pool comes back with ids the test never asked for -- how many, and which,
+//! depends on the developer's hardware. Claiming the live screens at ids 100+ before load()
+//! keeps them out of the 10-12 band the id tests reason about: load() finds them already
+//! mapped and adds nothing of its own, whatever the machine looks like.
+static void parkLiveScreensAbove(KConfigGroup &group)
+{
+    int parkedId = 100;
+
+    for (const QScreen *screen : qGuiApp->screens()) {
+        // serialized form is "name:::x,y wxh"; the geometry is irrelevant to id allocation
+        const QString serialized = screen->name() + QStringLiteral(":::0,0 1x1");
+        group.writeEntry(QString::number(parkedId++), serialized);
+    }
+}
+
+void ScreenPoolTest::lattePool_loadMapsEveryLiveScreen()
+{
+    auto config = KSharedConfig::openConfig(m_configDir.filePath(QStringLiteral("lattepool_live.rc")),
+                                            KConfig::SimpleConfig);
+
+    // Nothing seeded, so every mapping in the pool has to have come from load() itself
+    // claiming a connected screen.
+    Latte::ScreenPool pool(config);
+    pool.load();
+
+    const QList<QScreen *> screens = qGuiApp->screens();
+    QCOMPARE(pool.screensTable().rowCount(), int(screens.count()));
+
+    for (const QScreen *screen : screens) {
+        QVERIFY(pool.id(screen->name()) >= int(Latte::ScreenPool::FIRSTSCREENID));
+    }
+}
+
+void ScreenPoolTest::lattePool_firstAvailableIdCountsUpFromFirstScreenId()
+{
+    auto config = KSharedConfig::openConfig(m_configDir.filePath(QStringLiteral("lattepool_countup.rc")),
+                                            KConfig::SimpleConfig);
+
+    // No load() and no seeds: the table starts empty, so these ids are the allocator counting
+    // up from FIRSTSCREENID. This is the one path that runs the scan off its end; as soon as
+    // the table also holds the parked live screens, a free id turns up inside the loop and the
+    // scan returns from there instead.
+    Latte::ScreenPool pool(config);
+
+    pool.insertScreenMapping(QStringLiteral("COUNT-1"));
+    pool.insertScreenMapping(QStringLiteral("COUNT-2"));
+    pool.insertScreenMapping(QStringLiteral("COUNT-3"));
+
+    QCOMPARE(pool.id(QStringLiteral("COUNT-1")), 10);
+    QCOMPARE(pool.id(QStringLiteral("COUNT-2")), 11);
+    QCOMPARE(pool.id(QStringLiteral("COUNT-3")), 12);
+    QCOMPARE(int(Latte::ScreenPool::FIRSTSCREENID), 10);
+}
+
 void ScreenPoolTest::lattePool_firstAvailableIdFillsGap()
 {
     auto config = KSharedConfig::openConfig(m_configDir.filePath(QStringLiteral("lattepool_gap.rc")),
                                             KConfig::SimpleConfig);
     KConfigGroup group(config, QStringLiteral("ScreenConnectors"));
-    // Seed three connectors so the QGuiApp virtual screen (which load() auto-inserts
-    // for any QScreen not yet in the table) occupies id 13, leaving 10-12 under our control.
+    parkLiveScreensAbove(group);
+    // Seed a run of three so ids 10-12 are ours alone.
     group.writeEntry(QStringLiteral("10"), QStringLiteral("DP-0:::0,0 1920x1080"));
     group.writeEntry(QStringLiteral("11"), QStringLiteral("DP-1:::1920,0 1920x1080"));
     group.writeEntry(QStringLiteral("12"), QStringLiteral("HDMI-1:::3840,0 1280x1024"));
@@ -165,7 +226,6 @@ void ScreenPoolTest::lattePool_firstAvailableIdFillsGap()
 
     Latte::ScreenPool pool(config);
     pool.load();
-    // After load, ids 10-12 are ours; the virtual QScreen fills 13+.
     QVERIFY(pool.hasScreenId(10));
     QVERIFY(pool.hasScreenId(11));
     QVERIFY(pool.hasScreenId(12));
@@ -176,7 +236,7 @@ void ScreenPoolTest::lattePool_firstAvailableIdFillsGap()
     pool.removeScreens(toRemove);
     QVERIFY(!pool.hasScreenId(11));
 
-    // A new connector must reuse the lowest free id -- the hole at 11, not 13+.
+    // A new connector must reuse the lowest free id -- the hole at 11, not the end of the run.
     pool.insertScreenMapping(QStringLiteral("NEW-1"));
 
     QCOMPARE(pool.id(QStringLiteral("NEW-1")), 11);
@@ -188,15 +248,15 @@ void ScreenPoolTest::lattePool_firstAvailableIdAdvancesPastContiguousRun()
     auto config = KSharedConfig::openConfig(m_configDir.filePath(QStringLiteral("lattepool_contig.rc")),
                                             KConfig::SimpleConfig);
     KConfigGroup group(config, QStringLiteral("ScreenConnectors"));
-    // Seed two connectors; load() will auto-insert the virtual QScreen at 12.
-    // insertScreenMapping("NEW-2") must then advance to 13.
+    parkLiveScreensAbove(group);
+    // Seed a run with no hole in it.
     group.writeEntry(QStringLiteral("10"), QStringLiteral("DP-1:::0,0 1920x1080"));
     group.writeEntry(QStringLiteral("11"), QStringLiteral("HDMI-1:::1920,0 1280x1024"));
+    group.writeEntry(QStringLiteral("12"), QStringLiteral("HDMI-2:::3200,0 1280x1024"));
     group.sync();
 
     Latte::ScreenPool pool(config);
     pool.load();
-    // ids 10 and 11 are ours; the QGuiApp virtual screen fills 12.
     QVERIFY(pool.hasScreenId(10));
     QVERIFY(pool.hasScreenId(11));
     QVERIFY(pool.hasScreenId(12));
@@ -267,6 +327,14 @@ int main(int argc, char *argv[])
     //! ~/.local/share/plasma/shells would shadow the staged one and fail this test for reasons
     //! unrelated to the code. Redirect it alongside the config dir.
     qputenv("XDG_DATA_HOME", xdgConfig.path().toUtf8());
+
+    //! Run headless unless the caller asked for something else, so a bare run of this binary
+    //! cannot put a window on the developer's desktop. ctest sets this already, and leaving an
+    //! existing value alone is what lets "offscreen:configfile=..." drive fake monitor layouts.
+    if (!qEnvironmentVariableIsSet("QT_QPA_PLATFORM")) {
+        qputenv("QT_QPA_PLATFORM", "offscreen");
+    }
+
     QGuiApplication app(argc, argv);
     ScreenPoolTest tc;
     return QTest::qExec(&tc, argc, argv);
