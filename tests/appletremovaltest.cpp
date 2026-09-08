@@ -52,20 +52,34 @@ void AppletRemovalTest::removesContainerWhenAppletAlreadyDestroyed()
     QVERIFY2(QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation).startsWith(s_xdgConfig.path()),
              "config home escaped the sandbox");
 
+    // Both packages below come from plasma-desktop, and a missing one does not show up as a null
+    // pointer: createContainment() documents that an unresolvable plugin still yields a containment,
+    // just with invalid metadata, and loadApplet() "should never return nullptr". pluginMetaData()
+    // is the only thing that says whether the package resolved. Skip rather than fail — a build
+    // without plasma-desktop installed has nothing to say about widget removal.
+    const QString containmentId = QStringLiteral("org.kde.desktopcontainment");
+    const QString appletId = QStringLiteral("org.kde.plasma.minimizeall");
+
     auto *corona = new TestCorona();
-    Plasma::Containment *cont = corona->createContainment(QStringLiteral("org.kde.plasma.desktopcontainment"));
-    if (!cont) {
-        QSKIP("desktop containment package not installed; cannot build the real stack.");
+    Plasma::Containment *cont = corona->createContainment(containmentId);
+    if (!cont->pluginMetaData().isValid()) {
+        QSKIP("plasma-desktop's org.kde.desktopcontainment is not installed; cannot build the real stack.");
     }
+    //! The substitution is silent, so pin down that we got the containment we asked for rather than
+    //! a nameless placeholder standing in for a misspelt id.
+    QCOMPARE(cont->pluginMetaData().pluginId(), containmentId);
+
     corona->setImmutability(Plasma::Types::Mutable);
     cont->setImmutability(Plasma::Types::Mutable);
 
-    Plasma::Applet *applet = cont->createApplet(QStringLiteral("org.kde.plasma.minimizeall"));
-    if (!applet) {
-        QSKIP("test applet not installed; cannot build the real stack.");
+    Plasma::Applet *applet = cont->createApplet(appletId);
+    //! An unresolved applet keeps the requested pluginId, so isValid() is the only thing that
+    //! distinguishes a real widget from a placeholder here.
+    if (!applet->pluginMetaData().isValid()) {
+        QSKIP("plasma-desktop's org.kde.plasma.minimizeall is not installed; cannot build the real stack.");
     }
     auto *graphicItem = PlasmaQuick::AppletQuickItem::itemForApplet(applet);
-    QVERIFY2(graphicItem, "itemForApplet returned null for a real applet.");
+    QVERIFY2(graphicItem, "the applet package resolved but Plasma built no graphic item for it.");
 
     // The layout tree LayoutManager edits, with the applet's container parked in the main layout.
     QQuickItem root, startLayout, mainLayout, endLayout;

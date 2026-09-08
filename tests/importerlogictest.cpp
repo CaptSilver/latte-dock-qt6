@@ -591,7 +591,7 @@ void ImporterLogicTest::importOldLayoutRejectsWhenNoLatteContainment()
     {
         KConfig config(oldPath);
         KConfigGroup containment = config.group(QStringLiteral("Containments")).group(QStringLiteral("1"));
-        containment.writeEntry(QStringLiteral("plugin"), QStringLiteral("org.kde.plasma.desktopcontainment"));
+        containment.writeEntry(QStringLiteral("plugin"), QStringLiteral("org.kde.desktopcontainment"));
         config.sync();
     }
 
