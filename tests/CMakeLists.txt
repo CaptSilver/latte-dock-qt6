@@ -1007,6 +1007,18 @@ foreach(_repo_root_test
     target_compile_definitions(${_repo_root_test} PRIVATE REPO_ROOT="${CMAKE_SOURCE_DIR}")
 endforeach()
 
+# The indicator packages have to be installable into an arbitrary prefix: DESTDIR staging
+# hides an absolute install DESTINATION because the stage path is prepended either way, so
+# nothing else in the suite would notice one. The stage sits in /tmp because this build tree
+# is in-source and anything written under it would land in the checkout.
+add_test(NAME indicatorsinstallprefix
+    COMMAND ${CMAKE_COMMAND}
+            -DINSTALL_SCRIPT=${CMAKE_BINARY_DIR}/indicators/cmake_install.cmake
+            -DSTAGE=/tmp/latte-indicatorsstage-${_latte_stage_id}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/indicators_install_prefix.cmake)
+# An inherited DESTDIR would be prepended to the destination and mask an absolute one.
+set_tests_properties(indicatorsinstallprefix PROPERTIES ENVIRONMENT "DESTDIR=")
+
 # When coverage is on, instrument every test binary AND the production sources
 # linked into it (ecm_add_test compiles the listed app/* sources into the target).
 # Add new test names here when adding tests.
