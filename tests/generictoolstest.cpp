@@ -24,19 +24,6 @@
 
 using namespace Latte;
 
-//! True when any pixel carries a non-zero alpha, i.e. the painter drew something.
-static bool paintedAnything(const QImage &img)
-{
-    for (int y = 0; y < img.height(); ++y) {
-        for (int x = 0; x < img.width(); ++x) {
-            if (qAlpha(img.pixel(x, y)) != 0) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
 //! True when some opaque pixel is dominated by the given channel, used to assert a
 //! solid-colour fill survived scaling/antialiasing without pinning an exact RGB.
 static bool hasGreenishPixel(const QImage &img)
@@ -52,11 +39,9 @@ static bool hasGreenishPixel(const QImage &img)
     return false;
 }
 
-//! Paints one icon helper onto its own transparent canvas the size of the option
-//! rect, so two helpers can be compared pixel for pixel.
-// Bounding box of everything non-transparent. drawIcon and drawLayoutIcon now share
-// iconTargetRect, so comparing one against the other can no longer fail -- the placement
-// has to be pinned against absolute geometry instead.
+//! Bounding box of everything non-transparent. The draw helpers below are asserted
+//! through this: that something was painted holds for any implementation at all, while
+//! the rectangle the ink lands in does not.
 static QRect paintedBounds(const QImage &img)
 {
     int left = img.width(), right = -1, top = img.height(), bottom = -1;
@@ -73,24 +58,71 @@ static QRect paintedBounds(const QImage &img)
     return right < 0 ? QRect() : QRect(left, top, right - left + 1, bottom - top + 1);
 }
 
-static QImage paintedByIcon(const QStyleOption &option, const QString &icon, Qt::AlignmentFlag alignment)
+//! Paints one helper onto its own transparent canvas the size of the given rect, so the
+//! placement it chose can be read back as a bounding box.
+template <typename Draw>
+static QImage paintedOn(const QRect &rect, Draw draw)
 {
-    QImage img(option.rect.width(), option.rect.height(), QImage::Format_ARGB32_Premultiplied);
+    QImage img(rect.width(), rect.height(), QImage::Format_ARGB32_Premultiplied);
     img.fill(Qt::transparent);
     QPainter p(&img);
-    drawIcon(&p, option, icon, alignment);
+    draw(&p);
     p.end();
     return img;
 }
 
+//! Ink per colour channel across the whole canvas. Antialiased glyphs leave few fully
+//! opaque pixels, so which colour a text run was drawn in is read off the totals rather
+//! than off any one pixel.
+struct InkSums
+{
+    qint64 red = 0;
+    qint64 green = 0;
+    qint64 blue = 0;
+};
+
+static InkSums inkSums(const QImage &img)
+{
+    InkSums sums;
+    for (int y = 0; y < img.height(); ++y) {
+        for (int x = 0; x < img.width(); ++x) {
+            const QRgb px = img.pixel(x, y);
+            sums.red += qRed(px);
+            sums.green += qGreen(px);
+            sums.blue += qBlue(px);
+        }
+    }
+    return sums;
+}
+
+static QImage paintedByIcon(const QStyleOption &option, const QString &icon, Qt::AlignmentFlag alignment)
+{
+    return paintedOn(option.rect, [&](QPainter *p) { drawIcon(p, option, icon, alignment); });
+}
+
 static QImage paintedByLayoutIcon(const QStyleOption &option, const QString &icon, Qt::AlignmentFlag alignment)
 {
-    QImage img(option.rect.width(), option.rect.height(), QImage::Format_ARGB32_Premultiplied);
-    img.fill(Qt::transparent);
-    QPainter p(&img);
-    drawLayoutIcon(&p, option, false, icon, alignment);
-    p.end();
-    return img;
+    return paintedOn(option.rect, [&](QPainter *p) { drawLayoutIcon(p, option, false, icon, alignment); });
+}
+
+//! The background-file branch of drawLayoutIcon, fed a path that does not exist.
+static QImage paintedByLayoutBackground(const QStyleOption &option, Qt::AlignmentFlag alignment)
+{
+    return paintedOn(option.rect, [&](QPainter *p) { drawLayoutIcon(p, option, true, QStringLiteral("/definitely/missing-bg.png"), alignment); });
+}
+
+static QImage paintedByColorSchemeIcon(const QStyleOption &option, Qt::AlignmentFlag alignment)
+{
+    return paintedOn(option.rect, [&](QPainter *p) { drawColorSchemeIcon(p, option, QColor(220, 0, 0), QColor(0, 0, 220), alignment); });
+}
+
+//! The viewitem overload of drawFormattedText, which reads its alignment off
+//! displayAlignment.
+static QImage paintedByFormattedText(QStyleOptionViewItem option, const QString &text, Qt::AlignmentFlag alignment)
+{
+    option.text = text;
+    option.displayAlignment = alignment | Qt::AlignVCenter;
+    return paintedOn(option.rect, [&](QPainter *p) { drawFormattedText(p, option, 1.0); });
 }
 
 // Real-object tests for the Settings::Generic free helpers in generictools.cpp.
@@ -134,9 +166,9 @@ private Q_SLOTS:
     void remainedFromLayoutIconCenteredReturnsFull();
     void remainedFromScreenDrawingShrinks();
 
-    void drawChangesIndicatorPaints();
+    void drawChangesIndicatorPaintsRightEdge();
     void drawScreenReturnsAvailableRect();
-    void drawFormattedTextDoesNotCrash();
+    void drawFormattedTextUsesHighlightColorWhenSelected();
 
     // remaining-rect helpers not yet exercised
     void remainedFromFormattedText_data();
@@ -154,24 +186,24 @@ private Q_SLOTS:
 
     // drawing helpers not yet exercised
     void drawIconPaintsThemedIcon();
-    void drawLayoutIconBackgroundPaintsEllipse();
+    void drawLayoutIconBackgroundStrokesOutline();
     void drawLayoutIconThemedPaints();
     void drawColorSchemeIconPaintsColors();
-    void drawCheckBoxPaints();
-    void drawBackgroundViewItemPaintsSelection();
-    void drawBackgroundMenuItemPaints();
-    void drawFormattedTextCenteredPaints();
-    void drawFormattedTextRightAlignedPaints();
-    void drawFormattedTextMenuOverloadPaints();
+    void drawCheckBoxPlacement_data();
+    void drawCheckBoxPlacement();
+    void drawBackgroundViewItemFillsRowWhenSelected();
+    void drawBackgroundMenuItemFillsRowWhenSelected();
+    void drawFormattedTextCentersInk();
+    void drawFormattedTextRightAlignsInkToTheEdge();
+    void drawFormattedTextMenuOverloadFollowsLayoutDirection();
     void drawChangesIndicatorRtlPaintsLeftEdge();
-    void drawScreenMultipleVerticalPaints();
-    void drawHelpersAlignmentAndRtlBranches();
+    void drawScreenFollowsLayoutDirection();
+    void drawScreenMultipleScreensOutlinesBehindTheScreen();
+    void drawScreenPortraitGeometryPaintsNarrowerScreen();
 
     // the icon slot itself: every icon painter must place its target identically
-    void drawIconMatchesLayoutIconWhenAligned_data();
-    void drawIconMatchesLayoutIconWhenAligned();
-    void drawIconCenteredMatchesLayoutIcon();
-    void drawIconCenteredMatchesLayoutIconRtl();
+    void iconPaintersShareTheSlot_data();
+    void iconPaintersShareTheSlot();
     void remainedFromIconExactSlot();
     void remainedFromIconCenteredIgnoresDirection();
 
@@ -400,28 +432,15 @@ void GenericToolsTest::remainedFromScreenDrawingShrinks()
     QCOMPARE(r.height(), 40);
 }
 
-void GenericToolsTest::drawChangesIndicatorPaints()
+void GenericToolsTest::drawChangesIndicatorPaintsRightEdge()
 {
-    QImage img(200, 30, QImage::Format_ARGB32_Premultiplied);
-    img.fill(Qt::transparent);
-    QPainter p(&img);
+    // The dot is placed by arithmetic on the indicator constants alone - no style, no
+    // font - so the rect it inks is fixed: a 6px circle inset by the 5px margin from the
+    // right edge of a 200x30 row, one pixel wider each way for the stroke.
     QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
+    const QImage img = paintedOn(opt.rect, [&](QPainter *p) { drawChangesIndicator(p, opt); });
 
-    drawChangesIndicator(&p, opt);
-    p.end();
-
-    // The orange dot lands at the right edge; somewhere in the image must now be
-    // non-transparent.
-    bool painted = false;
-    for (int y = 0; y < img.height() && !painted; ++y) {
-        for (int x = 0; x < img.width(); ++x) {
-            if (qAlpha(img.pixel(x, y)) != 0) {
-                painted = true;
-                break;
-            }
-        }
-    }
-    QVERIFY(painted);
+    QCOMPARE(paintedBounds(img), QRect(189, 12, 7, 7));
 }
 
 void GenericToolsTest::drawScreenReturnsAvailableRect()
@@ -441,29 +460,27 @@ void GenericToolsTest::drawScreenReturnsAvailableRect()
     QVERIFY(opt.rect.contains(avail.topLeft()));
 }
 
-void GenericToolsTest::drawFormattedTextDoesNotCrash()
+void GenericToolsTest::drawFormattedTextUsesHighlightColorWhenSelected()
 {
-    QImage img(200, 30, QImage::Format_ARGB32_Premultiplied);
-    img.fill(Qt::transparent);
-    QPainter p(&img);
-    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled | QStyle::State_Selected, QRect(0, 0, 200, 30));
-    opt.text = QStringLiteral("Hello");
-    opt.displayAlignment = Qt::AlignLeft | Qt::AlignVCenter;
+    // A selected row draws its text in HighlightedText, an unselected one in Text. Give
+    // the two roles colours nothing else can produce and read the ink back: red means the
+    // helper took the Text branch, blue the HighlightedText one.
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
+    opt.palette.setColor(QPalette::Text, QColor(255, 0, 0));
+    opt.palette.setColor(QPalette::HighlightedText, QColor(0, 0, 255));
 
-    // Drives the HighlightedText branch (Selected) plus the QTextDocument render.
-    drawFormattedText(&p, opt, 1.0);
-    p.end();
+    const InkSums plain = inkSums(paintedByFormattedText(opt, QStringLiteral("Hello"), Qt::AlignLeft));
+    QVERIFY(plain.red > 0);
+    QCOMPARE(plain.blue, 0);
 
-    bool painted = false;
-    for (int y = 0; y < img.height() && !painted; ++y) {
-        for (int x = 0; x < img.width(); ++x) {
-            if (qAlpha(img.pixel(x, y)) != 0) {
-                painted = true;
-                break;
-            }
-        }
-    }
-    QVERIFY(painted);
+    opt.state |= QStyle::State_Selected;
+    const QImage highlighted = paintedByFormattedText(opt, QStringLiteral("Hello"), Qt::AlignLeft);
+    const InkSums selected = inkSums(highlighted);
+    QVERIFY(selected.blue > 0);
+    QCOMPARE(selected.red, 0);
+
+    // Left-aligned text starts at the left edge of the row, a margin of glyph bearing aside.
+    QVERIFY(paintedBounds(highlighted).left() < 10);
 }
 
 void GenericToolsTest::initTestCase()
@@ -645,19 +662,22 @@ void GenericToolsTest::drawIconPaintsThemedIcon()
     QVERIFY(hasGreenishPixel(img));
 }
 
-void GenericToolsTest::drawLayoutIconBackgroundPaintsEllipse()
+void GenericToolsTest::drawLayoutIconBackgroundStrokesOutline()
 {
-    QImage img(200, 30, QImage::Format_ARGB32_Premultiplied);
-    img.fill(Qt::transparent);
-    QPainter p(&img);
+    // Background-file branch with an image that does not exist: the brush is empty, so what
+    // is left is the stroked ellipse. Read the row through the middle of the slot - which
+    // iconPaintersShareTheSlot pins - and it has ink at both ends and a hole between them.
+    // A filled circle, or a plain rectangle standing in for the missing image, would paint
+    // the middle too.
     QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
+    const QImage img = paintedByLayoutBackground(opt, Qt::AlignLeft);
 
-    // Background-file branch: even with a missing image the ellipse outline is
-    // stroked with the palette text colour, so something lands on the canvas.
-    drawLayoutIcon(&p, opt, true, QStringLiteral("/definitely/missing-bg.png"), Qt::AlignLeft);
-    p.end();
+    const QRect slot(3, 1, 28, 28);
+    const int midRow = slot.y() + slot.height() / 2;
 
-    QVERIFY(paintedAnything(img));
+    QVERIFY(qAlpha(img.pixel(slot.left(), midRow)) > 0);
+    QVERIFY(qAlpha(img.pixel(slot.right(), midRow)) > 0);
+    QCOMPARE(qAlpha(img.pixel(slot.center().x(), midRow)), 0);
 }
 
 void GenericToolsTest::drawLayoutIconThemedPaints()
@@ -705,191 +725,189 @@ void GenericToolsTest::drawColorSchemeIconPaintsColors()
     QVERIFY(hasBlue);
 }
 
-void GenericToolsTest::drawCheckBoxPaints()
+void GenericToolsTest::drawCheckBoxPlacement_data()
 {
-    QImage img(200, 30, QImage::Format_ARGB32_Premultiplied);
-    img.fill(Qt::transparent);
-    QPainter p(&img);
+    QTest::addColumn<Qt::AlignmentFlag>("alignment");
+    QTest::addColumn<Qt::LayoutDirection>("direction");
+    QTest::addColumn<bool>("leading"); //! indicator against the left edge of the row
+
+    QTest::newRow("left-ltr") << Qt::AlignLeft << Qt::LeftToRight << true;
+    QTest::newRow("right-ltr") << Qt::AlignRight << Qt::LeftToRight << false;
+    QTest::newRow("left-rtl") << Qt::AlignLeft << Qt::RightToLeft << false;
+    QTest::newRow("right-rtl") << Qt::AlignRight << Qt::RightToLeft << true;
+}
+
+void GenericToolsTest::drawCheckBoxPlacement()
+{
+    // Unlike the icon painters, the checkbox slot is sized by the widget style through
+    // QStyle::sizeFromContents, so the indicator rect is whatever the style hands back and
+    // is no invariant of this code. What the helper does decide is which end of the row it
+    // goes to, and that RTL swaps the two ends - so only the end is asserted.
+    QFETCH(Qt::AlignmentFlag, alignment);
+    QFETCH(Qt::LayoutDirection, direction);
+    QFETCH(bool, leading);
+
+    qApp->setLayoutDirection(direction);
     QStyleOptionButton opt;
     opt.rect = QRect(0, 0, 200, 30);
     opt.state = QStyle::State_Enabled | QStyle::State_On;
     opt.palette = QApplication::palette();
 
-    drawCheckBox(&p, opt, Qt::AlignLeft);
-    p.end();
+    const QRect ink = paintedBounds(paintedOn(opt.rect, [&](QPainter *p) { drawCheckBox(p, opt, alignment); }));
+    QVERIFY(!ink.isEmpty());
 
-    QVERIFY(paintedAnything(img));
+    if (leading) {
+        QVERIFY2(ink.right() < opt.rect.width() / 3, qPrintable(QStringLiteral("indicator at %1..%2").arg(ink.left()).arg(ink.right())));
+    } else {
+        QVERIFY2(ink.left() > opt.rect.width() / 2, qPrintable(QStringLiteral("indicator at %1..%2").arg(ink.left()).arg(ink.right())));
+    }
 }
 
-void GenericToolsTest::drawBackgroundViewItemPaintsSelection()
+void GenericToolsTest::drawBackgroundViewItemFillsRowWhenSelected()
 {
-    // drawBackground(viewitem) routes through option.widget->style(), so it needs a
-    // real widget; a selected item paints its highlight.
+    // drawBackground(viewitem) routes through option.widget->style(), so it needs a real
+    // widget. It also rewrites the option before handing it over - text cleared, focus
+    // stripped - and the selection has to survive that: a selected row is filled edge to
+    // edge, an otherwise identical unselected one is left alone.
     QWidget host;
-    QImage img(200, 30, QImage::Format_ARGB32_Premultiplied);
-    img.fill(Qt::transparent);
-    QPainter p(&img);
     QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled | QStyle::State_Selected | QStyle::State_Active, QRect(0, 0, 200, 30));
     opt.widget = &host;
     opt.palette = host.palette();
 
-    drawBackground(&p, opt);
-    p.end();
+    QCOMPARE(paintedBounds(paintedOn(opt.rect, [&](QPainter *p) { drawBackground(p, opt); })), opt.rect);
 
-    QVERIFY(paintedAnything(img));
+    opt.state &= ~QStyle::State_Selected;
+    QVERIFY(paintedBounds(paintedOn(opt.rect, [&](QPainter *p) { drawBackground(p, opt); })).isNull());
 }
 
-void GenericToolsTest::drawBackgroundMenuItemPaints()
+void GenericToolsTest::drawBackgroundMenuItemFillsRowWhenSelected()
 {
-    QImage img(200, 30, QImage::Format_ARGB32_Premultiplied);
-    img.fill(Qt::transparent);
-    QPainter p(&img);
+    // Same claim for the menu-item overload, which clears the text and calls the style
+    // that was passed in rather than the one on the option.
     QStyleOptionMenuItem opt;
     opt.rect = QRect(0, 0, 200, 30);
     opt.state = QStyle::State_Enabled | QStyle::State_Selected;
     opt.menuItemType = QStyleOptionMenuItem::Normal;
     opt.palette = QApplication::palette();
 
-    drawBackground(&p, QApplication::style(), opt);
-    p.end();
+    QCOMPARE(paintedBounds(paintedOn(opt.rect, [&](QPainter *p) { drawBackground(p, QApplication::style(), opt); })), opt.rect);
 
-    QVERIFY(paintedAnything(img));
+    opt.state &= ~QStyle::State_Selected;
+    QVERIFY(paintedBounds(paintedOn(opt.rect, [&](QPainter *p) { drawBackground(p, QApplication::style(), opt); })).isNull());
 }
 
-void GenericToolsTest::drawFormattedTextCenteredPaints()
+void GenericToolsTest::drawFormattedTextCentersInk()
 {
-    QImage img(200, 30, QImage::Format_ARGB32_Premultiplied);
-    img.fill(Qt::transparent);
-    QPainter p(&img);
+    // The rendered width depends on the host font, so the ink is asserted as a
+    // relationship rather than a pixel column: centered text leaves the same gap on both
+    // sides of the row. The right-aligned test below pins the other branch with the same
+    // string, and between them the two branches cannot be swapped unnoticed.
     QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
-    opt.text = QStringLiteral("Hi");
-    opt.displayAlignment = Qt::AlignHCenter | Qt::AlignVCenter;
+    const QRect ink = paintedBounds(paintedByFormattedText(opt, QStringLiteral("Aligned"), Qt::AlignHCenter));
 
-    // viewitem overload maps AlignHCenter -> the centered translate branch.
-    drawFormattedText(&p, opt, 1.0);
-    p.end();
-
-    QVERIFY(paintedAnything(img));
+    QVERIFY(!ink.isEmpty());
+    const int leftGap = ink.left() - opt.rect.left();
+    const int rightGap = opt.rect.right() - ink.right();
+    QVERIFY2(qAbs(leftGap - rightGap) <= 2, qPrintable(QStringLiteral("gaps %1 / %2").arg(leftGap).arg(rightGap)));
+    QVERIFY(leftGap > 20); //! clear of both edges, so neither side branch can pass this
 }
 
-void GenericToolsTest::drawFormattedTextRightAlignedPaints()
+void GenericToolsTest::drawFormattedTextRightAlignsInkToTheEdge()
 {
-    QImage img(200, 30, QImage::Format_ARGB32_Premultiplied);
-    img.fill(Qt::transparent);
-    QPainter p(&img);
+    // The same string, right-aligned: the ink ends against the right edge of the row and
+    // starts past its midpoint.
     QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
-    opt.text = QStringLiteral("Right");
-    opt.displayAlignment = Qt::AlignRight | Qt::AlignVCenter;
+    const QRect ink = paintedBounds(paintedByFormattedText(opt, QStringLiteral("Aligned"), Qt::AlignRight));
 
-    drawFormattedText(&p, opt, 1.0); // LTR AlignRight -> right translate branch
-    p.end();
-
-    QVERIFY(paintedAnything(img));
+    QVERIFY(!ink.isEmpty());
+    const int rightGap = opt.rect.right() - ink.right();
+    QVERIFY2(rightGap <= 10, qPrintable(QStringLiteral("right gap %1").arg(rightGap)));
+    QVERIFY(ink.left() > opt.rect.center().x());
 }
 
-void GenericToolsTest::drawFormattedTextMenuOverloadPaints()
+void GenericToolsTest::drawFormattedTextMenuOverloadFollowsLayoutDirection()
 {
-    // RTL so this also drives the direction-flip branch inside the core overload.
-    qApp->setLayoutDirection(Qt::RightToLeft);
-    QImage img(200, 30, QImage::Format_ARGB32_Premultiplied);
-    img.fill(Qt::transparent);
-    QPainter p(&img);
+    // The menu overload always asks for AlignLeft, so the side the text ends up on is
+    // decided by the layout direction alone.
     QStyleOptionMenuItem opt;
     opt.rect = QRect(0, 0, 200, 30);
     opt.state = QStyle::State_Enabled;
     opt.text = QStringLiteral("Menu");
     opt.palette = QApplication::palette();
 
-    drawFormattedText(&p, opt, 1.0);
-    p.end();
+    const QRect ltr = paintedBounds(paintedOn(opt.rect, [&](QPainter *p) { drawFormattedText(p, opt, 1.0); }));
+    QVERIFY(!ltr.isEmpty());
+    QVERIFY(ltr.left() < 10);
 
-    QVERIFY(paintedAnything(img));
+    qApp->setLayoutDirection(Qt::RightToLeft);
+    const QRect rtl = paintedBounds(paintedOn(opt.rect, [&](QPainter *p) { drawFormattedText(p, opt, 1.0); }));
+    QCOMPARE(rtl.size(), ltr.size());
+    QVERIFY2(opt.rect.right() - rtl.right() <= 10, qPrintable(QStringLiteral("right gap %1").arg(opt.rect.right() - rtl.right())));
 }
 
 void GenericToolsTest::drawChangesIndicatorRtlPaintsLeftEdge()
 {
-    // RTL parks the orange dot at the left edge; assert a painted pixel there, which
-    // the LTR case (right edge) would not produce.
+    // RTL parks the same dot the same distance in from the other edge.
     qApp->setLayoutDirection(Qt::RightToLeft);
-    QImage img(200, 30, QImage::Format_ARGB32_Premultiplied);
-    img.fill(Qt::transparent);
-    QPainter p(&img);
     QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
+    const QImage img = paintedOn(opt.rect, [&](QPainter *p) { drawChangesIndicator(p, opt); });
 
-    drawChangesIndicator(&p, opt);
-    p.end();
-
-    bool leftPainted = false;
-    for (int y = 0; y < img.height() && !leftPainted; ++y) {
-        for (int x = 0; x < 30; ++x) {
-            if (qAlpha(img.pixel(x, y)) != 0) {
-                leftPainted = true;
-                break;
-            }
-        }
-    }
-    QVERIFY(leftPainted);
+    QCOMPARE(paintedBounds(img), QRect(5, 12, 7, 7));
 }
 
-void GenericToolsTest::drawScreenMultipleVerticalPaints()
+void GenericToolsTest::drawScreenFollowsLayoutDirection()
 {
-    // One call covering three otherwise-uncovered branches: RTL placement, a
-    // portrait screen (isVertical), and the multiple-screens decoration.
-    qApp->setLayoutDirection(Qt::RightToLeft);
-    QImage img(300, 40, QImage::Format_ARGB32_Premultiplied);
-    img.fill(Qt::transparent);
-    QPainter p(&img);
+    // The screen icon sits on the leading edge of the row: left under LTR, right under
+    // RTL, with the same drawing either way.
     QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 300, 40));
 
-    QRect avail = drawScreen(&p, opt, true, QRect(0, 0, 1080, 1920));
-    p.end();
+    const QRect ltr = paintedBounds(paintedOn(opt.rect, [&](QPainter *p) { drawScreen(p, opt, false, QRect(0, 0, 1920, 1080)); }));
+    QVERIFY(!ltr.isEmpty());
+    QVERIFY(ltr.right() < opt.rect.center().x());
 
-    QVERIFY(avail.isValid());
-    QVERIFY(avail.width() > 0);
-    QVERIFY(paintedAnything(img));
+    qApp->setLayoutDirection(Qt::RightToLeft);
+    const QRect rtl = paintedBounds(paintedOn(opt.rect, [&](QPainter *p) { drawScreen(p, opt, false, QRect(0, 0, 1920, 1080)); }));
+    QVERIFY(rtl.left() > opt.rect.center().x());
+    QCOMPARE(rtl.size(), ltr.size());
 }
 
-void GenericToolsTest::drawHelpersAlignmentAndRtlBranches()
+void GenericToolsTest::drawScreenMultipleScreensOutlinesBehindTheScreen()
 {
-    // The icon/checkbox draw helpers place their target per alignment; exercise the
-    // right-aligned and centered LTR branches, then the RTL direction-flip branch.
-    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
-    QStyleOptionButton btn;
-    btn.rect = QRect(0, 0, 200, 30);
-    btn.state = QStyle::State_Enabled | QStyle::State_On;
-    btn.palette = QApplication::palette();
-    const QColor red(220, 0, 0);
-    const QColor blue(0, 0, 220);
+    // The multiple-screens hint adds two lines up and to the left of the screen, as if a
+    // second screen were stacked behind it. It must not move the screen itself, so the
+    // ink grows on the top-left only and the available rect handed back is unchanged.
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 300, 40));
+    QRect singleAvail;
+    QRect multipleAvail;
 
-    {
-        QImage img(200, 30, QImage::Format_ARGB32_Premultiplied);
-        img.fill(Qt::transparent);
-        QPainter p(&img);
-        drawIcon(&p, opt, m_themeIcon, Qt::AlignRight);
-        drawLayoutIcon(&p, opt, false, m_themeIcon, Qt::AlignRight);
-        drawLayoutIcon(&p, opt, true, QStringLiteral("/missing.png"), Qt::AlignHCenter);
-        drawColorSchemeIcon(&p, opt, red, blue, Qt::AlignRight);
-        drawColorSchemeIcon(&p, opt, red, blue, Qt::AlignHCenter);
-        drawCheckBox(&p, btn, Qt::AlignRight);
-        p.end();
-        QVERIFY(paintedAnything(img));
-    }
+    const QRect single = paintedBounds(paintedOn(opt.rect, [&](QPainter *p) { singleAvail = drawScreen(p, opt, false, QRect(0, 0, 1920, 1080)); }));
+    const QRect multiple = paintedBounds(paintedOn(opt.rect, [&](QPainter *p) { multipleAvail = drawScreen(p, opt, true, QRect(0, 0, 1920, 1080)); }));
 
-    {
-        qApp->setLayoutDirection(Qt::RightToLeft);
-        QImage img(200, 30, QImage::Format_ARGB32_Premultiplied);
-        img.fill(Qt::transparent);
-        QPainter p(&img);
-        drawIcon(&p, opt, m_themeIcon, Qt::AlignLeft);
-        drawLayoutIcon(&p, opt, false, m_themeIcon, Qt::AlignLeft);
-        drawColorSchemeIcon(&p, opt, red, blue, Qt::AlignLeft);
-        drawCheckBox(&p, btn, Qt::AlignLeft);
-        p.end();
-        QVERIFY(paintedAnything(img));
-    }
+    QVERIFY(multiple.left() < single.left());
+    QVERIFY(multiple.top() < single.top());
+    QCOMPARE(multiple.right(), single.right());
+    QCOMPARE(multiple.bottom(), single.bottom());
+    QCOMPARE(multipleAvail, singleAvail);
 }
 
-void GenericToolsTest::drawIconMatchesLayoutIconWhenAligned_data()
+void GenericToolsTest::drawScreenPortraitGeometryPaintsNarrowerScreen()
+{
+    // A portrait screen geometry is drawn as a portrait screen: the same row height, but
+    // the outline and the available rect inside it are narrower and taller.
+    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 300, 40));
+    QRect landscapeAvail;
+    QRect portraitAvail;
+
+    const QRect landscape = paintedBounds(paintedOn(opt.rect, [&](QPainter *p) { landscapeAvail = drawScreen(p, opt, false, QRect(0, 0, 1920, 1080)); }));
+    const QRect portrait = paintedBounds(paintedOn(opt.rect, [&](QPainter *p) { portraitAvail = drawScreen(p, opt, false, QRect(0, 0, 1080, 1920)); }));
+
+    QVERIFY(portrait.width() < landscape.width());
+    QVERIFY(portrait.height() > landscape.height());
+    QVERIFY(portraitAvail.width() < landscapeAvail.width());
+    QVERIFY(portraitAvail.height() > landscapeAvail.height());
+}
+
+void GenericToolsTest::iconPaintersShareTheSlot_data()
 {
     QTest::addColumn<Qt::AlignmentFlag>("alignment");
     QTest::addColumn<Qt::LayoutDirection>("direction");
@@ -902,12 +920,20 @@ void GenericToolsTest::drawIconMatchesLayoutIconWhenAligned_data()
     QTest::newRow("right-ltr") << Qt::AlignRight << Qt::LeftToRight << QRect(169, 1, 28, 28);
     QTest::newRow("left-rtl") << Qt::AlignLeft << Qt::RightToLeft << QRect(169, 1, 28, 28);
     QTest::newRow("right-rtl") << Qt::AlignRight << Qt::RightToLeft << QRect(3, 1, 28, 28);
+    // Centered is where the painters used to diverge: drawIcon had no centered branch and
+    // dropped the icon at the right edge, and in RTL it mapped AlignHCenter onto AlignLeft
+    // and parked it at the left one. A centered slot has no side, so both directions pin
+    // the same rect.
+    QTest::newRow("center-ltr") << Qt::AlignHCenter << Qt::LeftToRight << QRect(86, 1, 28, 28);
+    QTest::newRow("center-rtl") << Qt::AlignHCenter << Qt::RightToLeft << QRect(86, 1, 28, 28);
 }
 
-void GenericToolsTest::drawIconMatchesLayoutIconWhenAligned()
+void GenericToolsTest::iconPaintersShareTheSlot()
 {
-    // Both now route through iconTargetRect, so asserting they agree with each other is a
-    // tautology no implementation can fail. Pin the absolute placement instead.
+    // Four painters fill the same slot: a themed icon, a layout icon, the layout
+    // background circle and the colour-scheme swatches. They all route through
+    // iconTargetRect, so asserting they agree with each other is a tautology no
+    // implementation can fail - the placement is pinned against absolute geometry.
     QFETCH(Qt::AlignmentFlag, alignment);
     QFETCH(Qt::LayoutDirection, direction);
     QFETCH(QRect, painted);
@@ -917,27 +943,8 @@ void GenericToolsTest::drawIconMatchesLayoutIconWhenAligned()
 
     QCOMPARE(paintedBounds(paintedByIcon(opt, m_themeIcon, alignment)), painted);
     QCOMPARE(paintedBounds(paintedByLayoutIcon(opt, m_themeIcon, alignment)), painted);
-}
-
-void GenericToolsTest::drawIconCenteredMatchesLayoutIcon()
-{
-    // Centered is where the two used to diverge: drawIcon had no centered branch
-    // and dropped the icon at the right edge instead.
-    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
-
-    QCOMPARE(paintedBounds(paintedByIcon(opt, m_themeIcon, Qt::AlignHCenter)), QRect(86, 1, 28, 28));
-    QCOMPARE(paintedBounds(paintedByLayoutIcon(opt, m_themeIcon, Qt::AlignHCenter)), QRect(86, 1, 28, 28));
-}
-
-void GenericToolsTest::drawIconCenteredMatchesLayoutIconRtl()
-{
-    // In RTL the mirror must leave a centered icon centered; drawIcon used to map
-    // AlignHCenter onto AlignLeft and park it at the left edge.
-    qApp->setLayoutDirection(Qt::RightToLeft);
-    QStyleOptionViewItem opt = makeOption(QStyle::State_Enabled, QRect(0, 0, 200, 30));
-
-    QCOMPARE(paintedBounds(paintedByIcon(opt, m_themeIcon, Qt::AlignHCenter)), QRect(86, 1, 28, 28));
-    QCOMPARE(paintedBounds(paintedByLayoutIcon(opt, m_themeIcon, Qt::AlignHCenter)), QRect(86, 1, 28, 28));
+    QCOMPARE(paintedBounds(paintedByLayoutBackground(opt, alignment)), painted);
+    QCOMPARE(paintedBounds(paintedByColorSchemeIcon(opt, alignment)), painted);
 }
 
 void GenericToolsTest::remainedFromIconExactSlot()

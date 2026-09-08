@@ -131,7 +131,8 @@ private Q_SLOTS:
     void maskRoundness_steppedCorner_returnsLineCount();
     void maskRoundness_topLeft_mirrorsBottomRight();
     void maskRoundness_mirrorEquivalence();
-    void maskRoundness_singleRowTall_noCrash();
+    void maskRoundness_singleRow_bottomRight_findsNoRoundness();
+    void maskRoundness_singleRow_topLeft_findsNoRoundness();
 
     // ---- roundnessFromShadowCorner ----
 
@@ -140,7 +141,8 @@ private Q_SLOTS:
     void shadowRoundness_monotonicRamp_returnsLineCount();
     void shadowRoundness_mirrorEquivalence();
     void shadowRoundness_perRowMaxBeyondBaseline_doesNotExtendBaseline();
-    void shadowRoundness_singleRowTall_noCrash();
+    void shadowRoundness_singleRow_bottomRight_findsNoRoundness();
+    void shadowRoundness_singleRow_topLeft_findsNoRoundness();
 
     // ---- both roundness scanners ----
 
@@ -298,16 +300,34 @@ void PanelBackgroundScanTest::maskRoundness_mirrorEquivalence()
              PanelBackgroundScan::roundnessFromMaskCorner(square, false));
 }
 
-void PanelBackgroundScanTest::maskRoundness_singleRowTall_noCrash()
+void PanelBackgroundScanTest::maskRoundness_singleRow_bottomRight_findsNoRoundness()
 {
-    // 8x1 image — both topLeftCorner=false and topLeftCorner=true must not over-read.
+    // A mask one row tall: the base line is found, and then there is no second row for
+    // the roundness to be measured across, so the answer is no roundness at all.
+    //
+    // Note what this does and does not show. The row loops are never entered - the walk
+    // rejects the first step off the only row - so nothing here proves the walk stops at
+    // the right row in a taller image. What it does pin is the value: the guard against a
+    // head and tail limit that never moved is the only thing keeping this at 0 rather than
+    // reporting a phantom line of roundness. Under a sanitizer it also covers the bound
+    // itself, since a walk that stepped anyway would read past the last scan line.
+    //
+    // Each direction needs its own image: the walk starts at the opposite corner and bails
+    // out early unless the base pixel is opaque and the one across the diagonal is not, so
+    // one image cannot get both directions as far as the row loop.
     QImage img = argb(8, 1);
     setA(img, 0, 0, 255);
-    // Should complete without crash and return >= 0.
-    int r1 = PanelBackgroundScan::roundnessFromMaskCorner(img, false);
-    int r2 = PanelBackgroundScan::roundnessFromMaskCorner(img, true);
-    QVERIFY(r1 >= 0);
-    QVERIFY(r2 >= 0);
+
+    QCOMPARE(PanelBackgroundScan::roundnessFromMaskCorner(img, false), 0);
+}
+
+void PanelBackgroundScanTest::maskRoundness_singleRow_topLeft_findsNoRoundness()
+{
+    // The same image mirrored, for the walk that runs back towards (0,0).
+    QImage img = argb(8, 1);
+    setA(img, 7, 0, 255);
+
+    QCOMPARE(PanelBackgroundScan::roundnessFromMaskCorner(img, true), 0);
 }
 
 // ---- roundnessFromShadowCorner ----
@@ -414,14 +434,27 @@ void PanelBackgroundScanTest::shadowRoundness_perRowMaxBeyondBaseline_doesNotExt
     QCOMPARE(PanelBackgroundScan::roundnessFromShadowCorner(shadowCornerWithOutlyingRowPeak(), false), 2);
 }
 
-void PanelBackgroundScanTest::shadowRoundness_singleRowTall_noCrash()
+void PanelBackgroundScanTest::shadowRoundness_singleRow_bottomRight_findsNoRoundness()
 {
-    // 8x1 image — both branches must not read scanLine(1).
+    // Same shape of test for the shadow scanner. The base pixel has to be transparent and
+    // some pixel further along the row solid, or the scan gives up before it reaches the
+    // row loop at all and the image proves nothing about it.
+    //
+    // As above: with one row the loop cannot be entered, so this pins the answer and
+    // covers the bound under a sanitizer rather than proving the walk stops correctly.
     QImage img = argb(8, 1);
-    int r1 = PanelBackgroundScan::roundnessFromShadowCorner(img, false);
-    int r2 = PanelBackgroundScan::roundnessFromShadowCorner(img, true);
-    QVERIFY(r1 >= 0);
-    QVERIFY(r2 >= 0);
+    setA(img, 2, 0, 200);
+
+    QCOMPARE(PanelBackgroundScan::roundnessFromShadowCorner(img, false), 0);
+}
+
+void PanelBackgroundScanTest::shadowRoundness_singleRow_topLeft_findsNoRoundness()
+{
+    // The same image mirrored, for the walk that runs back towards (0,0).
+    QImage img = argb(8, 1);
+    setA(img, 5, 0, 200);
+
+    QCOMPARE(PanelBackgroundScan::roundnessFromShadowCorner(img, true), 0);
 }
 
 // ---- shadowFromBorder ----
