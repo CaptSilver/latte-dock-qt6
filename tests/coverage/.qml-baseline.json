@@ -757,13 +757,6 @@
       "units_total": 2,
       "coverage": 1.0
     },
-    "plasmoid/package/contents/ui/previews/PlasmaCoreThumbnail.qml": {
-      "loc_hit": 0,
-      "loc_total": 6,
-      "units_hit": 0,
-      "units_total": 1,
-      "coverage": 0.0
-    },
     "plasmoid/package/contents/ui/task/animations/ClickedAnimation.qml": {
       "loc_hit": 0,
       "loc_total": 6,

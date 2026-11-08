@@ -194,15 +194,9 @@ Column {
                 id:previewThumbLoader
                 anchors.fill: parent
                 anchors.margins: Math.max(2, thumbnailSourceItem.shadowPx)
-                active: LatteCore.WindowSystem.isPlatformX11 || LatteCore.WindowSystem.isPlatformWayland
+                active: LatteCore.WindowSystem.isPlatformWayland
                 visible: !albumArtImage.visible && !thumbnailSourceItem.isMinimized
-                source:  {
-                    if (LatteCore.WindowSystem.isPlatformWayland) {
-                        return "PipeWireThumbnail.5.26.qml";
-                    }
-
-                    return "PlasmaCoreThumbnail.qml";
-                }
+                source: "PipeWireThumbnail.5.26.qml"
 
                 LatteComponents.ShadowedItem {
                     anchors.fill: previewThumbLoader.item
