@@ -13,6 +13,7 @@
 #include "view.h"
 #include "visibilitymanager.h"
 #include "../lattecorona.h"
+#include "../plasmascreenid.h"
 #include "../screenpool.h"
 #include "../data/screendata.h"
 #include "../layout/centrallayout.h"
@@ -366,11 +367,22 @@ void Positioner::syncLatteViews()
     }
 }
 
+//! libplasma keeps the containment's screen as plain state, so nothing updates it when the
+//! view moves: the containment is told which screen the view is on. A primary view is on
+//! whatever the primary screen is now, an explicit one on the screen it follows.
 void Positioner::updateContainmentScreen()
 {
-    if (m_view->containment()) {
-        m_view->containment()->reactToScreenChange();
+    if (!m_view->containment()) {
+        return;
     }
+
+    auto *latteCorona = qobject_cast<Latte::Corona *>(m_view->corona());
+
+    if (!latteCorona) {
+        return;
+    }
+
+    setContainmentScreen(m_view->containment(), m_view->onPrimary() ? latteCorona->screenPool()->primaryScreenId() : currentScreenId());
 }
 
 //! this function updates the dock's associated screen.
@@ -526,7 +538,7 @@ void Positioner::immediateSyncGeometry()
         if (m_view->formFactor() == Plasma::Types::Vertical) {
             QString layoutName = m_view->layout() ? m_view->layout()->name() : QString();
             auto latteCorona = qobject_cast<Latte::Corona *>(m_view->corona());
-            int fixedScreen = m_view->onPrimary() ? latteCorona->screenPool()->primaryScreenId() : m_view->containment()->screen();
+            int fixedScreen = m_view->onPrimary() ? latteCorona->screenPool()->primaryScreenId() : currentScreenId();
 
             QList<Types::Visibility> ignoreModes({Latte::Types::AutoHide,
                                                   Latte::Types::SidebarOnDemand,

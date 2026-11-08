@@ -16,6 +16,16 @@ using namespace Latte::Layouts;
 
 #define QL(x) QStringLiteral(x)
 
+//! Input with only the three id lists the algorithm started with, no preset containments.
+static IdRemapInput plain(const QStringList &used, const QStringList &containments, const QStringList &applets)
+{
+    IdRemapInput input;
+    input.usedIds = used;
+    input.containmentIds = containments;
+    input.appletIds = applets;
+    return input;
+}
+
 class StorageIdRemapperTest : public QObject
 {
     Q_OBJECT
@@ -32,6 +42,11 @@ private Q_SLOTS:
     void remap_emptyIdGetsFreshId();
     void mapped_passthroughForUnknownKey();
     void remap_orderKeyBehavior_unknownTokenMapsToEmpty();
+    void remap_presetContainmentIdsAreKeptVerbatim();
+    void remap_presetSwapIsNotCollapsedByTheTwoCycleFix();
+    void remap_appletsAvoidPresetContainmentIds();
+    void remap_otherContainmentsAvoidPresetIds();
+    void remap_appletMovedOntoPresetKeyIsNotCollapsedByTheTwoCycleFix();
 };
 
 void StorageIdRemapperTest::availableId_findsFirstGapAtOrAboveBase()
@@ -55,7 +70,7 @@ void StorageIdRemapperTest::availableId_exhaustionReturnsEmpty()
 void StorageIdRemapperTest::remap_keepsHighFreeIdsUnchanged()
 {
     // usedIds empty → no collisions; containment 12 and applet 40 keep themselves
-    IdRemap r = StorageIdRemapper::remap({{}, {QL("12")}, {QL("40")}});
+    IdRemap r = StorageIdRemapper::remap(plain({}, {QL("12")}, {QL("40")}));
     QCOMPARE(r.assigned.value(QL("12")), QL("12"));
     QCOMPARE(r.assigned.value(QL("40")), QL("40"));
 }
@@ -64,7 +79,7 @@ void StorageIdRemapperTest::remap_reassignsLowIds()
 {
     // Containment "1" < 12 → reassigned to 12 (lowest free containment base).
     // Applet "5" < 40 → reassigned to 40 (lowest free applet base).
-    IdRemap r = StorageIdRemapper::remap({{}, {QL("1")}, {QL("5")}});
+    IdRemap r = StorageIdRemapper::remap(plain({}, {QL("1")}, {QL("5")}));
     QCOMPARE(r.assigned.value(QL("1")), QL("12"));
     QCOMPARE(r.assigned.value(QL("5")), QL("40"));
 }
@@ -73,7 +88,7 @@ void StorageIdRemapperTest::remap_reassignsCollidingUsedId()
 {
     // Destination already has id "12"; importing a containment also numbered "12"
     // must receive the next free id (13).
-    IdRemap r = StorageIdRemapper::remap({{QL("12")}, {QL("12")}, {}});
+    IdRemap r = StorageIdRemapper::remap(plain({QL("12")}, {QL("12")}, {}));
     QCOMPARE(r.assigned.value(QL("12")), QL("13"));
 }
 
@@ -81,7 +96,7 @@ void StorageIdRemapperTest::remap_containmentsBeforeApplets_distinctRanges()
 {
     // Low-numbered containments/applets all get fresh ids from their respective bases.
     // Containments: "1"→12, "2"→13.  Applets: "3"→40, "4"→41.
-    IdRemap r = StorageIdRemapper::remap({{}, {QL("1"), QL("2")}, {QL("3"), QL("4")}});
+    IdRemap r = StorageIdRemapper::remap(plain({}, {QL("1"), QL("2")}, {QL("3"), QL("4")}));
     QCOMPARE(r.assigned.value(QL("1")), QL("12"));
     QCOMPARE(r.assigned.value(QL("2")), QL("13"));
     QCOMPARE(r.assigned.value(QL("3")), QL("40"));
@@ -94,7 +109,7 @@ void StorageIdRemapperTest::remap_appletAllocationSkipsContainmentAssignments()
     // Applet "50": 50 >= 40 ✓, not in usedIds ✓, but "50" IS in assignedIds
     // → goes to availableId([], ["50"], 40) → "40".
     // The applet pass overwrites the "50" key in assigned, so assigned["50"]="40".
-    IdRemap r = StorageIdRemapper::remap({{}, {QL("50")}, {QL("50")}});
+    IdRemap r = StorageIdRemapper::remap(plain({}, {QL("50")}, {QL("50")}));
     QCOMPARE(r.assigned.value(QL("50")), QL("40"));
 }
 
@@ -113,7 +128,7 @@ void StorageIdRemapperTest::remap_twoCycleCheckDoesNotCorruptNonCycleCase()
     // "13": 13>=12 ✓, not in usedIds ✓, "13" IS in assignedIds → availableId({"12"}, ["13"], 12)
     //       → i=12: in all, i=13: in assigned, i=14 → "14". assigned["13"]="14".
     // 2-cycle check "12": value="13", assigned["13"]="14" ≠ "12" → no fix fires.
-    IdRemap r = StorageIdRemapper::remap({{QL("12")}, {QL("12"), QL("13")}, {}});
+    IdRemap r = StorageIdRemapper::remap(plain({QL("12")}, {QL("12"), QL("13")}, {}));
     QCOMPARE(r.assigned.value(QL("12")), QL("13"));
     QCOMPARE(r.assigned.value(QL("13")), QL("14"));
 }
@@ -121,7 +136,7 @@ void StorageIdRemapperTest::remap_twoCycleCheckDoesNotCorruptNonCycleCase()
 void StorageIdRemapperTest::remap_emptyIdGetsFreshId()
 {
     // Empty string → toInt() == 0, which is < 12 → gets a fresh id from base 12.
-    IdRemap r = StorageIdRemapper::remap({{}, {QL("")}, {}});
+    IdRemap r = StorageIdRemapper::remap(plain({}, {QL("")}, {}));
     QCOMPARE(r.assigned.value(QL("")), QL("12"));
 }
 
@@ -141,7 +156,7 @@ void StorageIdRemapperTest::remap_orderKeyBehavior_unknownTokenMapsToEmpty()
     //
     // Verify: a token that is NOT in containmentIds/appletIds is absent from
     // r.assigned, so r.assigned.value(token, QString()) returns "".
-    IdRemap r = StorageIdRemapper::remap({{}, {QL("12")}, {QL("40")}});
+    IdRemap r = StorageIdRemapper::remap(plain({}, {QL("12")}, {QL("40")}));
     // "99" was never an original id → not in assigned
     QVERIFY(!r.assigned.contains(QL("99")));
     QCOMPARE(r.assigned.value(QL("99"), QString()), QString());
@@ -150,6 +165,81 @@ void StorageIdRemapperTest::remap_orderKeyBehavior_unknownTokenMapsToEmpty()
     QString got = r.assigned.value(QL("99"), QString());
     QCOMPARE(got, QString());
     QCOMPARE(r.assigned.size(), sizeBefore); // no insert happened
+}
+
+void StorageIdRemapperTest::remap_presetContainmentIdsAreKeptVerbatim()
+{
+    // The containments were already created (by the corona) and own these ids; the
+    // remap must not second-guess them, even when they are below the usual base.
+    IdRemapInput input;
+    input.containmentIds = {QL("12"), QL("20")};
+    input.presetContainmentIds = {{QL("12"), QL("5")}, {QL("20"), QL("31")}};
+
+    IdRemap r = StorageIdRemapper::remap(input);
+
+    QCOMPARE(r.assigned.value(QL("12")), QL("5"));
+    QCOMPARE(r.assigned.value(QL("20")), QL("31"));
+}
+
+void StorageIdRemapperTest::remap_presetSwapIsNotCollapsedByTheTwoCycleFix()
+{
+    // The preset ids are decisions the corona already made, so they stay even when
+    // they look like a swap: "10" maps to 9 and "9" to 10. The two-cycle fix would
+    // turn that into the identity and point both references at the wrong containment.
+    IdRemapInput input;
+    input.containmentIds = {QL("10"), QL("9")};
+    input.presetContainmentIds = {{QL("10"), QL("9")}, {QL("9"), QL("10")}};
+
+    IdRemap r = StorageIdRemapper::remap(input);
+
+    QCOMPARE(r.assigned.value(QL("10")), QL("9"));
+    QCOMPARE(r.assigned.value(QL("9")), QL("10"));
+}
+
+void StorageIdRemapperTest::remap_appletsAvoidPresetContainmentIds()
+{
+    // Applet 40 would keep its id, but a containment now owns 40.
+    IdRemapInput input;
+    input.containmentIds = {QL("12")};
+    input.appletIds = {QL("40")};
+    input.presetContainmentIds = {{QL("12"), QL("40")}};
+
+    IdRemap r = StorageIdRemapper::remap(input);
+
+    QCOMPARE(r.assigned.value(QL("12")), QL("40"));
+    QCOMPARE(r.assigned.value(QL("40")), QL("41"));
+}
+
+void StorageIdRemapperTest::remap_otherContainmentsAvoidPresetIds()
+{
+    // Only "13" has a preset id (12). "12" would keep itself, but that id now
+    // belongs to another containment, so it moves on.
+    IdRemapInput input;
+    input.containmentIds = {QL("12"), QL("13")};
+    input.presetContainmentIds = {{QL("13"), QL("12")}};
+
+    IdRemap r = StorageIdRemapper::remap(input);
+
+    QCOMPARE(r.assigned.value(QL("13")), QL("12"));
+    QCOMPARE(r.assigned.value(QL("12")), QL("13"));
+}
+
+void StorageIdRemapperTest::remap_appletMovedOntoPresetKeyIsNotCollapsedByTheTwoCycleFix()
+{
+    // The file's containment "45" was created by the corona as 61, and the file also
+    // has an applet "61". The applet has to move off 61 and lands on 45, so the two
+    // look like a swap. Collapsing it would put the applet back on 61, the id the
+    // containment owns, and leave the containment's own id mapped to 45.
+    IdRemapInput input;
+    input.usedIds = {QL("1"), QL("40"), QL("41"), QL("42"), QL("43"), QL("44"), QL("61")};
+    input.containmentIds = {QL("45")};
+    input.appletIds = {QL("61")};
+    input.presetContainmentIds = {{QL("45"), QL("61")}};
+
+    IdRemap r = StorageIdRemapper::remap(input);
+
+    QCOMPARE(r.assigned.value(QL("45")), QL("61"));
+    QCOMPARE(r.assigned.value(QL("61")), QL("45"));
 }
 
 QTEST_GUILESS_MAIN(StorageIdRemapperTest)

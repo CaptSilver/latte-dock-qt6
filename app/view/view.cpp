@@ -27,6 +27,7 @@
 #include "../layouts/manager.h"
 #include "../layouts/storage.h"
 #include "../plasma/extended/theme.h"
+#include "../plasmascreenid.h"
 #include "../screenpool.h"
 #include "../settings/universalsettings.h"
 #include "../settings/exporttemplatedialog/exporttemplatedialog.h"
@@ -45,6 +46,7 @@
 #include <QQmlEngine>
 #include <QQmlProperty>
 #include <QQuickItem>
+#include <QResizeEvent>
 #include <QMenu>
 
 // KDe
@@ -95,7 +97,6 @@ View::View(Plasma::Corona *corona, QScreen *targetScreen, bool byPassX11WM)
 
     // setTitle(corona->kPackage().metadata().name());
     setIcon(qGuiApp->windowIcon());
-    setResizeMode(QuickViewSharedEngine::SizeRootObjectToView);
     setColor(QColor(Qt::transparent));
 
     const auto flags = Qt::FramelessWindowHint
@@ -152,6 +153,10 @@ View::View(Plasma::Corona *corona, QScreen *targetScreen, bool byPassX11WM)
 
         //! Check the screen assigned to this dock
         reconsiderScreen();
+
+        //! The screen move in the constructor happened before there was a containment to tell,
+        //! and reconsiderScreen() does nothing when the view is already where it should be.
+        m_positioner->updateContainmentScreen();
 
         //! needs to be created before visibility creation because visibility uses it
         if (!m_windowsTracker) {
@@ -422,12 +427,13 @@ void View::init(Plasma::Containment *plasma_containment)
         }
     }
 
-    setSource(QUrl::fromLocalFile(corona()->kPackage().filePath("lattedockui")));
+    const QUrl uiSource = QUrl::fromLocalFile(corona()->kPackage().filePath("lattedockui"));
+    setSource(uiSource);
 
     //! immediateSyncGeometry helps avoiding binding loops from containment qml side
     m_positioner->immediateSyncGeometry();
 
-    qDebug() << "SOURCE:" << source();
+    qDebug() << "SOURCE:" << uiSource;
 }
 
 void View::reloadSource()
@@ -437,7 +443,7 @@ void View::reloadSource()
         //     m_configView->deleteLater();
         // }
 
-        engine()->clearComponentCache();
+        rootContext()->engine()->clearComponentCache();
         m_layout->recreateView(containment(), settingsWindowIsShown());
     }
 }
@@ -1443,10 +1449,9 @@ Latte::Data::View View::data() const
     vdata.isActive = true;
     vdata.onPrimary = onPrimary();
 
-    vdata.screen = containment()->screen();
-    if (!Layouts::Storage::isValid(vdata.screen)) {
-        vdata.screen = containment()->lastScreen();
-    }
+    //! the screen the containment holds: every move of this view is pushed to it
+    //! (Positioner::updateContainmentScreen), so it matches the screen the view is on
+    vdata.screen = latteScreenId(containment()->screen());
 
     vdata.screensGroup = screensGroup();
 
@@ -1554,6 +1559,18 @@ void View::setInterfacesGraphicObj(Latte::Interfaces *ifaces)
     }
 
     Q_EMIT interfacesGraphicObjChanged();
+}
+
+void View::resizeEvent(QResizeEvent *ev)
+{
+    //! libplasma's ContainmentView::resizeEvent resizes the root object without checking
+    //! that there is one, and the view can be resized before init() has called setSource().
+    if (!rootObject()) {
+        QQuickWindow::resizeEvent(ev);
+        return;
+    }
+
+    PlasmaQuick::ContainmentView::resizeEvent(ev);
 }
 
 bool View::event(QEvent *e)

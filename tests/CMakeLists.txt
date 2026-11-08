@@ -482,6 +482,27 @@ target_include_directories(appletremovaltest PRIVATE
     ${CMAKE_BINARY_DIR}/containment)
 set_tests_properties(appletremovaltest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+# plasmascreenid.h is the boundary between Latte's signed screen ids and libplasma's
+# unsigned ones. Header-only; the Containment check needs a real Plasma::Corona.
+ecm_add_test(plasmascreenidtest.cpp
+    TEST_NAME plasmascreenidtest
+    LINK_LIBRARIES Qt6::Test Qt6::Gui KF6::ConfigCore Plasma::Plasma
+)
+target_include_directories(plasmascreenidtest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app)
+set_tests_properties(plasmascreenidtest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+# qmlobjectloader.cpp loads a QML file into its own context on a shared engine. It only
+# needs Qt, KLocalizedQmlContext and PlasmaQuick's global engine, so the real source links
+# directly with no Corona/View graph.
+ecm_add_test(qmlobjectloadertest.cpp ${CMAKE_SOURCE_DIR}/app/qmlobjectloader.cpp
+    TEST_NAME qmlobjectloadertest
+    LINK_LIBRARIES Qt6::Test Qt6::Gui Qt6::Qml Qt6::Quick KF6::I18nQml Plasma::PlasmaQuick
+)
+target_include_directories(qmlobjectloadertest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app)
+set_tests_properties(qmlobjectloadertest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 qt_wrap_cpp(layoutmanagertest_TYPES_MOC ${CMAKE_BINARY_DIR}/containment/plugin/lattetypes.h)
 ecm_add_test(layoutmanagertest.cpp
     ${CMAKE_SOURCE_DIR}/containment/plugin/layoutmanager.cpp
@@ -858,6 +879,64 @@ set_tests_properties(layoutsmanagertest PROPERTIES
     ENVIRONMENT "QT_QPA_PLATFORM=offscreen;${LATTE_SHELL_STAGE_ENV};${LATTE_NO_SESSION_BUS}"
     FIXTURES_REQUIRED shellpackage)
 
+# The Corona overrides libplasma calls with unsigned screen ids; driven through a headless
+# Corona with the signals they emit read back through spies.
+ecm_add_test(coronascreenidboundarytest.cpp
+    TEST_NAME coronascreenidboundarytest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::DBus Qt6::Network
+        Plasma::Activities KF6::Archive KF6::CoreAddons KF6::Crash KF6::DBusAddons
+        KF6::ConfigQml KF6::ConfigCore KF6::GuiAddons KF6::GlobalAccel KF6::I18n
+        KF6::IconThemes KF6::IconWidgets KF6::KIOWidgets KF6::Notifications
+        KF6::NewStuffWidgets Plasma::Plasma KF6::Svg KF6::Package Plasma::PlasmaQuick
+        Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
+        KF6::Service Wayland::Client
+)
+target_link_libraries(coronascreenidboundarytest lattedock-objs)
+target_include_directories(coronascreenidboundarytest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(coronascreenidboundarytest PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;${LATTE_SHELL_STAGE_ENV};${LATTE_NO_SESSION_BUS}"
+    FIXTURES_REQUIRED shellpackage)
+
+# A real View on the offscreen platform: the containment's screen after the view is given one,
+# and a resize before the view has loaded its QML.
+ecm_add_test(viewcontainmentscreentest.cpp
+    TEST_NAME viewcontainmentscreentest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::DBus Qt6::Network
+        Plasma::Activities KF6::Archive KF6::CoreAddons KF6::Crash KF6::DBusAddons
+        KF6::ConfigQml KF6::ConfigCore KF6::GuiAddons KF6::GlobalAccel KF6::I18n
+        KF6::IconThemes KF6::IconWidgets KF6::KIOWidgets KF6::Notifications
+        KF6::NewStuffWidgets Plasma::Plasma KF6::Svg KF6::Package Plasma::PlasmaQuick
+        Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
+        KF6::Service Wayland::Client
+)
+target_link_libraries(viewcontainmentscreentest lattedock-objs)
+target_include_directories(viewcontainmentscreentest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(viewcontainmentscreentest PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen:configfile=${CMAKE_CURRENT_SOURCE_DIR}/offscreen-two-screens.json;${LATTE_SHELL_STAGE_ENV};${LATTE_NO_SESSION_BUS}"
+    FIXTURES_REQUIRED shellpackage)
+
+# Storage::importLayoutFile creates containments in a real corona, so the prebuilt-objects
+# trick links storage.cpp.o (minus main.cpp) and drives it through a headless Corona with
+# the staged shell package, which supplies the Latte containment plugin.
+ecm_add_test(storageimporttest.cpp
+    TEST_NAME storageimporttest
+    LINK_LIBRARIES Qt6::Test Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::DBus Qt6::Network
+        Plasma::Activities KF6::Archive KF6::CoreAddons KF6::Crash KF6::DBusAddons
+        KF6::ConfigQml KF6::ConfigCore KF6::GuiAddons KF6::GlobalAccel KF6::I18n
+        KF6::IconThemes KF6::IconWidgets KF6::KIOWidgets KF6::Notifications
+        KF6::NewStuffWidgets Plasma::Plasma KF6::Svg KF6::Package Plasma::PlasmaQuick
+        Plasma::KWaylandClient LayerShellQt::Interface KF6::XmlGui KF6::WindowSystem
+        KF6::Service Wayland::Client
+)
+target_link_libraries(storageimporttest lattedock-objs)
+target_include_directories(storageimporttest PRIVATE
+    ${CMAKE_SOURCE_DIR}/app ${CMAKE_BINARY_DIR}/app)
+set_tests_properties(storageimporttest PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;${LATTE_SHELL_STAGE_ENV};${LATTE_NO_SESSION_BUS}"
+    FIXTURES_REQUIRED shellpackage)
+
 # Templates::Manager's header pulls in lattecorona.h; the prebuilt-objects trick
 # links the real templatesmanager.cpp.o (minus main.cpp) and drives it against a
 # real headless Corona so init() can scan the shipped shell-package templates.
@@ -1046,7 +1125,9 @@ if(LATTE_COVERAGE)
         # is what makes the Corona-coupled core count toward whole-app coverage.
         universalsettingstest storagetest genericlayouttest schemesmodeltest colorsmodeltest viewsmodeltest
         layoutsmodeltest lastactivewindowtest importerlogictest coronaenginegeometrytest
-        layoutsmanagertest templatesmanagertest layoutssynchronizertest)
+        layoutsmanagertest templatesmanagertest layoutssynchronizertest
+        plasmascreenidtest qmlobjectloadertest storageimporttest coronascreenidboundarytest
+        viewcontainmentscreentest)
     foreach(_t ${_latte_cov_targets})
         target_compile_options(${_t} PRIVATE ${LATTE_COV_COMPILE_FLAGS})
         target_link_options(${_t} PRIVATE ${LATTE_COV_LINK_FLAGS})

@@ -47,7 +47,7 @@ public:
     static Storage *self();
     ~Storage();
 
-    static const int IDNULL;
+    static constexpr int IDNULL = -1;
     static const int IDBASE;
 
     bool isWritable(const Layout::GenericLayout *layout) const;
@@ -124,9 +124,12 @@ private:
     //! STORAGE !////
     //! provides a new file path based the provided file. The new file
     //! has updated ids for containments and applets based on the corona
-    //! loaded ones
-    QString newUniqueIdsFile(QString originFile, const Layout::GenericLayout *destinationLayout);
-    //! imports a layout file and returns the containments for the docks
+    //! loaded ones. Containments in presetContainmentIds (file id -> id)
+    //! keep the id they were given, because the corona already created them.
+    QString newUniqueIdsFile(QString originFile, const Layout::GenericLayout *destinationLayout, const QHash<QString, QString> &presetContainmentIds = QHash<QString, QString>());
+    //! imports the containments of a layout file into the corona of the layout, with
+    //! ids the corona picks and every id in the file rewritten to match, and returns the
+    //! containments for the docks. Needs the corona to be Mutable.
     QList<Plasma::Containment *> importLayoutFile(const Layout::GenericLayout *layout, QString file);
 
     QStringList containmentsIds(const QString &filepath);

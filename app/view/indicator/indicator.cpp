@@ -22,7 +22,6 @@
 #include <KLocalizedString>
 #include <KPluginMetaData>
 #include <KConfigPropertyMap>
-#include <PlasmaQuick/SharedQmlEngine>
 
 
 namespace Latte {
@@ -271,7 +270,7 @@ void Indicator::updateComponent()
 
     if (!uiPath.isEmpty()) {
         uiPath = m_pluginPath + QStringLiteral("/package/") + uiPath;
-        m_component = new QQmlComponent(m_view->engine().get(), uiPath);
+        m_component = new QQmlComponent(m_view->rootContext()->engine(), uiPath);
     }
 
     if (prevComponent) {
@@ -288,7 +287,7 @@ void Indicator::loadPlasmaComponent()
 
     if (!uiPath.isEmpty()) {
         uiPath = QFileInfo(metadata.fileName()).absolutePath() + QStringLiteral("/package/") + uiPath;
-        m_plasmaComponent = new QQmlComponent(m_view->engine().get(), uiPath);
+        m_plasmaComponent = new QQmlComponent(m_view->rootContext()->engine(), uiPath);
     }
 
     if (prevComponent) {

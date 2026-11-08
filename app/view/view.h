@@ -286,6 +286,7 @@ protected Q_SLOTS:
 
 protected:
     bool event(QEvent *ev) override;
+    void resizeEvent(QResizeEvent *ev) override;
 
 Q_SIGNALS:
     void eventTriggered(QEvent *ev);

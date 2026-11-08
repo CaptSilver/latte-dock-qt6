@@ -62,11 +62,11 @@ void ScreenPool::load()
         }
     }
 
-    // if there are already connected unknown screens, map those
-    // all needs to be populated as soon as possible, otherwise
-    // containment->screen() will return an incorrect -1
-    // at startup, if it' asked before corona::addOutput()
-    // is performed, driving to the creation of a new containment
+    // if there are already connected unknown screens, map those.
+    // Everything has to be mapped before the first layout loads: views
+    // look their screen up in this pool, and a connected screen without
+    // an id answers NOSCREENID, so its views would be dropped as if the
+    // screen were not there.
     for (QScreen *screen : qGuiApp->screens()) {
         onScreenRemoved(screen);
 

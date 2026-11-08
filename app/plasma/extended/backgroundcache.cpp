@@ -6,6 +6,7 @@
 #include "backgroundcache.h"
 
 // local
+#include "../../plasmascreenid.h"
 #include "../../tools/commontools.h"
 #include "backgroundimageinfo.h"
 
@@ -125,7 +126,8 @@ void BackgroundCache::reload()
     for (const auto &containmentId : plasmaConfigContainments.groupList()) {
         const auto containment = plasmaConfigContainments.group(containmentId);
         const auto wallpaperPlugin = containment.readEntry("wallpaperplugin", QString());
-        const auto lastScreen  = containment.readEntry("lastScreen", 0);
+        //! plasmashell 6.8 stores the unsigned screen id, so read it wide and let anything that is not a screen id fall through to no connector
+        const int lastScreen = storedScreenId(containment.readEntry("lastScreen", qlonglong(0)));
         const auto activity    = containment.readEntry("activityId", QString());
 
         //! Ignore the containment if the activity is not defined or

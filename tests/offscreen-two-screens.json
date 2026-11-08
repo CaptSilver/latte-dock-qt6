@@ -1,0 +1,8 @@
+{
+    "synchronousWindowSystemEvents": false,
+    "windowFrameMargins": true,
+    "screens": [
+        { "name": "OFFSCREEN-1", "x": 0, "y": 0, "width": 1280, "height": 800, "logicalDpi": 96, "logicalBaseDpi": 96, "dpr": 1 },
+        { "name": "OFFSCREEN-2", "x": 1280, "y": 0, "width": 1280, "height": 800, "logicalDpi": 96, "logicalBaseDpi": 96, "dpr": 1 }
+    ]
+}

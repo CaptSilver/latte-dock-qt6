@@ -43,9 +43,20 @@ IdRemap StorageIdRemapper::remap(const IdRemapInput &input)
     QStringList assignedIds;
     QHash<QString, QString> assigned;
 
+    //! Ids the corona already gave out are taken before anything else is assigned,
+    //! so a containment that is processed earlier cannot claim one of them.
+    for (auto it = input.presetContainmentIds.constBegin(); it != input.presetContainmentIds.constEnd(); ++it) {
+        assignedIds << it.value();
+    }
+
     //! Reassign containment ids to unique ones
     for (const auto &contId : input.containmentIds) {
         QString newId;
+
+        if (input.presetContainmentIds.contains(contId)) {
+            assigned[contId] = input.presetContainmentIds.value(contId);
+            continue;
+        }
 
         if (contId.toInt() >= 12 && !input.usedIds.contains(contId) && !assignedIds.contains(contId)) {
             newId = contId;
@@ -73,8 +84,18 @@ IdRemap StorageIdRemapper::remap(const IdRemapInput &input)
 
     //! "PROBLEM APPEARED" 2-cycle fix — port of storage.cpp ~:429-455.
     //! Collapses a strict 2-cycle (cId -> B -> cId) to identity on both sides.
+    //! Preset ids are decisions, not collisions to untangle: a swap between two of
+    //! them is legitimate and must survive.
+    auto isPreset = [&input](const QString &id) {
+        return input.presetContainmentIds.contains(id);
+    };
+
     for (const auto &cId : input.containmentIds) {
         QString value = assigned[cId];
+
+        if (isPreset(cId) || isPreset(value)) {
+            continue;
+        }
 
         if (assigned.contains(value)) {
             QString value2 = assigned[value];
@@ -88,6 +109,11 @@ IdRemap StorageIdRemapper::remap(const IdRemapInput &input)
 
     for (const auto &aId : input.appletIds) {
         QString value = assigned[aId];
+
+        //! an applet pushed onto the file id of a preset containment looks like a swap with it
+        if (isPreset(aId) || isPreset(value)) {
+            continue;
+        }
 
         if (assigned.contains(value)) {
             QString value2 = assigned[value];

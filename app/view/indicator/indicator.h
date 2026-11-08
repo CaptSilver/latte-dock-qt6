@@ -22,11 +22,6 @@
 #include <KPluginMetaData>
 
 class KConfigPropertyMap;
-namespace PlasmaQuick
-{
-class SharedQmlEngine;
-}
-
 namespace Latte {
 class Corona;
 class View;

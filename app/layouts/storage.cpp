@@ -11,6 +11,7 @@
 #include "storageidremapper.h"
 #include "storagevalidator.h"
 #include "manager.h"
+#include "../plasmascreenid.h"
 #include "../lattecorona.h"
 #include "../screenpool.h"
 #include "../data/errordata.h"
@@ -18,8 +19,12 @@
 #include "../layout/abstractlayout.h"
 #include "../view/view.h"
 
+#include <algorithm>
+
 // Qt
 #include <QDebug>
+#include <QHash>
+#include <QPointer>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -40,8 +45,12 @@
 namespace Latte {
 namespace Layouts {
 
-const int Storage::IDNULL = -1;
 const int Storage::IDBASE = 0;
+
+//! "no id" is -1 in three places: here, ScreenPool::NOSCREENID and the NOSCREEN of plasmascreenid.h.
+//! Callers compare one against another, so they must stay the same value.
+static_assert(Storage::IDNULL == NOSCREEN, "IDNULL and NOSCREEN must agree");
+static_assert(ScreenPool::NOSCREENID == NOSCREEN, "ScreenPool::NOSCREENID and NOSCREEN must agree");
 
 Storage::Storage()
 {
@@ -259,11 +268,8 @@ void Storage::importToCorona(const Layout::GenericLayout *layout)
 
     newFile->reparseConfiguration();
 
-    //! update ids to unique ones
-    QString temp2File = newUniqueIdsFile(temp1FilePath, layout);
-
-    //! Finally import the configuration
-    importLayoutFile(layout, temp2File);
+    //! Finally import the configuration; the ids are made unique on the way in
+    importLayoutFile(layout, temp1FilePath);
 }
 
 
@@ -306,7 +312,7 @@ QStringList Storage::appletsIds(const QString &filepath)
     return ids;
 }
 
-QString Storage::newUniqueIdsFile(QString originFile, const Layout::GenericLayout *destinationLayout)
+QString Storage::newUniqueIdsFile(QString originFile, const Layout::GenericLayout *destinationLayout, const QHash<QString, QString> &presetContainmentIds)
 {
     if (!destinationLayout) {
         return QString();
@@ -376,7 +382,12 @@ QString Storage::newUniqueIdsFile(QString originFile, const Layout::GenericLayou
     }
 
     //! Reassign containment and applet ids to unique ones
-    IdRemap r = StorageIdRemapper::remap({allIds, toInvestigateContainmentIds, toInvestigateAppletIds});
+    IdRemapInput remapInput;
+    remapInput.usedIds = allIds;
+    remapInput.containmentIds = toInvestigateContainmentIds;
+    remapInput.appletIds = toInvestigateAppletIds;
+    remapInput.presetContainmentIds = presetContainmentIds;
+    IdRemap r = StorageIdRemapper::remap(remapInput);
 
     //! update applet ids in their containment order and in MultipleLayouts update also the layoutId
     for (const auto &cId : investigate_conts.groupList()) {
@@ -529,13 +540,89 @@ void Storage::moveToLayoutFile(const QString &layoutName)
 
 QList<Plasma::Containment *> Storage::importLayoutFile(const Layout::GenericLayout *layout, QString file)
 {
+    Latte::Corona *corona = layout->corona();
+
+    if (!corona) {
+        return QList<Plasma::Containment *>();
+    }
+
     KSharedConfigPtr filePtr = KSharedConfig::openConfig(file);
-    auto newContainments = layout->corona()->importLayout(KConfigGroup(filePtr, QStringLiteral("")));
+    KConfigGroup fileContainments(filePtr, QStringLiteral("Containments"));
+
+    //! libplasma has no call that creates a containment with a chosen id, so the corona
+    //! creates them first and picks the ids; the file is rewritten to match afterwards.
+    //! Created in numeric id order so the new ids follow the order of the file.
+    QStringList groups = fileContainments.groupList();
+    std::sort(groups.begin(), groups.end(), [](const QString &a, const QString &b) {
+        const uint aid = a.toUInt();
+        const uint bid = b.toUInt();
+        return aid != bid ? aid < bid : a < b;
+    });
+
+    //! guarded: an applet can delete a containment of the file while another one starts (the
+    //! systray folds its old standalone containment into itself and removes it)
+    QList<QPointer<Plasma::Containment>> created;
+    QHash<QString, QString> newContainmentIds;
+
+    for (const QString &group : groups) {
+        const KConfigGroup containmentGroup = fileContainments.group(group);
+        const QString plugin = containmentGroup.readEntry(QStringLiteral("plugin"), QString());
+
+        //! same groups newUniqueIdsFile leaves out, plus the ones libplasma never restores
+        if (containmentGroup.entryMap().isEmpty()
+                || containmentGroup.readEntry(QStringLiteral("transient"), false)
+                || plugin == QLatin1String("org.kde.desktopcontainment")) {
+            continue;
+        }
+
+        Plasma::Containment *containment = corona->createContainmentDelayed(plugin);
+
+        if (!containment) {
+            qWarning() << "Importing layout file: the corona created no containment for" << group << "from" << file
+                       << "(it only creates them while it is mutable)";
+            continue;
+        }
+
+        created << QPointer<Plasma::Containment>(containment);
+        newContainmentIds[group] = QString::number(containment->id());
+    }
+
+    //! every other id in the file (applets, the containment an applet points at) is made
+    //! unique against the corona, which by now includes the new containments
+    const QString preparedFile = newUniqueIdsFile(file, layout, newContainmentIds);
+    KConfigGroup preparedContainments(KSharedConfig::openConfig(preparedFile), QStringLiteral("Containments"));
+    KConfigGroup coronaContainments(corona->config(), QStringLiteral("Containments"));
+
+    //! all configurations are in place before any containment starts, so an applet that
+    //! refers to another containment of the file finds it
+    for (const QPointer<Plasma::Containment> &containment : created) {
+        const QString id = QString::number(containment->id());
+        KConfigGroup target = coronaContainments.group(id);
+        target.deleteGroup();
+        preparedContainments.group(id).copyTo(&target);
+    }
+
+    //! the same steps libplasma runs for a containment it restores itself
+    for (const QPointer<Plasma::Containment> &containment : created) {
+        if (!containment) {
+            continue;
+        }
+
+        containment->init();
+        KConfigGroup containmentConfig = containment->config();
+        containment->restore(containmentConfig);
+
+        containment->updateConstraints(Plasma::Applet::StartupCompletedConstraint);
+        containment->save(containmentConfig);
+        corona->requestConfigSync();
+        containment->flushPendingConstraintsEvents();
+        Q_EMIT corona->containmentAdded(containment);
+    }
 
     QList<Plasma::Containment *> importedViews;
 
-    for (const auto containment : newContainments) {
-        if (isLatteContainment(containment)) {
+    for (const QPointer<Plasma::Containment> &containment : std::as_const(created)) {
+        if (containment && isLatteContainment(containment)) {
             importedViews << containment;
         }
     }
@@ -586,13 +673,19 @@ Data::View Storage::newView(const Layout::GenericLayout *destinationLayout, cons
 
     QFile(templateFile).copy(templateTmpAbsolutePath);
 
-    //! update ids to unique ones
-    QString temp2File = newUniqueIdsFile(templateTmpAbsolutePath, destinationLayout);
+    //! An active layout creates the containments first and rewrites the ids of the file to
+    //! match them, so only an inactive layout gets its ids made unique here.
+    QString viewsFile = templateTmpAbsolutePath;
+
+    if (!destinationLayout->hasCorona()) {
+        //! update ids to unique ones
+        viewsFile = newUniqueIdsFile(templateTmpAbsolutePath, destinationLayout);
+    }
 
     //! update view containment data in case next data are provided
     if (nextViewData.state() != Data::View::IsInvalid) {
 
-        KSharedConfigPtr lFile = KSharedConfig::openConfig(temp2File);
+        KSharedConfigPtr lFile = KSharedConfig::openConfig(viewsFile);
         KConfigGroup containments = KConfigGroup(lFile, QStringLiteral("Containments"));
 
         for (const auto cId : containments.groupList()) {
@@ -606,7 +699,7 @@ Data::View Storage::newView(const Layout::GenericLayout *destinationLayout, cons
         lFile->reparseConfiguration();
     }
 
-    Data::ViewsTable updatedNextViews = views(temp2File);
+    Data::ViewsTable updatedNextViews = views(viewsFile);
 
     if (updatedNextViews.rowCount() <= 0) {
         return Data::View();
@@ -614,18 +707,24 @@ Data::View Storage::newView(const Layout::GenericLayout *destinationLayout, cons
 
     if (destinationLayout->hasCorona()) {
         //! import views for active layout
-        QList<Plasma::Containment *> importedViews = importLayoutFile(destinationLayout, temp2File);
+        QList<Plasma::Containment *> importedViews = importLayoutFile(destinationLayout, viewsFile);
 
         Plasma::Containment *newContainment = (importedViews.size() == 1 ? importedViews[0] : nullptr);
 
+        //! A template whose containment plugin is missing ends up here too: libplasma keeps a
+        //! placeholder containment for it, which isn't a Latte containment, and importLayoutFile
+        //! leaves that placeholder in the corona like loadLayout does.
         if (!newContainment || !newContainment->pluginMetaData().isValid()) {
-            qWarning() << "the requested containment plugin can not be located or loaded from:" << templateFile;
+            qWarning() << "the template does not hold exactly one loadable Latte containment:" << templateFile;
             return Data::View();
         }
-    } else {
-        //! import views for inactive layout
-        importContainments(temp2File, destinationLayout->file());
+
+        //! the file's ids are not the ones the corona gave the new containment
+        return view(destinationLayout, newContainment);
     }
+
+    //! import views for inactive layout
+    importContainments(viewsFile, destinationLayout->file());
 
     return updatedNextViews[0];
 }
@@ -1281,10 +1380,9 @@ Data::View Storage::view(const Layout::GenericLayout *layout, const Plasma::Cont
 
     vdata = view(lattecontainment->config());
 
-    vdata.screen = lattecontainment->screen();
-    if (!isValid(vdata.screen)) {
-        vdata.screen = lattecontainment->lastScreen();
-    }
+    //! the screen the containment holds: a view's moves are pushed to it, and a containment
+    //! without a view still has the screen it was last given
+    vdata.screen = latteScreenId(lattecontainment->screen());
 
     vdata.subcontainments = subcontainments(layout, lattecontainment);
 
@@ -1304,7 +1402,8 @@ Data::View Storage::view(const KConfigGroup &containmentGroup)
     vdata.isActive = false;
     vdata.screensGroup = static_cast<Latte::Types::ScreensGroup>(containmentGroup.readEntry(QStringLiteral("screensGroup"), (int)Latte::Types::SingleScreenGroup));
     vdata.onPrimary = containmentGroup.readEntry(QStringLiteral("onPrimary"), true);
-    vdata.screen = containmentGroup.readEntry(QStringLiteral("lastScreen"), IDNULL);
+    //! read wide: libplasma 6.8 stores 4294967295 for a containment that was never placed
+    vdata.screen = storedScreenId(containmentGroup.readEntry(QStringLiteral("lastScreen"), static_cast<qlonglong>(IDNULL)));
     vdata.isClonedFrom = containmentGroup.readEntry(QStringLiteral("isClonedFrom"), Data::View::ISCLONEDNULL);
     vdata.screenEdgeMargin = containmentGroup.group(QStringLiteral("General")).readEntry(QStringLiteral("screenEdgeMargin"), (int)-1);
 

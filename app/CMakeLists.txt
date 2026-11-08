@@ -5,6 +5,7 @@ set(lattedock-app_SRCS
     coronahelpers.cpp
     coronaengine.cpp
     lattecorona.cpp
+    qmlobjectloader.cpp
     realscreeninfo.cpp
     screengeometrycalculator.cpp
     startuplayoutplanner.cpp
@@ -84,6 +85,7 @@ target_link_libraries(lattedock-objs PUBLIC
     KF6::GuiAddons
     KF6::GlobalAccel
     KF6::I18n
+    KF6::I18nQml
     KF6::IconThemes
     KF6::IconWidgets
     KF6::KIOWidgets

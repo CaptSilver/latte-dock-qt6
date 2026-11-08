@@ -33,7 +33,7 @@ class TestCorona : public Plasma::Corona
 {
 public:
     using Plasma::Corona::Corona;
-    QRect screenGeometry(int) const override { return QRect(0, 0, 1920, 1080); }
+    QRect screenGeometry(uint) const override { return QRect(0, 0, 1920, 1080); }
 };
 
 //! Throwaway config home, armed in main() before QGuiApplication exists.

@@ -11,6 +11,7 @@
 #include "../indicator/indicator.h"
 #include "../../lattecorona.h"
 #include "../../indicator/factory.h"
+#include "../../qmlobjectloader.h"
 #include "../../tools/qmlinvoke.h"
 
 // Qt
@@ -21,7 +22,6 @@
 // KDE
 #include <KLocalizedString>
 #include <KPluginMetaData>
-#include <PlasmaQuick/SharedQmlEngine>
 
 namespace Latte {
 namespace ViewPart {
@@ -116,18 +116,20 @@ void IndicatorUiManager::ui(const QString &type, Latte::View *view)
         if (!uiPath.isEmpty()) {
             IndicatorUiData uidata;
 
-            uidata.ui = new PlasmaQuick::SharedQmlEngine(this);
+            uidata.ui = new QmlObjectLoader(this);
             uidata.pluginPath = QFileInfo(metadata.fileName()).absolutePath();
             uidata.type = type;
             uidata.view = view;
 
             uidata.ui->setTranslationDomain(QStringLiteral("latte_indicator_") + metadata.pluginId());
-            uidata.ui->setInitializationDelayed(true);
-            uiPath = uidata.pluginPath + QStringLiteral("/package/") + uiPath;
-            uidata.ui->setSource(QUrl::fromLocalFile(uiPath));
             uidata.ui->rootContext()->setContextProperty(QStringLiteral("dialog"), m_parentItem);
             uidata.ui->rootContext()->setContextProperty(QStringLiteral("indicator"), view->indicator());
-            uidata.ui->completeInitialization();
+            uiPath = uidata.pluginPath + QStringLiteral("/package/") + uiPath;
+
+            if (!uidata.ui->load(QUrl::fromLocalFile(uiPath))) {
+                delete uidata.ui;
+                return;
+            }
 
             int newTypeIndex = view->indicator()->index(type);
             int newPos = -1;

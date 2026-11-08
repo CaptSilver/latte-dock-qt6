@@ -20,10 +20,6 @@
 // Plasma
 #include <Plasma/Corona>
 
-namespace PlasmaQuick {
-class SharedQmlEngine;
-}
-
 namespace Plasma {
 class Corona;
 class Containment;
@@ -87,10 +83,15 @@ public:
 
     bool inQuit() const;
 
-    int numScreens() const override;
-    QRect screenGeometry(int id) const override;
-    QRegion availableScreenRegion(int id) const override;
-    QRect availableScreenRect(int id) const override;
+    //! libplasma calls these with the screen id it has stored for a containment, which
+    //! is a Latte screen id once the views have pushed it, or UINT_MAX for a
+    //! containment that was never placed. screenGeometry() answers the primary screen
+    //! for it, like it does for any id the screen pool does not know; the available
+    //! area of an unplaced containment is empty.
+    uint numScreens() const override;
+    QRect screenGeometry(uint id) const override;
+    QRegion availableScreenRegion(uint id) const override;
+    QRect availableScreenRect(uint id) const override;
 
     //! This is a very generic function in order to return the availableScreenRect of specific screen
     //! by calculating only the user specified visibility modes and edges. Empty QLists for both
@@ -110,7 +111,9 @@ public:
                                               bool ignoreExternalPanels = true,
                                               bool desktopUse = false) const;
 
-    int screenForContainment(const Plasma::Containment *containment) const override;
+    //! libplasma has no "all screens" id, so the containments are told one screen at a time.
+    //! Screens the pool has no id for are skipped.
+    void emitAvailableScreenAreaChangedForAll();
 
     KWayland::Client::PlasmaShell *waylandCoronaInterface() const;
 
@@ -181,7 +184,6 @@ Q_SIGNALS:
     void verticalUnityViewHasFocus();
 
 private Q_SLOTS:
-    void alternativesVisibilityChanged(bool visible);
     void load();
 
     void onAboutToQuit();
@@ -224,8 +226,6 @@ private:
     QString m_layoutNameOnStartUp;
     QString m_startupAddViewTemplateName;
     QString m_importFullConfigurationFile;
-
-    QList<PlasmaQuick::SharedQmlEngine *> m_alternativesObjects;
 
     QTimer m_viewsScreenSyncTimer;
 

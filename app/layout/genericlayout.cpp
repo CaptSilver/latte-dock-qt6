@@ -16,6 +16,7 @@
 #include "viewsyncplan.h"
 #include "../apptypes.h"
 #include "../lattecorona.h"
+#include "../plasmascreenid.h"
 #include "../screenpool.h"
 #include "../layouts/importer.h"
 #include "../layouts/manager.h"
@@ -348,8 +349,8 @@ int GenericLayout::screenForContainment(Plasma::Containment *containment)
         return m_corona->screenPool()->id(view->screen()->name());
     }
 
-    //! fallback scenario
-    return containment->lastScreen();
+    //! fallback scenario: the screen the containment was last given
+    return latteScreenId(containment->screen());
 }
 
 bool GenericLayout::containsView(const int &containmentId) const
@@ -824,11 +825,7 @@ bool GenericLayout::initCorona()
     connect(m_corona->layoutsManager(), &Layouts::Manager::lastConfigViewChangedFrom, this, &GenericLayout::onLastConfigViewChangedFrom);
 
     //!connect signals after adding the containment
-    // In Plasma6, availableScreenRect/RegionChanged(int) requires a screen id; emit with -1 to indicate all screens
-    connect(this, &GenericLayout::viewsCountChanged, m_corona, [this]() {
-        Q_EMIT m_corona->availableScreenRectChanged(-1);
-        Q_EMIT m_corona->availableScreenRegionChanged(-1);
-    });
+    connect(this, &GenericLayout::viewsCountChanged, m_corona, &Latte::Corona::emitAvailableScreenAreaChangedForAll);
 
     return true;
 }
@@ -1090,8 +1087,12 @@ void GenericLayout::syncLatteViewsToScreens()
         auto containment = containmentForId(viewdata.id.toUInt());
 
         if (containment) {
-            if ((viewdata.onPrimary && containment->lastScreen() == m_corona->screenPool()->primaryScreenId())
-                    || (!viewdata.onPrimary && containment->lastScreen() == viewdata.screen)) {
+            //! the screen the containment holds, not the live one: the update is done once the
+            //! containment itself has caught up with it
+            const int storedScreen = latteScreenId(containment->screen());
+
+            if ((viewdata.onPrimary && storedScreen == m_corona->screenPool()->primaryScreenId())
+                    || (!viewdata.onPrimary && storedScreen == viewdata.screen)) {
                 clearpendings << viewdata.id;
             }
         }
@@ -1335,14 +1336,14 @@ void GenericLayout::updateView(const Latte::Data::View &viewData)
     if (containment) {
         Layouts::Storage::self()->updateView(this, viewData);
 
-        //! by using pendingContainmentUpdates we make sure that when containment->screen() will be
-        //! called though reactToScreenChange() the proper screen will be returned
+        //! the pending update is what screenForContainment() answers with until the view has
+        //! moved, so the containment is told the screen the view is about to be on
         if (!m_pendingContainmentUpdates.containsId(viewData.id)) {
             m_pendingContainmentUpdates << viewData;
         } else {
             m_pendingContainmentUpdates[viewData.id] = viewData;
         }
-        containment->reactToScreenChange();
+        setContainmentScreen(containment, screenForContainment(containment));
     }
 
     if (!nextactivelayoutname.isEmpty()) {

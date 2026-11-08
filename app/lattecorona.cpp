@@ -14,6 +14,8 @@
 #include "coronaengine.h"
 #include "coronahelpers.h"
 #include "lattedockadaptor.h"
+#include "plasmascreenid.h"
+#include "qmlobjectloader.h"
 #include "screengeometrycalculator.h"
 #include "screenpool.h"
 #include "startuplayoutplanner.h"
@@ -58,6 +60,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QFontDatabase>
+#include <QPointer>
 #include <QQmlContext>
 #include <QProcess>
 
@@ -76,7 +79,6 @@
 #include <KPackage/Package>
 #include <KPackage/PackageLoader>
 #include <PlasmaActivities/Consumer>
-#include <PlasmaQuick/SharedQmlEngine>
 #include <KWindowSystem>
 #include <KWayland/Client/connection_thread.h>
 #include <KWayland/Client/registry.h>
@@ -360,14 +362,16 @@ PlasmaExtended::Theme *Corona::themeExtended() const
     return m_engine->themeExtended();
 }
 
-int Corona::numScreens() const
+uint Corona::numScreens() const
 {
-    return m_engine->numScreens();
+    return static_cast<uint>(m_engine->numScreens());
 }
 
-QRect Corona::screenGeometry(int id) const
+QRect Corona::screenGeometry(uint id) const
 {
-    return m_engine->screenGeometry(id);
+    //! an id that is no screen (UINT_MAX, a containment that was never placed) gets the
+    //! primary screen, the same as any other id the screen pool does not know
+    return m_engine->screenGeometry(latteScreenId(id));
 }
 
 CentralLayout *Corona::centralLayout(QString name) const
@@ -392,9 +396,15 @@ Layout::GenericLayout *Corona::layout(QString name) const
     return result;
 }
 
-QRegion Corona::availableScreenRegion(int id) const
+QRegion Corona::availableScreenRegion(uint id) const
 {
-    return m_engine->availableScreenRegion(id);
+    const int screenId = latteScreenId(id);
+
+    if (screenId == NOSCREEN) {
+        return QRegion();
+    }
+
+    return m_engine->availableScreenRegion(screenId);
 }
 
 QRegion Corona::availableScreenRegionWithCriteria(int id,
@@ -407,9 +417,15 @@ QRegion Corona::availableScreenRegionWithCriteria(int id,
     return m_engine->availableScreenRegionWithCriteria(id, activityid, ignoreModes, ignoreEdges, ignoreExternalPanels, desktopUse);
 }
 
-QRect Corona::availableScreenRect(int id) const
+QRect Corona::availableScreenRect(uint id) const
 {
-    return m_engine->availableScreenRect(id);
+    const int screenId = latteScreenId(id);
+
+    if (screenId == NOSCREEN) {
+        return QRect();
+    }
+
+    return m_engine->availableScreenRect(screenId);
 }
 
 QRect Corona::availableScreenRectWithCriteria(int id,
@@ -420,6 +436,18 @@ QRect Corona::availableScreenRectWithCriteria(int id,
                                               bool desktopUse) const
 {
     return m_engine->availableScreenRectWithCriteria(id, activityid, ignoreModes, ignoreEdges, ignoreExternalPanels, desktopUse);
+}
+
+void Corona::emitAvailableScreenAreaChangedForAll()
+{
+    for (QScreen *screen : qGuiApp->screens()) {
+        const std::optional<uint> id = plasmaScreenId(screenPool()->id(screen->name()));
+
+        if (id) {
+            Q_EMIT availableScreenRectChanged(*id);
+            Q_EMIT availableScreenRegionChanged(*id);
+        }
+    }
 }
 
 void Corona::onScreenAdded(QScreen *screen)
@@ -434,8 +462,12 @@ void Corona::onScreenAdded(QScreen *screen)
 
     connect(screen, &QScreen::geometryChanged, this, &Corona::onScreenGeometryChanged);
 
-    Q_EMIT availableScreenRectChanged(screenPool()->id(screen->name()));
-    Q_EMIT screenAdded(screenPool()->id(screen->name()));
+    const std::optional<uint> addedId = plasmaScreenId(screenPool()->id(screen->name()));
+
+    if (addedId) {
+        Q_EMIT availableScreenRectChanged(*addedId);
+        Q_EMIT screenAdded(*addedId);
+    }
 
     onScreenCountChanged();
 }
@@ -461,26 +493,34 @@ void Corona::onScreenGeometryChanged(const QRect &geometry)
         return;
     }
 
-    const int id = screenPool()->id(screen->name());
+    const std::optional<uint> id = plasmaScreenId(screenPool()->id(screen->name()));
 
-    if (id >= 0) {
-        Q_EMIT screenGeometryChanged(id);
-        Q_EMIT availableScreenRegionChanged(id);
-        Q_EMIT availableScreenRectChanged(id);
+    if (id) {
+        Q_EMIT screenGeometryChanged(*id);
+        Q_EMIT availableScreenRegionChanged(*id);
+        Q_EMIT availableScreenRectChanged(*id);
     }
 }
 
 void Corona::onAvailableScreenRectChangedFrom(Latte::View *origin)
 {
     if (origin && origin->positioner()) {
-        Q_EMIT availableScreenRectChanged(origin->positioner()->currentScreenId());
+        const std::optional<uint> id = plasmaScreenId(origin->positioner()->currentScreenId());
+
+        if (id) {
+            Q_EMIT availableScreenRectChanged(*id);
+        }
     }
 }
 
 void Corona::onAvailableScreenRegionChangedFrom(Latte::View *origin)
 {
     if (origin && origin->positioner()) {
-        Q_EMIT availableScreenRegionChanged(origin->positioner()->currentScreenId());
+        const std::optional<uint> id = plasmaScreenId(origin->positioner()->currentScreenId());
+
+        if (id) {
+            Q_EMIT availableScreenRegionChanged(*id);
+        }
     }
 }
 
@@ -518,38 +558,6 @@ void Corona::loadDefaultLayout()
   //disabled
 }
 
-int Corona::screenForContainment(const Plasma::Containment *containment) const
-{
-    //FIXME: indexOf is not a proper way to support multi-screen
-    // as for environment to environment the indexes change
-    // also there is the following issue triggered
-    // from latteView adaptToScreen()
-    //
-    // in a multi-screen environment that
-    // primary screen is not set to 0 it was
-    // created an endless showing loop at
-    // startup (catch-up race) between
-    // screen:0 and primaryScreen
-
-    //case in which this containment is child of an applet, hello systray :)
-    if (Plasma::Applet *parentApplet = qobject_cast<Plasma::Applet *>(containment->parent())) {
-        if (Plasma::Containment *cont = parentApplet->containment()) {
-            return screenForContainment(cont);
-        } else {
-            return -1;
-        }
-    }
-
-    Plasma::Containment *c = const_cast<Plasma::Containment *>(containment);
-    int scrId = layoutsManager()->synchronizer()->screenForContainment(c);
-
-    if (scrId >= 0) {
-        return scrId;
-    }
-
-    return containment->lastScreen();
-}
-
 void Corona::showAlternativesForApplet(Plasma::Applet *applet)
 {
     const QString alternativesQML = kPackage().filePath("appletalternativesui");
@@ -558,70 +566,36 @@ void Corona::showAlternativesForApplet(Plasma::Applet *applet)
         return;
     }
 
-    Latte::View *latteView =  layoutsManager()->synchronizer()->viewForContainment(applet->containment());
+    QPointer<Latte::View> latteView = layoutsManager()->synchronizer()->viewForContainment(applet->containment());
 
-    PlasmaQuick::SharedQmlEngine *qmlObj{nullptr};
+    auto *loader = new QmlObjectLoader(latteView ? static_cast<QObject *>(latteView.data()) : this);
+    auto *helper = new AlternativesHelper(applet, loader);
+    loader->rootContext()->setContextProperty(QStringLiteral("alternativesHelper"), helper);
 
-    if (latteView) {
-        latteView->setAlternativesIsShown(true);
-        qmlObj = new PlasmaQuick::SharedQmlEngine(latteView);
-    } else {
-        qmlObj = new PlasmaQuick::SharedQmlEngine(this);
-    }
-
-    qmlObj->setInitializationDelayed(true);
-    qmlObj->setSource(QUrl::fromLocalFile(alternativesQML));
-
-    AlternativesHelper *helper = new AlternativesHelper(applet, qmlObj);
-    qmlObj->rootContext()->setContextProperty(QStringLiteral("alternativesHelper"), helper);
-
-    m_alternativesObjects << qmlObj;
-    qmlObj->completeInitialization();
-
-    //! Alternative dialog signals
-    connect(helper, &QObject::destroyed, this, [latteView]() {
-        latteView->setAlternativesIsShown(false);
-    });
-
-    connect(qmlObj->rootObject(), SIGNAL(visibleChanged(bool)),
-            this, SLOT(alternativesVisibilityChanged(bool)));
-
-    connect(applet, &Plasma::Applet::destroyedChanged, this, [this, qmlObj](bool destroyed) {
-        if (!destroyed) {
-            return;
-        }
-
-        QMutableListIterator<PlasmaQuick::SharedQmlEngine *> it(m_alternativesObjects);
-
-        while (it.hasNext()) {
-            PlasmaQuick::SharedQmlEngine *obj = it.next();
-
-            if (obj == qmlObj) {
-                it.remove();
-                obj->deleteLater();
-            }
-        }
-    });
-}
-
-void Corona::alternativesVisibilityChanged(bool visible)
-{
-    if (visible) {
+    if (!loader->load(QUrl::fromLocalFile(alternativesQML))) {
+        delete loader;
         return;
     }
 
-    QObject *root = sender();
-
-    QMutableListIterator<PlasmaQuick::SharedQmlEngine *> it(m_alternativesObjects);
-
-    while (it.hasNext()) {
-        PlasmaQuick::SharedQmlEngine *obj = it.next();
-
-        if (obj->rootObject() == root) {
-            it.remove();
-            obj->deleteLater();
-        }
+    if (latteView) {
+        latteView->setAlternativesIsShown(true);
     }
+
+    //! the dialog goes away with its view, with the applet, or when it is closed
+    loader->deleteLaterWhenHidden();
+
+    //! Alternative dialog signals
+    connect(helper, &QObject::destroyed, this, [latteView]() {
+        if (latteView) {
+            latteView->setAlternativesIsShown(false);
+        }
+    });
+
+    connect(applet, &Plasma::Applet::destroyedChanged, loader, [loader](bool destroyed) {
+        if (destroyed) {
+            loader->deleteLater();
+        }
+    });
 }
 
 QStringList Corona::containmentsIds()

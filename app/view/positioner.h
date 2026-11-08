@@ -88,6 +88,11 @@ public:
 
     void reconsiderScreen();
 
+    //! Tells the containment which screen this view is on. Public because the view has to
+    //! do it once after it is given its containment: the constructor moves the view to its
+    //! screen before there is any containment to tell.
+    void updateContainmentScreen();
+
     Latte::WindowSystem::WindowId trackedWindowId();
 
 public Q_SLOTS:
@@ -140,7 +145,6 @@ private Q_SLOTS:
     void validateDockGeometry();
     void updateInRelocationAnimation();
     void syncLatteViews();
-    void updateContainmentScreen();
 
 private:
     void init();

@@ -94,6 +94,7 @@ private Q_SLOTS:
     void appletGroupIsValidRejectsPreloadShell();
     void viewDeserializesContainmentGroup();
     void viewRejectsNonLatteContainment();
+    void viewReadsNeverPlacedScreenAsNoScreen();
     void updateViewRoundTripsThroughKConfig();
     void viewsEnumeratesOnlyLatteContainments();
     void subcontainmentsFromGroup();
@@ -204,6 +205,32 @@ void StorageTest::viewDeserializesContainmentGroup()
     // The systray applet under this view is reported as a subcontainment.
     QCOMPARE(v.subcontainments.rowCount(), 1);
     QCOMPARE(v.subcontainments[(uint)0].id, QStringLiteral("99"));
+}
+
+void StorageTest::viewReadsNeverPlacedScreenAsNoScreen()
+{
+    //! libplasma 6.8 saves a containment that was never placed with lastScreen=4294967295, the
+    //! unsigned form of the -1 Latte has always written. Both mean "no screen".
+    KConfig cfg(m_dir.filePath(QStringLiteral("unplaced.latte")));
+    KConfigGroup g = cfg.group(QStringLiteral("Containments")).group(QStringLiteral("1"));
+    g.writeEntry(QStringLiteral("plugin"), QStringLiteral("org.kde.latte.containment"));
+
+    g.writeEntry(QStringLiteral("lastScreen"), 4294967295u);
+    QCOMPARE(Storage::self()->view(g).screen, Storage::IDNULL);
+
+    g.writeEntry(QStringLiteral("lastScreen"), -1);
+    QCOMPARE(Storage::self()->view(g).screen, Storage::IDNULL);
+
+    //! anything else that is not an int-sized screen id is no screen too, instead of
+    //! whatever negative number the int conversion wraps it into
+    g.writeEntry(QStringLiteral("lastScreen"), 3000000000u);
+    QCOMPARE(Storage::self()->view(g).screen, Storage::IDNULL);
+
+    g.deleteEntry(QStringLiteral("lastScreen"));
+    QCOMPARE(Storage::self()->view(g).screen, Storage::IDNULL);
+
+    g.writeEntry(QStringLiteral("lastScreen"), 11);
+    QCOMPARE(Storage::self()->view(g).screen, 11);
 }
 
 void StorageTest::viewRejectsNonLatteContainment()

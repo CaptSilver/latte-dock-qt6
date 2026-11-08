@@ -17,6 +17,9 @@ struct IdRemapInput {
     QStringList usedIds;        // ids already taken (corona containment+applet ids, or file-derived)
     QStringList containmentIds; // toInvestigateContainmentIds, in groupList() order
     QStringList appletIds;      // toInvestigateAppletIds, in order
+    // Containments whose new id is already decided because the corona created them
+    // first: old id -> id they own. Kept as given, and no other id is handed out twice.
+    QHash<QString, QString> presetContainmentIds;
 };
 
 struct IdRemap {

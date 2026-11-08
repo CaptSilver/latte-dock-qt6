@@ -11,11 +11,11 @@ set(BUG_ADDRESS "https://bugs.kde.org/enter_bug.cgi?product=lattedock")
 set(FAQS "https://userbase.kde.org/LatteDock/FAQ")
 
 set(QT_MIN_VERSION "6.7.0")
-set(KF6_MIN_VERSION "6.5.0")
+set(KF6_MIN_VERSION "6.8.0") # KLocalizedQmlContext
 # Plasma versions on its own series, not Frameworks': a distro can ship Plasma
 # 6.4.2 next to KF6 6.16. Requiring the Frameworks floor from a Plasma package
 # rejects that pairing for a version number that never meant anything about it.
-set(PLASMA_MIN_VERSION "6.4.0")
+set(PLASMA_MIN_VERSION "6.8.0")
 set(KDE_COMPILERSETTINGS_LEVEL "6.5.0")
 
 set(KF6_LOCALE_PREFIX "")
