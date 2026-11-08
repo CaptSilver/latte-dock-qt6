@@ -1023,6 +1023,15 @@ ecm_add_test(${tasksbackendtest_SRCS}
 )
 target_include_directories(tasksbackendtest PRIVATE ${CMAKE_SOURCE_DIR}/plasmoid/plugin ${CMAKE_CURRENT_BINARY_DIR})
 
+# These start a QGuiApplication without choosing a platform: with a display in the
+# environment they connect to the live session, without one they abort.
+foreach(_offscreen_test
+        settingsmodelstest screengeometrycalculatortest layershellmappingtest
+        windowinfowraptest visibilityrevealtest appletzoomsizetest panelbackgroundtest
+        configcontrolstest contextmenudefaulttest editmodehandleactiontest tasksbackendtest)
+    set_tests_properties(${_offscreen_test} PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endforeach()
+
 # Headless QML compile gate: compiles every shell/containment/plasmoid QML in the
 # real engine (offscreen) so removed-type / removed-property errors in lazy,
 # interaction-only components are caught without a live session. It reads the
