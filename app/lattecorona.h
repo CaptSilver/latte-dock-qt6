@@ -20,6 +20,9 @@
 // Plasma
 #include <Plasma/Corona>
 
+// moc needs the full type to register a metatype for the pointer used below.
+Q_MOC_INCLUDE("view/view.h")
+
 namespace Plasma {
 class Corona;
 class Containment;

@@ -113,6 +113,16 @@ string(REPLACE "-Wunused-parameter" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 #add format security check
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wformat -Werror=format-security")
 
+# A QObject that moc sees first as a forward-declared pointer and later defines is a hard
+# static_assert ("Meta Types must be fully defined") from Qt 6.12 on, because AUTOMOC compiles
+# every moc file in one translation unit. Older Qt only gets GCC's sfinae-incomplete warning, so
+# make that warning fatal to catch it here. The fix is Q_MOC_INCLUDE of the defining header.
+include(CheckCXXCompilerFlag)
+check_cxx_compiler_flag(-Werror=sfinae-incomplete HAVE_WERROR_SFINAE_INCOMPLETE)
+if(HAVE_WERROR_SFINAE_INCOMPLETE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror=sfinae-incomplete")
+endif()
+
 message(STATUS "COMPILER FLAGS : ${CMAKE_CXX_FLAGS}")
 
 # Share Same Core Types between declarativeimports and app

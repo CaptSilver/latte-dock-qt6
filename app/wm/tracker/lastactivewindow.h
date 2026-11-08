@@ -13,6 +13,9 @@
 #include <QObject>
 #include <QRect>
 
+// moc needs the full type to register a metatype for the pointer used below.
+Q_MOC_INCLUDE("view/view.h")
+
 namespace Latte {
 class View;
 namespace WindowSystem {

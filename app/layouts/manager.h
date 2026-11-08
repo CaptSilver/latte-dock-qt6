@@ -24,6 +24,9 @@
 // KDE
 #include <KLocalizedString>
 
+// moc needs the full type to register a metatype for the pointer used below.
+Q_MOC_INCLUDE("view/view.h")
+
 namespace Plasma {
 class Containment;
 class Types;

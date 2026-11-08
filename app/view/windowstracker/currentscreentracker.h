@@ -12,6 +12,9 @@
 // Qt
 #include <QObject>
 
+// moc needs the full type to register a metatype for the pointer used below.
+Q_MOC_INCLUDE("wm/tracker/lastactivewindow.h")
+
 namespace Latte{
 class View;
 
