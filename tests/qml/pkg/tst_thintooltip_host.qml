@@ -82,8 +82,8 @@ TestCase {
         m.isEnabled = true;
         m.showIsBlocked = false;
 
-        const long = "x".repeat(120);
-        m.show(parentA, long);
+        const longText = "x".repeat(120);
+        m.show(parentA, longText);
         compare(m.currentText.length, m.maxCharacters - 1 + 3);
         verify(m.currentText.endsWith("..."));
     }
