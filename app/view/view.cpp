@@ -1449,9 +1449,9 @@ Latte::Data::View View::data() const
     vdata.isActive = true;
     vdata.onPrimary = onPrimary();
 
-    //! the screen the containment holds: every move of this view is pushed to it
-    //! (Positioner::updateContainmentScreen), so it matches the screen the view is on
-    vdata.screen = latteScreenId(containment()->screen());
+    //! every move of this view is pushed to the containment (Positioner::updateContainmentScreen),
+    //! so what it holds matches the screen the view is on
+    vdata.screen = currentScreenIdOf(containment());
 
     vdata.screensGroup = screensGroup();
 

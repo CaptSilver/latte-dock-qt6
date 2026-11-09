@@ -11,6 +11,7 @@
 // local
 #include <coretypes.h>
 #include "layouts/storage.h"
+#include "plasmascreenid.h"
 #include "view/panelshadows_p.h"
 
 // Qt
@@ -86,15 +87,16 @@ public:
 
     bool inQuit() const;
 
-    //! libplasma calls these with the screen id it has stored for a containment, which
-    //! is a Latte screen id once the views have pushed it, or UINT_MAX for a
-    //! containment that was never placed. screenGeometry() answers the primary screen
-    //! for it, like it does for any id the screen pool does not know; the available
-    //! area of an unplaced containment is empty.
-    uint numScreens() const override;
-    QRect screenGeometry(uint id) const override;
-    QRegion availableScreenRegion(uint id) const override;
-    QRect availableScreenRect(uint id) const override;
+    //! libplasma calls these with the screen id it has for a containment, which is a
+    //! Latte screen id once the views have pushed it, or PLASMA_UNPLACED_SCREEN (-1, which is
+    //! UINT_MAX from libplasma 6.8 where ids are unsigned) for a containment that was never
+    //! placed. screenGeometry() answers the primary screen for it, like it does
+    //! for any id the screen pool does not know; the available area of an unplaced
+    //! containment is empty.
+    PlasmaScreenId numScreens() const override;
+    QRect screenGeometry(PlasmaScreenId id) const override;
+    QRegion availableScreenRegion(PlasmaScreenId id) const override;
+    QRect availableScreenRect(PlasmaScreenId id) const override;
 
     //! This is a very generic function in order to return the availableScreenRect of specific screen
     //! by calculating only the user specified visibility modes and edges. Empty QLists for both
@@ -113,6 +115,12 @@ public:
                                               QList<Plasma::Types::Location> ignoreEdges = QList<Plasma::Types::Location>(),
                                               bool ignoreExternalPanels = true,
                                               bool desktopUse = false) const;
+
+#if !LATTE_LIBPLASMA_6_8_API
+    //! libplasma before 6.8 asks the corona which screen a containment is on, every time
+    //! Containment::screen() is called.
+    int screenForContainment(const Plasma::Containment *containment) const override;
+#endif
 
     //! libplasma has no "all screens" id, so the containments are told one screen at a time.
     //! Screens the pool has no id for are skipped.

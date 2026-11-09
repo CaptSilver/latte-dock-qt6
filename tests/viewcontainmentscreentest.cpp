@@ -4,9 +4,10 @@
 */
 
 // libplasma 6.8 keeps a containment's screen as plain state that only changes when the shell calls
-// setScreen(), and its ContainmentView does not do that for us. The first test checks that a view
-// given a containment tells it the screen the view is on, and the second that a resize arriving
-// before the view has loaded its QML does not touch a root object that does not exist yet.
+// setScreen(), and its ContainmentView does not do that for us; older libplasma asks the corona
+// each time. Either way, a containment given to a view must report the screen the view is on.
+// The tests check that, and that a resize arriving before the view has loaded its QML does not
+// touch a root object that does not exist yet.
 
 #include "../app/lattecorona.h"
 #include "../app/plasmascreenid.h"
@@ -17,6 +18,7 @@
 
 #include <QResizeEvent>
 #include <QScreen>
+#include <QSignalSpy>
 #include <QtTest>
 
 #include <Plasma/Containment>
@@ -106,14 +108,24 @@ void ViewContainmentScreenTest::containmentFollowsTheViewWhetherItIsOnPrimaryOrE
     view->positioner()->setScreenToFollow(other);
     QCOMPARE(view->positioner()->currentScreenId(), otherId);
 
-    //! a screen the view is not on, left over from an earlier placement
+    //! a screen the view is not on, left over from an earlier placement. Only libplasma 6.8
+    //! can hold a screen the view is not on; before that the corona answers with the view's.
     setContainmentScreen(containment, 99);
+#if LATTE_LIBPLASMA_6_8_API
     QCOMPARE(latteScreenId(containment->screen()), 99);
+#endif
 
     //! a primary view is on whatever the primary screen is, not on the screen it follows
+    QSignalSpy screenChanged(containment, &Plasma::Containment::screenChanged);
     view->setOnPrimary(true);
     view->positioner()->updateContainmentScreen();
     QCOMPARE(latteScreenId(containment->screen()), primaryId);
+#if !LATTE_LIBPLASMA_6_8_API
+    //! containment->screen() is the corona's live answer there, so it would be right even if
+    //! the update did nothing. What only the update causes is the containment re-reading it.
+    QVERIFY(screenChanged.count() >= 1);
+    QCOMPARE(containment->lastScreen(), primaryId);
+#endif
 
     setContainmentScreen(containment, 99);
 
@@ -121,6 +133,9 @@ void ViewContainmentScreenTest::containmentFollowsTheViewWhetherItIsOnPrimaryOrE
     view->setOnPrimary(false);
     view->positioner()->updateContainmentScreen();
     QCOMPARE(latteScreenId(containment->screen()), otherId);
+#if !LATTE_LIBPLASMA_6_8_API
+    QCOMPARE(containment->lastScreen(), otherId);
+#endif
 
     delete view;
 }

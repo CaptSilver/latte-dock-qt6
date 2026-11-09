@@ -93,6 +93,10 @@ public:
     //! screen before there is any containment to tell.
     void updateContainmentScreen();
 
+    //! The screen the containment of this view is on: the primary screen for a primary
+    //! view, the screen it follows for an explicit one.
+    int screenIdForContainment() const;
+
     Latte::WindowSystem::WindowId trackedWindowId();
 
 public Q_SLOTS:

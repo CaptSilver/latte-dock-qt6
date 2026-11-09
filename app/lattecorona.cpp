@@ -40,6 +40,7 @@
 #include "settings/universalsettings.h"
 #include "templates/templatesmanager.h"
 #include "view/originalview.h"
+#include "view/positioner.h"
 #include "view/view.h"
 #include "view/settings/viewsettingsfactory.h"
 #include "view/windowstracker/windowstracker.h"
@@ -56,6 +57,7 @@
 #include <QAction>
 #include <QApplication>
 #include <QScreen>
+#include <QWindow>
 #include <QDBusConnection>
 #include <QDebug>
 #include <QFile>
@@ -362,12 +364,12 @@ PlasmaExtended::Theme *Corona::themeExtended() const
     return m_engine->themeExtended();
 }
 
-uint Corona::numScreens() const
+PlasmaScreenId Corona::numScreens() const
 {
-    return static_cast<uint>(m_engine->numScreens());
+    return static_cast<PlasmaScreenId>(m_engine->numScreens());
 }
 
-QRect Corona::screenGeometry(uint id) const
+QRect Corona::screenGeometry(PlasmaScreenId id) const
 {
     //! an id that is no screen (UINT_MAX, a containment that was never placed) gets the
     //! primary screen, the same as any other id the screen pool does not know
@@ -396,7 +398,7 @@ Layout::GenericLayout *Corona::layout(QString name) const
     return result;
 }
 
-QRegion Corona::availableScreenRegion(uint id) const
+QRegion Corona::availableScreenRegion(PlasmaScreenId id) const
 {
     const int screenId = latteScreenId(id);
 
@@ -417,7 +419,7 @@ QRegion Corona::availableScreenRegionWithCriteria(int id,
     return m_engine->availableScreenRegionWithCriteria(id, activityid, ignoreModes, ignoreEdges, ignoreExternalPanels, desktopUse);
 }
 
-QRect Corona::availableScreenRect(uint id) const
+QRect Corona::availableScreenRect(PlasmaScreenId id) const
 {
     const int screenId = latteScreenId(id);
 
@@ -441,7 +443,7 @@ QRect Corona::availableScreenRectWithCriteria(int id,
 void Corona::emitAvailableScreenAreaChangedForAll()
 {
     for (QScreen *screen : qGuiApp->screens()) {
-        const std::optional<uint> id = plasmaScreenId(screenPool()->id(screen->name()));
+        const std::optional<PlasmaScreenId> id = plasmaScreenId(screenPool()->id(screen->name()));
 
         if (id) {
             Q_EMIT availableScreenRectChanged(*id);
@@ -462,7 +464,7 @@ void Corona::onScreenAdded(QScreen *screen)
 
     connect(screen, &QScreen::geometryChanged, this, &Corona::onScreenGeometryChanged);
 
-    const std::optional<uint> addedId = plasmaScreenId(screenPool()->id(screen->name()));
+    const std::optional<PlasmaScreenId> addedId = plasmaScreenId(screenPool()->id(screen->name()));
 
     if (addedId) {
         Q_EMIT availableScreenRectChanged(*addedId);
@@ -493,7 +495,7 @@ void Corona::onScreenGeometryChanged(const QRect &geometry)
         return;
     }
 
-    const std::optional<uint> id = plasmaScreenId(screenPool()->id(screen->name()));
+    const std::optional<PlasmaScreenId> id = plasmaScreenId(screenPool()->id(screen->name()));
 
     if (id) {
         Q_EMIT screenGeometryChanged(*id);
@@ -505,7 +507,7 @@ void Corona::onScreenGeometryChanged(const QRect &geometry)
 void Corona::onAvailableScreenRectChangedFrom(Latte::View *origin)
 {
     if (origin && origin->positioner()) {
-        const std::optional<uint> id = plasmaScreenId(origin->positioner()->currentScreenId());
+        const std::optional<PlasmaScreenId> id = plasmaScreenId(origin->positioner()->currentScreenId());
 
         if (id) {
             Q_EMIT availableScreenRectChanged(*id);
@@ -516,7 +518,7 @@ void Corona::onAvailableScreenRectChangedFrom(Latte::View *origin)
 void Corona::onAvailableScreenRegionChangedFrom(Latte::View *origin)
 {
     if (origin && origin->positioner()) {
-        const std::optional<uint> id = plasmaScreenId(origin->positioner()->currentScreenId());
+        const std::optional<PlasmaScreenId> id = plasmaScreenId(origin->positioner()->currentScreenId());
 
         if (id) {
             Q_EMIT availableScreenRegionChanged(*id);
@@ -557,6 +559,46 @@ void Corona::loadDefaultLayout()
 {
   //disabled
 }
+
+#if !LATTE_LIBPLASMA_6_8_API
+int Corona::screenForContainment(const Plasma::Containment *containment) const
+{
+    //! libplasma before 6.7.90 calls this on every Containment::screen(), so answer from the
+    //! pending updates or the views and fall back to lastScreen()
+
+    //case in which this containment is child of an applet, hello systray :)
+    if (Plasma::Applet *parentApplet = qobject_cast<Plasma::Applet *>(containment->parent())) {
+        if (Plasma::Containment *cont = parentApplet->containment()) {
+            return screenForContainment(cont);
+        } else {
+            return -1;
+        }
+    }
+
+    Plasma::Containment *c = const_cast<Plasma::Containment *>(containment);
+    int scrId = layoutsManager()->synchronizer()->screenForContainment(c);
+
+    if (scrId >= 0) {
+        return scrId;
+    }
+
+    //! a view that has its containment but is not in a layout's view lists (yet) is still
+    //! on a screen, and it is the same screen the view tells libplasma 6.8 about
+    for (QWindow *window : qGuiApp->allWindows()) {
+        auto *view = qobject_cast<Latte::View *>(window);
+
+        if (view && view->containment() == containment && view->positioner()) {
+            scrId = view->positioner()->screenIdForContainment();
+
+            if (scrId >= 0) {
+                return scrId;
+            }
+        }
+    }
+
+    return containment->lastScreen();
+}
+#endif
 
 void Corona::showAlternativesForApplet(Plasma::Applet *applet)
 {

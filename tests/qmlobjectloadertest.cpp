@@ -23,7 +23,12 @@
 #include <QtTest>
 
 #include <KLocalizedQmlContext>
+#include "libplasmaapi.h"
+#if LATTE_LIBPLASMA_6_8_API
 #include <PlasmaQuick/PlasmaQuick>
+#else
+#include <PlasmaQuick/SharedQmlEngine>
+#endif
 
 using Latte::QmlObjectLoader;
 
@@ -151,7 +156,14 @@ void QmlObjectLoaderTest::defaultConstructorUsesThePlasmaQuickEngine()
     //! the engine both production callers get
     QmlObjectLoader loader;
     QVERIFY(loader.engine());
+#if LATTE_LIBPLASMA_6_8_API
     QCOMPARE(loader.engine(), PlasmaQuick::globalEngine().get());
+#else
+    //! libplasma 6.7 has no globalEngine(); the shared engine ContainmentView runs on is the one
+    //! every SharedQmlEngine hands out while something holds it, and the loader holds it
+    PlasmaQuick::SharedQmlEngine sharedEngine;
+    QCOMPARE(loader.engine(), sharedEngine.engine().get());
+#endif
 }
 
 void QmlObjectLoaderTest::deleteLaterWhenHiddenDeletesTheLoaderOnceTheRootIsHidden()

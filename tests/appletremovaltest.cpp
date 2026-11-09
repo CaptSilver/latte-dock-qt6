@@ -23,6 +23,7 @@
 #include <QQuickItem>
 
 #include "layoutmanager.h"
+#include "../app/plasmascreenid.h"
 
 #include <Plasma/Applet>
 #include <Plasma/Containment>
@@ -33,7 +34,7 @@ class TestCorona : public Plasma::Corona
 {
 public:
     using Plasma::Corona::Corona;
-    QRect screenGeometry(uint) const override { return QRect(0, 0, 1920, 1080); }
+    QRect screenGeometry(Latte::PlasmaScreenId) const override { return QRect(0, 0, 1920, 1080); }
 };
 
 //! Throwaway config home, armed in main() before QGuiApplication exists.

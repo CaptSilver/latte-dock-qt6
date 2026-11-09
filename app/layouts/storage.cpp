@@ -1380,9 +1380,9 @@ Data::View Storage::view(const Layout::GenericLayout *layout, const Plasma::Cont
 
     vdata = view(lattecontainment->config());
 
-    //! the screen the containment holds: a view's moves are pushed to it, and a containment
-    //! without a view still has the screen it was last given
-    vdata.screen = latteScreenId(lattecontainment->screen());
+    //! a view's moves are pushed to the containment, and a containment without a view still
+    //! has the screen it was last given
+    vdata.screen = currentScreenIdOf(lattecontainment);
 
     vdata.subcontainments = subcontainments(layout, lattecontainment);
 

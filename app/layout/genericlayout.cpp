@@ -349,8 +349,9 @@ int GenericLayout::screenForContainment(Plasma::Containment *containment)
         return m_corona->screenPool()->id(view->screen()->name());
     }
 
-    //! fallback scenario: the screen the containment was last given
-    return latteScreenId(containment->screen());
+    //! fallback scenario: the screen the containment was last given. Not
+    //! containment->screen(), which is what asks this function on older libplasma.
+    return heldScreenId(containment);
 }
 
 bool GenericLayout::containsView(const int &containmentId) const
@@ -1089,7 +1090,7 @@ void GenericLayout::syncLatteViewsToScreens()
         if (containment) {
             //! the screen the containment holds, not the live one: the update is done once the
             //! containment itself has caught up with it
-            const int storedScreen = latteScreenId(containment->screen());
+            const int storedScreen = heldScreenId(containment);
 
             if ((viewdata.onPrimary && storedScreen == m_corona->screenPool()->primaryScreenId())
                     || (!viewdata.onPrimary && storedScreen == viewdata.screen)) {

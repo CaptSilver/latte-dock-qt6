@@ -11,6 +11,7 @@
 #include "../data/activitystatescache.h"
 #include "../data/layoutdata.h"
 #include "../data/layoutstable.h"
+#include "../libplasmaapi.h"
 
 // Qt
 #include <QObject>
@@ -90,6 +91,10 @@ public:
     QStringList freeRunningActivities(); //! These are activities that haven't been assigned to specific layout
     QStringList validActivities(const QStringList &layoutActivities);
 
+#if !LATTE_LIBPLASMA_6_8_API
+    //! the screen a containment is on, asked by Corona::screenForContainment
+    int screenForContainment(Plasma::Containment *containment);
+#endif
     Latte::View *viewForContainment(Plasma::Containment *containment);
     Latte::View *viewForContainment(uint id);
 

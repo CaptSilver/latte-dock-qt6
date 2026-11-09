@@ -372,17 +372,22 @@ void Positioner::syncLatteViews()
 //! whatever the primary screen is now, an explicit one on the screen it follows.
 void Positioner::updateContainmentScreen()
 {
-    if (!m_view->containment()) {
+    if (!m_view->containment() || !qobject_cast<Latte::Corona *>(m_view->corona())) {
         return;
     }
 
+    setContainmentScreen(m_view->containment(), screenIdForContainment());
+}
+
+int Positioner::screenIdForContainment() const
+{
     auto *latteCorona = qobject_cast<Latte::Corona *>(m_view->corona());
 
     if (!latteCorona) {
-        return;
+        return NOSCREEN;
     }
 
-    setContainmentScreen(m_view->containment(), m_view->onPrimary() ? latteCorona->screenPool()->primaryScreenId() : currentScreenId());
+    return m_view->onPrimary() ? latteCorona->screenPool()->primaryScreenId() : currentScreenId();
 }
 
 //! this function updates the dock's associated screen.

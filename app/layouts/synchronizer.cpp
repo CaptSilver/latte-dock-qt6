@@ -396,6 +396,19 @@ Layout::GenericLayout *Synchronizer::layout(QString layoutname) const
     return l;
 }
 
+#if !LATTE_LIBPLASMA_6_8_API
+int Synchronizer::screenForContainment(Plasma::Containment *containment)
+{
+    for (auto layout : m_centralLayouts) {
+        if (layout->contains(containment)) {
+            return layout->screenForContainment(containment);
+        }
+    }
+
+    return -1;
+}
+#endif
+
 Latte::View *Synchronizer::viewForContainment(uint id)
 {
     for (auto layout : m_centralLayouts) {

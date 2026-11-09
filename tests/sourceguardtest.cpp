@@ -210,6 +210,7 @@ private:
 
 private Q_SLOTS:
     void visibilityManager_updateSidebarState_assignsState();
+    void libplasmaVersionIsComparedInOneHeader();
     void layoutsController_modeIsChanged_delegatesToModel();
     void containmentInterface_updateContainmentConfigProperty_guardReturns();
     void primaryScreen_dereferencesAreNullGuarded();
@@ -310,6 +311,39 @@ private Q_SLOTS:
     void viewSettingsFactory_isTheOnlySettingsWindowDeleter();
     void view_readsTheSettingsWindowThroughTheFactory();
 };
+
+void SourceGuardTest::libplasmaVersionIsComparedInOneHeader()
+{
+    // Latte builds on libplasma before and from 6.7.90, whose screen id and QML engine APIs differ.
+    // The version comparison lives in app/libplasmaapi.h and everything else asks the macro it
+    // defines. A second comparison somewhere else is a second opinion about where the line falls,
+    // and the two drift: the build then passes on one libplasma and breaks on the other.
+    const QString gateRel = QStringLiteral("app/libplasmaapi.h");
+    const QString gate = withoutComments(readRepoFile(gateRel));
+    QVERIFY2(!gate.isEmpty(), qPrintable(QStringLiteral("%1 unreadable").arg(gateRel)));
+    QVERIFY(gate.contains(QStringLiteral("#define LATTE_LIBPLASMA_6_8_API 1")));
+    QVERIFY(gate.contains(QStringLiteral("#define LATTE_LIBPLASMA_6_8_API 0")));
+
+    const QRegularExpression versionCheck(QStringLiteral("\\bPLASMA_VERSION(_MAJOR|_MINOR|_PATCH)?\\s*(>=|<=|<|>|==|!=)"));
+
+    QStringList strays;
+    const QStringList dirs = {QStringLiteral("app"), QStringLiteral("containment"), QStringLiteral("plasmoid"),
+                              QStringLiteral("declarativeimports"), QStringLiteral("shell"), QStringLiteral("tests")};
+    for (const QString &glob : {QStringLiteral("*.cpp"), QStringLiteral("*.h")}) {
+        for (const QString &abs : sourcesUnder(dirs, glob)) {
+            const QString rel = relativeToRepo(abs);
+            if (rel == gateRel || rel == QStringLiteral("tests/sourceguardtest.cpp")) {
+                continue;
+            }
+
+            if (withoutComments(readFile(abs)).contains(versionCheck)) {
+                strays << QStringLiteral("%1  compares the libplasma version itself; use LATTE_LIBPLASMA_6_8_API from libplasmaapi.h").arg(rel);
+            }
+        }
+    }
+    QVERIFY2(strays.isEmpty(),
+             qPrintable(QStringLiteral("libplasma version checks outside the one header:\n  %1").arg(strays.join(QStringLiteral("\n  ")))));
+}
 
 void SourceGuardTest::visibilityManager_updateSidebarState_assignsState()
 {

@@ -3,11 +3,11 @@
     SPDX-License-Identifier: GPL-2.0-or-later
 */
 
-// libplasma 6.8 carries screen ids as unsigned and no longer accepts -1. Latte keeps
-// signed ids (ScreenPool::NOSCREENID is -1, real ids start at FIRSTSCREENID). The
-// helpers in plasmascreenid.h are the only place the two domains meet, so they are
-// tested at the edges: the unplaced sentinel libplasma stores, the Latte "no screen"
-// value, and what a real Containment ends up holding.
+// libplasma 6.8 carries screen ids as unsigned and no longer accepts -1; older libplasma
+// uses plain ints. Latte keeps signed ids (ScreenPool::NOSCREENID is -1, real ids start at
+// FIRSTSCREENID). The helpers in plasmascreenid.h are the only place the two domains meet,
+// so they are tested at the edges: the unplaced sentinel libplasma stores, the Latte "no
+// screen" value, and what a real Containment ends up holding.
 
 #include "plasmascreenid.h"
 
@@ -17,6 +17,7 @@
 #include <QtTest>
 
 #include <climits>
+#include <type_traits>
 
 #include <KConfig>
 #include <KConfigGroup>
@@ -29,7 +30,22 @@ class TestCorona : public Plasma::Corona
 {
 public:
     using Plasma::Corona::Corona;
-    QRect screenGeometry(uint) const override { return QRect(0, 0, 1920, 1080); }
+    QRect screenGeometry(PlasmaScreenId) const override { return QRect(0, 0, 1920, 1080); }
+
+#if !LATTE_LIBPLASMA_6_8_API
+    //! older libplasma has no setScreen(): the containment's screen is whatever this says
+    int screenForContainment(const Plasma::Containment *) const override { return m_answer; }
+    int m_answer{-1};
+#endif
+
+    //! puts the containment on the screen the way the installed libplasma allows
+    void place(Plasma::Containment *containment, int latteId)
+    {
+#if !LATTE_LIBPLASMA_6_8_API
+        m_answer = latteId;
+#endif
+        setContainmentScreen(containment, latteId);
+    }
 };
 
 //! Throwaway config home, armed in main() before QGuiApplication exists.
@@ -40,9 +56,10 @@ class PlasmaScreenIdTest : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
+    void screenIdAliasMatchesWhatContainmentReturns();
     void latteScreenId_keepsValidIds();
     void latteScreenId_unplacedSentinelIsNoScreen();
-    void latteScreenId_valuesAboveIntMaxAreNoScreen();
+    void latteScreenId_idsOutsideNonNegativeIntAreNoScreen();
     void plasmaScreenId_keepsValidIds();
     void plasmaScreenId_noScreenHasNoPlasmaId();
     void roundTrip();
@@ -54,38 +71,58 @@ private Q_SLOTS:
     void setContainmentScreen_ignoresNoScreen();
 };
 
+void PlasmaScreenIdTest::screenIdAliasMatchesWhatContainmentReturns()
+{
+    static_assert(std::is_same_v<PlasmaScreenId, decltype(std::declval<const Plasma::Containment &>().screen())>);
+    static_assert(std::is_same_v<PlasmaScreenId, decltype(std::declval<const Plasma::Corona &>().numScreens())>);
+
+#if LATTE_LIBPLASMA_6_8_API
+    static_assert(std::is_same_v<PlasmaScreenId, uint>);
+#else
+    static_assert(std::is_same_v<PlasmaScreenId, int>);
+#endif
+}
+
 void PlasmaScreenIdTest::latteScreenId_keepsValidIds()
 {
-    QCOMPARE(latteScreenId(0u), 0);
-    QCOMPARE(latteScreenId(10u), 10);
-    QCOMPARE(latteScreenId(static_cast<uint>(INT_MAX)), INT_MAX);
+    QCOMPARE(latteScreenId(0), 0);
+    QCOMPARE(latteScreenId(10), 10);
+    QCOMPARE(latteScreenId(static_cast<PlasmaScreenId>(INT_MAX)), INT_MAX);
 }
 
 void PlasmaScreenIdTest::latteScreenId_unplacedSentinelIsNoScreen()
 {
-    //! createContainment() and loadLayout() hand the containment UINT_MAX, the -1 they pass
-    //! into the unsigned screen parameter.
-    QCOMPARE(latteScreenId(UINT_MAX), NOSCREEN);
+    //! createContainment() and loadLayout() hand the containment -1, which is UINT_MAX when
+    //! ids are unsigned
+    QCOMPARE(PLASMA_UNPLACED_SCREEN, static_cast<PlasmaScreenId>(-1));
+    QCOMPARE(latteScreenId(PLASMA_UNPLACED_SCREEN), NOSCREEN);
     QCOMPARE(NOSCREEN, -1);
 }
 
-void PlasmaScreenIdTest::latteScreenId_valuesAboveIntMaxAreNoScreen()
+void PlasmaScreenIdTest::latteScreenId_idsOutsideNonNegativeIntAreNoScreen()
 {
+#if LATTE_LIBPLASMA_6_8_API
     QCOMPARE(latteScreenId(static_cast<uint>(INT_MAX) + 1u), NOSCREEN);
     QCOMPARE(latteScreenId(4000000000u), NOSCREEN);
+#else
+    //! signed ids cannot exceed INT_MAX; any negative one is no screen
+    QCOMPARE(latteScreenId(INT_MIN), NOSCREEN);
+    QCOMPARE(latteScreenId(-12), NOSCREEN);
+#endif
 }
 
 void PlasmaScreenIdTest::plasmaScreenId_keepsValidIds()
 {
     QVERIFY(plasmaScreenId(0).has_value());
-    QCOMPARE(*plasmaScreenId(0), 0u);
-    QCOMPARE(*plasmaScreenId(10), 10u);
-    QCOMPARE(*plasmaScreenId(INT_MAX), static_cast<uint>(INT_MAX));
+    QCOMPARE(*plasmaScreenId(0), static_cast<PlasmaScreenId>(0));
+    QCOMPARE(*plasmaScreenId(10), static_cast<PlasmaScreenId>(10));
+    QCOMPARE(*plasmaScreenId(INT_MAX), static_cast<PlasmaScreenId>(INT_MAX));
 }
 
 void PlasmaScreenIdTest::plasmaScreenId_noScreenHasNoPlasmaId()
 {
-    //! -1 must not wrap into UINT_MAX: that would look like a placed screen to libplasma.
+    //! -1 must not turn into libplasma's unplaced id (UINT_MAX when ids are unsigned) or any
+    //! other id: that would look like a placed screen to libplasma.
     QVERIFY(!plasmaScreenId(-1).has_value());
     QVERIFY(!plasmaScreenId(NOSCREEN).has_value());
     QVERIFY(!plasmaScreenId(INT_MIN).has_value());
@@ -136,6 +173,9 @@ void PlasmaScreenIdTest::storedScreenId_readsWhatLibplasmaWrites()
     QCOMPARE(storedScreenId(group.readEntry(QStringLiteral("lastScreen"), qlonglong(NOSCREEN))), 11);
 }
 
+//! libplasma 6.8 stores what setContainmentScreen() is given. Older libplasma has nothing to
+//! store: the containment asks the corona, and setContainmentScreen() makes it ask again, so
+//! the test corona's answer has to reach screen() and the saved lastScreen.
 void PlasmaScreenIdTest::setContainmentScreen_storesTheId()
 {
     QVERIFY2(QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation).startsWith(s_xdgConfig.path()),
@@ -145,11 +185,15 @@ void PlasmaScreenIdTest::setContainmentScreen_storesTheId()
     Plasma::Containment *cont = corona->createContainment(QStringLiteral("null"));
     QVERIFY(cont);
     QCOMPARE(latteScreenId(cont->screen()), NOSCREEN);
+    QCOMPARE(cont->config().readEntry(QStringLiteral("lastScreen"), -1), -1);
 
-    setContainmentScreen(cont, 11);
-    QCOMPARE(cont->screen(), 11u);
+    QSignalSpy spy(cont, &Plasma::Containment::screenChanged);
+    corona->place(cont, 11);
+    QCOMPARE(cont->screen(), static_cast<PlasmaScreenId>(11));
     QCOMPARE(latteScreenId(cont->screen()), 11);
     QCOMPARE(cont->config().readEntry(QStringLiteral("lastScreen"), -1), 11);
+    QVERIFY(spy.count() >= 1);
+    QCOMPARE(spy.last().at(0).value<PlasmaScreenId>(), static_cast<PlasmaScreenId>(11));
 }
 
 void PlasmaScreenIdTest::setContainmentScreen_ignoresNoScreen()
@@ -158,10 +202,14 @@ void PlasmaScreenIdTest::setContainmentScreen_ignoresNoScreen()
     Plasma::Containment *cont = corona->createContainment(QStringLiteral("null"));
     QVERIFY(cont);
 
-    setContainmentScreen(cont, 12);
+    corona->place(cont, 12);
     setContainmentScreen(cont, NOSCREEN);
 
-    QCOMPARE(cont->screen(), 12u);
+    //! Older libplasma asks the corona, so screen() alone can't tell a bridge that obeys
+    //! NOSCREEN from one that ignores it there. The stored lastScreen can: it is what
+    //! Plasma restores the containment to, and "no screen" must not wipe it.
+    QCOMPARE(cont->screen(), static_cast<PlasmaScreenId>(12));
+    QCOMPARE(cont->config().readEntry(QStringLiteral("lastScreen"), -1), 12);
 }
 
 int main(int argc, char *argv[])

@@ -22,7 +22,7 @@ class QQmlContext;
 namespace Latte {
 
 //! Creates one QML file in a context of its own on a shared engine and owns the
-//! resulting root object. libplasma used to do this through SharedQmlEngine; this
+//! resulting root object. libplasma 6.8 dropped SharedQmlEngine, which did this; this
 //! keeps the part Latte uses: context properties and a translation domain that are
 //! set before the file is created, initial properties, and a warning that names the
 //! file when it does not compile.
@@ -31,7 +31,8 @@ class QmlObjectLoader : public QObject
     Q_OBJECT
 
 public:
-    //! Loads on PlasmaQuick::globalEngine(), the engine the dock's own QML runs on.
+    //! Loads on the engine libplasma shares process-wide (PlasmaQuick::globalEngine(), or
+    //! the one SharedQmlEngine hands out on older libplasma), the engine the dock's own QML runs on.
     explicit QmlObjectLoader(QObject *parent = nullptr);
     explicit QmlObjectLoader(std::shared_ptr<QQmlEngine> engine, QObject *parent = nullptr);
     ~QmlObjectLoader() override;

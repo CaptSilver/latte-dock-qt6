@@ -5,6 +5,8 @@
 
 #include "qmlobjectloader.h"
 
+#include "libplasmaapi.h"
+
 // Qt
 #include <QDebug>
 #include <QQmlComponent>
@@ -12,12 +14,30 @@
 
 // KDE
 #include <KLocalizedQmlContext>
+#if LATTE_LIBPLASMA_6_8_API
 #include <PlasmaQuick/PlasmaQuick>
+#else
+#include <PlasmaQuick/SharedQmlEngine>
+#endif
 
 namespace Latte {
 
+//! The engine the dock's own QML runs on: the one libplasma shares process-wide.
+static std::shared_ptr<QQmlEngine> plasmaQuickEngine()
+{
+#if LATTE_LIBPLASMA_6_8_API
+    return PlasmaQuick::globalEngine();
+#else
+    //! Older libplasma hands the shared engine out through SharedQmlEngine, which holds it
+    //! with a weak pointer. The throwaway object is only the way to get at it; the
+    //! returned shared_ptr keeps the engine alive after the object is gone.
+    PlasmaQuick::SharedQmlEngine sharedEngine;
+    return sharedEngine.engine();
+#endif
+}
+
 QmlObjectLoader::QmlObjectLoader(QObject *parent)
-    : QmlObjectLoader(PlasmaQuick::globalEngine(), parent)
+    : QmlObjectLoader(plasmaQuickEngine(), parent)
 {
 }
 

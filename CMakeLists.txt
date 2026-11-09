@@ -15,7 +15,11 @@ set(KF6_MIN_VERSION "6.8.0") # KLocalizedQmlContext
 # Plasma versions on its own series, not Frameworks': a distro can ship Plasma
 # 6.4.2 next to KF6 6.16. Requiring the Frameworks floor from a Plasma package
 # rejects that pairing for a version number that never meant anything about it.
-set(PLASMA_MIN_VERSION "6.8.0")
+# The floor is the oldest libplasma the pre-6.7.90 bridge is built and tested against.
+# Below 6.7.90 libplasma has int screen ids, no Containment::setScreen and SharedQmlEngine
+# instead of PlasmaQuick::globalEngine(); app/libplasmaapi.h picks the API and its
+# LATTE_LIBPLASMA_6_8_API users bridge the difference.
+set(PLASMA_MIN_VERSION "6.7.5")
 set(KDE_COMPILERSETTINGS_LEVEL "6.5.0")
 
 set(KF6_LOCALE_PREFIX "")
